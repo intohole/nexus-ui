@@ -74,3 +74,12 @@
 
 /* docs — 文档中心 — 靛青 */
 .app-docs { --app-accent: #0891b2; --app-accent-rgb: 8, 145, 178; --app-accent-hover: #06b6d4; --app-name: "Docs"; }
+
+/* adSmart — 智能广告 — 紫红 */
+.app-ad-smart { --app-accent: #e11d48; --app-accent-rgb: 225, 29, 72; --app-accent-hover: #f43f5e; --app-name: "AdSmart"; }
+
+/* fastRPC — 微服务RPC — 石板蓝 */
+.app-fast-rpc { --app-accent: #475569; --app-accent-rgb: 71, 85, 105; --app-accent-hover: #64748b; --app-name: "FastRPC"; }
+
+/* spider — 爬虫服务 — 深绿 */
+.app-moutain { --app-accent: #059669; --app-accent-rgb: 5, 150, 105; --app-accent-hover: #10b981; --app-name: "Spider"; }

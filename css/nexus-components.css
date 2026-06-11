@@ -354,8 +354,143 @@
     to { transform: rotate(360deg); }
 }
 
+/* ========== Login Page ========== */
+.nux-login-page {
+    display: flex;
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+.nux-login-brand {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--app-accent, var(--nx-primary)), color-mix(in srgb, var(--app-accent, var(--nx-primary)) 70%, #000));
+    padding: var(--nx-space-8);
+    position: relative;
+    overflow: hidden;
+}
+.nux-login-brand::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 30% 70%, rgba(255,255,255,0.08) 0%, transparent 60%);
+}
+.nux-login-brand-content {
+    position: relative;
+    text-align: center;
+    color: #fff;
+}
+.nux-login-icon {
+    font-size: 64px;
+    display: block;
+    margin-bottom: var(--nx-space-4);
+}
+.nux-login-app-name {
+    font-size: 32px;
+    font-weight: 700;
+    margin: 0 0 var(--nx-space-2);
+}
+.nux-login-slogan {
+    font-size: var(--nx-text-lg);
+    opacity: 0.8;
+    margin: 0;
+}
+.nux-login-form-side {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--nx-space-8);
+    background: var(--nx-bg-surface);
+}
+.nux-login-card {
+    width: 100%;
+    max-width: 400px;
+}
+.nux-login-tabs {
+    display: flex;
+    gap: var(--nx-space-4);
+    margin-bottom: var(--nx-space-6);
+    border-bottom: 2px solid var(--nx-border);
+}
+.nux-login-tab {
+    padding: var(--nx-space-2) 0;
+    font-size: var(--nx-text-lg);
+    font-weight: 500;
+    color: var(--nx-text-muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all var(--nx-transition-fast);
+}
+.nux-login-tab:hover { color: var(--nx-text-heading); }
+.nux-login-tab.active {
+    color: var(--app-accent, var(--nx-primary));
+    border-bottom-color: var(--app-accent, var(--nx-primary));
+}
+.nux-login-error {
+    padding: var(--nx-space-2) var(--nx-space-3);
+    background: color-mix(in srgb, var(--nx-danger) 10%, transparent);
+    color: var(--nx-danger);
+    border-radius: var(--nx-radius-md);
+    font-size: var(--nx-text-sm);
+    margin-bottom: var(--nx-space-4);
+}
+.nux-login-submit {
+    width: 100%;
+    padding: var(--nx-space-3);
+    font-size: var(--nx-text-base);
+    font-weight: 600;
+    color: #fff;
+    background: var(--app-accent, var(--nx-primary));
+    border: none;
+    border-radius: var(--nx-radius-md);
+    cursor: pointer;
+    transition: opacity var(--nx-transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-space-2);
+    margin-top: var(--nx-space-4);
+}
+.nux-login-submit:hover { opacity: 0.9; }
+.nux-login-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+.nux-login-footer {
+    margin-top: var(--nx-space-4);
+    text-align: center;
+    font-size: var(--nx-text-sm);
+    color: var(--nx-text-muted);
+}
+
+/* ========== Input ========== */
+.nux-input {
+    width: 100%;
+    padding: var(--nx-space-2) var(--nx-space-3);
+    font-size: var(--nx-text-sm);
+    color: var(--nx-text-heading);
+    background: var(--nx-bg-base);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-md);
+    outline: none;
+    transition: border-color var(--nx-transition-fast), box-shadow var(--nx-transition-fast);
+    box-sizing: border-box;
+}
+.nux-input:focus {
+    border-color: var(--app-accent, var(--nx-primary));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--app-accent, var(--nx-primary)) 15%, transparent);
+}
+.nux-input::placeholder { color: var(--nx-text-muted); }
+
 /* ========== Responsive ========== */
 @media (max-width: 768px) {
+  .nux-login-page { flex-direction: column; }
+  .nux-login-brand { min-height: 200px; flex: none; padding: var(--nx-space-6); }
+  .nux-login-icon { font-size: 40px; }
+  .nux-login-app-name { font-size: 24px; }
+  .nux-login-form-side { padding: var(--nx-space-4); }
   .nux-stat-card { padding: var(--nx-space-3); }
   .nux-stat-value { font-size: var(--nx-text-xl); }
   .nux-tab-item { padding: var(--nx-space-2) var(--nx-space-3); font-size: var(--nx-text-xs); }
