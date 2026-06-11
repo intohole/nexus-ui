@@ -2,41 +2,50 @@
 
 统一前端基础设施工程，为所有项目提供设计系统、移动端适配、通用组件和工具函数。
 
+CDN地址（国内加速）：`https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.2/`
+
 ## 引入方式
 
 ### CSS（在HTML head中）
 
 ```html
-<!-- 方式1：全量引入（推荐） -->
-<link rel="stylesheet" href="/nexus-ui/css/nexus-all.css">
-
-<!-- 方式2：按需引入 -->
-<link rel="stylesheet" href="/nexus-ui/css/nexus-design.css">
-<link rel="stylesheet" href="/nexus-ui/css/nexus-themes.css">
-<link rel="stylesheet" href="/nexus-ui/css/nexus-mobile.css">
-<link rel="stylesheet" href="/nexus-ui/css/nexus-components.css">
+<!-- 全量引入（推荐） -->
+<link rel="stylesheet" href="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.2/css/nexus-all.css">
 ```
 
 ### JS（在Vue 3之后引入）
 
 ```html
-<!-- 基础工具（必须） -->
-<script src="/nexus-ui/js/nexus-utils.js"></script>
+<!-- 基础工具（必须最先引入） -->
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.2/js/nexus-utils.js"></script>
 
 <!-- 按需引入 -->
-<script src="/nexus-ui/js/nexus-api.js"></script>
-<script src="/nexus-ui/js/nexus-store.js"></script>
-<script src="/nexus-ui/js/user-center-sdk.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.2/js/nexus-api.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.2/js/nexus-store.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.2/js/user-center-sdk.js"></script>
 
-<!-- Vue组件（需要先引入nexus-utils.js） -->
-<script src="/nexus-ui/js/components/nux-toast.js"></script>
-<script src="/nexus-ui/js/components/nux-modal.js"></script>
-<script src="/nexus-ui/js/components/nux-drawer.js"></script>
-<script src="/nexus-ui/js/components/nux-empty.js"></script>
+<!-- Vue组件 -->
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.2/js/components/nux-toast.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.2/js/components/nux-modal.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.2/js/components/nux-drawer.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.2/js/components/nux-empty.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.2/js/components/nux-stat-card.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.2/js/components/nux-confirm.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.2/js/components/nux-tab-group.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.2/js/components/nux-pagination.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.2/js/components/nux-breadcrumb.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.2/js/components/nux-error-state.js"></script>
 
-<!-- Composables（需要先引入nexus-utils.js） -->
-<script src="/nexus-ui/js/composables/use-mobile.js"></script>
-<script src="/nexus-ui/js/composables/use-loading.js"></script>
+<!-- Composables -->
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.2/js/composables/use-mobile.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.2/js/composables/use-loading.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.2/js/composables/use-pagination.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.2/js/composables/use-search.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.2/js/composables/use-sort.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.2/js/composables/use-theme.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.2/js/composables/use-sse.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.2/js/composables/use-auth.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.2/js/composables/use-collection.js"></script>
 ```
 
 ## 主题配置
@@ -54,11 +63,15 @@
 ## 暗色模式
 
 ```javascript
+// 方式1：手动
 document.documentElement.setAttribute('data-theme', 'dark'); // 开启
 document.documentElement.setAttribute('data-theme', 'light'); // 关闭
+
+// 方式2：useTheme composable
+const { isDark, toggleTheme } = useTheme();
 ```
 
-## API
+## API参考
 
 ### NexusApi
 
@@ -73,9 +86,20 @@ api.createCrud('/notes'); // 返回 { create, list, get, update, delete }
 
 ```javascript
 NexusUtils.formatDate(dateString);
+NexusUtils.formatDateShort(dateString);
 NexusUtils.formatCurrency(amount);
+NexusUtils.formatNumber(num, decimals);
+NexusUtils.formatPhone(phone);        // 138****1234
+NexusUtils.formatMsg(markdownContent); // Markdown简易渲染
+NexusUtils.truncateText(text, maxLen);
 NexusUtils.debounce(fn, 300);
 NexusUtils.throttle(fn, 300);
+NexusUtils.generateId();
+NexusUtils.deepClone(obj);
+NexusUtils.pick(obj, keys);
+NexusUtils.omit(obj, keys);
+NexusUtils.downloadFile(content, filename, mimeType);
+NexusUtils.autoResize(textareaElement);
 ```
 
 ### NexusStore
@@ -94,6 +118,16 @@ app.component('nux-toast', NuxToast);
 app.component('nux-modal', NuxModal);
 app.component('nux-drawer', NuxDrawer);
 app.component('nux-empty', NuxEmpty);
+app.component('nux-stat-card', NuxStatCard);
+app.component('nux-confirm', NuxConfirm);
+app.component('nux-tab-group', NuxTabGroup);
+app.component('nux-pagination', NuxPagination);
+app.component('nux-breadcrumb', NuxBreadcrumb);
+app.component('nux-error-state', NuxErrorState);
+
+// 命令式调用
+showToast('操作成功', 'success');
+nuxConfirm('确定删除吗？').then(ok => { ... });
 ```
 
 ### Composables
@@ -101,4 +135,11 @@ app.component('nux-empty', NuxEmpty);
 ```javascript
 const { isMobile, mobileMenuOpen, toggleMenu, closeMenu } = useMobile();
 const { loading, error, withLoading } = useLoading();
+const { pagination, totalPages, hasNext, hasPrev, nextPage, prevPage, setTotal } = usePagination();
+const { keyword, isSearchMode, doSearch, clearSearch } = useSearch();
+const { sortField, sortOrder, toggleSort, sortList } = useSort();
+const { isDark, toggleTheme } = useTheme();
+const { status, data, connect, disconnect } = useSSE();
+const { isAuthenticated, isAdmin, hasRole, requireAuth } = useAuth(store);
+const { items, total, setItems, addItem, updateItem, deleteItem } = useCollection();
 ```

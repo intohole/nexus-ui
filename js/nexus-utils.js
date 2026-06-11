@@ -72,6 +72,47 @@
             URL.revokeObjectURL(url);
         },
 
+        formatPhone(phone) {
+            if (!phone || phone.length < 7) return phone || '';
+            return phone.substring(0, 3) + '****' + phone.substring(phone.length - 4);
+        },
+
+        formatMsg(content) {
+            if (!content) return '';
+            let html = content
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
+                .replace(/`([^`]+)`/g, '<code>$1</code>')
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.+?)\*/g, '<em>$1</em>')
+                .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+                .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+                .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+                .replace(/^- (.+)$/gm, '<li>$1</li>')
+                .replace(/\n/g, '<br>');
+            html = html.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
+            html = html.replace(/<\/ul><ul>/g, '');
+            return html;
+        },
+
+        autoResize(el) {
+            if (!el) return;
+            el.style.height = 'auto';
+            el.style.height = el.scrollHeight + 'px';
+        },
+
+        pick(obj, keys) {
+            const result = {};
+            keys.forEach(key => { if (key in obj) result[key] = obj[key]; });
+            return result;
+        },
+
+        omit(obj, keys) {
+            const result = { ...obj };
+            keys.forEach(key => delete result[key]);
+            return result;
+        },
+
         setViewportHeight() {
             const vh = window.innerHeight * 0.01;
             document.documentElement.style.setProperty('--nx-vh', `${vh}px`);
