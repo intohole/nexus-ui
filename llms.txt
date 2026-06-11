@@ -1,0 +1,104 @@
+# Nexus UI
+
+统一前端基础设施工程，为所有项目提供设计系统、移动端适配、通用组件和工具函数。
+
+## 引入方式
+
+### CSS（在HTML head中）
+
+```html
+<!-- 方式1：全量引入（推荐） -->
+<link rel="stylesheet" href="/nexus-ui/css/nexus-all.css">
+
+<!-- 方式2：按需引入 -->
+<link rel="stylesheet" href="/nexus-ui/css/nexus-design.css">
+<link rel="stylesheet" href="/nexus-ui/css/nexus-themes.css">
+<link rel="stylesheet" href="/nexus-ui/css/nexus-mobile.css">
+<link rel="stylesheet" href="/nexus-ui/css/nexus-components.css">
+```
+
+### JS（在Vue 3之后引入）
+
+```html
+<!-- 基础工具（必须） -->
+<script src="/nexus-ui/js/nexus-utils.js"></script>
+
+<!-- 按需引入 -->
+<script src="/nexus-ui/js/nexus-api.js"></script>
+<script src="/nexus-ui/js/nexus-store.js"></script>
+<script src="/nexus-ui/js/user-center-sdk.js"></script>
+
+<!-- Vue组件（需要先引入nexus-utils.js） -->
+<script src="/nexus-ui/js/components/nux-toast.js"></script>
+<script src="/nexus-ui/js/components/nux-modal.js"></script>
+<script src="/nexus-ui/js/components/nux-drawer.js"></script>
+<script src="/nexus-ui/js/components/nux-empty.js"></script>
+
+<!-- Composables（需要先引入nexus-utils.js） -->
+<script src="/nexus-ui/js/composables/use-mobile.js"></script>
+<script src="/nexus-ui/js/composables/use-loading.js"></script>
+```
+
+## 主题配置
+
+在 `<body>` 标签上添加应用class即可切换特色色：
+
+```html
+<body class="app-one-note">  <!-- 青色 #14b8a6 -->
+<body class="app-wisepath">  <!-- 粉红 #ec4899 -->
+<body class="app-lion">      <!-- 琥珀 #f59e0b -->
+```
+
+可用主题：app-prompt, app-prompt-manager, app-lion, app-golden-fish, app-code-block, app-one-note, app-ai-pet, app-verse-craft, app-financial-kg, app-resume-ai, app-bee-memory, app-chroma, app-mini-deploy, app-usercenter, app-wisepath, app-golden
+
+## 暗色模式
+
+```javascript
+document.documentElement.setAttribute('data-theme', 'dark'); // 开启
+document.documentElement.setAttribute('data-theme', 'light'); // 关闭
+```
+
+## API
+
+### NexusApi
+
+```javascript
+const api = new NexusApi({ baseUrl: '/api/v1', tokenKey: 'token' });
+api.get('/notes');
+api.post('/notes', { title: 'Hello' });
+api.createCrud('/notes'); // 返回 { create, list, get, update, delete }
+```
+
+### NexusUtils
+
+```javascript
+NexusUtils.formatDate(dateString);
+NexusUtils.formatCurrency(amount);
+NexusUtils.debounce(fn, 300);
+NexusUtils.throttle(fn, 300);
+```
+
+### NexusStore
+
+```javascript
+const store = new NexusStore({ notes: [] }, { persistKeys: ['token', 'user'] });
+store.get('notes');
+store.set('notes', data);
+store.logout();
+```
+
+### Vue组件
+
+```javascript
+app.component('nux-toast', NuxToast);
+app.component('nux-modal', NuxModal);
+app.component('nux-drawer', NuxDrawer);
+app.component('nux-empty', NuxEmpty);
+```
+
+### Composables
+
+```javascript
+const { isMobile, mobileMenuOpen, toggleMenu, closeMenu } = useMobile();
+const { loading, error, withLoading } = useLoading();
+```

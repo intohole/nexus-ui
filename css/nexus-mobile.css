@@ -1,0 +1,322 @@
+/*
+ * Nexus Mobile — 移动端基础设施
+ * 引入此文件即可获得：移动端布局组件、dvh支持、安全区域、触摸优化
+ *
+ * 依赖：nexus-design.css（必须先引入）
+ * 用法：在 nexus-design.css 之后引入此文件
+ */
+
+/* ========== 视口高度修正 ========== */
+:root {
+  --nx-vh: 1vh;
+  --nx-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --nx-safe-top: env(safe-area-inset-top, 0px);
+  --nx-safe-left: env(safe-area-inset-left, 0px);
+  --nx-safe-right: env(safe-area-inset-right, 0px);
+}
+
+@supports (height: 1dvh) {
+  :root { --nx-vh: 1dvh; }
+}
+
+/* ========== 响应式断点变量 ========== */
+:root {
+  --nx-bp-sm: 480px;
+  --nx-bp-md: 768px;
+  --nx-bp-lg: 1024px;
+  --nx-bp-xl: 1200px;
+}
+
+/* ========== 移动端布局容器 ========== */
+.nx-app {
+  display: flex;
+  min-height: calc(var(--nx-vh) * 100);
+  min-height: 100dvh;
+}
+
+.nx-app-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========== 汉堡菜单按钮 ========== */
+.nx-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: var(--nx-radius-md);
+  transition: background var(--nx-transition-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nx-hamburger:hover { background: var(--nx-bg-hover); }
+.nx-hamburger:active { background: var(--nx-border); }
+
+.nx-hamburger-line {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--nx-text-heading);
+  border-radius: 1px;
+  transition: all var(--nx-transition-base);
+}
+
+.nx-hamburger-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: center;
+}
+
+.nx-hamburger.open .nx-hamburger-line:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.nx-hamburger.open .nx-hamburger-line:nth-child(2) {
+  opacity: 0;
+}
+.nx-hamburger.open .nx-hamburger-line:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* ========== 移动端抽屉侧边栏 ========== */
+.nx-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 998;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--nx-transition-slow), visibility var(--nx-transition-slow);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nx-drawer-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.nx-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 999;
+  width: 280px;
+  max-width: 85vw;
+  background: var(--nx-bg-surface);
+  border-right: 1px solid var(--nx-border);
+  transform: translateX(-100%);
+  transition: transform var(--nx-transition-slow);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.nx-drawer.open {
+  transform: translateX(0);
+}
+
+.nx-drawer-right {
+  left: auto;
+  right: 0;
+  border-right: none;
+  border-left: 1px solid var(--nx-border);
+  transform: translateX(100%);
+}
+
+.nx-drawer-right.open {
+  transform: translateX(0);
+}
+
+/* ========== 底部导航栏 ========== */
+.nx-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 90;
+  height: 56px;
+  padding-bottom: var(--nx-safe-bottom);
+  background: var(--nx-glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--nx-border);
+  align-items: center;
+  justify-content: space-around;
+}
+
+.nx-bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 48px;
+  min-height: 44px;
+  padding: 4px 0;
+  color: var(--nx-text-muted);
+  font-size: 10px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color var(--nx-transition-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nx-bottom-nav-item:active { color: var(--app-accent); }
+.nx-bottom-nav-item.active { color: var(--app-accent); }
+
+.nx-bottom-nav-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+/* ========== 移动端模态框 ========== */
+@media (max-width: 768px) {
+  .nx-modal {
+    max-width: none;
+    width: 100%;
+    height: auto;
+    max-height: 90dvh;
+    margin: auto 0 0 0;
+    border-radius: var(--nx-radius-xl) var(--nx-radius-xl) 0 0;
+    padding: var(--nx-space-5);
+  }
+
+  .nx-modal-overlay {
+    align-items: flex-end;
+  }
+}
+
+/* ========== 移动端表格容器 ========== */
+.nx-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+  .nx-table-scroll {
+    margin: 0 calc(-1 * var(--nx-space-4));
+    padding: 0 var(--nx-space-4);
+  }
+}
+
+/* ========== 触摸优化 ========== */
+@media (hover: none) and (pointer: coarse) {
+  .nx-btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .nx-nav-link {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  .nx-sidebar-item {
+    min-height: 44px;
+  }
+
+  .nx-input, .nx-select {
+    min-height: 44px;
+    font-size: 16px;
+  }
+}
+
+/* ========== 响应式断点 ========== */
+@media (max-width: 768px) {
+  .nx-hamburger { display: flex; }
+  .nx-sidebar { display: none; }
+  .nx-bottom-nav { display: flex; }
+
+  .nx-nav {
+    padding: 0 var(--nx-space-4);
+    height: 52px;
+  }
+
+  .nx-layout-main {
+    padding: var(--nx-space-4);
+    padding-bottom: calc(var(--nx-space-4) + 56px + var(--nx-safe-bottom));
+  }
+
+  .nx-card, .nx-card-solid { padding: var(--nx-space-4); }
+  .nx-page-title { font-size: var(--nx-text-xl); }
+
+  .nx-app { flex-direction: column; }
+
+  .nx-hide-mobile { display: none !important; }
+  .nx-show-mobile { display: flex !important; }
+}
+
+@media (min-width: 769px) {
+  .nx-show-mobile { display: none !important; }
+  .nx-hide-desktop { display: none !important; }
+}
+
+@media (max-width: 480px) {
+  .nx-layout-main { padding: var(--nx-space-3); }
+  .nx-card, .nx-card-solid { padding: var(--nx-space-3); }
+  .nx-page-title { font-size: var(--nx-text-lg); }
+  .nx-modal { padding: var(--nx-space-4); }
+}
+
+/* ========== 暗色模式移动端适配 ========== */
+[data-theme="dark"] .nx-drawer {
+  background: var(--nx-bg-surface);
+}
+
+[data-theme="dark"] .nx-bottom-nav {
+  background: rgba(10, 10, 15, 0.85);
+  border-top-color: var(--nx-border);
+}
+
+[data-theme="dark"] .nx-hamburger-line {
+  background: var(--nx-text-heading);
+}
+
+/* ========== Element Plus 移动端覆盖 ========== */
+@media (max-width: 768px) {
+  .el-dialog {
+    width: 95% !important;
+    margin-top: 5vh !important;
+  }
+
+  .el-drawer {
+    width: 85% !important;
+  }
+
+  .el-table {
+    font-size: 13px;
+  }
+
+  .el-form-item__label {
+    float: none !important;
+    text-align: left !important;
+    width: auto !important;
+    padding-bottom: 4px !important;
+  }
+
+  .el-form-item__content {
+    margin-left: 0 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .el-dialog {
+    width: 98% !important;
+    margin-top: 2vh !important;
+  }
+
+  .el-message-box {
+    width: 92% !important;
+  }
+}

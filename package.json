@@ -1,0 +1,52 @@
+{
+  "name": "nexus-ui",
+  "version": "1.0.0",
+  "description": "Nexus Design System — 统一前端基础设施，Vue 3 CDN 全局模式",
+  "main": "css/nexus-all.css",
+  "files": [
+    "css/",
+    "js/"
+  ],
+  "keywords": [
+    "design-system",
+    "vue3",
+    "cdn",
+    "glassmorphism",
+    "mobile-first",
+    "dark-mode"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "structure": {
+    "css/": {
+      "nexus-design.css": "设计系统核心（变量、组件、暗色模式）",
+      "nexus-themes.css": "16个应用特色色主题配置",
+      "nexus-mobile.css": "移动端基础设施（dvh、安全区域、抽屉、触摸优化）",
+      "nexus-all.css": "一键引入聚合包"
+    },
+    "js/": {
+      "nexus-api.js": "通用API客户端（重试、取消、401处理、CRUD）",
+      "nexus-utils.js": "工具函数（格式化、防抖节流、视口高度）",
+      "nexus-store.js": "Vue 3响应式状态管理（持久化）",
+      "user-center-sdk.js": "用户中心SDK（登录/注册/Token/权限/VIP）"
+    },
+    "js/components/": {
+      "nux-toast.js": "Toast通知组件",
+      "nux-modal.js": "Modal弹窗组件",
+      "nux-drawer.js": "Drawer抽屉组件",
+      "nux-empty.js": "空状态组件"
+    },
+    "js/composables/": {
+      "use-mobile.js": "移动端检测composable",
+      "use-loading.js": "加载状态composable"
+    }
+  },
+  "usage": {
+    "css": "在HTML中引入: <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/nexus-ui@1/css/nexus-all.css'>",
+    "js": "在Vue 3之后引入: <script src='https://cdn.jsdelivr.net/npm/nexus-ui@1/js/nexus-utils.js'></script>",
+    "theme": "在body上添加应用class: <body class='app-one-note'>"
+  }
+}

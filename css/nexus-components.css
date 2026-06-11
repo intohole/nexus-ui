@@ -1,0 +1,74 @@
+.nux-toast-container {
+  position: fixed;
+  top: var(--nx-space-6);
+  right: var(--nx-space-6);
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  gap: var(--nx-space-2);
+  pointer-events: none;
+}
+
+.nux-toast-item {
+  display: flex;
+  align-items: center;
+  gap: var(--nx-space-3);
+  padding: var(--nx-space-3) var(--nx-space-5);
+  border-radius: var(--nx-radius-md);
+  font-size: var(--nx-text-sm);
+  color: #fff;
+  box-shadow: var(--nx-shadow-md);
+  pointer-events: auto;
+  max-width: 360px;
+}
+
+.nux-toast-success { background: var(--nx-success); }
+.nux-toast-error { background: var(--nx-danger); }
+.nux-toast-warning { background: var(--nx-warning); color: #1a1a1a; }
+.nux-toast-info { background: var(--nx-info); }
+
+.nux-toast-icon { font-size: var(--nx-text-lg); line-height: 1; flex-shrink: 0; }
+.nux-toast-msg { flex: 1; word-break: break-word; }
+
+.nux-toast-enter-active { transition: all 0.3s ease; }
+.nux-toast-leave-active { transition: all 0.2s ease; }
+.nux-toast-enter-from { transform: translateX(100%); opacity: 0; }
+.nux-toast-leave-to { transform: translateX(100%); opacity: 0; }
+
+.nux-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--nx-space-3);
+  margin-top: var(--nx-space-6);
+  padding-top: var(--nx-space-4);
+  border-top: 1px solid var(--nx-border);
+}
+
+.nux-modal-enter-active { transition: opacity 0.2s ease; }
+.nux-modal-leave-active { transition: opacity 0.15s ease; }
+.nux-modal-enter-from,
+.nux-modal-leave-to { opacity: 0; }
+
+.nux-drawer-overlay-enter-active { transition: opacity 0.3s ease; }
+.nux-drawer-overlay-leave-active { transition: opacity 0.2s ease; }
+.nux-drawer-overlay-enter-from,
+.nux-drawer-overlay-leave-to { opacity: 0; }
+
+.nux-drawer-left-enter-active,
+.nux-drawer-left-leave-active { transition: transform 0.3s ease; }
+.nux-drawer-left-enter-from,
+.nux-drawer-left-leave-to { transform: translateX(-100%); }
+
+.nux-drawer-right-enter-active,
+.nux-drawer-right-leave-active { transition: transform 0.3s ease; }
+.nux-drawer-right-enter-from,
+.nux-drawer-right-leave-to { transform: translateX(100%); }
+
+@media (max-width: 768px) {
+  .nux-toast-container {
+    left: var(--nx-space-4);
+    right: var(--nx-space-4);
+    top: var(--nx-space-4);
+  }
+  .nux-toast-item { max-width: none; }
+}

@@ -1,0 +1,52 @@
+/*
+ * Nexus Design System — 应用特色色配置
+ * 每个应用只需覆盖 --app-accent 和 --app-accent-rgb
+ */
+
+/* prompt — AI提示词工坊 — 靛蓝 */
+.app-prompt { --app-accent: #6366f1; --app-accent-rgb: 99, 102, 241; --app-accent-hover: #818cf8; --app-name: "Prompt"; }
+
+/* prompt-manager — 提示词管理 — 紫罗兰 */
+.app-prompt-manager { --app-accent: #8b5cf6; --app-accent-rgb: 139, 92, 246; --app-accent-hover: #a78bfa; --app-name: "PromptManager"; }
+
+/* lion — 配置中心 — 琥珀 */
+.app-lion { --app-accent: #f59e0b; --app-accent-rgb: 245, 158, 11; --app-accent-hover: #fbbf24; --app-name: "Lion"; }
+
+/* goldenFish — 金鱼决策 — 天蓝 */
+.app-golden-fish { --app-accent: #0ea5e9; --app-accent-rgb: 14, 165, 233; --app-accent-hover: #38bdf8; --app-name: "GoldenFish"; }
+
+/* codeBlock — 代码积木 — 翠绿 */
+.app-code-block { --app-accent: #10b981; --app-accent-rgb: 16, 185, 129; --app-accent-hover: #34d399; --app-name: "CodeBlock"; }
+
+/* oneNote — 智能笔记 — 青色 */
+.app-one-note { --app-accent: #14b8a6; --app-accent-rgb: 20, 184, 166; --app-accent-hover: #2dd4bf; --app-name: "OneNote"; }
+
+/* aiPet — AI宠物 — 珊瑚 */
+.app-ai-pet { --app-accent: #f97316; --app-accent-rgb: 249, 115, 22; --app-accent-hover: #fb923c; --app-name: "AiPet"; }
+
+/* verseCraft — 诗词工坊 — 玫瑰 */
+.app-verse-craft { --app-accent: #f43f5e; --app-accent-rgb: 244, 63, 94; --app-accent-hover: #fb7185; --app-name: "VerseCraft"; }
+
+/* financialKG — 金融知识图谱 — 靛蓝 */
+.app-financial-kg { --app-accent: #6366f1; --app-accent-rgb: 99, 102, 241; --app-accent-hover: #818cf8; --app-name: "FinancialKG"; }
+
+/* resumeAI — 简历AI — 蓝绿 */
+.app-resume-ai { --app-accent: #06b6d4; --app-accent-rgb: 6, 182, 212; --app-accent-hover: #22d3ee; --app-name: "ResumeAI"; }
+
+/* beeMemory — 记忆蜂 — 金色 */
+.app-bee-memory { --app-accent: #eab308; --app-accent-rgb: 234, 179, 8; --app-accent-hover: #facc15; --app-name: "BeeMemory"; }
+
+/* chroma-embedding-server — 向量服务 — 粉紫 */
+.app-chroma { --app-accent: #d946ef; --app-accent-rgb: 217, 70, 239; --app-accent-hover: #e879f9; --app-name: "Chroma"; }
+
+/* miniDeploy — 部署平台 — 天蓝 */
+.app-mini-deploy { --app-accent: #0ea5e9; --app-accent-rgb: 14, 165, 233; --app-accent-hover: #38bdf8; --app-name: "MiniDeploy"; }
+
+/* usercenter — 用户中心 — 靛蓝 */
+.app-usercenter { --app-accent: #6366f1; --app-accent-rgb: 99, 102, 241; --app-accent-hover: #818cf8; --app-name: "UserCenter"; }
+
+/* WisePath — 智慧路径 — 粉红 */
+.app-wisepath { --app-accent: #ec4899; --app-accent-rgb: 236, 72, 153; --app-accent-hover: #f472b6; --app-name: "WisePath"; }
+
+/* golden — 金色数据 — 靛蓝 */
+.app-golden { --app-accent: #6366f1; --app-accent-rgb: 99, 102, 241; --app-accent-hover: #818cf8; --app-name: "Golden"; }
