@@ -9,6 +9,8 @@
             this.tokenKey = config.tokenKey || 'token';
             this.userKey = config.userKey || 'user';
             this.onUnauthorized = config.onUnauthorized || null;
+            this.timeout = config.timeout || 30000;
+            this.responseAdapter = config.responseAdapter || null;
             this.abortControllers = new Map();
         }
 
@@ -16,6 +18,8 @@
             const controller = new AbortController();
             const requestId = `${url}_${Date.now()}`;
             this.abortControllers.set(requestId, controller);
+
+            const timeoutId = setTimeout(() => controller.abort(), options.timeout || this.timeout);
 
             const token = localStorage.getItem(this.tokenKey);
             const headers = {
@@ -44,9 +48,14 @@
                         try { data = JSON.parse(text); } catch { data = { detail: text }; }
                     }
 
+                    if (this.responseAdapter) {
+                        data = this.responseAdapter(data, response);
+                    }
+
                     if (!response.ok) {
                         const errorMsg = this._extractError(data);
                         if (response.status === 401) {
+                            clearTimeout(timeoutId);
                             this.abortControllers.delete(requestId);
                             localStorage.removeItem(this.tokenKey);
                             localStorage.removeItem(this.userKey);
@@ -56,17 +65,23 @@
                         throw new Error(errorMsg);
                     }
 
+                    clearTimeout(timeoutId);
                     this.abortControllers.delete(requestId);
                     return data;
                 } catch (error) {
                     lastError = error;
                     if (error.name === 'AbortError') {
+                        clearTimeout(timeoutId);
                         this.abortControllers.delete(requestId);
+                        if (lastError !== controller.signal.reason) {
+                            throw new Error('请求超时，请稍后重试');
+                        }
                         throw error;
                     }
                     if (attempt < maxAttempts) {
                         await new Promise(r => setTimeout(r, 1000 * attempt));
                     } else {
+                        clearTimeout(timeoutId);
                         this.abortControllers.delete(requestId);
                     }
                 }

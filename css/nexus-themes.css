@@ -50,3 +50,27 @@
 
 /* golden — 金色数据 — 靛蓝 */
 .app-golden { --app-accent: #6366f1; --app-accent-rgb: 99, 102, 241; --app-accent-hover: #818cf8; --app-name: "Golden"; }
+
+/* spider — 智能爬虫 — 石墨绿 */
+.app-spider { --app-accent: #059669; --app-accent-rgb: 5, 150, 105; --app-accent-hover: #10b981; --app-name: "Spider"; }
+
+/* userFeedback — 反馈中台 — 橙红 */
+.app-user-feedback { --app-accent: #ef4444; --app-accent-rgb: 239, 68, 68; --app-accent-hover: #f87171; --app-name: "UserFeedback"; }
+
+/* geniusStudent — 天才学伴 — 紫蓝 */
+.app-genius-student { --app-accent: #7c3aed; --app-accent-rgb: 124, 58, 237; --app-accent-hover: #8b5cf6; --app-name: "GeniusStudent"; }
+
+/* nexus-ui — 设计系统 — 品牌蓝 */
+.app-nexus-ui { --app-accent: #3b82f6; --app-accent-rgb: 59, 130, 246; --app-accent-hover: #60a5fa; --app-name: "NexusUI"; }
+
+/* admin — 管理后台 — 深灰蓝 */
+.app-admin { --app-accent: #475569; --app-accent-rgb: 71, 85, 105; --app-accent-hover: #64748b; --app-name: "Admin"; }
+
+/* dashboard — 仪表盘 — 渐变紫 */
+.app-dashboard { --app-accent: #8b5cf6; --app-accent-rgb: 139, 92, 246; --app-accent-hover: #a78bfa; --app-name: "Dashboard"; }
+
+/* chat — 对话系统 — 薄荷绿 */
+.app-chat { --app-accent: #34d399; --app-accent-rgb: 52, 211, 153; --app-accent-hover: #6ee7b7; --app-name: "Chat"; }
+
+/* docs — 文档中心 — 靛青 */
+.app-docs { --app-accent: #0891b2; --app-accent-rgb: 8, 145, 178; --app-accent-hover: #06b6d4; --app-name: "Docs"; }

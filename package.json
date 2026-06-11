@@ -1,6 +1,6 @@
 {
   "name": "nexus-ui",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Nexus Design System — 统一前端基础设施，Vue 3 CDN 全局模式",
   "main": "css/nexus-all.css",
   "files": [
@@ -13,23 +13,26 @@
     "cdn",
     "glassmorphism",
     "mobile-first",
-    "dark-mode"
+    "dark-mode",
+    "component-library"
   ],
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/intohole/nexus-ui"
   },
   "structure": {
     "css/": {
       "nexus-design.css": "设计系统核心（变量、组件、暗色模式）",
-      "nexus-themes.css": "16个应用特色色主题配置",
+      "nexus-themes.css": "24个应用特色色主题配置",
       "nexus-mobile.css": "移动端基础设施（dvh、安全区域、抽屉、触摸优化）",
+      "nexus-components.css": "组件样式（Toast/Modal/Drawer/Table/Form/Badge/Avatar/Skeleton等）",
+      "nexus-layout.css": "布局样式（Sidebar/TopNav/响应式导航）",
       "nexus-all.css": "一键引入聚合包"
     },
     "js/": {
-      "nexus-api.js": "通用API客户端（重试、取消、401处理、CRUD）",
-      "nexus-utils.js": "工具函数（格式化、防抖节流、视口高度）",
+      "nexus-api.js": "通用API客户端（重试、超时、取消、401处理、CRUD、响应适配器）",
+      "nexus-utils.js": "工具函数（格式化、防抖节流、视口高度、Markdown）",
       "nexus-store.js": "Vue 3响应式状态管理（持久化）",
       "user-center-sdk.js": "用户中心SDK（登录/注册/Token/权限/VIP）"
     },
@@ -37,16 +40,36 @@
       "nux-toast.js": "Toast通知组件",
       "nux-modal.js": "Modal弹窗组件",
       "nux-drawer.js": "Drawer抽屉组件",
-      "nux-empty.js": "空状态组件"
+      "nux-empty.js": "空状态组件",
+      "nux-stat-card.js": "统计卡片组件",
+      "nux-confirm.js": "确认对话框组件",
+      "nux-tab-group.js": "标签页组件",
+      "nux-pagination.js": "分页组件",
+      "nux-breadcrumb.js": "面包屑组件",
+      "nux-error-state.js": "错误状态组件",
+      "nux-layout-sidebar.js": "侧边栏布局组件",
+      "nux-layout-topnav.js": "顶部导航布局组件",
+      "nux-form-group.js": "表单分组组件",
+      "nux-data-table.js": "数据表格组件",
+      "nux-badge.js": "徽标组件",
+      "nux-avatar.js": "头像组件",
+      "nux-skeleton.js": "骨架屏组件"
     },
     "js/composables/": {
       "use-mobile.js": "移动端检测composable",
-      "use-loading.js": "加载状态composable"
+      "use-loading.js": "加载状态composable",
+      "use-pagination.js": "分页composable",
+      "use-search.js": "搜索composable",
+      "use-sort.js": "排序composable",
+      "use-theme.js": "主题切换composable",
+      "use-sse.js": "SSE连接composable",
+      "use-auth.js": "认证composable",
+      "use-collection.js": "集合CRUD composable"
     }
   },
   "usage": {
-    "css": "在HTML中引入: <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/nexus-ui@1/css/nexus-all.css'>",
-    "js": "在Vue 3之后引入: <script src='https://cdn.jsdelivr.net/npm/nexus-ui@1/js/nexus-utils.js'></script>",
+    "css": "在HTML中引入: <link rel='stylesheet' href='https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.1.0/css/nexus-all.css'>",
+    "js": "在Vue 3之后引入: <script src='https://cdn.jsdelivr.net/gh/intohole/nexus-ui@v1.1.0/js/nexus-utils.js'></script>",
     "theme": "在body上添加应用class: <body class='app-one-note'>"
   }
 }
