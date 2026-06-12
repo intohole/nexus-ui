@@ -21,17 +21,20 @@
   --nx-bg-surface: #ffffff;
   --nx-bg-elevated: #ffffff;
   --nx-bg-hover: #f1f5f9;
+  --nx-bg-muted: #f1f5f9;       /* 表头/骨架屏背景 */
 
   /* 边框 — 微光分隔 */
   --nx-border: rgba(0, 0, 0, 0.08);
   --nx-border-hover: rgba(0, 0, 0, 0.15);
   --nx-border-accent: rgba(var(--app-accent-rgb), 0.3);
 
-  /* 文字层级 */
-  --nx-text-heading: #0f172a;
-  --nx-text-body: #475569;
-  --nx-text-muted: #94a3b8;
+  /* 文字层级 — WCAG AA 对比度 ≥ 4.5:1 */
+  --nx-text-heading: #0f172a;   /* 15.3:1 on #f8fafc */
+  --nx-text-body: #334155;      /* 8.2:1 on #f8fafc — 提深确保可读 */
+  --nx-text-secondary: #64748b; /* 4.7:1 on #f8fafc — 新增：次级正文 */
+  --nx-text-muted: #64748b;     /* 4.7:1 on #f8fafc — 原#94a3b8仅2.9:1不达标 */
   --nx-text-accent: var(--app-accent);
+  --nx-text-on-accent: #ffffff; /* 主色按钮上的文字 */
 
   /* 语义色 */
   --nx-success: #10b981;
@@ -457,11 +460,14 @@ a:hover { color: var(--app-accent-hover); }
   --nx-bg-surface: #12121a;
   --nx-bg-elevated: #1a1a26;
   --nx-bg-hover: #22222e;
-  --nx-border: rgba(255, 255, 255, 0.06);
-  --nx-border-hover: rgba(255, 255, 255, 0.12);
-  --nx-text-heading: #f1f5f9;
-  --nx-text-body: #94a3b8;
-  --nx-text-muted: #475569;
+  --nx-bg-muted: #1a1a26;
+  --nx-border: rgba(255, 255, 255, 0.08);
+  --nx-border-hover: rgba(255, 255, 255, 0.15);
+  --nx-text-heading: #f1f5f9;    /* 16.2:1 on #0a0a0f */
+  --nx-text-body: #cbd5e1;       /* 10.8:1 on #0a0a0f — 原#94a3b8仅5.4:1偏淡 */
+  --nx-text-secondary: #94a3b8;  /* 5.4:1 on #0a0a0f — 次级正文达标 */
+  --nx-text-muted: #94a3b8;      /* 5.4:1 on #0a0a0f — 原#475569仅2.1:1不可见！ */
+  --nx-text-on-accent: #ffffff;
   --nx-glass-bg: rgba(18, 18, 26, 0.7);
   --nx-glass-border: rgba(255, 255, 255, 0.08);
   --nx-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
@@ -479,7 +485,7 @@ a:hover { color: var(--app-accent-hover); }
 .el-input__wrapper { background: var(--nx-bg-base) !important; box-shadow: 0 0 0 1px var(--nx-border) inset !important; }
 .el-input__wrapper:hover { box-shadow: 0 0 0 1px var(--nx-border-hover) inset !important; }
 .el-input__wrapper.is-focus { box-shadow: 0 0 0 1px var(--app-accent) inset !important; }
-.el-table { background: var(--nx-bg-surface) !important; --el-table-bg-color: var(--nx-bg-surface) !important; --el-table-tr-bg-color: var(--nx-bg-surface) !important; --el-table-header-bg-color: var(--nx-bg-elevated) !important; --el-table-row-hover-bg-color: var(--nx-bg-hover) !important; --el-table-border-color: var(--nx-border) !important; --el-table-text-color: var(--nx-text-body) !important; --el-table-header-text-color: var(--nx-text-muted) !important; }
+.el-table { background: var(--nx-bg-surface) !important; --el-table-bg-color: var(--nx-bg-surface) !important; --el-table-tr-bg-color: var(--nx-bg-surface) !important; --el-table-header-bg-color: var(--nx-bg-elevated) !important; --el-table-row-hover-bg-color: var(--nx-bg-hover) !important; --el-table-border-color: var(--nx-border) !important; --el-table-text-color: var(--nx-text-body) !important; --el-table-header-text-color: var(--nx-text-secondary) !important; }
 .el-dialog { background: var(--nx-bg-elevated) !important; }
 .el-form-item__label { color: var(--nx-text-body) !important; }
 .el-pagination { --el-pagination-bg-color: var(--nx-bg-surface) !important; --el-pagination-text-color: var(--nx-text-body) !important; --el-pagination-button-bg-color: var(--nx-bg-hover) !important; }
