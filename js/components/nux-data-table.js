@@ -23,9 +23,9 @@
             },
             toggleRow(row) {
                 const key = row[this.rowKey];
-                const keys = this.allSelected ? this.selectedKeys.filter(k => k !== key) : [...this.selectedKeys, key];
-                if (!this.selectedKeys.includes(key)) keys.push(key);
-                else keys.splice(keys.indexOf(key), 1);
+                const keys = this.selectedKeys.includes(key)
+                    ? this.selectedKeys.filter(k => k !== key)
+                    : [...this.selectedKeys, key];
                 this.$emit('select', keys);
             },
             isSelected(row) {

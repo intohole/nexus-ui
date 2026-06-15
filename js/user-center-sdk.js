@@ -1,3 +1,4 @@
+(function() {
 class UserCenterSDK {
     constructor(config) {
         this.baseUrl = config.baseUrl.replace(/\/+$/, '');
@@ -355,3 +356,4 @@ class UserCenterSDK {
 }
 
 window.UserCenterSDK = UserCenterSDK;
+})();
