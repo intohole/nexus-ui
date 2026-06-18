@@ -49,6 +49,14 @@
 
         const _connectFetch = async (url) => {
             fetchController = new AbortController();
+            const readTimeout = options.readTimeout || 30000;
+            let readTimer = null;
+            const resetReadTimer = () => {
+                if (readTimer) clearTimeout(readTimer);
+                readTimer = setTimeout(() => {
+                    try { fetchController.abort(); } catch (e) {}
+                }, readTimeout);
+            };
             try {
                 const resp = await fetch(url, {
                     method: 'GET',
@@ -65,8 +73,10 @@
                 const reader = resp.body.getReader();
                 const decoder = new TextDecoder();
                 let buffer = '';
+                resetReadTimer();
                 while (true) {
                     const { done, value } = await reader.read();
+                    resetReadTimer();
                     if (done) break;
                     buffer += decoder.decode(value, { stream: true });
                     const lines = buffer.split('\n');
@@ -86,7 +96,12 @@
                 if (e.name !== 'AbortError') {
                     status.value = 'disconnected';
                     _scheduleReconnect(url);
+                } else {
+                    status.value = 'disconnected';
+                    _scheduleReconnect(url);
                 }
+            } finally {
+                if (readTimer) { clearTimeout(readTimer); readTimer = null; }
             }
         };
 

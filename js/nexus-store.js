@@ -12,6 +12,8 @@
             this._persistKeys = options.persistKeys || ['token', 'user'];
             this._tokenKey = options.tokenKey || 'token';
             this._userKey = options.userKey || 'user';
+            this._unwatchFns = [];
+            this._isAuthenticated = computed(() => !!this._state.token && !!this._state.user);
             this._initPersistence();
         }
 
@@ -20,7 +22,14 @@
         get(key) { return this._state[key]; }
         set(key, value) { this._state[key] = value; }
 
-        get isAuthenticated() { return computed(() => !!this._state.token && !!this._state.user); }
+        get isAuthenticated() { return this._isAuthenticated.value; }
+
+        destroy() {
+            if (this._unwatchFns) {
+                this._unwatchFns.forEach(fn => { try { fn(); } catch (e) {} });
+                this._unwatchFns = [];
+            }
+        }
 
         logout() {
             this._state.user = null;
@@ -35,13 +44,14 @@
                     try { this._state[key] = key === 'user' ? JSON.parse(saved) : saved; }
                     catch (e) { console.error(`解析${key}失败:`, e); }
                 }
-                watch(() => this._state[key], (newVal) => {
+                const unwatch = watch(() => this._state[key], (newVal) => {
                     if (newVal) {
                         localStorage.setItem(key, typeof newVal === 'object' ? JSON.stringify(newVal) : newVal);
                     } else {
                         localStorage.removeItem(key);
                     }
                 }, { deep: true });
+                this._unwatchFns.push(unwatch);
             });
         }
     }

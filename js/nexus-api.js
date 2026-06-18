@@ -1,6 +1,9 @@
 (function() {
     const DEFAULT_BASE_URL = (window.PATH_PREFIX || '') + '/api';
     const MAX_RETRY = 3;
+    const MAX_ABORT_CONTROLLERS = 100;
+    const BASE_DELAY = 1000;
+    const MAX_DELAY = 30000;
 
     class NexusApi {
         constructor(config = {}) {
@@ -12,14 +15,34 @@
             this.timeout = config.timeout || 30000;
             this.responseAdapter = config.responseAdapter || null;
             this.abortControllers = new Map();
+            this._requestCounter = 0;
+        }
+
+        _generateRequestId(url) {
+            this._requestCounter = (this._requestCounter + 1) % Number.MAX_SAFE_INTEGER;
+            if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+                return `${url}_${crypto.randomUUID()}`;
+            }
+            return `${url}_${Date.now()}_${this._requestCounter}_${Math.random().toString(36).substring(2)}`;
+        }
+
+        _registerController(requestId, controller) {
+            if (this.abortControllers.size >= MAX_ABORT_CONTROLLERS) {
+                const oldestKey = this.abortControllers.keys().next().value;
+                const oldCtrl = this.abortControllers.get(oldestKey);
+                try { oldCtrl.abort(); } catch (e) {}
+                this.abortControllers.delete(oldestKey);
+            }
+            this.abortControllers.set(requestId, controller);
         }
 
         async request(url, options = {}) {
             const controller = new AbortController();
-            const requestId = `${url}_${Date.now()}`;
-            this.abortControllers.set(requestId, controller);
+            const requestId = this._generateRequestId(url);
+            this._registerController(requestId, controller);
 
-            const timeoutId = setTimeout(() => controller.abort(), options.timeout || this.timeout);
+            const timeoutValue = options.timeout !== undefined ? options.timeout : this.timeout;
+            const timeoutId = setTimeout(() => controller.abort(), timeoutValue);
 
             const token = localStorage.getItem(this.tokenKey);
             const headers = {
@@ -32,61 +55,55 @@
             const maxAttempts = isIdempotent ? this.maxRetry : 1;
             let lastError;
 
-            for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-                try {
-                    const response = await fetch(`${this.baseUrl}${url}`, {
-                        ...options, headers,
-                        signal: controller.signal
-                    });
+            try {
+                for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                    try {
+                        const response = await fetch(`${this.baseUrl}${url}`, {
+                            ...options, headers,
+                            signal: controller.signal
+                        });
 
-                    let data;
-                    const contentType = response.headers.get('content-type') || '';
-                    if (contentType.includes('application/json')) {
-                        data = await response.json();
-                    } else {
-                        const text = await response.text();
-                        try { data = JSON.parse(text); } catch { data = { detail: text }; }
-                    }
-
-                    if (this.responseAdapter) {
-                        data = this.responseAdapter(data, response);
-                    }
-
-                    if (!response.ok) {
-                        const errorMsg = this._extractError(data);
-                        if (response.status === 401) {
-                            clearTimeout(timeoutId);
-                            this.abortControllers.delete(requestId);
-                            localStorage.removeItem(this.tokenKey);
-                            localStorage.removeItem(this.userKey);
-                            if (this.onUnauthorized) this.onUnauthorized();
-                            throw new Error('登录已过期，请重新登录');
+                        let data;
+                        const contentType = response.headers.get('content-type') || '';
+                        if (contentType.includes('application/json')) {
+                            data = await response.json();
+                        } else {
+                            const text = await response.text();
+                            try { data = JSON.parse(text); } catch { data = { detail: text }; }
                         }
-                        throw new Error(errorMsg);
-                    }
 
-                    clearTimeout(timeoutId);
-                    this.abortControllers.delete(requestId);
-                    return data;
-                } catch (error) {
-                    lastError = error;
-                    if (error.name === 'AbortError') {
-                        clearTimeout(timeoutId);
-                        this.abortControllers.delete(requestId);
-                        if (lastError !== controller.signal.reason) {
+                        if (this.responseAdapter) {
+                            data = this.responseAdapter(data, response);
+                        }
+
+                        if (!response.ok) {
+                            const errorMsg = this._extractError(data);
+                            if (response.status === 401) {
+                                localStorage.removeItem(this.tokenKey);
+                                localStorage.removeItem(this.userKey);
+                                if (this.onUnauthorized) this.onUnauthorized();
+                                throw new Error('登录已过期，请重新登录');
+                            }
+                            throw new Error(errorMsg);
+                        }
+
+                        return data;
+                    } catch (error) {
+                        lastError = error;
+                        if (error.name === 'AbortError') {
                             throw new Error('请求超时，请稍后重试');
                         }
-                        throw error;
-                    }
-                    if (attempt < maxAttempts) {
-                        await new Promise(r => setTimeout(r, 1000 * attempt));
-                    } else {
-                        clearTimeout(timeoutId);
-                        this.abortControllers.delete(requestId);
+                        if (attempt < maxAttempts) {
+                            const delay = Math.min(MAX_DELAY, BASE_DELAY * 2 ** (attempt - 1)) * (0.5 + Math.random() * 0.5);
+                            await new Promise(r => setTimeout(r, delay));
+                        }
                     }
                 }
+                throw lastError;
+            } finally {
+                clearTimeout(timeoutId);
+                this.abortControllers.delete(requestId);
             }
-            throw lastError;
         }
 
         _extractError(data) {

@@ -18,7 +18,7 @@
 
         const requireAuth = (callback) => {
             if (!isAuthenticated.value) {
-                if (window.showToast) showToast('请先登录', 'warning');
+                if (window.showToast) window.showToast('请先登录', 'warning');
                 return false;
             }
             if (callback) callback();

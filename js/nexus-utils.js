@@ -53,10 +53,16 @@
         },
 
         generateId() {
-            return Date.now().toString(36) + Math.random().toString(36).substring(2);
+            if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+                return crypto.randomUUID();
+            }
+            return Date.now().toString(36) + Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
         },
 
         deepClone(obj) {
+            if (typeof structuredClone === 'function') {
+                try { return structuredClone(obj); } catch (e) { }
+            }
             return JSON.parse(JSON.stringify(obj));
         },
 
@@ -79,19 +85,22 @@
 
         formatMsg(content) {
             if (!content) return '';
-            let html = content
-                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-                .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
-                .replace(/`([^`]+)`/g, '<code>$1</code>')
-                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.+?)\*/g, '<em>$1</em>')
-                .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-                .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-                .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-                .replace(/^- (.+)$/gm, '<li>$1</li>')
-                .replace(/\n/g, '<br>');
-            html = html.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
-            html = html.replace(/<\/ul><ul>/g, '');
+            let html = String(content)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+            const codeBlocks = [];
+            html = html.replace(/```([\s\S]*?)```/g, (m, code) => {
+                codeBlocks.push(code.replace(/^\n/, ''));
+                return `\x00CODEBLOCK${codeBlocks.length - 1}\x00`;
+            });
+            html = html.replace(/`([^`]+)`/g, (m, code) => `<code>${code}</code>`);
+            html = html.replace(/\n/g, '<br>');
+            codeBlocks.forEach((code, i) => {
+                html = html.replace(`\x00CODEBLOCK${i}\x00`, `<pre><code>${code}</code></pre>`);
+            });
             return html;
         },
 
@@ -120,7 +129,8 @@
     };
 
     utils.setViewportHeight();
-    window.addEventListener('resize', utils.debounce(utils.setViewportHeight, 100));
+    utils._resizeHandler = utils.debounce(utils.setViewportHeight, 100);
+    window.addEventListener('resize', utils._resizeHandler);
 
     window.NexusUtils = utils;
 })();

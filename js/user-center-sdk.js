@@ -94,29 +94,40 @@ class UserCenterSDK {
         if (requireAuth && this._accessToken) {
             headers['Authorization'] = `Bearer ${this._accessToken}`;
         }
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), this.timeout);
         const options = {
             method,
             headers,
-            signal: AbortSignal.timeout(this.timeout)
+            signal: controller.signal
         };
         if (data && (method === 'POST' || method === 'PUT')) {
             options.body = JSON.stringify(data);
         }
-        const response = await fetch(url, options);
-        if (response.status === 401 && requireAuth && this._refreshToken && !skipRefresh) {
-            const refreshed = await this.refreshAccessToken();
-            if (refreshed) {
-                return this._request(method, path, data, requireAuth, true);
+        try {
+            const response = await fetch(url, options);
+            if (response.status === 401 && requireAuth && this._refreshToken && !skipRefresh) {
+                const refreshed = await this.refreshAccessToken();
+                if (refreshed) {
+                    return this._request(method, path, data, requireAuth, true);
+                }
             }
-        }
-        if (!response.ok) {
-            const error = await response.json().catch(() => ({ detail: response.statusText }));
-            if (response.status === 401 && this._onAuthError) {
-                this._onAuthError(error);
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({ detail: response.statusText }));
+                if (response.status === 401 && this._onAuthError) {
+                    this._onAuthError(error);
+                }
+                throw new Error(error.detail || `HTTP ${response.status}`);
             }
-            throw new Error(error.detail || `HTTP ${response.status}`);
+            return response.json();
+        } catch (e) {
+            if (e.name === 'AbortError') {
+                throw new Error('请求超时，请稍后重试');
+            }
+            throw e;
+        } finally {
+            clearTimeout(timeoutId);
         }
-        return response.json();
     }
 
     async login(username, password, inviteCode = null) {
