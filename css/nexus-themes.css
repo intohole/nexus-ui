@@ -1,5 +1,5 @@
 /*
- * Nexus Design System — 应用特色色配置 v2.0
+ * Nexus Design System — 应用特色色配置 v2.1
  *
  * 配色原则（参考 Linear/Vercel/Notion/Figma 2025 设计趋势）：
  * 1. 每个产品必须有视觉可区分的独特主色
@@ -8,6 +8,7 @@
  * 4. 教育/创意类用暖色传达活力感
  * 5. 开发工具用中性冷色传达技术感
  * 6. 主色需在浅色/深色模式下都可用
+ * 7. 24个主题至少20个可区分色相，消除重复
  */
 
 /* ===== AI 产品线 ===== */
@@ -49,19 +50,19 @@
 
 /* ===== 教育产品线 ===== */
 
-/* WisePath — 高考志愿 — 暖粉（教育/关怀的亲和力） */
-.app-wisepath { --app-accent: #db2777; --app-accent-rgb: 219, 39, 119; --app-accent-hover: #ec4899; --app-name: "知路"; }
+/* WisePath — 高考志愿 — 金色（智慧/成就的象征，区别于AdSmart玫红） */
+.app-wisepath { --app-accent: #ca8a04; --app-accent-rgb: 202, 138, 4; --app-accent-hover: #eab308; --app-name: "知路"; }
 
 /* codeBlock — 青少年编程 — 翡翠绿（编程/成长的活力感） */
 .app-code-block { --app-accent: #059669; --app-accent-rgb: 5, 150, 105; --app-accent-hover: #10b981; --app-name: "码趣星"; }
 
-/* geniusStudent — 天才学伴 — 紫蓝（学习/探索的想象力） */
-.app-genius-student { --app-accent: #7c3aed; --app-accent-rgb: 124, 58, 237; --app-accent-hover: #8b5cf6; --app-name: "天才学伴"; }
+/* geniusStudent — 天才学伴 — 琥珀（学习/探索的温暖感，区别于紫罗兰） */
+.app-genius-student { --app-accent: #f59e0b; --app-accent-rgb: 245, 158, 11; --app-accent-hover: #fbbf24; --app-name: "天才学伴"; }
 
 /* ===== 开发工具产品线 ===== */
 
-/* lion — 配置中心 — 琥珀（配置/管理的稳重感） */
-.app-lion { --app-accent: #d97706; --app-accent-rgb: 217, 119, 6; --app-accent-hover: #f59e0b; --app-name: "Lion"; }
+/* lion — 配置中心 — 深天蓝（配置/基础设施的可靠感，区别于琥珀） */
+.app-lion { --app-accent: #0369a1; --app-accent-rgb: 3, 105, 161; --app-accent-hover: #0284c7; --app-name: "Lion"; }
 
 /* miniDeploy — 部署平台 — 天蓝（DevOps/云的开放感） */
 .app-mini-deploy { --app-accent: #0284c7; --app-accent-rgb: 2, 132, 199; --app-accent-hover: #0ea5e9; --app-name: "MiniDeploy"; }
@@ -77,28 +78,28 @@
 
 /* ===== 基础设施 ===== */
 
-/* usercenter — 用户中心 — 深紫（认证/安全的权威感） */
-.app-usercenter { --app-accent: #7c3aed; --app-accent-rgb: 124, 58, 237; --app-accent-hover: #8b5cf6; --app-name: "用户中心"; }
+/* usercenter — 用户中心 — 靛蓝（认证/安全的权威感，区别于紫罗兰） */
+.app-usercenter { --app-accent: #6366f1; --app-accent-rgb: 99, 102, 241; --app-accent-hover: #818cf8; --app-name: "用户中心"; }
 
-/* goldenFish — 闲鱼助手 — 天蓝（电商/交易的清爽感） */
-.app-golden-fish { --app-accent: #0284c7; --app-accent-rgb: 2, 132, 199; --app-accent-hover: #0ea5e9; --app-name: "GoldenFish"; }
+/* goldenFish — 闲鱼助手 — 深青蓝（电商/交易的清爽感，区别于天蓝） */
+.app-golden-fish { --app-accent: #155e75; --app-accent-rgb: 21, 94, 117; --app-accent-hover: #0e7490; --app-name: "GoldenFish"; }
 
 /* ===== 通用主题 ===== */
 
 /* nexus-ui — 设计系统 — 品牌蓝 */
 .app-nexus-ui { --app-accent: #3b82f6; --app-accent-rgb: 59, 130, 246; --app-accent-hover: #60a5fa; --app-name: "NexusUI"; }
 
-/* admin — 管理后台 — 深灰蓝 */
-.app-admin { --app-accent: #475569; --app-accent-rgb: 71, 85, 105; --app-accent-hover: #64748b; --app-name: "Admin"; }
+/* admin — 管理后台 — 深石板蓝（区别于FastRPC石板蓝） */
+.app-admin { --app-accent: #334155; --app-accent-rgb: 51, 65, 85; --app-accent-hover: #475569; --app-name: "Admin"; }
 
-/* dashboard — 仪表盘 — 渐变紫 */
-.app-dashboard { --app-accent: #7c3aed; --app-accent-rgb: 124, 58, 237; --app-accent-hover: #8b5cf6; --app-name: "Dashboard"; }
+/* dashboard — 仪表盘 — 亮紫罗兰（区别于PromptManager紫罗兰） */
+.app-dashboard { --app-accent: #8b5cf6; --app-accent-rgb: 139, 92, 246; --app-accent-hover: #a78bfa; --app-name: "Dashboard"; }
 
-/* chat — 对话系统 — 薄荷绿 */
-.app-chat { --app-accent: #059669; --app-accent-rgb: 5, 150, 105; --app-accent-hover: #10b981; --app-name: "Chat"; }
+/* chat — 对话系统 — 青绿（区别于CodeBlock翡翠绿） */
+.app-chat { --app-accent: #14b8a6; --app-accent-rgb: 20, 184, 166; --app-accent-hover: #2dd4bf; --app-name: "Chat"; }
 
-/* docs — 文档中心 — 靛青 */
-.app-docs { --app-accent: #0e7490; --app-accent-rgb: 14, 116, 144; --app-accent-hover: #0891b2; --app-name: "Docs"; }
+/* docs — 文档中心 — 灰色（文档/中性，区别于FinancialKG靛青） */
+.app-docs { --app-accent: #6b7280; --app-accent-rgb: 107, 114, 128; --app-accent-hover: #9ca3af; --app-name: "Docs"; }
 
-/* moutain — 爬虫服务 — 深绿 */
-.app-moutain { --app-accent: #047857; --app-accent-rgb: 4, 120, 87; --app-accent-hover: #059669; --app-name: "Spider"; }
+/* moutain — 爬虫服务 — 森林绿（区别于Spider深绿） */
+.app-moutain { --app-accent: #15803d; --app-accent-rgb: 21, 128, 61; --app-accent-hover: #16a34a; --app-name: "Spider"; }
