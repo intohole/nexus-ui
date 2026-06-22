@@ -11,11 +11,17 @@
             this.maxRetry = config.maxRetry || MAX_RETRY;
             this.tokenKey = config.tokenKey || 'token';
             this.userKey = config.userKey || 'user';
+            this.refreshTokenKey = config.refreshTokenKey || null;
+            this.refreshUrl = config.refreshUrl || null;
+            this.refreshMethod = config.refreshMethod || 'POST';
+            this.refreshBodyBuilder = config.refreshBodyBuilder || null;
             this.onUnauthorized = config.onUnauthorized || null;
+            this.onRefreshSuccess = config.onRefreshSuccess || null;
             this.timeout = config.timeout || 30000;
             this.responseAdapter = config.responseAdapter || null;
             this.abortControllers = new Map();
             this._requestCounter = 0;
+            this._refreshPromise = null;
         }
 
         _generateRequestId(url) {
@@ -36,74 +42,61 @@
             this.abortControllers.set(requestId, controller);
         }
 
-        async request(url, options = {}) {
-            const controller = new AbortController();
-            const requestId = this._generateRequestId(url);
-            this._registerController(requestId, controller);
+        _getToken() {
+            try { return localStorage.getItem(this.tokenKey) || ''; } catch (e) { return ''; }
+        }
 
-            const timeoutValue = options.timeout !== undefined ? options.timeout : this.timeout;
-            const timeoutId = setTimeout(() => controller.abort(), timeoutValue);
+        _setToken(token) {
+            try { localStorage.setItem(this.tokenKey, token); } catch (e) {}
+        }
 
-            const token = localStorage.getItem(this.tokenKey);
-            const headers = {
+        _getRefreshToken() {
+            if (!this.refreshTokenKey) return '';
+            try { return localStorage.getItem(this.refreshTokenKey) || ''; } catch (e) { return ''; }
+        }
+
+        _setRefreshToken(token) {
+            if (!this.refreshTokenKey) return;
+            try { localStorage.setItem(this.refreshTokenKey, token); } catch (e) {}
+        }
+
+        _clearAuth() {
+            try {
+                localStorage.removeItem(this.tokenKey);
+                localStorage.removeItem(this.userKey);
+                if (this.refreshTokenKey) localStorage.removeItem(this.refreshTokenKey);
+            } catch (e) {}
+        }
+
+        _buildHeaders(extra) {
+            const token = this._getToken();
+            return {
                 'Content-Type': 'application/json',
                 ...(token && { 'Authorization': `Bearer ${token}` }),
-                ...options.headers
+                ...extra
             };
+        }
 
-            const isIdempotent = !options.method || options.method === 'GET';
-            const maxAttempts = isIdempotent ? this.maxRetry : 1;
-            let lastError;
+        async _doFetch(url, options, controller) {
+            const response = await fetch(`${this.baseUrl}${url}`, {
+                ...options,
+                headers: this._buildHeaders(options.headers),
+                signal: controller.signal
+            });
 
-            try {
-                for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-                    try {
-                        const response = await fetch(`${this.baseUrl}${url}`, {
-                            ...options, headers,
-                            signal: controller.signal
-                        });
-
-                        let data;
-                        const contentType = response.headers.get('content-type') || '';
-                        if (contentType.includes('application/json')) {
-                            data = await response.json();
-                        } else {
-                            const text = await response.text();
-                            try { data = JSON.parse(text); } catch { data = { detail: text }; }
-                        }
-
-                        if (this.responseAdapter) {
-                            data = this.responseAdapter(data, response);
-                        }
-
-                        if (!response.ok) {
-                            const errorMsg = this._extractError(data);
-                            if (response.status === 401) {
-                                localStorage.removeItem(this.tokenKey);
-                                localStorage.removeItem(this.userKey);
-                                if (this.onUnauthorized) this.onUnauthorized();
-                                throw new Error('登录已过期，请重新登录');
-                            }
-                            throw new Error(errorMsg);
-                        }
-
-                        return data;
-                    } catch (error) {
-                        lastError = error;
-                        if (error.name === 'AbortError') {
-                            throw new Error('请求超时，请稍后重试');
-                        }
-                        if (attempt < maxAttempts) {
-                            const delay = Math.min(MAX_DELAY, BASE_DELAY * 2 ** (attempt - 1)) * (0.5 + Math.random() * 0.5);
-                            await new Promise(r => setTimeout(r, delay));
-                        }
-                    }
-                }
-                throw lastError;
-            } finally {
-                clearTimeout(timeoutId);
-                this.abortControllers.delete(requestId);
+            let data;
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                data = await response.json();
+            } else {
+                const text = await response.text();
+                try { data = JSON.parse(text); } catch { data = { detail: text }; }
             }
+
+            if (this.responseAdapter) {
+                data = this.responseAdapter(data, response);
+            }
+            return { response, data };
         }
 
         _extractError(data) {
@@ -120,13 +113,107 @@
             return '请求失败';
         }
 
+        async _tryRefresh() {
+            if (this._refreshPromise) return this._refreshPromise;
+            const refreshToken = this._getRefreshToken();
+            if (!this.refreshUrl || !refreshToken) {
+                return Promise.reject(new Error('no refresh config'));
+            }
+            const body = this.refreshBodyBuilder
+                ? this.refreshBodyBuilder(refreshToken)
+                : { refresh_token: refreshToken };
+            this._refreshPromise = fetch(`${this.baseUrl}${this.refreshUrl}`, {
+                method: this.refreshMethod,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            }).then(async (res) => {
+                let rdata;
+                try { rdata = await res.json(); } catch { rdata = {}; }
+                if (!res.ok) throw new Error('refresh failed');
+                const newToken = rdata.access_token || (rdata.data && rdata.data.access_token);
+                const newRefresh = rdata.refresh_token || (rdata.data && rdata.data.refresh_token);
+                if (!newToken) throw new Error('no token in refresh response');
+                this._setToken(newToken);
+                if (newRefresh) this._setRefreshToken(newRefresh);
+                if (this.onRefreshSuccess) this.onRefreshSuccess(rdata);
+                return newToken;
+            }).finally(() => {
+                this._refreshPromise = null;
+            });
+            return this._refreshPromise;
+        }
+
+        async request(url, options = {}) {
+            const controller = new AbortController();
+            const requestId = this._generateRequestId(url);
+            this._registerController(requestId, controller);
+
+            const timeoutValue = options.timeout !== undefined ? options.timeout : this.timeout;
+            const timeoutId = setTimeout(() => controller.abort(), timeoutValue);
+
+            const isIdempotent = !options.method || options.method === 'GET';
+            const maxAttempts = isIdempotent ? this.maxRetry : 1;
+            const skipAuthRefresh = options.skipAuthRefresh === true;
+            let lastError;
+
+            try {
+                for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                    try {
+                        const { response, data } = await this._doFetch(url, options, controller);
+
+                        if (!response.ok) {
+                            const errorMsg = this._extractError(data);
+                            if (response.status === 401 && !skipAuthRefresh && this.refreshUrl) {
+                                try {
+                                    await this._tryRefresh();
+                                    const retryResult = await this._doFetch(url, options, controller);
+                                    if (!retryResult.response.ok) {
+                                        throw new Error(this._extractError(retryResult.data));
+                                    }
+                                    return retryResult.data;
+                                } catch (refreshErr) {
+                                    this._clearAuth();
+                                    if (this.onUnauthorized) this.onUnauthorized();
+                                    throw new Error('登录已过期，请重新登录');
+                                }
+                            }
+                            if (response.status === 401) {
+                                this._clearAuth();
+                                if (this.onUnauthorized) this.onUnauthorized();
+                                throw new Error('登录已过期，请重新登录');
+                            }
+                            throw new Error(errorMsg);
+                        }
+
+                        return data;
+                    } catch (error) {
+                        lastError = error;
+                        if (error.name === 'AbortError') {
+                            throw new Error('请求超时，请稍后重试');
+                        }
+                        if (error.message && error.message.includes('登录已过期')) {
+                            throw error;
+                        }
+                        if (attempt < maxAttempts) {
+                            const delay = Math.min(MAX_DELAY, BASE_DELAY * 2 ** (attempt - 1)) * (0.5 + Math.random() * 0.5);
+                            await new Promise(r => setTimeout(r, delay));
+                        }
+                    }
+                }
+                throw lastError;
+            } finally {
+                clearTimeout(timeoutId);
+                this.abortControllers.delete(requestId);
+            }
+        }
+
         get(url, params = {}) {
             const qs = new URLSearchParams(params).toString();
             return this.request(qs ? `${url}?${qs}` : url, { method: 'GET' });
         }
 
-        post(url, data = {}) {
-            return this.request(url, { method: 'POST', body: JSON.stringify(data) });
+        post(url, data = {}, options = {}) {
+            return this.request(url, { method: 'POST', body: JSON.stringify(data), ...options });
         }
 
         put(url, data = {}) {
@@ -135,6 +222,21 @@
 
         delete(url) {
             return this.request(url, { method: 'DELETE' });
+        }
+
+        upload(url, formData, options = {}) {
+            const token = this._getToken();
+            const headers = { ...(token && { 'Authorization': `Bearer ${token}` }), ...options.headers };
+            return fetch(`${this.baseUrl}${url}`, {
+                method: 'POST', body: formData, headers, ...options
+            }).then(async (res) => {
+                let data;
+                const ct = res.headers.get('content-type') || '';
+                if (ct.includes('application/json')) data = await res.json();
+                else { const t = await res.text(); try { data = JSON.parse(t); } catch { data = { detail: t }; } }
+                if (!res.ok) throw new Error(this._extractError(data));
+                return data;
+            });
         }
 
         cancel(url) {
@@ -153,6 +255,11 @@
                 update: (id, data) => this.put(`${basePath}/${id}`, data),
                 delete: (id) => this.delete(`${basePath}/${id}`)
             };
+        }
+
+        logout() {
+            this._clearAuth();
+            if (this.onUnauthorized) this.onUnauthorized();
         }
     }
 
