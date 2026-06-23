@@ -1,7 +1,9 @@
 (function() {
-    const { ref, createApp, h } = Vue;
+    const { ref } = Vue;
 
     const confirmState = ref({ visible: false, title: '', message: '', resolve: null });
+    const queue = [];
+    let isShowing = false;
 
     const NuxConfirm = {
         name: 'NuxConfirm',
@@ -9,10 +11,12 @@
             const confirm = () => {
                 confirmState.value.visible = false;
                 if (confirmState.value.resolve) confirmState.value.resolve(true);
+                _next();
             };
             const cancel = () => {
                 confirmState.value.visible = false;
                 if (confirmState.value.resolve) confirmState.value.resolve(false);
+                _next();
             };
             return { confirmState, confirm, cancel };
         },
@@ -34,9 +38,27 @@
         `
     };
 
+    const _show = (item) => {
+        isShowing = true;
+        confirmState.value = { visible: true, title: item.title, message: item.message, resolve: item.resolve };
+    };
+
+    const _next = () => {
+        isShowing = false;
+        if (queue.length > 0) {
+            const item = queue.shift();
+            _show(item);
+        }
+    };
+
     const confirm = (message, title = '确认操作') => {
         return new Promise((resolve) => {
-            confirmState.value = { visible: true, title, message, resolve };
+            const item = { message, title, resolve };
+            if (isShowing) {
+                queue.push(item);
+            } else {
+                _show(item);
+            }
         });
     };
 

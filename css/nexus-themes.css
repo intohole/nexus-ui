@@ -101,5 +101,5 @@
 /* docs — 文档中心 — 灰色（文档/中性，区别于FinancialKG靛青） */
 .app-docs { --app-accent: #6b7280; --app-accent-rgb: 107, 114, 128; --app-accent-hover: #9ca3af; --app-name: "Docs"; }
 
-/* moutain — 爬虫服务 — 森林绿（区别于Spider深绿） */
-.app-moutain { --app-accent: #15803d; --app-accent-rgb: 21, 128, 61; --app-accent-hover: #16a34a; --app-name: "Spider"; }
+/* mountain — 爬虫服务 — 森林绿（区别于Spider深绿） */
+.app-mountain { --app-accent: #15803d; --app-accent-rgb: 21, 128, 61; --app-accent-hover: #16a34a; --app-name: "Mountain"; }

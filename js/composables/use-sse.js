@@ -8,6 +8,7 @@
         let fetchController = null;
         let reconnectTimer = null;
         let reconnectAttempts = 0;
+        let manualClose = false;
         const maxReconnect = options.maxReconnect || 5;
         const reconnectInterval = options.reconnectInterval || 3000;
         const useFetch = options.useFetch || false;
@@ -15,6 +16,7 @@
 
         const connect = (url) => {
             disconnect();
+            manualClose = false;
             status.value = 'connecting';
             if (useFetch) {
                 _connectFetch(url);
@@ -42,7 +44,9 @@
                     status.value = 'disconnected';
                     eventSource.close();
                     eventSource = null;
-                    _scheduleReconnect(url);
+                    if (!manualClose) {
+                        _scheduleReconnect(url);
+                    }
                 };
             } catch (e) { status.value = 'disconnected'; }
         };
@@ -93,11 +97,8 @@
                 status.value = 'disconnected';
                 _scheduleReconnect(url);
             } catch (e) {
-                if (e.name !== 'AbortError') {
-                    status.value = 'disconnected';
-                    _scheduleReconnect(url);
-                } else {
-                    status.value = 'disconnected';
+                status.value = 'disconnected';
+                if (!manualClose) {
                     _scheduleReconnect(url);
                 }
             } finally {
@@ -113,6 +114,7 @@
         };
 
         const disconnect = () => {
+            manualClose = true;
             if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
             if (eventSource) { eventSource.close(); eventSource = null; }
             if (fetchController) { fetchController.abort(); fetchController = null; }

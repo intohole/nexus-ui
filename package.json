@@ -23,10 +23,13 @@
   },
   "structure": {
     "css/": {
-      "nexus-design.css": "设计系统核心（变量、组件、暗色模式）",
+      "nexus-tokens.css": "设计系统变量（颜色、间距、圆角、阴影等CSS变量）",
+      "nexus-base.css": "基础样式（重置、排版、按钮、表单基础）",
       "nexus-themes.css": "24个应用特色色主题配置",
       "nexus-mobile.css": "移动端基础设施（dvh、安全区域、抽屉、触摸优化）",
-      "nexus-components.css": "组件样式（Toast/Modal/Drawer/Table/Form/Badge/Avatar/Skeleton等）",
+      "nexus-components-feedback.css": "反馈组件样式（Toast/Modal/Drawer/Confirm/Skeleton等）",
+      "nexus-components-data.css": "数据组件样式（Table/Pagination/Badge/Avatar/StatCard等）",
+      "nexus-components-form.css": "表单组件样式（FormGroup/输入控件等）",
       "nexus-layout.css": "布局样式（Sidebar/TopNav/响应式导航）",
       "nexus-all.css": "一键引入聚合包"
     },
