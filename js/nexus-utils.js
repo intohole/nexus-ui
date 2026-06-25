@@ -125,6 +125,70 @@
         setViewportHeight() {
             const vh = window.innerHeight * 0.01;
             document.documentElement.style.setProperty('--nx-vh', `${vh}px`);
+        },
+
+        escapeHtml(text) {
+            if (text === null || text === undefined) return '';
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        },
+
+        formatRelativeTime(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return '';
+            const now = Date.now();
+            const diff = now - date.getTime();
+            const seconds = Math.floor(diff / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+            if (seconds < 60) return '刚刚';
+            if (minutes < 60) return `${minutes}分钟前`;
+            if (hours < 24) return `${hours}小时前`;
+            if (days < 30) return `${days}天前`;
+            return this.formatDateShort(dateString);
+        },
+
+        getPathPrefix() {
+            if (window.PATH_PREFIX) return window.PATH_PREFIX;
+            const scripts = document.querySelectorAll('script[src]');
+            for (const script of scripts) {
+                const src = script.getAttribute('src');
+                if (src && src.startsWith('/') && !src.startsWith('//')) {
+                    const match = src.match(/^\/([^/]+)\//);
+                    if (match && match[1] !== 'static' && match[1] !== 'api') {
+                        window.PATH_PREFIX = '/' + match[1];
+                        return window.PATH_PREFIX;
+                    }
+                }
+            }
+            window.PATH_PREFIX = '';
+            return '';
+        },
+
+        copyToClipboard(text) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                return navigator.clipboard.writeText(text).then(() => true).catch(() => this._copyFallback(text));
+            }
+            return Promise.resolve(this._copyFallback(text));
+        },
+
+        _copyFallback(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            let ok = false;
+            try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+            textarea.remove();
+            return ok;
         }
     };
 

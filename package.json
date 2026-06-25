@@ -1,6 +1,6 @@
 {
   "name": "nexus-ui",
-  "version": "2.2.1",
+  "version": "2.3.0",
   "description": "Nexus Design System — 统一前端基础设施，Vue 3 CDN 全局模式",
   "main": "css/nexus-all.css",
   "files": [
