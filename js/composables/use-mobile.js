@@ -13,7 +13,7 @@
         const toggleMenu = () => { mobileMenuOpen.value = !mobileMenuOpen.value; };
         const closeMenu = () => { mobileMenuOpen.value = false; };
 
-        const debouncedCheck = NexusUtils.debounce(checkMobile, 150);
+        const debouncedCheck = (typeof NexusUtils !== 'undefined' && NexusUtils.debounce) ? NexusUtils.debounce(checkMobile, 150) : checkMobile;
         onMounted(() => window.addEventListener('resize', debouncedCheck));
         onUnmounted(() => window.removeEventListener('resize', debouncedCheck));
 
