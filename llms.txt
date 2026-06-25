@@ -2,7 +2,7 @@
 
 统一前端基础设施工程，为所有项目提供设计系统、移动端适配、通用组件和工具函数。
 
-CDN地址（国内加速）：`https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.3/`
+CDN地址（国内加速）：`https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/`
 
 ## 引入方式
 
@@ -10,42 +10,51 @@ CDN地址（国内加速）：`https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1
 
 ```html
 <!-- 全量引入（推荐） -->
-<link rel="stylesheet" href="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.3/css/nexus-all.css">
+<link rel="stylesheet" href="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/css/nexus-all.css">
 ```
 
 ### JS（在Vue 3之后引入）
 
 ```html
 <!-- 基础工具（必须最先引入） -->
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.3/js/nexus-utils.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/nexus-utils.js"></script>
 
 <!-- 按需引入 -->
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.3/js/nexus-api.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.3/js/nexus-store.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.3/js/user-center-sdk.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/nexus-api.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/nexus-store.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/user-center-sdk.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/nexus-mobile.js"></script>
 
 <!-- Vue组件 -->
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.3/js/components/nux-toast.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.3/js/components/nux-modal.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.3/js/components/nux-drawer.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.3/js/components/nux-empty.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.3/js/components/nux-stat-card.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.3/js/components/nux-confirm.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.3/js/components/nux-tab-group.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.3/js/components/nux-pagination.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.3/js/components/nux-breadcrumb.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.3/js/components/nux-error-state.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/components/nux-toast.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/components/nux-modal.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/components/nux-drawer.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/components/nux-empty.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/components/nux-stat-card.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/components/nux-confirm.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/components/nux-tab-group.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/components/nux-pagination.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/components/nux-breadcrumb.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/components/nux-error-state.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/components/nux-data-table.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/components/nux-login-page.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/components/nux-skeleton.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/components/nux-avatar.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/components/nux-badge.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/components/nux-layout-sidebar.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/components/nux-layout-topnav.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/components/nux-form-group.js"></script>
 
 <!-- Composables -->
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.3/js/composables/use-mobile.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.3/js/composables/use-loading.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.3/js/composables/use-pagination.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.3/js/composables/use-search.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.3/js/composables/use-sort.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.3/js/composables/use-theme.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.3/js/composables/use-sse.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.3/js/composables/use-auth.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v1.0.3/js/composables/use-collection.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/composables/use-mobile.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/composables/use-loading.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/composables/use-pagination.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/composables/use-search.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/composables/use-sort.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/composables/use-theme.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/composables/use-sse.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/composables/use-auth.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/composables/use-collection.js"></script>
 ```
 
 ## 主题配置

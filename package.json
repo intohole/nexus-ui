@@ -71,8 +71,8 @@
     }
   },
   "usage": {
-    "css": "在HTML中引入: <link rel='stylesheet' href='https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.0/css/nexus-all.css'>",
-    "js": "在Vue 3之后引入: <script src='https://cdn.jsdelivr.net/gh/intohole/nexus-ui@v2.2.0/js/nexus-utils.js'></script>",
+    "css": "在HTML中引入: <link rel='stylesheet' href='https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/css/nexus-all.css'>",
+    "js": "在Vue 3之后引入: <script src='https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/nexus-utils.js'></script>",
     "theme": "在body上添加应用class: <body class='app-one-note'>"
   }
 }
