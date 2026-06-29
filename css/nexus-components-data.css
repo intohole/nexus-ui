@@ -214,3 +214,16 @@
   .nux-tab-item { padding: var(--nx-space-2) var(--nx-space-3); font-size: var(--nx-text-xs); }
   .nux-data-table th, .nux-data-table td { padding: var(--nx-space-2) var(--nx-space-3); }
 }
+
+.nux-radar-chart-wrap {
+  display: inline-block;
+  width: 100%;
+  max-width: 500px;
+  padding: var(--nx-space-3);
+}
+.nux-radar-chart-wrap canvas {
+  border-radius: var(--nx-radius-md, 8px);
+}
+@media (max-width: 768px) {
+  .nux-radar-chart-wrap { padding: var(--nx-space-2); }
+}
