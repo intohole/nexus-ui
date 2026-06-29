@@ -2,7 +2,7 @@
 
 统一前端基础设施工程，为所有项目提供设计系统、移动端适配、通用组件和工具函数。
 
-CDN地址（国内加速）：`https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/`
+CDN地址（国内加速）：`https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/`
 
 ## 引入方式
 
@@ -10,52 +10,53 @@ CDN地址（国内加速）：`https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2
 
 ```html
 <!-- 全量引入（推荐） -->
-<link rel="stylesheet" href="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/css/nexus-all.css">
+<link rel="stylesheet" href="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/css/nexus-all.css">
 ```
 
 ### JS（在Vue 3之后引入）
 
 ```html
 <!-- 基础工具（必须最先引入） -->
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/nexus-utils.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/nexus-utils.js"></script>
 
 <!-- 按需引入 -->
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/nexus-api.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/nexus-store.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/user-center-sdk.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/nexus-mobile.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/nexus-api.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/nexus-store.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/user-center-sdk.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/nexus-mobile.js"></script>
 
 <!-- Vue组件 -->
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/components/nux-toast.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/components/nux-modal.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/components/nux-drawer.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/components/nux-empty.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/components/nux-stat-card.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/components/nux-confirm.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/components/nux-tab-group.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/components/nux-pagination.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/components/nux-breadcrumb.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/components/nux-error-state.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/components/nux-data-table.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/components/nux-radar-chart.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/components/nux-login-page.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/components/nux-skeleton.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/components/nux-avatar.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/components/nux-badge.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/components/nux-layout-sidebar.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/components/nux-layout-topnav.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/components/nux-form-group.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/components/nux-toast.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/components/nux-modal.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/components/nux-drawer.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/components/nux-empty.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/components/nux-stat-card.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/components/nux-confirm.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/components/nux-tab-group.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/components/nux-pagination.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/components/nux-breadcrumb.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/components/nux-error-state.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/components/nux-data-table.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/components/nux-radar-chart-util.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/components/nux-radar-chart.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/components/nux-login-page.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/components/nux-skeleton.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/components/nux-avatar.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/components/nux-badge.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/components/nux-layout-sidebar.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/components/nux-layout-topnav.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/components/nux-form-group.js"></script>
 
 <!-- Composables -->
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/composables/use-mobile.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/composables/use-loading.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/composables/use-pagination.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/composables/use-search.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/composables/use-sort.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/composables/use-theme.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/composables/use-sse.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/composables/use-auth.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.1/js/composables/use-collection.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/composables/use-mobile.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/composables/use-loading.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/composables/use-pagination.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/composables/use-search.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/composables/use-sort.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/composables/use-theme.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/composables/use-sse.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/composables/use-auth.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/composables/use-collection.js"></script>
 ```
 
 ## 主题配置
@@ -143,7 +144,7 @@ nuxConfirm('确定删除吗？').then(ok => { ... });
 
 ### nux-radar-chart 雷达图组件
 
-Canvas绘制，支持多数据集对比，自适应高DPI屏幕，ResizeObserver响应式。
+Canvas绘制，支持多数据集对比，自适应高DPI屏幕，ResizeObserver响应式。依赖 `nux-radar-chart-util.js`（提供 `window.NuxRadarDraw` 绘制引擎）。
 
 ```html
 <nux-radar-chart
@@ -156,7 +157,19 @@ Canvas绘制，支持多数据集对比，自适应高DPI屏幕，ResizeObserver
 </nux-radar-chart>
 ```
 
-Props: labels(Array), datasets(Array[{label,values,color}]), maxValue(Number=100), size(Number=320), showLabels(Boolean=true), showValues(Boolean=false), showLegend(Boolean=true), gridLevels(Number=4)
+Props: labels(Array), datasets(Array[{label,values,color}]), maxValue(Number=100), size(Number=320), showLabels(Boolean=true), showLegend(Boolean=true), gridLevels(Number=4)
+
+### NuxRadarDraw 静态绘制函数
+
+独立的Canvas雷达图绘制工具，无需Vue环境，适用于v-html渲染场景。
+
+```javascript
+NuxRadarDraw.draw(canvas, {
+  labels: ['风险纪律','护城河价值','成长分类','趋势时机','宏观反射'],
+  datasets: [{label:'贵州茅台', values:[100,96.8,80,83.3,71.4], color:'#3b82f6'}],
+  maxValue: 100, showLabels: true, showLegend: true, gridLevels: 4
+});
+```
 
 ### Composables
 

@@ -1,6 +1,6 @@
 {
   "name": "nexus-ui",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "description": "Nexus Design System — 统一前端基础设施，Vue 3 CDN 全局模式",
   "main": "css/nexus-all.css",
   "files": [
@@ -54,6 +54,8 @@
       "nux-layout-topnav.js": "顶部导航布局组件",
       "nux-form-group.js": "表单分组组件",
       "nux-data-table.js": "数据表格组件",
+      "nux-radar-chart-util.js": "雷达图Canvas绘制引擎（静态函数，v-html场景适用）",
+      "nux-radar-chart.js": "雷达图Vue组件（薄包装，依赖nux-radar-chart-util）",
       "nux-badge.js": "徽标组件",
       "nux-avatar.js": "头像组件",
       "nux-skeleton.js": "骨架屏组件"
@@ -71,8 +73,8 @@
     }
   },
   "usage": {
-    "css": "在HTML中引入: <link rel='stylesheet' href='https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/css/nexus-all.css'>",
-    "js": "在Vue 3之后引入: <script src='https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.2.1/js/nexus-utils.js'></script>",
+    "css": "在HTML中引入: <link rel='stylesheet' href='https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/css/nexus-all.css'>",
+    "js": "在Vue 3之后引入: <script src='https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.3.2/js/nexus-utils.js'></script>",
     "theme": "在body上添加应用class: <body class='app-one-note'>"
   }
 }
