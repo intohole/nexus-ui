@@ -20,6 +20,7 @@
             this.onError = config.onError || null;
             this.timeout = config.timeout || 30000;
             this.responseAdapter = config.responseAdapter || null;
+            this.storage = config.storage || localStorage;
             this.abortControllers = new Map();
             this._requestCounter = 0;
             this._refreshPromise = null;
@@ -44,28 +45,28 @@
         }
 
         _getToken() {
-            try { return localStorage.getItem(this.tokenKey) || ''; } catch (e) { return ''; }
+            try { return this.storage.getItem(this.tokenKey) || ''; } catch (e) { return ''; }
         }
 
         _setToken(token) {
-            try { localStorage.setItem(this.tokenKey, token); } catch (e) {}
+            try { this.storage.setItem(this.tokenKey, token); } catch (e) {}
         }
 
         _getRefreshToken() {
             if (!this.refreshTokenKey) return '';
-            try { return localStorage.getItem(this.refreshTokenKey) || ''; } catch (e) { return ''; }
+            try { return this.storage.getItem(this.refreshTokenKey) || ''; } catch (e) { return ''; }
         }
 
         _setRefreshToken(token) {
             if (!this.refreshTokenKey) return;
-            try { localStorage.setItem(this.refreshTokenKey, token); } catch (e) {}
+            try { this.storage.setItem(this.refreshTokenKey, token); } catch (e) {}
         }
 
         _clearAuth() {
             try {
-                localStorage.removeItem(this.tokenKey);
-                localStorage.removeItem(this.userKey);
-                if (this.refreshTokenKey) localStorage.removeItem(this.refreshTokenKey);
+                this.storage.removeItem(this.tokenKey);
+                this.storage.removeItem(this.userKey);
+                if (this.refreshTokenKey) this.storage.removeItem(this.refreshTokenKey);
             } catch (e) {}
         }
 
