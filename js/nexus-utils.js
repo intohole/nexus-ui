@@ -154,6 +154,44 @@
             return this.formatDateShort(dateString);
         },
 
+        formatDateTime(dateString, options = {}) {
+            if (!dateString) return '';
+            try {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) return '';
+                return date.toLocaleString('zh-CN', {
+                    year: 'numeric', month: '2-digit', day: '2-digit',
+                    hour: '2-digit', minute: '2-digit', second: '2-digit',
+                    ...options
+                });
+            } catch (e) { return ''; }
+        },
+
+        formatPercent(value, decimals = 1) {
+            if (value === undefined || value === null || isNaN(value)) return '0%';
+            return (Number(value) * 100).toFixed(decimals) + '%';
+        },
+
+        formatChatTime(timeStr) {
+            if (!timeStr) return '';
+            const date = new Date(timeStr);
+            if (isNaN(date.getTime())) return '';
+            const now = new Date();
+            const isToday = date.getFullYear() === now.getFullYear()
+                && date.getMonth() === now.getMonth()
+                && date.getDate() === now.getDate();
+            const hh = String(date.getHours()).padStart(2, '0');
+            const mm = String(date.getMinutes()).padStart(2, '0');
+            if (isToday) return `${hh}:${mm}`;
+            const M = String(date.getMonth() + 1).padStart(2, '0');
+            const D = String(date.getDate()).padStart(2, '0');
+            return `${M}/${D} ${hh}:${mm}`;
+        },
+
+        formatTime(dateString) {
+            return this.formatRelativeTime(dateString);
+        },
+
         getPathPrefix() {
             if (window.PATH_PREFIX) return window.PATH_PREFIX;
             const scripts = document.querySelectorAll('script[src]');

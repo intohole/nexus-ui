@@ -17,6 +17,7 @@
             this.refreshBodyBuilder = config.refreshBodyBuilder || null;
             this.onUnauthorized = config.onUnauthorized || null;
             this.onRefreshSuccess = config.onRefreshSuccess || null;
+            this.onError = config.onError || null;
             this.timeout = config.timeout || 30000;
             this.responseAdapter = config.responseAdapter || null;
             this.abortControllers = new Map();
@@ -100,6 +101,8 @@
         }
 
         _extractError(data) {
+            if (data.success === false) return String(data.message || data.error || '操作失败');
+            if (data.error) return String(data.error);
             if (data.message) {
                 return Array.isArray(data.message) ? data.message.join(', ') :
                        typeof data.message === 'object' ? JSON.stringify(data.message) :
@@ -182,6 +185,7 @@
                                 if (this.onUnauthorized) this.onUnauthorized();
                                 throw new Error('登录已过期，请重新登录');
                             }
+                            if (this.onError) this.onError(response.status, errorMsg);
                             throw new Error(errorMsg);
                         }
 
@@ -208,7 +212,11 @@
         }
 
         get(url, params = {}) {
-            const qs = new URLSearchParams(params).toString();
+            const filtered = {};
+            Object.entries(params).forEach(([k, v]) => {
+                if (v !== undefined && v !== null && v !== '') filtered[k] = v;
+            });
+            const qs = new URLSearchParams(filtered).toString();
             return this.request(qs ? `${url}?${qs}` : url, { method: 'GET' });
         }
 
@@ -245,6 +253,21 @@
                 if (id.includes(url)) { ctrl.abort(); keysToDelete.push(id); }
             }
             keysToDelete.forEach(id => this.abortControllers.delete(id));
+        }
+
+        async download(url, params = {}) {
+            const qs = new URLSearchParams(params).toString();
+            const fullUrl = qs ? `${url}?${qs}` : url;
+            const token = this._getToken();
+            const response = await fetch(`${this.baseUrl}${fullUrl}`, {
+                headers: { ...(token && { 'Authorization': `Bearer ${token}` }) }
+            });
+            if (!response.ok) {
+                const errorMsg = `下载失败 (${response.status})`;
+                if (this.onError) this.onError(response.status, errorMsg);
+                throw new Error(errorMsg);
+            }
+            return await response.blob();
         }
 
         createCrud(basePath) {
