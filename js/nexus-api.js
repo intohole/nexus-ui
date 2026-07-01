@@ -7,7 +7,7 @@
 
     class NexusApi {
         constructor(config = {}) {
-            this.baseUrl = config.baseUrl || DEFAULT_BASE_URL;
+            this.baseUrl = config.baseUrl !== undefined ? config.baseUrl : DEFAULT_BASE_URL;
             this.maxRetry = config.maxRetry || MAX_RETRY;
             this.tokenKey = config.tokenKey || 'token';
             this.userKey = config.userKey || 'user';
