@@ -1,4 +1,13 @@
 (function() {
+const TOKEN_KEY = 'uc_access_token';
+const REFRESH_KEY = 'uc_refresh_token';
+const EXPIRES_KEY = 'uc_token_expires_at';
+const LEGACY_KEYS = [
+    ['siwu_uc_access_token', 'siwu_uc_refresh_token', 'siwu_uc_token_expires_at'],
+    ['uc_token', 'uc_refresh_token', 'uc_token_expires_at'],
+    ['ucToken', 'ucRefreshToken', 'ucTokenExpiresAt']
+];
+
 class UserCenterSDK {
     constructor(config) {
         this.baseUrl = config.baseUrl.replace(/\/+$/, '');
@@ -16,31 +25,52 @@ class UserCenterSDK {
         return new UserCenterSDK({ baseUrl: config.baseUrl, appKey: config.appKey });
     }
 
+    _migrateLegacyTokens() {
+        for (const [oldAccess, oldRefresh, oldExpires] of LEGACY_KEYS) {
+            const access = localStorage.getItem(oldAccess);
+            if (access && !this._accessToken) {
+                this._accessToken = access;
+                this._refreshToken = localStorage.getItem(oldRefresh);
+                const exp = localStorage.getItem(oldExpires);
+                this._tokenExpiresAt = exp ? parseInt(exp) : null;
+                localStorage.removeItem(oldAccess);
+                localStorage.removeItem(oldRefresh);
+                localStorage.removeItem(oldExpires);
+            }
+        }
+        if (this._accessToken) {
+            this._persistTokens();
+        }
+    }
+
     _loadPersistedTokens() {
         try {
-            this._accessToken = localStorage.getItem('siwu_uc_access_token');
-            this._refreshToken = localStorage.getItem('siwu_uc_refresh_token');
-            const expiresAt = localStorage.getItem('siwu_uc_token_expires_at');
+            this._accessToken = localStorage.getItem(TOKEN_KEY);
+            this._refreshToken = localStorage.getItem(REFRESH_KEY);
+            const expiresAt = localStorage.getItem(EXPIRES_KEY);
             this._tokenExpiresAt = expiresAt ? parseInt(expiresAt) : null;
+            if (!this._accessToken) {
+                this._migrateLegacyTokens();
+            }
         } catch (e) {}
     }
 
     _persistTokens() {
         try {
             if (this._accessToken) {
-                localStorage.setItem('siwu_uc_access_token', this._accessToken);
+                localStorage.setItem(TOKEN_KEY, this._accessToken);
             } else {
-                localStorage.removeItem('siwu_uc_access_token');
+                localStorage.removeItem(TOKEN_KEY);
             }
             if (this._refreshToken) {
-                localStorage.setItem('siwu_uc_refresh_token', this._refreshToken);
+                localStorage.setItem(REFRESH_KEY, this._refreshToken);
             } else {
-                localStorage.removeItem('siwu_uc_refresh_token');
+                localStorage.removeItem(REFRESH_KEY);
             }
             if (this._tokenExpiresAt) {
-                localStorage.setItem('siwu_uc_token_expires_at', String(this._tokenExpiresAt));
+                localStorage.setItem(EXPIRES_KEY, String(this._tokenExpiresAt));
             } else {
-                localStorage.removeItem('siwu_uc_token_expires_at');
+                localStorage.removeItem(EXPIRES_KEY);
             }
         } catch (e) {}
     }
@@ -61,17 +91,9 @@ class UserCenterSDK {
         }
     }
 
-    getToken() {
-        return this._accessToken;
-    }
-
-    getRefreshToken() {
-        return this._refreshToken;
-    }
-
-    isAuthenticated() {
-        return !!this._accessToken;
-    }
+    getToken() { return this._accessToken; }
+    getRefreshToken() { return this._refreshToken; }
+    isAuthenticated() { return !!this._accessToken; }
 
     isTokenExpiringSoon(bufferSeconds = 60) {
         if (!this._tokenExpiresAt) return false;
@@ -96,11 +118,7 @@ class UserCenterSDK {
         }
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), this.timeout);
-        const options = {
-            method,
-            headers,
-            signal: controller.signal
-        };
+        const options = { method, headers, signal: controller.signal };
         if (data && (method === 'POST' || method === 'PUT')) {
             options.body = JSON.stringify(data);
         }
@@ -134,9 +152,7 @@ class UserCenterSDK {
         const data = { username, password, app_key: this.appKey };
         if (inviteCode) data.invite_code = inviteCode;
         const result = await this._request('POST', '/api/auth/login', data, false);
-        if (result.success && result.data) {
-            this._setTokens(result.data);
-        }
+        if (result.success && result.data) { this._setTokens(result.data); }
         return result;
     }
 
@@ -144,9 +160,7 @@ class UserCenterSDK {
         const data = { email, password, app_key: this.appKey };
         if (inviteCode) data.invite_code = inviteCode;
         const result = await this._request('POST', '/api/auth/login', data, false);
-        if (result.success && result.data) {
-            this._setTokens(result.data);
-        }
+        if (result.success && result.data) { this._setTokens(result.data); }
         return result;
     }
 
@@ -154,21 +168,18 @@ class UserCenterSDK {
         const data = { phone, password, app_key: this.appKey };
         if (inviteCode) data.invite_code = inviteCode;
         const result = await this._request('POST', '/api/auth/login', data, false);
-        if (result.success && result.data) {
-            this._setTokens(result.data);
-        }
+        if (result.success && result.data) { this._setTokens(result.data); }
         return result;
     }
 
-    async register(username, password, email = null, phone = null, inviteCode = null) {
-        const data = { username, password, app_key: this.appKey };
+    async register({ username, password, email = null, phone = null, inviteCode = null }) {
+        const data = { password, app_key: this.appKey };
+        if (username) data.username = username;
         if (email) data.email = email;
         if (phone) data.phone = phone;
         if (inviteCode) data.invite_code = inviteCode;
         const result = await this._request('POST', '/api/auth/register', data, false);
-        if (result.success && result.data) {
-            this._setTokens(result.data);
-        }
+        if (result.success && result.data) { this._setTokens(result.data); }
         return result;
     }
 
@@ -203,8 +214,7 @@ class UserCenterSDK {
         if (result.success && result.data) {
             this._accessToken = result.data.access_token;
             this._tokenExpiresAt = result.data.expires_in
-                ? Date.now() + result.data.expires_in * 1000
-                : null;
+                ? Date.now() + result.data.expires_in * 1000 : null;
             this._persistTokens();
         }
         return result;
@@ -225,130 +235,17 @@ class UserCenterSDK {
         return this._request('GET', `/api/auth/login-page-config?app_key=${key}`, null, false);
     }
 
-    async getCurrentUser() {
-        return this._request('GET', '/api/users/me');
-    }
-
-    async updateCurrentUser(updateData) {
-        return this._request('PUT', '/api/users/me', updateData);
-    }
-
-    async getUserPermissions() {
-        return this._request('GET', '/api/users/permissions');
-    }
-
-    async getUsers(skip = 0, limit = 100) {
-        return this._request('GET', `/api/users?skip=${skip}&limit=${limit}`);
-    }
-
-    async getUser(userId) {
-        return this._request('GET', `/api/users/${userId}`);
-    }
-
-    async updateUser(userId, updateData) {
-        return this._request('PUT', `/api/users/${userId}`, updateData);
-    }
-
-    async deleteUser(userId) {
-        return this._request('DELETE', `/api/users/${userId}`);
-    }
-
-    async getDashboardStats() {
-        return this._request('GET', '/api/users/stats');
-    }
-
-    async getApplications(skip = 0, limit = 100) {
-        return this._request('GET', `/api/applications?skip=${skip}&limit=${limit}`);
-    }
-
-    async getApplication(appId) {
-        return this._request('GET', `/api/applications/${appId}`);
-    }
-
-    async createApplication(appData) {
-        return this._request('POST', '/api/applications', appData);
-    }
-
-    async updateApplication(appId, appData) {
-        return this._request('PUT', `/api/applications/${appId}`, appData);
-    }
-
-    async deleteApplication(appId) {
-        return this._request('DELETE', `/api/applications/${appId}`);
-    }
-
-    async getRoles(skip = 0, limit = 100) {
-        return this._request('GET', `/api/permissions/roles?skip=${skip}&limit=${limit}`);
-    }
-
-    async createRole(name, description = null) {
-        return this._request('POST', '/api/permissions/roles', { name, description });
-    }
-
-    async getPermissions(skip = 0, limit = 100) {
-        return this._request('GET', `/api/permissions?skip=${skip}&limit=${limit}`);
-    }
-
-    async createPermission(name, code, description = null) {
-        return this._request('POST', '/api/permissions', { name, code, description });
-    }
-
-    async validateInviteCode(code, appKey = null) {
-        return this._request('POST', '/api/invite-codes/validate', {
-            code,
-            app_key: appKey || this.appKey
-        }, false);
-    }
-
-    async useInviteCode(inviteCode) {
-        return this._request('POST', '/api/invite-codes/use', { invite_code: inviteCode });
-    }
+    async getCurrentUser() { return this._request('GET', '/api/users/me'); }
+    async getUserinfo() { return this._request('GET', '/api/auth/userinfo'); }
+    async updateCurrentUser(updateData) { return this._request('PUT', '/api/users/me', updateData); }
 
     async thirdPartyLogin(provider, code, state = null, extra = null) {
         const data = { app_key: this.appKey, provider, code };
         if (state) data.state = state;
         if (extra) data.extra = extra;
         const result = await this._request('POST', '/api/auth/third-party', data, false);
-        if (result.success && result.data) {
-            this._setTokens(result.data);
-        }
+        if (result.success && result.data) { this._setTokens(result.data); }
         return result;
-    }
-
-    async getDiscovery() {
-        return this._request('GET', '/api/discovery');
-    }
-
-    async getIntegrationGuide() {
-        return this._request('GET', '/api/discovery/integration-guide');
-    }
-
-    async getVipLevels() {
-        return this._request('GET', `/api/vip/levels?app_key=${this.appKey}`);
-    }
-
-    async upgradeVip(levelCode, durationDays = null) {
-        const data = { level_code: levelCode };
-        if (durationDays) data.duration_days = durationDays;
-        return this._request('POST', '/api/vip/upgrade', data);
-    }
-
-    async checkVipExpiry() {
-        return this._request('GET', '/api/vip/check-expiry');
-    }
-
-    async getUserinfo() {
-        return this._request('GET', '/api/auth/userinfo');
-    }
-
-    async createInviteCodeBatch(appId, batchName, totalCount = 10, options = {}) {
-        const data = { app_id: appId, batch_name: batchName, total_count: totalCount, ...options };
-        return this._request('POST', '/api/invite-codes/batch', data);
-    }
-
-    async getInviteCodeBatches(appId = null) {
-        const path = appId ? `/api/invite-codes/batch?app_id=${appId}` : '/api/invite-codes/batch';
-        return this._request('GET', path);
     }
 
     static initFromScriptTag() {
