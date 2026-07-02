@@ -91,6 +91,10 @@ class UserCenterSDK {
         }
     }
 
+    setTokens(data) {
+        this._setTokens(data);
+    }
+
     getToken() { return this._accessToken; }
     getRefreshToken() { return this._refreshToken; }
     isAuthenticated() { return !!this._accessToken; }
