@@ -126,10 +126,14 @@
             const body = this.refreshBodyBuilder
                 ? this.refreshBodyBuilder(refreshToken)
                 : { refresh_token: refreshToken };
+            const refreshTimeout = this.timeout || 30000;
+            const refreshController = new AbortController();
+            const refreshTimeoutId = setTimeout(() => refreshController.abort(), refreshTimeout);
             this._refreshPromise = fetch(`${this.baseUrl}${this.refreshUrl}`, {
                 method: this.refreshMethod,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
+                body: JSON.stringify(body),
+                signal: refreshController.signal
             }).then(async (res) => {
                 let rdata;
                 try { rdata = await res.json(); } catch { rdata = {}; }
@@ -141,7 +145,13 @@
                 if (newRefresh) this._setRefreshToken(newRefresh);
                 if (this.onRefreshSuccess) this.onRefreshSuccess(rdata);
                 return newToken;
+            }).catch((err) => {
+                if (err.name === 'AbortError') {
+                    throw new Error('refresh timeout');
+                }
+                throw err;
             }).finally(() => {
+                clearTimeout(refreshTimeoutId);
                 this._refreshPromise = null;
             });
             return this._refreshPromise;
@@ -182,6 +192,9 @@
                                 }
                             }
                             if (response.status === 401) {
+                                if (skipAuthRefresh) {
+                                    throw new Error(errorMsg || '认证失败');
+                                }
                                 this._clearAuth();
                                 if (this.onUnauthorized) this.onUnauthorized();
                                 throw new Error('登录已过期，请重新登录');
