@@ -54,8 +54,8 @@
                     localError.value = '请填写用户名、邮箱或手机号';
                     return;
                 }
-                if (form.password.length < 6) {
-                    localError.value = '密码至少6位';
+                if (form.password.length < 8) {
+                    localError.value = '密码至少8位';
                     return;
                 }
                 if (form.password !== form.confirmPassword) {
