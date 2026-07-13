@@ -4,6 +4,15 @@
     const MAX_ABORT_CONTROLLERS = 100;
     const BASE_DELAY = 1000;
     const MAX_DELAY = 30000;
+    const ApiError = window.NexusApiError || Error;
+    const NET_PATTERNS = ['Failed to fetch', 'NetworkError', 'Network request failed', 'Load failed'];
+
+    function _isNetworkErr(err) {
+        if (!err) return false;
+        if (err.isNetwork === true) return true;
+        const msg = err.message || '';
+        return NET_PATTERNS.some(p => msg.includes(p));
+    }
 
     class NexusApi {
         constructor(config = {}) {
@@ -28,17 +37,14 @@
 
         _generateRequestId(url) {
             this._requestCounter = (this._requestCounter + 1) % Number.MAX_SAFE_INTEGER;
-            if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-                return `${url}_${crypto.randomUUID()}`;
-            }
+            if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return `${url}_${crypto.randomUUID()}`;
             return `${url}_${Date.now()}_${this._requestCounter}_${Math.random().toString(36).substring(2)}`;
         }
 
         _registerController(requestId, controller) {
             if (this.abortControllers.size >= MAX_ABORT_CONTROLLERS) {
                 const oldestKey = this.abortControllers.keys().next().value;
-                const oldCtrl = this.abortControllers.get(oldestKey);
-                try { oldCtrl.abort(); } catch (e) {}
+                try { this.abortControllers.get(oldestKey).abort(); } catch (e) {}
                 this.abortControllers.delete(oldestKey);
             }
             this.abortControllers.set(requestId, controller);
@@ -81,11 +87,8 @@
 
         async _doFetch(url, options, controller) {
             const response = await fetch(`${this.baseUrl}${url}`, {
-                ...options,
-                headers: this._buildHeaders(options.headers),
-                signal: controller.signal
+                ...options, headers: this._buildHeaders(options.headers), signal: controller.signal
             });
-
             let data;
             const contentType = response.headers.get('content-type') || '';
             if (contentType.includes('application/json')) {
@@ -94,10 +97,7 @@
                 const text = await response.text();
                 try { data = JSON.parse(text); } catch { data = { detail: text }; }
             }
-
-            if (this.responseAdapter) {
-                data = this.responseAdapter(data, response);
-            }
+            if (this.responseAdapter) data = this.responseAdapter(data, response);
             return { response, data };
         }
 
@@ -120,23 +120,17 @@
         async _tryRefresh() {
             if (this._refreshPromise) return this._refreshPromise;
             const refreshToken = this._getRefreshToken();
-            if (!this.refreshUrl || !refreshToken) {
-                return Promise.reject(new Error('no refresh config'));
-            }
-            const body = this.refreshBodyBuilder
-                ? this.refreshBodyBuilder(refreshToken)
-                : { refresh_token: refreshToken };
-            const refreshTimeout = this.timeout || 30000;
+            if (!this.refreshUrl || !refreshToken) return Promise.reject(new Error('no refresh config'));
+            const body = this.refreshBodyBuilder ? this.refreshBodyBuilder(refreshToken) : { refresh_token: refreshToken };
             const refreshController = new AbortController();
-            const refreshTimeoutId = setTimeout(() => refreshController.abort(), refreshTimeout);
+            const refreshTimeoutId = setTimeout(() => refreshController.abort(), this.timeout || 30000);
             this._refreshPromise = fetch(`${this.baseUrl}${this.refreshUrl}`, {
                 method: this.refreshMethod,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body),
                 signal: refreshController.signal
             }).then(async (res) => {
-                let rdata;
-                try { rdata = await res.json(); } catch { rdata = {}; }
+                let rdata; try { rdata = await res.json(); } catch { rdata = {}; }
                 if (!res.ok) throw new Error('refresh failed');
                 const newToken = rdata.access_token || (rdata.data && rdata.data.access_token);
                 const newRefresh = rdata.refresh_token || (rdata.data && rdata.data.refresh_token);
@@ -146,14 +140,8 @@
                 if (this.onRefreshSuccess) this.onRefreshSuccess(rdata);
                 return newToken;
             }).catch((err) => {
-                if (err.name === 'AbortError') {
-                    throw new Error('refresh timeout');
-                }
-                throw err;
-            }).finally(() => {
-                clearTimeout(refreshTimeoutId);
-                this._refreshPromise = null;
-            });
+                throw err.name === 'AbortError' ? new Error('refresh timeout') : err;
+            }).finally(() => { clearTimeout(refreshTimeoutId); this._refreshPromise = null; });
             return this._refreshPromise;
         }
 
@@ -182,36 +170,35 @@
                                     await this._tryRefresh();
                                     const retryResult = await this._doFetch(url, options, controller);
                                     if (!retryResult.response.ok) {
-                                        throw new Error(this._extractError(retryResult.data));
+                                        const retryMsg = this._extractError(retryResult.data);
+                                        throw new ApiError(retryMsg, retryResult.response.status, retryResult.data);
                                     }
                                     return retryResult.data;
                                 } catch (refreshErr) {
                                     this._clearAuth();
                                     if (this.onUnauthorized) this.onUnauthorized();
-                                    throw new Error('登录已过期，请重新登录');
+                                    throw new ApiError('登录已过期，请重新登录', 401, null);
                                 }
                             }
                             if (response.status === 401) {
-                                if (skipAuthRefresh) {
-                                    throw new Error(errorMsg || '认证失败');
-                                }
                                 this._clearAuth();
                                 if (this.onUnauthorized) this.onUnauthorized();
-                                throw new Error('登录已过期，请重新登录');
+                                const msg401 = skipAuthRefresh ? (errorMsg || '认证失败') : '登录已过期，请重新登录';
+                                throw new ApiError(msg401, 401, data);
                             }
                             if (this.onError) this.onError(response.status, errorMsg);
-                            throw new Error(errorMsg);
+                            throw new ApiError(errorMsg, response.status, data);
                         }
 
                         return data;
                     } catch (error) {
                         lastError = error;
-                        if (error.name === 'AbortError') {
-                            throw new Error('请求超时，请稍后重试');
+                        if (error.name === 'AbortError') throw new ApiError('请求超时，请稍后重试', 408, null);
+                        if (_isNetworkErr(error)) {
+                            const e = new ApiError('网络连接失败，请检查网络后重试', null, null);
+                            e.isNetwork = true; throw e;
                         }
-                        if (error.message && error.message.includes('登录已过期')) {
-                            throw error;
-                        }
+                        if (error.name === 'NexusApiError' || (error.message && error.message.includes('登录已过期'))) throw error;
                         if (attempt < maxAttempts) {
                             const delay = Math.min(MAX_DELAY, BASE_DELAY * 2 ** (attempt - 1)) * (0.5 + Math.random() * 0.5);
                             await new Promise(r => setTimeout(r, delay));
@@ -249,15 +236,16 @@
         upload(url, formData, options = {}) {
             const token = this._getToken();
             const headers = { ...(token && { 'Authorization': `Bearer ${token}` }), ...options.headers };
-            return fetch(`${this.baseUrl}${url}`, {
-                method: 'POST', body: formData, headers, ...options
-            }).then(async (res) => {
-                let data;
-                const ct = res.headers.get('content-type') || '';
+            return fetch(`${this.baseUrl}${url}`, { method: 'POST', body: formData, headers, ...options })
+            .then(async (res) => {
+                let data; const ct = res.headers.get('content-type') || '';
                 if (ct.includes('application/json')) data = await res.json();
                 else { const t = await res.text(); try { data = JSON.parse(t); } catch { data = { detail: t }; } }
-                if (!res.ok) throw new Error(this._extractError(data));
+                if (!res.ok) throw new ApiError(this._extractError(data), res.status, data);
                 return data;
+            }).catch((err) => {
+                if (err.name === 'NexusApiError') throw err;
+                throw _isNetworkErr(err) ? new ApiError('网络连接失败，请检查网络后重试', null, null) : new ApiError(err.message || '上传失败', null, null);
             });
         }
 
@@ -273,13 +261,16 @@
             const qs = new URLSearchParams(params).toString();
             const fullUrl = qs ? `${url}?${qs}` : url;
             const token = this._getToken();
-            const response = await fetch(`${this.baseUrl}${fullUrl}`, {
-                headers: { ...(token && { 'Authorization': `Bearer ${token}` }) }
-            });
+            let response;
+            try {
+                response = await fetch(`${this.baseUrl}${fullUrl}`, { headers: { ...(token && { 'Authorization': `Bearer ${token}` }) } });
+            } catch (err) {
+                throw _isNetworkErr(err) ? new ApiError('网络连接失败，请检查网络后重试', null, null) : new ApiError(err.message || '下载失败', null, null);
+            }
             if (!response.ok) {
                 const errorMsg = `下载失败 (${response.status})`;
                 if (this.onError) this.onError(response.status, errorMsg);
-                throw new Error(errorMsg);
+                throw new ApiError(errorMsg, response.status, null);
             }
             return await response.blob();
         }
