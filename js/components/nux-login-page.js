@@ -5,6 +5,8 @@
             appName: { type: String, default: '' },
             appIcon: { type: String, default: '' },
             slogan: { type: String, default: '' },
+            description: { type: String, default: '' },
+            features: { type: Array, default: () => [] },
             themeColor: { type: String, default: '' },
             showRegister: { type: Boolean, default: true },
             showPhoneLogin: { type: Boolean, default: false },
@@ -80,13 +82,6 @@
         },
         template: `
             <div class="nux-login-page">
-                <div class="nux-login-brand">
-                    <div class="nux-login-brand-content">
-                        <span v-if="appIcon" class="nux-login-icon">{{ appIcon }}</span>
-                        <h1 v-if="appName" class="nux-login-app-name">{{ appName }}</h1>
-                        <p v-if="slogan" class="nux-login-slogan">{{ slogan }}</p>
-                    </div>
-                </div>
                 <div class="nux-login-form-side">
                     <div class="nux-login-card">
                         <div class="nux-login-tabs">
@@ -135,6 +130,23 @@
 
                         <div class="nux-login-footer">
                             <slot name="footer"></slot>
+                        </div>
+                    </div>
+                </div>
+                <div class="nux-login-brand">
+                    <div class="nux-login-brand-content">
+                        <span v-if="appIcon" class="nux-login-icon">{{ appIcon }}</span>
+                        <h1 v-if="appName" class="nux-login-app-name">{{ appName }}</h1>
+                        <p v-if="slogan" class="nux-login-slogan">{{ slogan }}</p>
+                        <p v-if="description" class="nux-login-desc">{{ description }}</p>
+                        <div v-if="features && features.length" class="nux-login-features">
+                            <div v-for="(f, i) in features" :key="i" class="nux-login-feature">
+                                <span v-if="f.icon" class="nux-login-feature-icon">{{ f.icon }}</span>
+                                <div class="nux-login-feature-text">
+                                    <strong v-if="f.title">{{ f.title }}</strong>
+                                    <span v-if="f.desc">{{ f.desc }}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

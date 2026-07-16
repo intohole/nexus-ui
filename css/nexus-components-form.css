@@ -110,7 +110,14 @@
 }
 .nux-login-icon { font-size: 64px; display: block; margin-bottom: var(--nx-space-4); }
 .nux-login-app-name { font-size: 32px; font-weight: 700; margin: 0 0 var(--nx-space-2); }
-.nux-login-slogan { font-size: var(--nx-text-lg); opacity: 0.8; margin: 0; }
+.nux-login-slogan { font-size: var(--nx-text-lg); opacity: 0.8; margin: 0 0 var(--nx-space-4); }
+.nux-login-desc { font-size: var(--nx-text-base); opacity: 0.7; margin: 0 0 var(--nx-space-6); line-height: 1.6; max-width: 360px; }
+.nux-login-features { display: flex; flex-direction: column; gap: var(--nx-space-4); text-align: left; max-width: 380px; margin: 0 auto; }
+.nux-login-feature { display: flex; align-items: flex-start; gap: var(--nx-space-3); }
+.nux-login-feature-icon { font-size: 24px; line-height: 1; flex-shrink: 0; }
+.nux-login-feature-text { display: flex; flex-direction: column; gap: 2px; }
+.nux-login-feature-text strong { font-size: var(--nx-text-base); font-weight: 600; }
+.nux-login-feature-text span { font-size: var(--nx-text-sm); opacity: 0.7; line-height: 1.4; }
 .nux-login-form-side {
   flex: 1;
   display: flex;
