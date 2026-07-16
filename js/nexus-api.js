@@ -249,7 +249,7 @@
             });
         }
 
-        async streamPost(url, data = {}, { onEvent, onError, timeout = 30000, headers = {} } = {}) {
+        async streamPost(url, data = {}, { onEvent, onError, timeout = 60000, headers = {} } = {}) {
             const controller = new AbortController();
             const requestId = this._generateRequestId(url);
             this._registerController(requestId, controller);
