@@ -249,6 +249,72 @@
             });
         }
 
+        async streamPost(url, data = {}, { onEvent, onError, timeout = 30000, headers = {} } = {}) {
+            const controller = new AbortController();
+            const requestId = this._generateRequestId(url);
+            this._registerController(requestId, controller);
+            const timeoutId = setTimeout(() => controller.abort(), timeout);
+            try {
+                const response = await fetch(`${this.baseUrl}${url}`, {
+                    method: 'POST',
+                    headers: this._buildHeaders(headers),
+                    body: JSON.stringify(data),
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                if (!response.ok) {
+                    let errData;
+                    try { errData = await response.json(); } catch { errData = {}; }
+                    const errorMsg = this._extractError(errData);
+                    if (response.status === 401) {
+                        this._clearAuth();
+                        if (this.onUnauthorized) this.onUnauthorized();
+                        if (onError) onError('登录已过期，请重新登录');
+                        return;
+                    }
+                    if (this.onError) this.onError(response.status, errorMsg);
+                    if (onError) onError(errorMsg);
+                    return;
+                }
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let currentEvent = null;
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+                    let newlineIdx;
+                    while ((newlineIdx = buffer.indexOf('\n')) !== -1) {
+                        const line = buffer.slice(0, newlineIdx);
+                        buffer = buffer.slice(newlineIdx + 1);
+                        if (line.startsWith('event:')) {
+                            currentEvent = line.slice(6).trim();
+                        } else if (line.startsWith('data:')) {
+                            const payload = line.slice(5).trim();
+                            if (payload && onEvent) {
+                                try { onEvent(currentEvent, JSON.parse(payload)); }
+                                catch (e) { /* ignore parse error */ }
+                            }
+                        } else if (line === '') {
+                            currentEvent = null;
+                        }
+                    }
+                }
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    if (onError) onError('连接超时，请检查网络后重试');
+                } else if (_isNetworkErr(error)) {
+                    if (onError) onError('网络连接失败，请检查网络后重试');
+                } else if (onError) {
+                    onError(error.message || '网络错误');
+                }
+            } finally {
+                clearTimeout(timeoutId);
+                this.abortControllers.delete(requestId);
+            }
+        }
+
         cancel(url) {
             const keysToDelete = [];
             for (const [id, ctrl] of this.abortControllers) {
