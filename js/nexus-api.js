@@ -351,6 +351,36 @@
             };
         }
 
+        crud(resource, options = {}) {
+            const factory = window.createNexusCrud;
+            if (typeof factory !== 'function') {
+                return this.createCrud(resource);
+            }
+            return factory({
+                api: this,
+                basePath: resource,
+                idField: options.idField || 'id',
+                paramNames: options.paramNames,
+                listAdapter: options.listAdapter,
+                itemAdapter: options.itemAdapter,
+                idPathParam: options.idPathParam
+            });
+        }
+
+        uploadFile(url, file, options = {}) {
+            const formData = new FormData();
+            const fieldName = options.fieldName || 'file';
+            if (file instanceof File || file instanceof Blob) {
+                formData.append(fieldName, file, options.filename || file.name || 'blob');
+            } else {
+                throw new Error('uploadFile: file must be a File or Blob');
+            }
+            if (options.fields && typeof options.fields === 'object') {
+                Object.entries(options.fields).forEach(([k, v]) => formData.append(k, v));
+            }
+            return this.upload(url, formData, { headers: options.headers || {} });
+        }
+
         logout() {
             this._clearAuth();
             if (this.onUnauthorized) this.onUnauthorized();

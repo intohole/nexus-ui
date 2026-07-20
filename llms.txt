@@ -21,6 +21,8 @@ CDN地址（国内加速）：`https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2
 
 <!-- 按需引入 -->
 <script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.4.0/js/nexus-api.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.4.0/js/nexus-crud.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.4.0/js/nexus-validators.js"></script>
 <script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.4.0/js/nexus-store.js"></script>
 <script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.4.0/js/user-center-sdk.js"></script>
 <script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.4.0/js/nexus-mobile.js"></script>
@@ -57,6 +59,8 @@ CDN地址（国内加速）：`https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2
 <script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.4.0/js/composables/use-sse.js"></script>
 <script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.4.0/js/composables/use-auth.js"></script>
 <script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.4.0/js/composables/use-collection.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.4.0/js/composables/use-crud.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.4.0/js/composables/use-form-submit.js"></script>
 ```
 
 ## 主题配置
@@ -188,4 +192,145 @@ const { isDark, toggleTheme } = useTheme();
 const { status, data, connect, disconnect } = useSSE();
 const { isAuthenticated, isAdmin, hasRole, requireAuth } = useAuth(store);
 const { items, total, setItems, addItem, updateItem, deleteItem } = useCollection();
+const { items, total, loading, error, pagination, totalPages, fetchList, create, update, remove, goToPage, doSearch, toggleSort, setFilter, refresh } = useCrud(config);
+const { submitting, error, success, submitDisabled, submit, reset, wrap } = useFormSubmit(options);
 ```
+
+## 通用CRUD工厂 createNexusCrud
+
+封装通用CRUD操作，自动处理auth header和error handling，支持分页/搜索/排序。依赖 `nexus-api.js`。需先引入 `nexus-crud.js`。
+
+```javascript
+const crud = createNexusCrud({
+    api: nexusApi,
+    basePath: '/notes',
+    idField: 'id',
+    paramNames: { page: 'page', pageSize: 'page_size', search: 'q', sort: 'sort_by', sortOrder: 'sort_order' },
+    listAdapter: (resp) => ({ items: resp.data, total: resp.total }),
+    itemAdapter: (resp) => resp.data
+});
+
+crud.list({ page: 1, pageSize: 20, search: 'foo', sortField: 'created_at', sortOrder: 'desc', filters: { status: 'active' } });
+crud.listPaged(1, 20);
+crud.search('foo');
+crud.sortBy('created_at', 'desc');
+crud.get(123);
+crud.create({ title: 'Hello' });
+crud.update(123, { title: 'Updated' });
+crud.remove(123);
+crud.batchRemove([1, 2, 3]);
+crud.sub('chapters', 123);
+crud.action('publish', { id: 123, method: 'POST', data: { foo: 'bar' } });
+```
+
+返回方法清单：`list / listRaw / get / create / update / remove / batchRemove / listPaged / search / sortBy / sub / action`。
+
+## NexusApi 扩展方法（v2.6+）
+
+```javascript
+const api = new NexusApi({ baseUrl: '/api/v1', tokenKey: 'token' });
+
+api.crud('/notes');
+api.crud('/notes', { idField: 'uuid', paramNames: { page: 'p', pageSize: 'size' } });
+api.uploadFile('/upload', fileInput.files[0], { fieldName: 'file', filename: 'custom.txt', fields: { category: 'doc' } });
+api.download('/export', { format: 'pdf' });
+api.createCrud('/notes');
+```
+
+`api.crud(resource, options)` 返回增强版CRUD客户端（依赖 createNexusCrud，若未引入则降级为 createCrud）；`api.uploadFile(url, file, options)` 直接接受 File/Blob 对象，自动包装为 FormData；`api.download(url, params)` 返回 Blob，由调用方决定如何保存。
+
+## useCrud 组合式函数
+
+封装完整CRUD流程的状态管理：list/detail/创建/更新/删除/分页/搜索/排序/筛选。需先引入 `nexus-crud.js` 和 `use-crud.js`。
+
+```javascript
+const { items, total, loading, error, pagination, totalPages, hasNext, hasPrev,
+        search, sortField, sortOrder, filters, isEmpty,
+        fetchList, fetchDetail, create, update, remove, batchRemove,
+        goToPage, nextPage, prevPage, setPageSize,
+        doSearch, clearSearch, toggleSort, setSort,
+        setFilter, setFilters, clearFilters,
+        refresh, reset } = useCrud({
+    api: nexusApi,
+    basePath: '/notes',
+    idField: 'id',
+    defaultPageSize: 20,
+    defaultSortField: 'created_at',
+    defaultSortOrder: 'desc',
+    autoLoad: true,
+    refreshAfterMutation: true,
+    onError: (e, type) => console.error(type, e),
+    onCreated: (item) => showToast('创建成功', 'success'),
+    onUpdated: (item, id) => showToast('更新成功', 'success'),
+    onRemoved: (id) => showToast('已删除', 'success')
+});
+
+await fetchList();
+await create({ title: 'Hello' });
+await update(123, { title: 'Updated' });
+await remove(123);
+await goToPage(2);
+await doSearch('keyword');
+await toggleSort('created_at');
+await setFilter('status', 'active');
+```
+
+## useFormSubmit 组合式函数
+
+封装表单提交流程：自动管理 submitting/error/success 状态，自动调用 Toast。需先引入 `use-form-submit.js`。
+
+```javascript
+const { submitting, error, errorMessage, success, successMessage, lastResult,
+        submitDisabled, hasError, hasSuccess,
+        submit, run, wrap, reset, clearError, clearSuccess } = useFormSubmit({
+    successMessage: '保存成功',
+    errorMessage: '',
+    showToastOnSuccess: true,
+    showToastOnError: true
+});
+
+async function handleSave() {
+    await submit(() => api.post('/notes', form), {
+        successMessage: '创建成功',
+        onSuccess: (result) => { router.push(`/notes/${result.id}`); },
+        onError: (e) => { console.error(e); }
+    });
+}
+
+const wrappedSubmit = wrap(() => api.post('/notes', form), { successMessage: '创建成功' });
+```
+
+错误信息自动通过 `mapHttpError`（来自 `nexus-api-error.js`）翻译为中文。Toast 优先调用 `window.showToast`，缺失时降级到 console。
+
+## NexusValidators 通用表单验证器
+
+零依赖的表单验证库，所有验证器都是高阶函数（返回 `(value, allValues?) => string`，空字符串表示通过）。需引入 `nexus-validators.js`。
+
+```javascript
+const V = NexusValidators;
+
+const rules = {
+    username: [V.required('请输入用户名'), V.minLength(3), V.maxLength(20)],
+    email: [V.required(), V.email()],
+    phone: [V.phone()],
+    age: [V.number(), V.range(18, 99)],
+    website: [V.url()],
+    code: [V.pattern(/^\d{6}$/, '请输入6位数字')],
+    idCard: [V.idCard()],
+    status: [V.oneOf(['active', 'inactive'])]
+};
+
+const form = { username: 'ab', email: 'invalid', phone: '13800138000', age: 25 };
+const { valid, errors } = NexusValidators.validateForm(form, rules);
+if (!valid) {
+    console.log(errors.username);
+    console.log(errors.email);
+}
+
+const usernameValidator = V.composeValidators(V.required(), V.minLength(3), V.maxLength(20));
+const err = usernameValidator('ab');
+```
+
+可用验证器：`required / requiredIf / minLength / maxLength / email / phone / url / number / integer / range / min / max / pattern / idCard / oneOf / custom`。
+
+辅助方法：`composeValidators(...validators) / validateField(value, validators, allValues?) / validateForm(form, rules) / validateFields(form, fields, rules) / makeFieldValidator(rules) / isEmpty(value)`。
