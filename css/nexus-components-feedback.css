@@ -180,6 +180,10 @@
   transition: background var(--nx-transition-fast), color var(--nx-transition-fast);
 }
 .nux-notif-btn:hover { background: var(--nx-bg-hover); color: var(--nx-text-heading); }
+.nux-notif-btn:focus-visible { outline: 2px solid var(--nx-text-accent); outline-offset: 2px; }
+.nux-notif-readall:focus-visible { outline: 2px solid var(--nx-text-accent); outline-offset: 2px; border-radius: var(--nx-radius-sm); }
+.nux-notif-item:focus-visible { outline: 2px solid var(--nx-text-accent); outline-offset: -2px; }
+.nux-notif-viewall:focus-visible { outline: 2px solid var(--nx-text-accent); outline-offset: 2px; border-radius: var(--nx-radius-sm); }
 .nux-notif-badge {
   position: absolute; top: 2px; right: 2px; min-width: 18px; height: 18px;
   padding: 0 5px; background: var(--nx-danger); color: #fff;

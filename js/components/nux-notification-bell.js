@@ -83,17 +83,23 @@
                 if (bellRef.value && !bellRef.value.contains(e.target)) open.value = false;
             };
 
+            const handleKeydown = (e) => {
+                if (e.key === 'Escape' && open.value) open.value = false;
+            };
+
             onMounted(() => {
                 notif.getUnreadCount();
                 pollTimer = setInterval(() => notif.getUnreadCount(), props.pollInterval);
                 notif.connectSSE();
                 document.addEventListener('click', handleClickOutside);
+                document.addEventListener('keydown', handleKeydown);
             });
 
             onUnmounted(() => {
                 if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
                 notif.disconnectSSE();
                 document.removeEventListener('click', handleClickOutside);
+                document.removeEventListener('keydown', handleKeydown);
             });
 
             return {
@@ -107,17 +113,19 @@
         },
         template: `
             <div class="nux-notif-bell" ref="bellRef">
-                <button class="nux-notif-btn" @click="togglePanel" aria-label="通知">
+                <button class="nux-notif-btn" @click="togglePanel"
+                        :aria-expanded="open" aria-haspopup="true" aria-label="通知">
                     <i class="fa-regular fa-bell"></i>
-                    <span v-if="unreadCount > 0" class="nux-notif-badge">{{ displayCount }}</span>
+                    <span v-if="unreadCount > 0" class="nux-notif-badge" role="status">{{ displayCount }}</span>
                 </button>
                 <transition name="nux-notif-panel">
-                    <div v-if="open" :class="['nux-notif-panel', { 'nux-notif-fullscreen': isMobile }]">
+                    <div v-if="open" :class="['nux-notif-panel', { 'nux-notif-fullscreen': isMobile }]"
+                         role="dialog" aria-label="通知列表">
                         <div class="nux-notif-header">
                             <span class="nux-notif-title">通知</span>
                             <button v-if="unreadCount > 0" class="nux-notif-readall" @click="handleMarkAllRead">全部已读</button>
                         </div>
-                        <div class="nux-notif-list">
+                        <div class="nux-notif-list" role="list">
                             <div v-if="loading" class="nux-notif-loading"><span class="nx-spinner"></span></div>
                             <div v-else-if="notifications.length === 0" class="nux-notif-empty">
                                 <i class="fa-regular fa-bell-slash nux-notif-empty-icon"></i>
@@ -125,7 +133,8 @@
                             </div>
                             <div v-else v-for="item in notifications" :key="item.id"
                                  :class="['nux-notif-item', { 'is-unread': !item.is_read }]"
-                                 @click="handleClick(item)">
+                                 role="listitem" tabindex="0"
+                                 @click="handleClick(item)" @keydown.enter="handleClick(item)">
                                 <span class="nux-notif-icon"><i :class="typeIcon(item.type)"></i></span>
                                 <div class="nux-notif-body">
                                     <div class="nux-notif-item-title">{{ item.title }}</div>
