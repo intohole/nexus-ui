@@ -3,7 +3,7 @@
 
     const useNotification = (options = {}) => {
         const notifyBase = options.baseUrl || window.NOTIFY_BASE_URL || '/api/notify';
-        const tokenKey = options.tokenKey || 'access_token';
+        const tokenKey = options.tokenKey || 'token';
         const sseMaxReconnect = options.sseMaxReconnect !== undefined ? options.sseMaxReconnect : 3;
         const sseReconnectInterval = options.sseReconnectInterval || 5000;
 
@@ -51,25 +51,47 @@
         };
 
         const markRead = async (id) => {
-            await api.put(notifyBase + '/' + id + '/read');
-            const item = notifications.value.find(n => n.id === id);
-            if (item) item.is_read = true;
-            if (unreadCount.value > 0) unreadCount.value--;
-            return true;
+            const prevRead = notifications.value.find(n => n.id === id)?.is_read;
+            try {
+                await api.put(notifyBase + '/' + id + '/read');
+                const item = notifications.value.find(n => n.id === id);
+                if (item) item.is_read = true;
+                if (unreadCount.value > 0) unreadCount.value--;
+                return true;
+            } catch (e) {
+                const item = notifications.value.find(n => n.id === id);
+                if (item) item.is_read = prevRead || false;
+                throw e;
+            }
         };
 
         const markAllRead = async () => {
-            await api.put(notifyBase + '/read-all');
-            notifications.value.forEach(n => { n.is_read = true; });
-            unreadCount.value = 0;
-            return true;
+            const prevStates = notifications.value.map(n => ({ id: n.id, is_read: n.is_read }));
+            const prevCount = unreadCount.value;
+            try {
+                await api.put(notifyBase + '/read-all');
+                notifications.value.forEach(n => { n.is_read = true; });
+                unreadCount.value = 0;
+                return true;
+            } catch (e) {
+                prevStates.forEach(s => {
+                    const item = notifications.value.find(n => n.id === s.id);
+                    if (item) item.is_read = s.is_read;
+                });
+                unreadCount.value = prevCount;
+                throw e;
+            }
         };
 
         const deleteNotification = async (id) => {
-            await api.delete(notifyBase + '/' + id);
-            notifications.value = notifications.value.filter(n => n.id !== id);
-            if (total.value > 0) total.value--;
-            return true;
+            try {
+                await api.delete(notifyBase + '/' + id);
+                notifications.value = notifications.value.filter(n => n.id !== id);
+                if (total.value > 0) total.value--;
+                return true;
+            } catch (e) {
+                throw e;
+            }
         };
 
         const onNotification = (cb) => { notifCallback = cb; };
