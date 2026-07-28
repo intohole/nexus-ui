@@ -284,3 +284,76 @@
   .form-input, .form-select, .form-textarea { min-height: 40px; font-size: 16px; }
   .tab { min-height: 40px; padding: 10px 14px; }
 }
+
+/* ===== 移动端基础重置（收口自各项目 mobile-base.css，可直接替代） ===== */
+:root {
+  --safe-top: var(--nx-safe-top);
+  --safe-bottom: var(--nx-safe-bottom);
+  --safe-left: var(--nx-safe-left);
+  --safe-right: var(--nx-safe-right);
+  --app-vh: calc(var(--nx-vh) * 100);
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html, body {
+  overscroll-behavior-y: contain;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+input[type="number"],
+textarea,
+select,
+.el-textarea__inner {
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  button,
+  .btn,
+  [role="button"],
+  a.btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .modal,
+  .modal-overlay {
+    padding: 0 !important;
+  }
+  .modal-card,
+  .modal-content {
+    max-width: 100% !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (pointer: coarse) {
+  button,
+  .btn,
+  [role="button"],
+  a.btn,
+  .clickable {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
