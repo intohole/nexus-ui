@@ -1,6 +1,6 @@
 {
   "name": "nexus-ui",
-  "version": "2.6.2",
+  "version": "2.7.1",
   "description": "Nexus Design System — 统一前端基础设施，Vue 3 CDN 全局模式",
   "main": "css/nexus-all.css",
   "files": [
@@ -59,7 +59,9 @@
       "nux-radar-chart.js": "雷达图Vue组件（薄包装，依赖nux-radar-chart-util）",
       "nux-badge.js": "徽标组件",
       "nux-avatar.js": "头像组件",
-      "nux-skeleton.js": "骨架屏组件"
+      "nux-skeleton.js": "骨架屏组件",
+      "nux-notification-bell.js": "通知铃铛组件",
+      "nux-about-page.js": "关于我们页面组件（自包含CSS，主题色驱动）"
     },
     "js/composables/": {
       "use-mobile.js": "移动端检测composable",
