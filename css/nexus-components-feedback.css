@@ -85,7 +85,7 @@
 
 .nux-toast-success { background: var(--nx-success); }
 .nux-toast-error { background: var(--nx-danger); }
-.nux-toast-warning { background: var(--nx-warning); color: #1a1a1a; }
+.nux-toast-warning { background: var(--nx-warning); color: #3d3421; }
 .nux-toast-info { background: var(--nx-info); }
 
 .nux-toast-icon { font-size: var(--nx-text-lg); line-height: 1; flex-shrink: 0; }

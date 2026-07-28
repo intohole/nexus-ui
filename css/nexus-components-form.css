@@ -92,7 +92,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--app-accent, var(--nx-primary)), color-mix(in srgb, var(--app-accent, var(--nx-primary)) 70%, #000));
+  background: linear-gradient(135deg, var(--app-accent, var(--nx-primary)), color-mix(in srgb, var(--app-accent, var(--nx-primary)) 70%, #1e293b));
   padding: var(--nx-space-8);
   position: relative;
   overflow: hidden;
