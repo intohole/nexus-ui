@@ -154,15 +154,15 @@
   .nx-btn { min-height: 44px; min-width: 44px; }
   .nx-nav-link { min-height: 44px; display: flex; align-items: center; }
   .nx-sidebar-item { min-height: 44px; }
-  .nx-input, .nx-select { min-height: 44px; font-size: 16px; }
+  .nx-input, .nx-select, .nux-input { min-height: 44px; font-size: 16px; }
 }
 
 .nx-about-btn {
   position: fixed;
   right: 20px;
   bottom: 80px;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: var(--app-accent, #0ea5e9);
   color: #fff;
@@ -209,7 +209,7 @@
 }
 
 [data-theme="dark"] .nx-drawer { background: var(--nx-bg-surface); }
-[data-theme="dark"] .nx-bottom-nav { background: rgba(10, 10, 15, 0.85); border-top-color: var(--nx-border); }
+[data-theme="dark"] .nx-bottom-nav { background: var(--nx-glass-bg); border-top-color: var(--nx-border); }
 [data-theme="dark"] .nx-hamburger-line { background: var(--nx-text-heading); }
 
 @media (max-width: 768px) {

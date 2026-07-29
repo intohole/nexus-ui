@@ -98,7 +98,8 @@ a:hover { color: var(--app-accent-hover); }
   align-items: center;
   gap: var(--nx-space-6);
   padding: 0 var(--nx-space-6);
-  height: 56px;
+  padding-top: var(--nx-safe-top, 0px);
+  height: calc(56px + var(--nx-safe-top, 0px));
   background: var(--nx-glass-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
