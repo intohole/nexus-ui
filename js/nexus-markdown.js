@@ -6,8 +6,8 @@
     const LIBS = {
         marked: 'https://cdn.jsdmirror.com/npm/marked@12.0.0/marked.min.js',
         dompurify: 'https://cdn.jsdmirror.com/npm/dompurify@3.0.6/dist/purify.min.js',
-        highlight: 'https://cdn.jsdmirror.com/npm/highlight.js@11.9.0/lib/highlight.min.js',
-        highlightCss: 'https://cdn.jsdmirror.com/npm/highlight.js@11.9.0/styles/atom-one-dark.min.css'
+        highlight: 'https://cdn.bootcdn.net/ajax/libs/highlight.js/11.9.0/highlight.min.js',
+        highlightCss: 'https://cdn.bootcdn.net/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css'
     };
 
     const DEFAULT_ALLOWED_TAGS = [
