@@ -425,7 +425,7 @@
                             </div>
                             <div class="nx-ai-chat-bubble">
                                 <slot name="message-before" :msg="m"></slot>
-                                <template v-if="m.streaming && !m.content">
+                                <template v-if="m.streaming && !m.content && feat.typingIndicator">
                                     <div class="nx-ai-chat-typing"><span></span><span></span><span></span></div>
                                 </template>
                                 <template v-else>
