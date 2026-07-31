@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>NuxAiChat 组件测试</title>
+<link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.9.0/css/nexus-all.css">
+<style>
+html, body { margin: 0; padding: 0; height: 100%; background: var(--nx-bg-page, rgb(248,250,252)); font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif; }
+#app { height: 100vh; max-width: 960px; margin: 0 auto; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; }
+h1 { font-size: 1.5rem; margin: 0 0 16px; color: var(--nx-text-heading); }
+.toolbar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.toolbar button { padding: 6px 12px; background: var(--nx-bg-secondary); border: 1px solid var(--nx-border); border-radius: 6px; cursor: pointer; font-size: 0.875rem; }
+.toolbar button:hover { background: var(--nx-accent-soft); border-color: var(--nx-accent); color: var(--nx-accent); }
+.chat-wrapper { flex: 1; min-height: 0; background: var(--nx-bg-elevated); border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.05); overflow: hidden; display: flex; flex-direction: column; }
+.mode-badge { display: inline-block; padding: 2px 8px; background: rgba(5,150,105,0.1); color: rgb(5,150,105); border-radius: 4px; font-size: 0.75rem; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<div id="app">
+    <h1>🤖 NuxAiChat 组件测试</h1>
+    <div class="toolbar">
+        <span class="mode-badge">sendHandler 模式（自定义流式模拟）</span>
+        <button @click="clearChat"><i class="fas fa-trash"></i> 清空</button>
+        <button @click="scrollDown"><i class="fas fa-arrow-down"></i> 滚动到底部</button>
+        <button @click="toggleTheme"><i class="fas fa-moon"></i> 切换主题</button>
+    </div>
+    <div class="chat-wrapper">
+        <nux-ai-chat
+            ref="chatRef"
+            :welcome="welcomeConfig"
+            :quick-replies="quickReplies"
+            :send-handler="mockSendHandler"
+            :features="features"
+            :input-config="inputConfig"
+            :roles="rolesConfig"
+            placeholder="输入消息测试AI对话组件..."
+            @send="onSend"
+            @chunk="onChunk"
+            @done="onDone"
+            @error="onError"
+            @stop="onStop"
+            @stream-start="onStreamStart"
+            @stream-end="onStreamEnd">
+            <template #message-before="{ msg }">
+                <span v-if="msg.role==='assistant' && msg.meta" style="font-size:0.75rem;color:#059669;margin-bottom:4px;display:block">📊 {{ msg.meta }}</span>
+            </template>
+        </nux-ai-chat>
+    </div>
+</div>
+
+<script src="https://cdn.bootcdn.net/ajax/libs/vue/3.4.21/vue.global.prod.min.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.9.0/js/nexus-utils.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.9.0/js/nexus-markdown.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.9.0/js/nexus-chat.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.9.0/js/components/nux-ai-chat.js"></script>
+
+<script>
+const { createApp, ref, reactive } = Vue;
+
+const app = createApp({
+    setup() {
+        const chatRef = ref(null);
+        const isDark = ref(false);
+
+        const welcomeConfig = {
+            icon: '🤖',
+            title: 'NuxAiChat 组件演示',
+            description: '这是一个完整的 AI 对话组件，支持流式输出、Markdown 渲染、停止生成、错误重试、智能滚动等功能。'
+        };
+
+        const quickReplies = [
+            { text: '测试 Markdown', icon: '📝', value: '请用 Markdown 格式输出一段包含标题、列表、代码块、表格的内容' },
+            { text: '测试流式', icon: '⚡', value: '请写一首关于编程的短诗' },
+            { text: '测试长文本', icon: '📄', value: '请详细介绍 Python 的异步编程' },
+            { text: '测试错误', icon: '❌', value: '__TRIGGER_ERROR__' }
+        ];
+
+        const features = {
+            stopButton: true,
+            streamFallback: false,
+            scrollToBottomButton: true,
+            smartScroll: true,
+            typingIndicator: true,
+            messageCopy: true,
+            aiTag: true
+        };
+
+        const inputConfig = {
+            enterToSend: true,
+            shiftEnterNewline: true,
+            autoResize: true,
+            maxLength: 4000,
+            checkComposing: true,
+            maxRows: 5
+        };
+
+        const rolesConfig = {
+            user: { avatar: '🧑', label: '测试用户' },
+            assistant: { avatar: '🤖', label: 'Demo AI', aiTag: true }
+        };
+
+        const mockResponses = {
+            '请用 Markdown 格式输出一段包含标题、列表、代码块、表格的内容': `# Markdown 渲染测试
+
+## 1. 列表演示
+
+- 第一项内容
+- 第二项内容
+- 第三项内容
+
+## 2. 代码块演示
+
+\`\`\`python
+def fibonacci(n):
+    """生成斐波那契数列"""
+    a, b = 0, 1
+    result = []
+    for _ in range(n):
+        result.append(a)
+        a, b = b, a + b
+    return result
+
+print(fibonacci(10))
+\`\`\`
+
+## 3. 表格演示
+
+| 语言 | 类型系统 | 出现年份 |
+|------|---------|---------|
+| Python | 动态 | 1991 |
+| JavaScript | 动态 | 1995 |
+| Rust | 静态 | 2010 |
+| Go | 静态 | 2009 |
+
+## 4. 引用与强调
+
+> 好的代码是其自身最好的文档。
+
+这是**粗体**、*斜体*和\`行内代码\`的演示。`,
+
+            '请写一首关于编程的短诗': `键盘是画笔
+代码是诗行
+逻辑是韵脚
+Bug 是误会
+编译是审稿
+运行是发表
+
+而深夜的屏幕
+是程序员
+孤独的月亮`,
+
+            '请详细介绍 Python 的异步编程': `# Python 异步编程详解
+
+## 1. 协程基础
+
+Python 3.5+ 引入了 \`async\`/\`await\` 语法，使异步编程更加直观。
+
+\`\`\`python
+import asyncio
+
+async def fetch_data(url):
+    """异步获取数据"""
+    await asyncio.sleep(1)  # 模拟 IO 等待
+    return f"Data from {url}"
+
+async def main():
+    # 并发执行多个协程
+    results = await asyncio.gather(
+        fetch_data("api/users"),
+        fetch_data("api/posts"),
+        fetch_data("api/comments")
+    )
+    return results
+
+asyncio.run(main())
+\`\`\`
+
+## 2. 事件循环
+
+事件循环是异步编程的核心，负责调度协程的执行。
+
+## 3. 异步上下文管理器
+
+\`\`\`python
+class AsyncDB:
+    async def __aenter__(self):
+        await self.connect()
+        return self
+    
+    async def __aexit__(self, *args):
+        await self.close()
+
+async with AsyncDB() as db:
+    await db.query("SELECT * FROM users")
+\`\`\`
+
+## 4. 实际应用场景
+
+- **Web 爬虫**：并发抓取多个页面
+- **API 服务**：FastAPI 等框架
+- **数据库操作**：异步数据库驱动
+- **实时通信**：WebSocket 长连接
+
+异步编程能显著提升 IO 密集型应用的性能。`
+        };
+
+        function getMockResponse(content) {
+            if (content === '__TRIGGER_ERROR__') return null;
+            for (const key in mockResponses) {
+                if (content.includes(key) || key.includes(content)) {
+                    return mockResponses[key];
+                }
+            }
+            return `收到您的消息：「${content}」\n\n这是一个**模拟回复**。NuxAiChat 组件已正常工作，支持：\n\n- ✅ Markdown 渲染\n- ✅ 流式输出\n- ✅ 停止生成\n- ✅ 错误重试\n- ✅ 智能滚动\n\n您可以通过快捷按钮测试更多功能。`;
+        }
+
+        function mockSendHandler(content, callbacks) {
+            let stopped = false;
+            callbacks.registerStop(() => { stopped = true; });
+
+            if (content === '__TRIGGER_ERROR__') {
+                setTimeout(() => {
+                    callbacks.onError(new Error('模拟 AI 服务错误（测试错误处理与重试功能）'));
+                }, 500);
+                return;
+            }
+
+            const fullResponse = getMockResponse(content);
+            if (!fullResponse) {
+                callbacks.onError(new Error('未知错误'));
+                return;
+            }
+
+            const chunks = fullResponse.match(/[\s\S]{1,8}/g) || [];
+            let idx = 0;
+            let accumulated = '';
+
+            function sendNext() {
+                if (stopped) {
+                    callbacks.onDone(accumulated);
+                    return;
+                }
+                if (idx >= chunks.length) {
+                    callbacks.onDone(accumulated);
+                    return;
+                }
+                accumulated += chunks[idx];
+                callbacks.onChunk(chunks[idx], accumulated);
+                idx++;
+                setTimeout(sendNext, 30 + Math.random() * 50);
+            }
+            setTimeout(sendNext, 300);
+        }
+
+        function onSend(content) { console.log('[发送]', content); }
+        function onChunk(chunk, full) { /* 流式 chunk */ }
+        function onDone(full, msg) { console.log('[完成]', full.length, '字符'); }
+        function onError(err, msg) { console.warn('[错误]', err); }
+        function onStop() { console.log('[停止]'); }
+        function onStreamStart() { console.log('[流式开始]'); }
+        function onStreamEnd(ok) { console.log('[流式结束]', ok ? '成功' : '失败'); }
+
+        function clearChat() { chatRef.value && chatRef.value.clear(); }
+        function scrollDown() { chatRef.value && chatRef.value.scrollToBottom(); }
+        function toggleTheme() {
+            isDark.value = !isDark.value;
+            document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : '');
+        }
+
+        return {
+            chatRef, welcomeConfig, quickReplies, mockSendHandler,
+            features, inputConfig, rolesConfig,
+            onSend, onChunk, onDone, onError, onStop, onStreamStart, onStreamEnd,
+            clearChat, scrollDown, toggleTheme
+        };
+    }
+});
+
+app.component('nux-ai-chat', NuxAiChat);
+app.mount('#app');
+</script>
+</body>
+</html>
