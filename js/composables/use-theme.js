@@ -2,7 +2,7 @@
     const { ref, watch, onMounted } = Vue;
 
     const useTheme = (options = {}) => {
-        const storageKey = options.storageKey || 'theme';
+        const storageKey = options.storageKey || 'nx-theme';
         const isDark = ref(false);
 
         const applyTheme = (dark) => {
@@ -15,12 +15,7 @@
 
         onMounted(() => {
             const saved = localStorage.getItem(storageKey);
-            if (saved) {
-                applyTheme(saved === 'dark');
-            } else {
-                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                applyTheme(prefersDark);
-            }
+            applyTheme(saved === 'dark');
         });
 
         watch(isDark, (val) => localStorage.setItem(storageKey, val ? 'dark' : 'light'));

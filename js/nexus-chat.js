@@ -1,115 +1,50 @@
-(function() {
-    const MARKED_CDN = 'https://cdn.jsdmirror.com/npm/marked@12.0.0/marked.min.js';
-    const DOMPURIFY_CDN = 'https://cdn.jsdmirror.com/npm/dompurify@3.0.6/dist/purify.min.js';
-    const HIGHLIGHT_CDN = 'https://cdn.jsdmirror.com/npm/highlight.js@11.9.0/lib/highlight.min.js';
-    const HIGHLIGHT_CSS = 'https://cdn.jsdmirror.com/npm/highlight.js@11.9.0/styles/atom-one-dark.min.css';
+(function () {
+    'use strict';
 
-    let libsLoaded = false;
-    let libsLoading = null;
+    const CHAT_VERSION = '1.1.0';
 
-    function loadScript(src) {
-        return new Promise((resolve, reject) => {
-            if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
-            const script = document.createElement('script');
-            script.src = src;
-            script.onload = resolve;
-            script.onerror = () => reject(new Error(`load fail: ${src}`));
-            document.head.appendChild(script);
-        });
+    function delegateMarkdown(text) {
+        if (window.NexusMarkdown && typeof window.NexusMarkdown.render === 'function') {
+            return window.NexusMarkdown.render(text);
+        }
+        if (window.NexusMarkdown && typeof window.NexusMarkdown.escapeHtml === 'function') {
+            return window.NexusMarkdown.escapeHtml(text).replace(/\n/g, '<br>');
+        }
+        return String(text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/\n/g, '<br>');
     }
 
-    function loadStylesheet(href) {
-        return new Promise((resolve) => {
-            if (document.querySelector(`link[href="${href}"]`)) { resolve(); return; }
-            const link = document.createElement('link');
-            link.rel = 'stylesheet';
-            link.href = href;
-            link.onload = resolve;
-            link.onerror = resolve;
-            document.head.appendChild(link);
-        });
-    }
-
-    async function injectLibs() {
-        if (libsLoaded) return true;
-        if (libsLoading) return libsLoading;
-        libsLoading = (async () => {
-            await Promise.all([
-                loadScript(MARKED_CDN),
-                loadScript(DOMPURIFY_CDN),
-                loadScript(HIGHLIGHT_CDN),
-                loadStylesheet(HIGHLIGHT_CSS)
-            ]).catch(err => { console.warn('[NexusChat] lib load fail:', err.message); });
-            if (window.marked && window.DOMPurify) {
-                const renderer = new marked.Renderer();
-                const origLink = renderer.link.bind(renderer);
-                renderer.link = (href, title, text) => {
-                    const html = origLink(href, title, text);
-                    return html.replace('<a ', '<a target="_blank" rel="noopener noreferrer" ');
-                };
-                marked.setOptions({
-                    breaks: true,
-                    gfm: true,
-                    renderer: renderer,
-                    highlight: function(code, lang) {
-                        if (typeof hljs !== 'undefined' && lang) {
-                            try { return hljs.highlight(code, { language: lang }).value; } catch (e) {}
-                        }
-                        if (typeof hljs !== 'undefined') {
-                            try { return hljs.highlightAuto(code).value; } catch (e) {}
-                        }
-                        return code;
-                    }
-                });
-            }
-            libsLoaded = true;
-            return true;
-        })();
-        return libsLoading;
-    }
-
-    function escapeHtml(str) {
+    function delegateEscape(str) {
+        if (window.NexusMarkdown && typeof window.NexusMarkdown.escapeHtml === 'function') {
+            return window.NexusMarkdown.escapeHtml(str);
+        }
         if (str === null || str === undefined) return '';
         return String(str)
             .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
-    function renderMarkdown(text) {
-        if (!text) return '';
-        if (window.marked && window.DOMPurify) {
-            try {
-                const raw = marked.parse(text);
-                return DOMPurify.sanitize(raw, {
-                    ADD_ATTR: ['target', 'rel'],
-                    ALLOWED_TAGS: [
-                        'p', 'br', 'strong', 'em', 'code', 'pre', 'span',
-                        'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-                        'ul', 'ol', 'li', 'blockquote', 'hr',
-                        'table', 'thead', 'tbody', 'tr', 'th', 'td',
-                        'a', 'img', 'div', 'del', 'sub', 'sup'
-                    ]
-                });
-            } catch (e) {
-                console.warn('[NexusChat] render fail:', e);
-            }
+    async function delegateInject() {
+        if (window.NexusMarkdown && typeof window.NexusMarkdown.injectLibs === 'function') {
+            return window.NexusMarkdown.injectLibs();
         }
-        return escapeHtml(text).replace(/\n/g, '<br>');
+        return false;
     }
 
     class ChatController {
-        constructor(options = {}) {
-            this.api = options.api || (window.NexusApi ? new NexusApi() : null);
-            this.url = options.url || '';
-            this.body = options.body || {};
-            this.timeout = options.timeout || 120000;
-            this.eventKey = options.eventKey || 'delta';
-            this.contentKey = options.contentKey || 'content';
-            this.doneKey = options.doneKey || 'done';
-            this.onChunk = options.onChunk || (() => {});
-            this.onDone = options.onDone || (() => {});
-            this.onError = options.onError || (() => {});
-            this.onEvent = options.onEvent || null;
+        constructor(options) {
+            const opts = options || {};
+            this.api = opts.api || (window.NexusApi ? new NexusApi() : null);
+            this.url = opts.url || '';
+            this.body = opts.body || {};
+            this.timeout = opts.timeout || 120000;
+            this.eventKey = opts.eventKey || 'delta';
+            this.contentKey = opts.contentKey || 'content';
+            this.doneKey = opts.doneKey || 'done';
+            this.onChunk = opts.onChunk || (function () {});
+            this.onDone = opts.onDone || (function () {});
+            this.onError = opts.onError || (function () {});
+            this.onEvent = opts.onEvent || null;
             this.controller = null;
             this.receivedChunks = '';
             this._currentEvent = null;
@@ -133,7 +68,7 @@
                 });
                 if (!response.ok) {
                     let errData;
-                    try { errData = await response.json(); } catch { errData = {}; }
+                    try { errData = await response.json(); } catch (e) { errData = {}; }
                     this.onError(this.api._extractError(errData) || `请求失败 ${response.status}`);
                     return;
                 }
@@ -201,7 +136,12 @@
         }
     }
 
-    function createStreamingButton({ button, onSend, onStop, streamingClass = 'nx-chat-streaming' }) {
+    function createStreamingButton(opts) {
+        const options = opts || {};
+        const button = options.button;
+        const onSend = options.onSend;
+        const onStop = options.onStop;
+        const streamingClass = options.streamingClass || 'nx-chat-streaming';
         if (!button) return null;
         const sendIcon = button.innerHTML;
         let streaming = false;
@@ -214,23 +154,24 @@
             button.disabled = false;
             button.setAttribute('aria-label', state ? '停止生成' : '发送');
         }
-        button.addEventListener('click', () => {
-            if (streaming) onStop && onStop();
-            else onSend && onSend();
+        button.addEventListener('click', function () {
+            if (streaming) { onStop && onStop(); }
+            else { onSend && onSend(); }
         });
-        return { setStreaming, getStreaming: () => streaming };
+        return { setStreaming: setStreaming, getStreaming: function () { return streaming; } };
     }
 
-    function renderError(message, onRetry, retryLabel = '重试') {
+    function renderError(message, onRetry, retryLabel) {
+        const label = retryLabel || '重试';
         const errId = `nx-chat-err-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
         const retryBtn = onRetry
-            ? `<button type="button" class="nx-chat-retry" data-err-id="${errId}">${escapeHtml(retryLabel)}</button>`
+            ? `<button type="button" class="nx-chat-retry" data-err-id="${errId}">${delegateEscape(label)}</button>`
             : '';
         return `<div class="nx-chat-error" id="${errId}">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
             </svg>
-            <span>${escapeHtml(message)}</span>
+            <span>${delegateEscape(message)}</span>
             ${retryBtn}
         </div>`;
     }
@@ -246,15 +187,15 @@
     }
 
     const NexusChat = {
-        version: '1.0.0',
-        injectLibs,
-        renderMarkdown,
-        escapeHtml,
-        ChatController,
-        createStreamingButton,
-        renderError,
-        bindRetry,
-        typingCursor
+        version: CHAT_VERSION,
+        injectLibs: delegateInject,
+        renderMarkdown: delegateMarkdown,
+        escapeHtml: delegateEscape,
+        ChatController: ChatController,
+        createStreamingButton: createStreamingButton,
+        renderError: renderError,
+        bindRetry: bindRetry,
+        typingCursor: typingCursor
     };
 
     window.NexusChat = NexusChat;

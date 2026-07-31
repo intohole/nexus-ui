@@ -1,6 +1,6 @@
 {
   "name": "nexus-ui",
-  "version": "2.7.2",
+  "version": "2.8.0",
   "description": "Nexus Design System — 统一前端基础设施，Vue 3 CDN 全局模式",
   "main": "css/nexus-all.css",
   "files": [
@@ -36,6 +36,8 @@
     "js/": {
       "nexus-api-error.js": "API错误类（NexusApiError+mapHttpError+网络错误翻译）",
       "nexus-api.js": "通用API客户端（重试、超时、取消、401处理、CRUD、响应适配器、SSE流式POST）",
+      "nexus-markdown.js": "统一Markdown渲染组件（marked+DOMPurify+hljs，renderTo/postProcess/复制按钮）",
+      "nexus-chat.js": "AI对话工具集（ChatController流式管理+错误气泡，渲染委托NexusMarkdown）",
       "nexus-store.js": "Vue 3响应式状态管理（持久化）",
       "user-center-sdk.js": "用户中心SDK（登录/注册/Token/权限/VIP）",
       "user-center-api.js": "用户中心管理API（用户/应用/权限/邀请码/VIP）"
@@ -76,9 +78,11 @@
     }
   },
   "usage": {
-    "css": "在HTML中引入: <link rel='stylesheet' href='https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.6.0/css/nexus-all.css'>",
-    "js": "在Vue 3之后引入: <script src='https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.6.0/js/nexus-utils.js'></script>",
-    "error": "在nexus-api.js之前引入: <script src='https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.6.0/js/nexus-api-error.js'></script>",
+    "css": "在HTML中引入: <link rel='stylesheet' href='https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.8.0/css/nexus-all.css'>",
+    "js": "在Vue 3之后引入: <script src='https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.8.0/js/nexus-utils.js'></script>",
+    "markdown": "AI输出渲染: <script src='https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.8.0/js/nexus-markdown.js'></script>, 调用 NexusMarkdown.renderTo(el, text) 或 NexusMarkdown.render(text)",
+    "chat": "对话场景: 在nexus-markdown.js之后引入nexus-chat.js, 调用 NexusChat.renderMarkdown() 或 new NexusChat.ChatController()",
+    "error": "在nexus-api.js之前引入: <script src='https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.8.0/js/nexus-api-error.js'></script>",
     "theme": "在body上添加应用class: <body class='app-one-note'>"
   }
 }
