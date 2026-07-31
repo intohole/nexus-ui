@@ -1,6 +1,6 @@
 {
   "name": "nexus-ui",
-  "version": "2.8.0",
+  "version": "2.8.1",
   "description": "Nexus Design System — 统一前端基础设施，Vue 3 CDN 全局模式",
   "main": "css/nexus-all.css",
   "files": [
@@ -78,11 +78,11 @@
     }
   },
   "usage": {
-    "css": "在HTML中引入: <link rel='stylesheet' href='https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.8.0/css/nexus-all.css'>",
-    "js": "在Vue 3之后引入: <script src='https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.8.0/js/nexus-utils.js'></script>",
-    "markdown": "AI输出渲染: <script src='https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.8.0/js/nexus-markdown.js'></script>, 调用 NexusMarkdown.renderTo(el, text) 或 NexusMarkdown.render(text)",
+    "css": "在HTML中引入: <link rel='stylesheet' href='https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.8.1/css/nexus-all.css'>",
+    "js": "在Vue 3之后引入: <script src='https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.8.1/js/nexus-utils.js'></script>",
+    "markdown": "AI输出渲染: <script src='https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.8.1/js/nexus-markdown.js'></script>, 调用 NexusMarkdown.renderTo(el, text) 或 NexusMarkdown.render(text)",
     "chat": "对话场景: 在nexus-markdown.js之后引入nexus-chat.js, 调用 NexusChat.renderMarkdown() 或 new NexusChat.ChatController()",
-    "error": "在nexus-api.js之前引入: <script src='https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.8.0/js/nexus-api-error.js'></script>",
+    "error": "在nexus-api.js之前引入: <script src='https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.8.1/js/nexus-api-error.js'></script>",
     "theme": "在body上添加应用class: <body class='app-one-note'>"
   }
 }
