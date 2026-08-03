@@ -212,13 +212,13 @@
             }
         }
 
-        get(url, params = {}) {
+        get(url, params = {}, options = {}) {
             const filtered = {};
             Object.entries(params).forEach(([k, v]) => {
                 if (v !== undefined && v !== null && v !== '') filtered[k] = v;
             });
             const qs = new URLSearchParams(filtered).toString();
-            return this.request(qs ? `${url}?${qs}` : url, { method: 'GET' });
+            return this.request(qs ? `${url}?${qs}` : url, { method: 'GET', ...options });
         }
 
         post(url, data = {}, options = {}) {
