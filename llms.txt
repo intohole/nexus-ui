@@ -180,6 +180,45 @@ NuxRadarDraw.draw(canvas, {
 });
 ```
 
+### nux-login-page 登录页组件
+
+统一登录/注册页，双栏布局（表单+品牌区）。支持账号密码/手机验证码双登录、两步注册、记住我、忘记密码、用户协议勾选、第三方登录。挂载 `window.NuxLoginPage`，全部为新特性时可集成 `promptManager/verseCraft/aiPet/goldenStock/oneNote/WisePath/moutain/chroma/userFeedback/financialKG` 等项目。
+
+```html
+<nux-login-page
+  app-name="MyApp"
+  app-icon="🚀"
+  slogan="让复杂变简单"
+  :features="[{title:'极致体验',desc:'丝滑操作',icon:'⚡'}]"
+  theme-color="#3b82f6"
+  :show-register="true"
+  :show-email-field="true"
+  :require-email="true"
+  :show-phone-login="true"
+  :show-sms-login="true"
+  :show-remember-me="true"
+  :show-forgot="true"
+  :show-terms="true"
+  terms-url="/terms"
+  privacy-url="/privacy"
+  :third-party-login="[{key:'wechat',name:'微信',icon:'<svg>...</svg>'}]"
+  :loading="loading"
+  :sms-loading="smsLoading"
+  :error="error"
+  @login="handleLogin"
+  @register="handleRegister"
+  @sms-login="handleSmsLogin"
+  @send-sms="handleSendSms"
+  @third-party-login="handleThirdParty"
+  @forgot-password="handleForgot">
+  <template #footer>底部自定义内容</template>
+</nux-login-page>
+```
+
+Props: appName/appIcon/slogan/description/features/themeColor/showRegister(默认true)/showPhoneLogin/showEmailField/requireEmail/showInviteCode/showSmsLogin/showRememberMe/showForgot/showTerms/termsText(默认'我已阅读并同意《用户协议》和《隐私政策》')/termsUrl/privacyUrl/thirdPartyLogin(Array[{key,name,icon}])/authMode('local'|'sms'|'token')/minPasswordLength(默认8)/loading/smsLoading/error
+
+Events: login(emit {username,password,rememberMe})/register(emit {username,password,email,phone,inviteCode,code})/sms-login(emit {phone,code})/send-sms(emit {phone,mode})/third-party-login(emit {key})/forgot-password
+
 ### Composables
 
 ```javascript
