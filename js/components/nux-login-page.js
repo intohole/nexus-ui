@@ -38,7 +38,7 @@
             const agreed = Vue.ref(false);
             const smsCode = Vue.ref('');
             const smsCountdown = Vue.ref(0);
-            const smsTimer = null;
+            let smsTimer = null;
             const form = Vue.reactive({
                 username: '',
                 password: '',
@@ -105,13 +105,13 @@
                 emit('send-sms', { phone: phone, mode: mode.value === 'login' ? 'login' : 'register' });
             }
 
-            Vue.watch(smsLoading, function(v) {
+            Vue.watch(function() { return props.smsLoading; }, function(v) {
                 if (v) {
                     smsCountdown.value = 60;
                     if (smsTimer) clearInterval(smsTimer);
-                    const timer = setInterval(function() {
+                    smsTimer = setInterval(function() {
                         smsCountdown.value -= 1;
-                        if (smsCountdown.value <= 0) clearInterval(timer);
+                        if (smsCountdown.value <= 0) clearInterval(smsTimer);
                     }, 1000);
                 }
             });
