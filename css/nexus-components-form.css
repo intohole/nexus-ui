@@ -118,6 +118,17 @@
 .nux-login-feature-text { display: flex; flex-direction: column; gap: 2px; }
 .nux-login-feature-text strong { font-size: var(--nx-text-base); font-weight: 600; }
 .nux-login-feature-text span { font-size: var(--nx-text-sm); opacity: 0.7; line-height: 1.4; }
+.nux-login-stats {
+  display: flex;
+  gap: var(--nx-space-6);
+  margin-top: var(--nx-space-6);
+  padding-top: var(--nx-space-5);
+  border-top: 1px solid rgba(255,255,255,0.18);
+  justify-content: center;
+}
+.nux-login-stat { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.nux-login-stat strong { font-size: 26px; font-weight: 700; line-height: 1; }
+.nux-login-stat span { font-size: var(--nx-text-xs); opacity: 0.7; }
 .nux-login-form-side {
   flex: 1;
   display: flex;
@@ -312,9 +323,14 @@
 
 @media (max-width: 768px) {
   .nux-login-page { flex-direction: column; }
-  .nux-login-brand { min-height: 200px; flex: none; padding: var(--nx-space-6); }
-  .nux-login-icon { font-size: 40px; }
-  .nux-login-app-name { font-size: 24px; }
+  .nux-login-brand { min-height: 0; flex: none; padding: var(--nx-space-6); }
+  .nux-login-brand-content { text-align: center; }
+  .nux-login-desc,
+  .nux-login-features,
+  .nux-login-stats { display: none; }
+  .nux-login-icon { font-size: 36px; margin-bottom: var(--nx-space-2); }
+  .nux-login-app-name { font-size: 22px; margin-bottom: var(--nx-space-1); }
+  .nux-login-slogan { font-size: var(--nx-text-base); margin-bottom: 0; }
   .nux-login-form-side { padding: var(--nx-space-4); }
   .nux-form-horizontal { flex-direction: column; }
   .nux-form-horizontal .nux-form-label { width: auto; text-align: left; padding-top: 0; }

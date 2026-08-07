@@ -7,6 +7,7 @@
             slogan: { type: String, default: '' },
             description: { type: String, default: '' },
             features: { type: Array, default: () => [] },
+            stats: { type: Array, default: () => [] },
             themeColor: { type: String, default: '' },
             showRegister: { type: Boolean, default: true },
             showPhoneLogin: { type: Boolean, default: false },
@@ -322,6 +323,12 @@
                                     <strong v-if="f.title">{{ f.title }}</strong>
                                     <span v-if="f.desc">{{ f.desc }}</span>
                                 </div>
+                            </div>
+                        </div>
+                        <div v-if="stats && stats.length" class="nux-login-stats">
+                            <div v-for="(s, i) in stats" :key="i" class="nux-login-stat">
+                                <strong>{{ s.value }}</strong>
+                                <span>{{ s.label }}</span>
                             </div>
                         </div>
                     </div>
