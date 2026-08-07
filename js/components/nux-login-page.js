@@ -49,7 +49,7 @@
             });
 
             const combinedError = Vue.computed(() => props.error || localError.value);
-            const isSmsMode = Vue.computed(() => props.showSmsLogin && (mode.value === 'login' ? loginType.value === 'sms' : true));
+            const isSmsMode = Vue.computed(() => props.showSmsLogin && loginType.value === 'sms');
 
             function applyTheme() {
                 if (props.themeColor) {
@@ -161,6 +161,7 @@
             function switchMode(m) {
                 localError.value = '';
                 mode.value = m;
+                loginType.value = 'account';
             }
 
             function switchLoginType(t) {
@@ -193,7 +194,7 @@
 
                         <div v-if="combinedError" class="nux-login-error">{{ combinedError }}</div>
 
-                        <div v-if="mode === 'login' && showSmsLogin" class="nux-login-subtabs">
+                        <div v-if="showSmsLogin" class="nux-login-subtabs">
                             <button :class="['nux-login-subtab', { active: loginType === 'account' }]" @click="switchLoginType('account')">账号密码</button>
                             <button :class="['nux-login-subtab', { active: loginType === 'sms' }]" @click="switchLoginType('sms')">验证码登录</button>
                         </div>
