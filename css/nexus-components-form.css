@@ -338,3 +338,46 @@
   .nux-sms-btn { min-height: 44px; }
   .nux-third-btn { width: 52px; height: 52px; }
 }
+
+.nx-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nx-space-3);
+  padding: var(--nx-space-3) 0;
+  cursor: pointer;
+  font-size: var(--nx-text-sm);
+  color: var(--nx-text-secondary);
+}
+.nx-switch-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.nx-switch-slider {
+  position: relative;
+  width: 42px;
+  height: 24px;
+  flex-shrink: 0;
+  background: var(--nx-border-hover, #cbd5e1);
+  border-radius: var(--nx-radius-full);
+  transition: background var(--nx-transition-fast);
+}
+.nx-switch-slider::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform var(--nx-transition-fast);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.nx-switch-input:checked + .nx-switch-slider {
+  background: var(--nx-primary, #3b82f6);
+}
+.nx-switch-input:checked + .nx-switch-slider::after {
+  transform: translateX(18px);
+}
