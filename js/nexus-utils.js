@@ -137,6 +137,19 @@
                 .replace(/'/g, '&#39;');
         },
 
+        matchGrade(value, rules, mode = 'eq') {
+            if (value === undefined || value === null) return null;
+            const v = String(value).toLowerCase();
+            for (const rule of rules) {
+                const keys = Array.isArray(rule.match) ? rule.match : [rule.match];
+                const hit = mode === 'has'
+                    ? keys.some(k => k && v.indexOf(String(k).toLowerCase()) >= 0)
+                    : keys.some(k => k !== undefined && k !== null && String(k).toLowerCase() === v);
+                if (hit) return rule;
+            }
+            return null;
+        },
+
         formatRelativeTime(dateString) {
             if (!dateString) return '';
             const date = new Date(dateString);
