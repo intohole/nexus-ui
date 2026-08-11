@@ -337,3 +337,43 @@
   background: rgba(var(--nx-success-rgb), 0.12);
   color: var(--nx-success);
 }
+
+.nx-tooltip {
+  position: relative;
+  display: inline-flex;
+}
+.nx-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  border-radius: var(--nx-radius-sm);
+  background: var(--nx-text-heading);
+  color: var(--nx-bg-surface);
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--nx-transition-fast);
+  z-index: 300;
+}
+.nx-tooltip:hover::after,
+.nx-tooltip:focus-within::after {
+  opacity: 1;
+}
+
+.nx-progress {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--nx-bg-hover);
+  overflow: hidden;
+}
+.nx-progress-bar {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--nx-primary);
+  transition: width var(--nx-transition-base);
+}
