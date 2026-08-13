@@ -148,6 +148,38 @@
   100% { background-position: -200% 0; }
 }
 
+/* ===== 卡片网格骨架屏（作品/海报/列表加载） ===== */
+.nux-skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--nx-space-4, 1rem);
+}
+.nux-skeleton-card {
+  border: 1px solid var(--nx-border, rgba(0, 0, 0, 0.08));
+  border-radius: var(--nx-radius-lg, 16px);
+  background: var(--nx-bg-surface, #fff);
+  overflow: hidden;
+}
+.nux-skeleton-card-cover {
+  height: 96px;
+  background: linear-gradient(90deg, var(--nx-bg-muted, #f1f5f9) 25%, var(--nx-bg-hover, #e2e8f0) 50%, var(--nx-bg-muted, #f1f5f9) 75%);
+  background-size: 200% 100%;
+  animation: nx-skeleton-pulse 1.5s ease-in-out infinite;
+}
+.nux-skeleton-card-body {
+  padding: var(--nx-space-3, 0.75rem) var(--nx-space-4, 1rem);
+  display: flex;
+  flex-direction: column;
+  gap: var(--nx-space-2, 0.5rem);
+}
+.nux-skeleton-card-line {
+  height: 13px;
+  border-radius: var(--nx-radius-sm, 6px);
+  background: linear-gradient(90deg, var(--nx-bg-muted, #f1f5f9) 25%, var(--nx-bg-hover, #e2e8f0) 50%, var(--nx-bg-muted, #f1f5f9) 75%);
+  background-size: 200% 100%;
+  animation: nx-skeleton-pulse 1.5s ease-in-out infinite;
+}
+
 .nux-drawer-overlay-enter-active { transition: opacity 0.3s ease; }
 .nux-drawer-overlay-leave-active { transition: opacity 0.2s ease; }
 .nux-drawer-overlay-enter-from,
