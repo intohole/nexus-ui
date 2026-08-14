@@ -240,6 +240,21 @@
             try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
             textarea.remove();
             return ok;
+        },
+
+        showToast(message, type = 'info', options = {}) {
+            if (!window.ElementPlus || !ElementPlus.ElMessage) return;
+            ElementPlus.ElMessage({ message, type, duration: options.duration || 3000, ...options });
+        },
+
+        confirm(message, title = '操作确认', options = {}) {
+            if (!window.ElementPlus || !ElementPlus.ElMessageBox) return Promise.resolve(false);
+            return ElementPlus.ElMessageBox.confirm(message, title, {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning',
+                ...options
+            }).then(() => true).catch(() => false);
         }
     };
 

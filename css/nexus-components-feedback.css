@@ -148,6 +148,31 @@
   100% { background-position: -200% 0; }
 }
 
+/* ===== 会话/建议加载骨架屏（工作区规范统一语义类） ===== */
+.session-skeleton,
+.suggest-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nx-space-2, 0.5rem);
+  padding: var(--nx-space-2, 0.5rem);
+}
+.session-skeleton::before,
+.session-skeleton::after,
+.suggest-skeleton::before,
+.suggest-skeleton::after {
+  content: "";
+  display: block;
+  height: 14px;
+  border-radius: var(--nx-radius-sm, 6px);
+  background: linear-gradient(90deg, var(--nx-bg-muted) 25%, var(--nx-bg-hover) 50%, var(--nx-bg-muted) 75%);
+  background-size: 200% 100%;
+  animation: nx-skeleton-pulse 1.5s ease-in-out infinite;
+}
+.session-skeleton::after,
+.suggest-skeleton::after {
+  width: 70%;
+}
+
 /* ===== 卡片网格骨架屏（作品/海报/列表加载） ===== */
 .nux-skeleton-grid {
   display: grid;
