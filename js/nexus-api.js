@@ -305,6 +305,17 @@
                         }
                     }
                 }
+                if (buffer && buffer.length) {
+                    const line = buffer.trim();
+                    if (line.startsWith('data:')) {
+                        const payload = line.slice(5).trim();
+                        if (payload && onEvent) {
+                            try { onEvent(currentEvent, JSON.parse(payload)); }
+                            catch (e) { /* ignore parse error */ }
+                        }
+                    }
+                    buffer = '';
+                }
             } catch (error) {
                 if (error.name === 'AbortError') {
                     if (onError) onError('连接超时，请检查网络后重试');
