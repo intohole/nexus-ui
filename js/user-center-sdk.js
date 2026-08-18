@@ -105,9 +105,18 @@ class UserCenterSDK {
         this._setTokens(data);
     }
 
-    getToken() { return this._accessToken; }
-    getRefreshToken() { return this._refreshToken; }
-    isAuthenticated() { return !!this._accessToken; }
+    syncFromStorage() {
+        try {
+            var t = localStorage.getItem(TOKEN_KEY);
+            if (t && t !== this._accessToken) this._accessToken = t;
+            var r = localStorage.getItem(REFRESH_KEY);
+            if (r) this._refreshToken = r;
+        } catch (e) {}
+    }
+
+    getToken() { this.syncFromStorage(); return this._accessToken; }
+    getRefreshToken() { this.syncFromStorage(); return this._refreshToken; }
+    isAuthenticated() { this.syncFromStorage(); return !!this._accessToken; }
 
     isTokenExpiringSoon(bufferSeconds = 60) {
         if (!this._tokenExpiresAt) return false;
