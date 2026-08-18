@@ -8,8 +8,11 @@
         { name: 'NuxUserCenter', file: 'nux-user-center.js' },
         { name: 'NuxToast', file: 'nux-toast.js' }
     ];
+    const POLL_INTERVAL = 1500;
 
     let _config = null;
+    let _rootApp = null;
+    let _timer = null;
 
     function componentBase() {
         var src = (document.currentScript && document.currentScript.src) || '';
@@ -80,12 +83,23 @@
         return false;
     }
 
-    function mount(sdk) {
+    function unmount() {
+        if (_rootApp) {
+            _rootApp.unmount();
+            _rootApp = null;
+        }
         var root = document.getElementById('nux-float-user-center-root');
-        if (root) return null;
-        root = document.createElement('div');
-        root.id = 'nux-float-user-center-root';
-        document.body.appendChild(root);
+        if (root) root.remove();
+    }
+
+    function mount(sdk) {
+        if (_rootApp) return _rootApp;
+        var root = document.getElementById('nux-float-user-center-root');
+        if (!root) {
+            root = document.createElement('div');
+            root.id = 'nux-float-user-center-root';
+            document.body.appendChild(root);
+        }
         var app = Vue.createApp({
             name: 'NuxFloatUserCenterRoot',
             setup: function() {
@@ -106,46 +120,57 @@
         if (window.NuxAvatar) app.component('nux-avatar', window.NuxAvatar);
         if (window.NuxDrawer) app.component('nux-drawer', window.NuxDrawer);
         if (window.NuxUserCenter) app.component('nux-user-center', window.NuxUserCenter);
+        _rootApp = app;
         app.mount(root);
         return app;
     }
 
-    function init() {
-        if (!window.Vue) return null;
-        if (document.getElementById('nux-float-user-center-root')) return null;
-        return ensureDeps().then(function() {
-            if (document.getElementById('nux-float-user-center-root')) return null;
-            var sdk = resolveSdk();
-            if (!sdk || !isAuthed(sdk)) return null;
-            return mount(sdk);
-        }).catch(function() {});
+    function sync() {
+        if (!window.Vue) return false;
+        var sdk = resolveSdk();
+        var authed = !!(sdk && isAuthed(sdk));
+        if (_rootApp && !authed) {
+            unmount();
+        } else if (!_rootApp && authed && sdk) {
+            ensureDeps().then(function() {
+                if (_rootApp) return;
+                var sdk2 = resolveSdk();
+                if (!sdk2 || !isAuthed(sdk2)) return;
+                mount(sdk2);
+            }).catch(function() {});
+        }
+        return authed;
     }
 
-    function auto() {
-        if (!window.Vue) {
-            var tries = 0;
-            var timer = setInterval(function() {
-                if (window.Vue) {
-                    clearInterval(timer);
-                    init();
-                } else if (++tries > 300) {
-                    clearInterval(timer);
-                }
-            }, 500);
-            return;
-        }
-        init();
+    function start() {
+        if (_timer) return;
+        _timer = setInterval(sync, POLL_INTERVAL);
+    }
+
+    function init() {
+        sync();
+        start();
     }
 
     window.addEventListener('uc:authchange', function() {
-        init();
+        sync();
     });
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', auto);
+        document.addEventListener('DOMContentLoaded', start);
     } else {
-        auto();
+        start();
     }
 
-    window.NuxFloatUserCenter = { init: init, auto: auto };
+    window.NuxFloatUserCenter = {
+        init: init,
+        configure: function(cfg) {
+            if (cfg && cfg.base_url && cfg.app_key) {
+                _config = { baseUrl: cfg.base_url, appKey: cfg.app_key };
+            }
+            init();
+            return !!_config;
+        },
+        destroy: unmount
+    };
 })();
