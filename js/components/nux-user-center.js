@@ -245,7 +245,7 @@
         },
         template: `
             <div class="nux-user-center">
-                <button type="button" class="nux-uc-trigger" :class="{ 'nux-uc-floating': floating }" :title="avatarName() || '用户中心'" @click="toggleOpen">
+                <button type="button" class="nux-uc-trigger" :class="{ 'nux-uc-floating': floating, 'nux-uc-active': drawerOpen, 'nux-uc-loading': loading && !user }" :title="avatarName() || '用户中心'" :aria-label="avatarName() || '用户中心'" @click="toggleOpen">
                     <nux-avatar :name="avatarName()" size="sm"></nux-avatar>
                 </button>
                 <nux-drawer v-model="drawerOpen" side="right" width="380px">

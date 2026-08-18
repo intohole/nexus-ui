@@ -429,15 +429,41 @@
   right: 16px;
   z-index: 1000;
   padding: 0;
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   background: var(--nx-bg-base, #fff);
-  border: 1px solid var(--nx-border);
+  border: 1px solid var(--nx-border, #e2e8f0);
   border-radius: var(--nx-radius-full);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
-  transition: opacity var(--nx-transition-fast), transform var(--nx-transition-fast);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  transition: border-color var(--nx-transition-fast), box-shadow var(--nx-transition-fast), transform var(--nx-transition-fast);
 }
-.nux-uc-floating:hover { opacity: 0.9; transform: scale(1.05); }
+.nux-uc-floating .nux-avatar {
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
+  background: var(--app-accent, var(--nx-primary));
+  color: #fff;
+}
+.nux-uc-floating:hover {
+  opacity: 1;
+  transform: translateY(-1px) scale(1.04);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.16);
+}
+.nux-uc-floating:active { transform: scale(0.97); }
+.nux-uc-floating.nux-uc-active {
+  border-color: var(--app-accent, var(--nx-primary));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--app-accent, var(--nx-primary)) 18%, transparent);
+}
+.nux-uc-floating.nux-uc-loading .nux-avatar {
+  background: linear-gradient(90deg, var(--nx-bg-muted) 25%, var(--nx-bg-hover) 50%, var(--nx-bg-muted) 75%);
+  background-size: 200% 100%;
+  animation: nux-uc-shimmer 1.2s infinite;
+  color: transparent;
+}
+@keyframes nux-uc-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
 .nux-uc-body {
   display: flex;
   flex-direction: column;
