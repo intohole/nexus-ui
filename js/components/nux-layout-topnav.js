@@ -7,9 +7,10 @@
             appIcon: { type: String, default: '' },
             themeClass: { type: String, default: '' },
             navItems: { type: Array, default: () => [] },
-            currentPath: { type: String, default: '' }
+            currentPath: { type: String, default: '' },
+            userCenterSdk: { type: Object, default: null }
         },
-        emits: ['navigate'],
+        emits: ['navigate', 'user-logout'],
         setup(props, { emit }) {
             const { isMobile, mobileMenuOpen, toggleMenu, closeMenu } = useMobile();
             return { isMobile, mobileMenuOpen, toggleMenu, closeMenu };
@@ -32,6 +33,7 @@
                     </nav>
                     <div class="nux-layout-header-actions">
                         <slot name="header-actions"></slot>
+                        <nux-user-center v-if="userCenterSdk" :sdk="userCenterSdk" @logout="$emit('user-logout')"></nux-user-center>
                     </div>
                     <button class="nx-hamburger nx-show-mobile" @click="toggleMenu" :class="{'open': mobileMenuOpen}">
                         <span class="nx-hamburger-inner">

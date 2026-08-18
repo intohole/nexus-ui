@@ -265,9 +265,9 @@
 .nx-hl-stats { display: flex; gap: var(--nx-space-4); padding: var(--nx-space-3) 0; flex-wrap: wrap; }
 .nx-hs-stat { display: flex; align-items: baseline; gap: 4px; font-size: var(--nx-text-sm); color: var(--nx-text-secondary); }
 .nx-hs-stat b { font-size: var(--nx-text-lg); color: var(--nx-text-heading); }
-.nx-hs-stat.is-ok b { color: var(--nx-success); }
-.nx-hs-stat.is-gen b { color: var(--nx-warning); }
-.nx-hs-stat.is-fail b { color: var(--nx-danger); }
+.nx-hs-stat.is-ready b, .nx-hs-stat.is-complete b, .nx-hs-stat.is-ok b { color: var(--nx-success); }
+.nx-hs-stat.is-generating b, .nx-hs-stat.is-gen b { color: var(--nx-warning); }
+.nx-hs-stat.is-failed b, .nx-hs-stat.is-fail b { color: var(--nx-danger); }
 
 /* Toolbar */
 .nx-hl-toolbar { display: flex; align-items: center; gap: var(--nx-space-3); padding: var(--nx-space-3) 0; flex-wrap: wrap; border-top: 1px solid var(--nx-border); border-bottom: 1px solid var(--nx-border); }

@@ -95,15 +95,12 @@
             });
 
             const stats = computed(() => {
-                const stat = {
-                    total: props.items.length,
-                    ready: 0, generating: 0, failed: 0,
-                };
+                const keys = props.filterOptions.filter(k => k !== 'all');
+                const stat = { total: props.items.length };
+                keys.forEach(k => { stat[k] = 0; });
                 props.items.forEach((d) => {
                     const s = d[props.itemStatus];
-                    if (s === 'ready') stat.ready++;
-                    else if (s === 'generating') stat.generating++;
-                    else if (s === 'failed') stat.failed++;
+                    if (keys.includes(s)) stat[s]++;
                 });
                 return stat;
             });
@@ -223,9 +220,9 @@
             <!-- Stats bar -->
             <div class="nx-hl-stats" v-if="items.length">
                 <div class="nx-hs-stat"><b>{{ stats.total }}</b><span>全部</span></div>
-                <div class="nx-hs-stat is-ok" v-if="filterOptions.includes('ready')"><b>{{ stats.ready }}</b><span>已完成</span></div>
-                <div class="nx-hs-stat is-gen" v-if="filterOptions.includes('generating')"><b>{{ stats.generating }}</b><span>生成中</span></div>
-                <div class="nx-hs-stat is-fail" v-if="filterOptions.includes('failed')"><b>{{ stats.failed }}</b><span>失败</span></div>
+                <div v-for="k in filterOptions.filter(o=>o!=='all')" :key="k" class="nx-hs-stat" :class="'is-'+k">
+                    <b>{{ stats[k] || 0 }}</b><span>{{ labels[k] || k }}</span>
+                </div>
             </div>
 
             <!-- Toolbar -->

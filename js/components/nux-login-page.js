@@ -16,7 +16,8 @@
             showInviteCode: { type: Boolean, default: false },
             showSmsLogin: { type: Boolean, default: false },
             showRememberMe: { type: Boolean, default: false },
-            showForgot: { type: Boolean, default: false },
+            showForgot: { type: Boolean, default: true },
+            sdk: { type: Object, default: null },
             showTerms: { type: Boolean, default: false },
             termsText: { type: String, default: '我已阅读并同意《用户协议》和《隐私政策》' },
             termsUrl: { type: String, default: '' },
@@ -28,7 +29,7 @@
             smsLoading: { type: Boolean, default: false },
             error: { type: String, default: '' }
         },
-        emits: ['login', 'register', 'sms-login', 'send-sms', 'third-party-login', 'forgot-password'],
+        emits: ['login', 'register', 'sms-login', 'send-sms', 'third-party-login'],
         setup(props, { emit }) {
             const mode = Vue.ref('login');
             const loginType = Vue.ref('account');
@@ -48,9 +49,20 @@
                 phone: '',
                 inviteCode: ''
             });
+            const forgotOpen = Vue.ref(false);
+            const forgotLoading = Vue.ref(false);
+            const forgotComp = Vue.shallowRef(window.NuxForgotPassword || null);
 
             const combinedError = Vue.computed(() => props.error || localError.value);
             const isSmsMode = Vue.computed(() => props.showSmsLogin && loginType.value === 'sms');
+            const effectiveSdk = Vue.computed(function() {
+                return props.sdk || window.ucSDK || window.__UC_SDK__ || null;
+            });
+            const compBase = (function() {
+                const src = (document.currentScript && document.currentScript.src) || '';
+                const idx = src.lastIndexOf('/');
+                return idx > 0 ? src.slice(0, idx) : '';
+            })();
 
             function applyTheme() {
                 if (props.themeColor) {
@@ -97,13 +109,12 @@
 
             function sendSms() {
                 localError.value = '';
-                const phone = isSmsMode.value ? form.phone : form.phone;
-                if (!/^1[3-9]\d{9}$/.test(phone)) {
+                if (!/^1[3-9]\d{9}$/.test(form.phone)) {
                     localError.value = '请输入正确的手机号';
                     return;
                 }
                 if (smsCountdown.value > 0) return;
-                emit('send-sms', { phone: phone, mode: mode.value === 'login' ? 'login' : 'register' });
+                emit('send-sms', { phone: form.phone, mode: mode.value === 'login' ? 'login' : 'register' });
             }
 
             Vue.watch(function() { return props.smsLoading; }, function(v) {
@@ -175,12 +186,29 @@
             }
 
             function onForgot() {
-                emit('forgot-password');
+                if (!effectiveSdk.value) return;
+                localError.value = '';
+                if (forgotComp.value) {
+                    forgotOpen.value = true;
+                    return;
+                }
+                if (!compBase) return;
+                forgotLoading.value = true;
+                const s = document.createElement('script');
+                s.src = compBase + '/nux-forgot-password.js';
+                s.onload = function() {
+                    forgotLoading.value = false;
+                    forgotComp.value = window.NuxForgotPassword || null;
+                    if (forgotComp.value) forgotOpen.value = true;
+                };
+                s.onerror = function() { forgotLoading.value = false; };
+                document.head.appendChild(s);
             }
 
             return {
                 mode, loginType, form, smsCode, smsCountdown, agreed, rememberMe,
-                showPassword, showConfirmPassword, combinedError, isSmsMode,
+                showPassword, showConfirmPassword, combinedError, isSmsMode, effectiveSdk,
+                forgotOpen, forgotLoading, forgotComp,
                 onLogin, onRegister, sendSms, switchMode, switchLoginType, onThirdParty, onForgot
             };
         },
@@ -188,6 +216,9 @@
             <div class="nux-login-page">
                 <div class="nux-login-form-side">
                     <div class="nux-login-card">
+                        <component :is="forgotComp" v-if="showForgot && effectiveSdk && forgotOpen" :sdk="effectiveSdk" @back="forgotOpen = false" @done="forgotOpen = false"></component>
+                        <div v-else-if="forgotLoading" class="nux-login-error">加载中…</div>
+                        <template v-else>
                         <div class="nux-login-tabs">
                             <button :class="['nux-login-tab', { active: mode === 'login' }]" @click="switchMode('login')">登录</button>
                             <button v-if="showRegister" :class="['nux-login-tab', { active: mode === 'register' }]" @click="switchMode('register')">注册</button>
@@ -296,6 +327,7 @@
                                 {{ mode === 'login' ? '登 录' : '注 册' }}
                             </button>
                         </form>
+                        </template>
 
                         <div v-if="thirdPartyLogin && thirdPartyLogin.length" class="nux-login-divider"><span>其他登录方式</span></div>
                         <div v-if="thirdPartyLogin && thirdPartyLogin.length" class="nux-login-third">

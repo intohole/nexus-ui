@@ -5,7 +5,8 @@
     var bottom = isMobile ? 'calc(76px + env(safe-area-inset-bottom, 0px))' : '80px';
     var accent = getComputedStyle(document.documentElement).getPropertyValue('--app-accent').trim() || '#0ea5e9';
     var btn = document.createElement('a');
-    btn.href = 'about.html';
+    var prefix = (window.PATH_PREFIX || '').replace(/\/$/, '');
+    btn.href = prefix + '/static/about.html';
     btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span style="margin-left:6px;font-size:13px;font-weight:500">关于</span>';
     btn.setAttribute('aria-label', '关于我们');
     btn.title = '关于我们';

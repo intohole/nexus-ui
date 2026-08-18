@@ -23,7 +23,7 @@ Nexus UI（Nexus Design System）是一套基于 Vue 3 CDN 全局模式的前端
 | 框架 | Vue 3.4.21 | CDN 全局模式（非 ES Module），挂载到 window |
 | UI | element-plus 2.6.1 | 可选，按需引入 |
 | HTTP | axios 1.6.8 | 经 nexus-api.js 封装统出 |
-| 基础设施 | nexus-ui | 本工程，CDN 分发，当前版本 v2.10.1 |
+| 基础设施 | nexus-ui | 本工程，CDN 分发，当前版本 v2.10.4 |
 | 渲染 | marked + DOMPurify + hljs | Markdown 安全渲染 |
 
 ## 快速开始 / 使用方式

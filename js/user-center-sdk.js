@@ -19,6 +19,9 @@ class UserCenterSDK {
         this._onTokenUpdate = config.onTokenUpdate || null;
         this._onAuthError = config.onAuthError || null;
         this._loadPersistedTokens();
+        if (!window.ucSDK && !config.silent) {
+            window.ucSDK = this;
+        }
     }
 
     static initFromConfig(config) {
@@ -75,6 +78,12 @@ class UserCenterSDK {
         } catch (e) {}
     }
 
+    _emitAuthChange() {
+        try {
+            window.dispatchEvent(new CustomEvent('uc:authchange', { detail: { authenticated: !!this._accessToken } }));
+        } catch (e) {}
+    }
+
     _setTokens(data) {
         this._accessToken = data.access_token;
         this._refreshToken = data.refresh_token || this._refreshToken;
@@ -82,6 +91,7 @@ class UserCenterSDK {
             ? Date.now() + data.expires_in * 1000
             : null;
         this._persistTokens();
+        this._emitAuthChange();
         if (this._onTokenUpdate) {
             this._onTokenUpdate({
                 access_token: this._accessToken,
@@ -109,6 +119,7 @@ class UserCenterSDK {
         this._refreshToken = null;
         this._tokenExpiresAt = null;
         this._persistTokens();
+        this._emitAuthChange();
     }
 
     async _request(method, path, data = null, requireAuth = true, skipRefresh = false) {
@@ -242,6 +253,46 @@ class UserCenterSDK {
     async getCurrentUser() { return this._request('GET', '/api/users/me'); }
     async getUserinfo() { return this._request('GET', '/api/auth/userinfo'); }
     async updateCurrentUser(updateData) { return this._request('PUT', '/api/users/me', updateData); }
+
+    async changePassword({ oldPassword, newPassword, revokeOthers = true }) {
+        return this._request('POST', '/api/auth/change-password', {
+            old_password: oldPassword,
+            new_password: newPassword,
+            revoke_others: revokeOthers
+        });
+    }
+
+    async forgotPassword({ email = null, phone = null }) {
+        const data = {};
+        if (email) data.email = email;
+        if (phone) data.phone = phone;
+        return this._request('POST', '/api/auth/forgot-password', data, false);
+    }
+
+    async resetPassword({ code, newPassword, email = null, phone = null }) {
+        const data = { code, new_password: newPassword };
+        if (email) data.email = email;
+        if (phone) data.phone = phone;
+        return this._request('POST', '/api/auth/reset-password', data, false);
+    }
+
+    async getSessions() { return this._request('GET', '/api/auth/sessions'); }
+    async revokeSession(sessionId) { return this._request('DELETE', `/api/auth/sessions/${sessionId}`); }
+    async revokeAllSessions() { return this._request('DELETE', '/api/auth/sessions'); }
+
+    async sendBindCode({ email = null, phone = null }) {
+        const data = {};
+        if (email) data.email = email;
+        if (phone) data.phone = phone;
+        return this._request('POST', '/api/auth/send-bind-code', data);
+    }
+
+    async bindContact({ code, email = null, phone = null }) {
+        const data = { code };
+        if (email) data.email = email;
+        if (phone) data.phone = phone;
+        return this._request('PUT', '/api/auth/bind-contact', data);
+    }
 
     async thirdPartyLogin(provider, code, state = null, extra = null) {
         const data = { app_key: this.appKey, provider, code };
