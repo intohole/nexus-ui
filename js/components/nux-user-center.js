@@ -257,7 +257,7 @@
                                     <strong v-if="avatarName()">{{ avatarName() }}</strong>
                                     <span v-if="user && user.email">{{ user.email }}</span>
                                     <span v-else-if="user && user.phone">{{ user.phone }}</span>
-                                    <span v-else-if="!user">未登录</span>
+                                    <span v-else-if="loading" class="nux-uc-muted">加载中…</span>
                                 </div>
                             </div>
                             <button type="button" class="nux-uc-close" @click="drawerOpen = false">×</button>
