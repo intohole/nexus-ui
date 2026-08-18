@@ -78,10 +78,57 @@
 
     function createSdk() {
         var cfg = readConfig();
-        if (!cfg || !window.UserCenterSDK) return null;
+        if (!cfg || !cfg.baseUrl || !window.UserCenterSDK) return null;
         var sdk = new window.UserCenterSDK({ baseUrl: cfg.baseUrl, appKey: cfg.appKey });
         window.ucSDK = sdk;
         return sdk;
+    }
+
+    function configUrl() {
+        var s = document.currentScript;
+        var u = s && s.getAttribute('data-config-url');
+        if (u) return u;
+        var p = '';
+        try { p = window.PATH_PREFIX || ''; } catch (e) {}
+        return (p || '') + '/api/auth/config';
+    }
+
+    var _configFetching = null;
+    var _configRetryAt = 0;
+
+    function fetchConfig() {
+        if (_config && _config.baseUrl) return Promise.resolve(_config);
+        var now = Date.now();
+        if (_configFetching || now < _configRetryAt) return Promise.resolve(null);
+        var url = configUrl();
+        if (!url) return Promise.resolve(null);
+        _configFetching = fetch(url, { headers: { 'Accept': 'application/json' } })
+            .then(function(resp) { return resp.ok ? resp.json() : null; })
+            .then(function(data) {
+                _configFetching = null;
+                var c = (data && data.data) ? data.data : data;
+                if (c && c.user_center && c.user_center.base_url) {
+                    c = { base_url: c.user_center.base_url, app_key: c.user_center.app_key || c.app_key || '' };
+                }
+                c = c || {};
+                var bu = c.base_url || c.uc_base_url || '';
+                var ak = c.app_key || c.uc_app_key || '';
+                if (bu) {
+                    _config = { baseUrl: bu, appKey: ak || '' };
+                    window.ucConfig = { base_url: bu, app_key: ak || '' };
+                    if (window.UserCenterSDK) {
+                        window.ucSDK = new window.UserCenterSDK({ baseUrl: bu, appKey: ak || '' });
+                    }
+                    if (typeof window.dispatchEvent === 'function') {
+                        try { window.dispatchEvent(new CustomEvent('uc:authchange')); } catch (e) {}
+                    }
+                } else {
+                    _configRetryAt = Date.now() + 30000;
+                }
+                return _config;
+            })
+            .catch(function() { _configFetching = null; _configRetryAt = Date.now() + 30000; return null; });
+        return _configFetching;
     }
 
     function resolveSdk() {
@@ -141,7 +188,9 @@
 
     function sync() {
         if (!window.Vue) return false;
+        if (!_config || !_config.baseUrl) fetchConfig();
         var sdk = resolveSdk();
+        if (sdk && !sdk.baseUrl) sdk = null;
         var authed = !!(sdk && isAuthed(sdk));
         if (_rootApp && !authed) {
             unmount();
