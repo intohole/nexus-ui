@@ -2,11 +2,14 @@
     if (window.NuxFloatUserCenter) return;
 
     const DEPS = [
+        { name: 'UserCenterSDK', file: '../user-center-sdk.js', force: true },
         { name: 'NuxAvatar', file: 'nux-avatar.js' },
         { name: 'NuxDrawer', file: 'nux-drawer.js' },
         { name: 'NuxUserCenter', file: 'nux-user-center.js' },
         { name: 'NuxToast', file: 'nux-toast.js' }
     ];
+
+    let _config = null;
 
     function componentBase() {
         var src = (document.currentScript && document.currentScript.src) || '';
@@ -30,15 +33,44 @@
         var chain = Promise.resolve();
         DEPS.forEach(function(dep) {
             chain = chain.then(function() {
-                if (window[dep.name] || !base) return;
+                if (!dep.force && (window[dep.name] || !base)) return;
                 return loadScript(base + '/' + dep.file);
             });
         });
         return chain;
     }
 
+    function readConfig() {
+        if (_config) return _config;
+        var cfg = window.ucConfig || null;
+        if (cfg && cfg.base_url && cfg.app_key) {
+            _config = { baseUrl: cfg.base_url, appKey: cfg.app_key };
+            return _config;
+        }
+        var s = document.currentScript;
+        if (s) {
+            var baseUrl = s.getAttribute('data-base-url');
+            var appKey = s.getAttribute('data-app-key');
+            if (baseUrl && appKey) {
+                _config = { baseUrl: baseUrl, appKey: appKey };
+                return _config;
+            }
+        }
+        return null;
+    }
+
+    function createSdk() {
+        var cfg = readConfig();
+        if (!cfg || !window.UserCenterSDK) return null;
+        var sdk = new window.UserCenterSDK({ baseUrl: cfg.baseUrl, appKey: cfg.appKey });
+        window.ucSDK = sdk;
+        return sdk;
+    }
+
     function resolveSdk() {
-        return window.ucSDK || window.__UC_SDK__ || window.ucSdk || null;
+        var sdk = window.ucSDK || window.__UC_SDK__ || window.ucSdk || null;
+        if (sdk && typeof sdk.changePassword === 'function') return sdk;
+        return createSdk();
     }
 
     function isAuthed(sdk) {
@@ -58,18 +90,12 @@
             name: 'NuxFloatUserCenterRoot',
             setup: function() {
                 var loggedIn = Vue.ref(isAuthed(sdk));
-                var checkTimer = null;
                 function check() {
                     var v = isAuthed(sdk);
                     if (v !== loggedIn.value) loggedIn.value = v;
                 }
-                if (document.readyState === 'loading') {
-                    document.addEventListener('DOMContentLoaded', check);
-                }
                 window.addEventListener('uc:authchange', check);
-                checkTimer = setInterval(check, 2000);
                 Vue.onUnmounted(function() {
-                    if (checkTimer) clearInterval(checkTimer);
                     window.removeEventListener('uc:authchange', check);
                 });
                 return { loggedIn: loggedIn, sdk: sdk };
@@ -84,34 +110,36 @@
         return app;
     }
 
-    function init(sdk) {
+    function init() {
         if (!window.Vue) return null;
-        sdk = sdk || resolveSdk();
-        if (!sdk || !isAuthed(sdk)) return null;
         if (document.getElementById('nux-float-user-center-root')) return null;
         return ensureDeps().then(function() {
             if (document.getElementById('nux-float-user-center-root')) return null;
+            var sdk = resolveSdk();
+            if (!sdk || !isAuthed(sdk)) return null;
             return mount(sdk);
-        }).catch(function(e) {});
+        }).catch(function() {});
     }
 
     function auto() {
-        var sdk = resolveSdk();
-        if (sdk && window.Vue) {
-            init(sdk);
+        if (!window.Vue) {
+            var tries = 0;
+            var timer = setInterval(function() {
+                if (window.Vue) {
+                    clearInterval(timer);
+                    init();
+                } else if (++tries > 300) {
+                    clearInterval(timer);
+                }
+            }, 500);
             return;
         }
-        var tries = 0;
-        var timer = setInterval(function() {
-            var s = resolveSdk();
-            if (s && window.Vue) {
-                clearInterval(timer);
-                init(s);
-            } else if (++tries > 300) {
-                clearInterval(timer);
-            }
-        }, 500);
+        init();
     }
+
+    window.addEventListener('uc:authchange', function() {
+        init();
+    });
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', auto);
