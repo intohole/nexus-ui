@@ -225,6 +225,10 @@
                 return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
             }
 
+            Vue.onMounted(function() {
+                loadUser();
+            });
+
             Vue.onUnmounted(function() {
                 if (sessionTimer) clearInterval(sessionTimer);
                 if (bindTimer) clearInterval(bindTimer);

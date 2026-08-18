@@ -14,10 +14,14 @@
     let _rootApp = null;
     let _timer = null;
 
-    function componentBase() {
+    let _base = (function() {
         var src = (document.currentScript && document.currentScript.src) || '';
         var idx = src.lastIndexOf('/');
         return idx > 0 ? src.slice(0, idx) : '';
+    })();
+
+    function componentBase() {
+        return _base;
     }
 
     function loadScript(url) {
@@ -41,6 +45,12 @@
             });
         });
         return chain;
+    }
+
+    function ensureSdk() {
+        if (window.UserCenterSDK) return Promise.resolve();
+        if (!_base) return Promise.resolve();
+        return loadScript(_base + '/../user-center-sdk.js').catch(function() {});
     }
 
     function trustedUrl(u) {
@@ -216,6 +226,9 @@
     function start() {
         if (_timer) return;
         _timer = setInterval(sync, POLL_INTERVAL);
+        ensureSdk().then(function() {
+            sync();
+        });
     }
 
     function init() {
