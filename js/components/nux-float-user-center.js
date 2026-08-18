@@ -43,6 +43,12 @@
         return chain;
     }
 
+    function trustedUrl(u) {
+        if (!u) return false;
+        if (u.indexOf('://') !== -1) return true;
+        return /\/?uc[-_]?api/i.test(u) || /\/usercenter/i.test(u);
+    }
+
     function readConfig() {
         if (_config) return _config;
         var cfg = window.ucConfig || null;
@@ -68,7 +74,7 @@
             }
         }
         var sdk = window.ucSDK || window.__UC_SDK__ || window.ucSdk || null;
-        if (sdk && typeof sdk.baseUrl === 'string' && sdk.baseUrl) {
+        if (sdk && typeof sdk.baseUrl === 'string' && trustedUrl(sdk.baseUrl)) {
             _config = { baseUrl: sdk.baseUrl, appKey: sdk.appKey || '' };
             return _config;
         }
