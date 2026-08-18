@@ -56,7 +56,13 @@
             const combinedError = Vue.computed(() => props.error || localError.value);
             const isSmsMode = Vue.computed(() => props.showSmsLogin && loginType.value === 'sms');
             const effectiveSdk = Vue.computed(function() {
-                return props.sdk || window.ucSDK || window.__UC_SDK__ || null;
+                if (props.sdk) return props.sdk;
+                var g = window.ucSDK || window.__UC_SDK__ || window.ucSdk || null;
+                if (g && typeof g.forgotPassword === 'function') return g;
+                if (window.UserCenterSDK && typeof window.UserCenterSDK.ensureGlobalSdk === 'function') {
+                    return window.UserCenterSDK.ensureGlobalSdk();
+                }
+                return null;
             });
             const compBase = (function() {
                 const src = (document.currentScript && document.currentScript.src) || '';
@@ -186,23 +192,34 @@
             }
 
             function onForgot() {
-                if (!effectiveSdk.value) return;
                 localError.value = '';
-                if (forgotComp.value) {
-                    forgotOpen.value = true;
-                    return;
-                }
                 if (!compBase) return;
                 forgotLoading.value = true;
-                const s = document.createElement('script');
-                s.src = compBase + '/nux-forgot-password.js';
-                s.onload = function() {
-                    forgotLoading.value = false;
-                    forgotComp.value = window.NuxForgotPassword || null;
-                    if (forgotComp.value) forgotOpen.value = true;
-                };
-                s.onerror = function() { forgotLoading.value = false; };
-                document.head.appendChild(s);
+                var chain = Promise.resolve();
+                if (!window.UserCenterSDK) {
+                    chain = chain.then(function() {
+                        return new Promise(function(resolve, reject) {
+                            var s = document.createElement('script');
+                            s.src = compBase + '/../user-center-sdk.js';
+                            s.onload = resolve;
+                            s.onerror = reject;
+                            document.head.appendChild(s);
+                        });
+                    });
+                }
+                chain.then(function() {
+                    if (!effectiveSdk.value) { forgotLoading.value = false; return; }
+                    if (forgotComp.value) { forgotLoading.value = false; forgotOpen.value = true; return; }
+                    const s = document.createElement('script');
+                    s.src = compBase + '/nux-forgot-password.js';
+                    s.onload = function() {
+                        forgotLoading.value = false;
+                        forgotComp.value = window.NuxForgotPassword || null;
+                        if (forgotComp.value) forgotOpen.value = true;
+                    };
+                    s.onerror = function() { forgotLoading.value = false; };
+                    document.head.appendChild(s);
+                }).catch(function() { forgotLoading.value = false; });
             }
 
             return {

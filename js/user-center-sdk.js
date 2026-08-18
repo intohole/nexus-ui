@@ -325,6 +325,32 @@ class UserCenterSDK {
         }
         return null;
     }
+
+    static resolveConfig() {
+        const cfg = window.ucConfig || null;
+        if (cfg && cfg.base_url) {
+            return { baseUrl: cfg.base_url, appKey: cfg.app_key || '' };
+        }
+        const scripts = document.getElementsByTagName('script');
+        for (const script of scripts) {
+            if (script.src && script.src.indexOf('user-center-sdk.js') !== -1) {
+                const baseUrl = script.getAttribute('data-base-url');
+                if (baseUrl) {
+                    return { baseUrl, appKey: script.getAttribute('data-app-key') || '' };
+                }
+            }
+        }
+        return { baseUrl: '', appKey: '' };
+    }
+
+    static ensureGlobalSdk() {
+        const existing = window.ucSDK || window.__UC_SDK__ || window.ucSdk || null;
+        if (existing && typeof existing.changePassword === 'function') return existing;
+        const cfg = UserCenterSDK.resolveConfig();
+        const sdk = new UserCenterSDK({ baseUrl: cfg.baseUrl, appKey: cfg.appKey, silent: true });
+        window.ucSDK = sdk;
+        return sdk;
+    }
 }
 
 window.UserCenterSDK = UserCenterSDK;

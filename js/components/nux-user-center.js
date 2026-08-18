@@ -80,7 +80,7 @@
             function changePassword() {
                 passwordError.value = '';
                 if (!oldPassword.value) { passwordError.value = '请输入当前密码'; return; }
-                if (newPassword.value.length < 6) { passwordError.value = '新密码至少6位'; return; }
+                if (newPassword.value.length < 8) { passwordError.value = '新密码至少8位'; return; }
                 if (newPassword.value !== confirmPassword.value) { passwordError.value = '两次输入的新密码不一致'; return; }
                 submitting.value = true;
                 props.sdk.changePassword({
@@ -281,7 +281,7 @@
                             </div>
                             <div class="nux-form-group">
                                 <label class="nux-form-label">新密码</label>
-                                <input v-model="newPassword" type="password" class="nux-input" placeholder="请输入新密码（至少6位）" autocomplete="new-password">
+                                <input v-model="newPassword" type="password" class="nux-input" placeholder="请输入新密码（至少8位）" autocomplete="new-password">
                             </div>
                             <div class="nux-form-group">
                                 <label class="nux-form-label">确认新密码</label>

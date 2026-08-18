@@ -46,20 +46,21 @@
     function readConfig() {
         if (_config) return _config;
         var cfg = window.ucConfig || null;
-        if (cfg && cfg.base_url && cfg.app_key) {
-            _config = { baseUrl: cfg.base_url, appKey: cfg.app_key };
+        if (cfg && cfg.base_url) {
+            _config = { baseUrl: cfg.base_url, appKey: cfg.app_key || '' };
             return _config;
         }
         var s = document.currentScript;
         if (s) {
             var baseUrl = s.getAttribute('data-base-url');
             var appKey = s.getAttribute('data-app-key');
-            if (baseUrl && appKey) {
-                _config = { baseUrl: baseUrl, appKey: appKey };
+            if (baseUrl) {
+                _config = { baseUrl: baseUrl, appKey: appKey || '' };
                 return _config;
             }
         }
-        return null;
+        _config = { baseUrl: '', appKey: '' };
+        return _config;
     }
 
     function createSdk() {
