@@ -50,6 +50,14 @@
             _config = { baseUrl: cfg.base_url, appKey: cfg.app_key || '' };
             return _config;
         }
+        var uccfg = window.ucCfg || null;
+        if (uccfg && uccfg.user_center && uccfg.user_center.base_url) {
+            _config = {
+                baseUrl: uccfg.user_center.base_url,
+                appKey: uccfg.user_center.app_key || uccfg.app_key || ''
+            };
+            return _config;
+        }
         var s = document.currentScript;
         if (s) {
             var baseUrl = s.getAttribute('data-base-url');
@@ -58,6 +66,11 @@
                 _config = { baseUrl: baseUrl, appKey: appKey || '' };
                 return _config;
             }
+        }
+        var sdk = window.ucSDK || window.__UC_SDK__ || window.ucSdk || null;
+        if (sdk && typeof sdk.baseUrl === 'string' && sdk.baseUrl) {
+            _config = { baseUrl: sdk.baseUrl, appKey: sdk.appKey || '' };
+            return _config;
         }
         _config = { baseUrl: '', appKey: '' };
         return _config;
