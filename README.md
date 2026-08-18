@@ -23,28 +23,28 @@ Nexus UI（Nexus Design System）是一套基于 Vue 3 CDN 全局模式的前端
 | 框架 | Vue 3.4.21 | CDN 全局模式（非 ES Module），挂载到 window |
 | UI | element-plus 2.6.1 | 可选，按需引入 |
 | HTTP | axios 1.6.8 | 经 nexus-api.js 封装统出 |
-| 基础设施 | nexus-ui | 本工程，CDN 分发，当前版本 v2.10.0 |
+| 基础设施 | nexus-ui | 本工程，CDN 分发，当前版本 v2.10.1 |
 | 渲染 | marked + DOMPurify + hljs | Markdown 安全渲染 |
 
 ## 快速开始 / 使用方式
 
 ### 公共库统一版本
 
-全工作区线上应用统一引用的公共 CDN 库版本以 `deps.json` 为唯一事实来源。当前统一版本：Vue=3.4.21、element-plus=2.6.1、axios=1.6.8、nexus-ui=2.10.0。新增/升级公共库版本必须先更新 `deps.json`，再统一同步所有项目，禁止只改单个项目。
+全工作区线上应用统一引用的公共 CDN 库版本以 `deps.json` 为唯一事实来源。当前统一版本：Vue=3.4.21、element-plus=2.6.1、axios=1.6.8、nexus-ui=2.10.1。新增/升级公共库版本必须先更新 `deps.json`，再统一同步所有项目，禁止只改单个项目。
 
 ### CSS 引入（HTML head）
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.10.0/css/nexus-all.css">
+<link rel="stylesheet" href="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.10.1/css/nexus-all.css">
 ```
 
 ### JS 引入（Vue 3 之后，基础工具最先引入）
 
 ```html
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.10.0/js/nexus-utils.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.10.0/js/nexus-api.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.10.0/js/nexus-crud.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.10.0/js/nexus-store.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.10.1/js/nexus-utils.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.10.1/js/nexus-api.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.10.1/js/nexus-crud.js"></script>
+<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.10.1/js/nexus-store.js"></script>
 ```
 
 ### 主题切换
