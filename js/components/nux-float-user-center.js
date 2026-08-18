@@ -94,6 +94,8 @@
         var s = document.currentScript;
         var u = s && s.getAttribute('data-config-url');
         if (u) return u;
+        var globalUrl = window.UC_CONFIG_URL || window.UCConfigUrl || '';
+        if (globalUrl) return globalUrl;
         var p = '';
         try { p = window.PATH_PREFIX || ''; } catch (e) {}
         return (p || '') + '/api/auth/config';
