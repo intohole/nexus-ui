@@ -42,6 +42,17 @@
                 return u.username || u.email || u.phone || '';
             }
 
+            function avatarInitial() {
+                const u = user.value;
+                if (!u) return '';
+                if (u.username) return u.username.charAt(0);
+                if (u.email) {
+                    const local = String(u.email).split('@')[0];
+                    if (local && /[a-z]/i.test(local.charAt(0))) return local.charAt(0).toUpperCase();
+                }
+                return '';
+            }
+
             function toggleOpen() {
                 drawerOpen.value = !drawerOpen.value;
                 if (drawerOpen.value) {
@@ -240,19 +251,19 @@
                 bindError, bindTarget, bindCode, bindType, bindSending, bindSubmitting, bindCountdown,
                 toggleOpen, loadSessions, changePassword, revokeSession, revokeAll, doLogout,
                 sendBindCode, submitBind, switchBindType, boundContact,
-                avatarName, deviceLabel, timeLabel
+                avatarName, avatarInitial, deviceLabel, timeLabel
             };
         },
         template: `
             <div class="nux-user-center">
                 <button type="button" class="nux-uc-trigger" :class="{ 'nux-uc-floating': floating, 'nux-uc-active': drawerOpen, 'nux-uc-loading': loading && !user }" :title="avatarName() || '用户中心'" :aria-label="avatarName() || '用户中心'" @click="toggleOpen">
-                    <nux-avatar :name="avatarName()" size="sm"></nux-avatar>
+                    <nux-avatar :name="avatarName()" :initial="avatarInitial()" size="sm"></nux-avatar>
                 </button>
                 <nux-drawer v-model="drawerOpen" side="right" width="380px">
                     <div class="nux-uc-body">
                         <div class="nux-uc-header">
                             <div class="nux-uc-user">
-                                <nux-avatar :name="avatarName()" size="lg"></nux-avatar>
+                                <nux-avatar :name="avatarName()" :initial="avatarInitial()" size="lg"></nux-avatar>
                                 <div class="nux-uc-user-meta">
                                     <strong v-if="avatarName()">{{ avatarName() }}</strong>
                                     <span v-if="user && user.email">{{ user.email }}</span>
