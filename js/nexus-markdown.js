@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '1.0.0';
+    const VERSION = '1.1.0';
 
     const LIBS = {
         marked: 'https://cdn.jsdmirror.com/npm/marked@12.0.0/marked.min.js',
@@ -150,6 +150,37 @@
         renderTo(element, text, options);
     }
 
+    function directive(options) {
+        const opts = options || {};
+        return {
+            mounted(el, binding) {
+                applyDirective(el, binding.value, opts);
+            },
+            updated(el, binding) {
+                if (binding.value === binding.oldValue) return;
+                applyDirective(el, binding.value, opts);
+            }
+        };
+    }
+
+    function applyDirective(el, value, opts) {
+        const text = value === null || value === undefined ? '' : String(value);
+        const fallback = () => { el.innerHTML = escapeHtml(text).replace(/\n/g, '<br>'); };
+        if (!window.NexusMarkdown) { fallback(); return; }
+        NexusMarkdown.injectLibs().then(() => {
+            el.innerHTML = NexusMarkdown.render(text, opts);
+            el.classList.add('nx-md');
+            NexusMarkdown.postProcess(el);
+        }).catch(fallback);
+    }
+
+    function install(vueApp, options) {
+        if (!vueApp || !vueApp.directive) return null;
+        const d = directive(options);
+        vueApp.directive('md', d);
+        return d;
+    }
+
     const NexusMarkdown = {
         version: VERSION,
         injectLibs,
@@ -159,6 +190,8 @@
         renderToAsync,
         escapeHtml,
         postProcess,
+        directive,
+        install,
         DEFAULT_ALLOWED_TAGS
     };
 
