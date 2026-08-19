@@ -169,6 +169,11 @@
   font-size: var(--nx-text-sm);
   margin-bottom: var(--nx-space-4);
 }
+.nux-live-hint {
+  margin-top: var(--nx-space-1);
+  font-size: var(--nx-text-sm);
+  color: var(--nx-danger, #ef4444);
+}
 .nux-login-submit {
   width: 100%;
   padding: var(--nx-space-3);

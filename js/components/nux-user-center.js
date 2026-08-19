@@ -17,6 +17,9 @@
             const oldPassword = Vue.ref('');
             const newPassword = Vue.ref('');
             const confirmPassword = Vue.ref('');
+            const showOldPwd = Vue.ref(false);
+            const showNewPwd = Vue.ref(false);
+            const showConfirmPwd = Vue.ref(false);
             const passwordError = Vue.ref('');
             const submitting = Vue.ref(false);
             const userError = Vue.ref('');
@@ -29,6 +32,10 @@
             const bindCountdown = Vue.ref(0);
             let bindTimer = null;
             let sessionTimer = null;
+
+            const confirmMismatch = Vue.computed(function() {
+                return confirmPassword.value && newPassword.value && newPassword.value !== confirmPassword.value;
+            });
 
             function toast(msg, type) {
                 if (typeof window.showToast === 'function') {
@@ -248,6 +255,7 @@
             return {
                 drawerOpen, tab, user, sessions, loading, sessionsLoading,
                 oldPassword, newPassword, confirmPassword, passwordError, submitting, userError,
+                showOldPwd, showNewPwd, showConfirmPwd, confirmMismatch,
                 bindError, bindTarget, bindCode, bindType, bindSending, bindSubmitting, bindCountdown,
                 toggleOpen, loadSessions, changePassword, revokeSession, revokeAll, doLogout,
                 sendBindCode, submitBind, switchBindType, boundContact,
@@ -292,15 +300,34 @@
                             <div v-if="passwordError" class="nux-login-error">{{ passwordError }}</div>
                             <div class="nux-form-group">
                                 <label class="nux-form-label">当前密码</label>
-                                <input v-model="oldPassword" type="password" class="nux-input" placeholder="请输入当前密码" autocomplete="current-password">
+                                <div class="nux-password-wrap">
+                                    <input v-model="oldPassword" :type="showOldPwd ? 'text' : 'password'" class="nux-input" placeholder="请输入当前密码" autocomplete="current-password">
+                                    <button type="button" class="nux-password-toggle" :aria-label="showOldPwd ? '隐藏密码' : '显示密码'" @click="showOldPwd = !showOldPwd">
+                                        <svg v-if="!showOldPwd" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        <svg v-else viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                                    </button>
+                                </div>
                             </div>
                             <div class="nux-form-group">
                                 <label class="nux-form-label">新密码</label>
-                                <input v-model="newPassword" type="password" class="nux-input" placeholder="请输入新密码（至少8位）" autocomplete="new-password">
+                                <div class="nux-password-wrap">
+                                    <input v-model="newPassword" :type="showNewPwd ? 'text' : 'password'" class="nux-input" placeholder="请输入新密码（至少8位）" autocomplete="new-password">
+                                    <button type="button" class="nux-password-toggle" :aria-label="showNewPwd ? '隐藏密码' : '显示密码'" @click="showNewPwd = !showNewPwd">
+                                        <svg v-if="!showNewPwd" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        <svg v-else viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                                    </button>
+                                </div>
                             </div>
                             <div class="nux-form-group">
                                 <label class="nux-form-label">确认新密码</label>
-                                <input v-model="confirmPassword" type="password" class="nux-input" placeholder="请再次输入新密码" autocomplete="new-password">
+                                <div class="nux-password-wrap">
+                                    <input v-model="confirmPassword" :type="showConfirmPwd ? 'text' : 'password'" class="nux-input" placeholder="请再次输入新密码" autocomplete="new-password">
+                                    <button type="button" class="nux-password-toggle" :aria-label="showConfirmPwd ? '隐藏密码' : '显示密码'" @click="showConfirmPwd = !showConfirmPwd">
+                                        <svg v-if="!showConfirmPwd" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        <svg v-else viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                                    </button>
+                                </div>
+                                <div v-if="confirmMismatch" class="nux-live-hint">两次输入的新密码不一致</div>
                             </div>
                             <button type="button" class="nux-login-submit" :disabled="submitting" @click="changePassword">
                                 <span v-if="submitting" class="nx-spinner"></span>
