@@ -11,7 +11,7 @@ Nexus UI（Nexus Design System）是一套基于 Vue 3 CDN 全局模式的前端
 - 设计令牌与主题：CSS 变量定义颜色/间距/圆角/阴影，内置 24 个应用特色色主题与暗色模式
 - 移动端优先：dvh、安全区域、抽屉、触摸优化等移动端基础设施
 - 通用 API 客户端：重试、超时、取消、401 处理、CRUD、文件上传/下载、SSE 流式 POST
-- 组件库：nux-* 前缀的 Vue 组件（Toast/Modal/Drawer/Table/FormGroup/RadarChart 等）
+- 组件库：nux-* 前缀的 Vue 组件（Toast/Modal/Drawer/Table/FormGroup/RadarChart/Checkin 等）
 - Composables：use-pagination/use-crud/use-auth/use-theme/use-sse 等组合式函数
 - AI 对话支持：统一 Markdown 渲染、ChatController 流式工具集、完整 nux-ai-chat 组件
 - 版本一致性校验：check_deps.py 扫描全工作区，确保公共库版本统一
