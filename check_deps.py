@@ -33,9 +33,12 @@ def check_file(path: str, deps: dict, ignore_prefixes: tuple) -> list:
             if actual != expected:
                 problems.append(f"  {name}: 引用 {actual}, 规范 {expected}")
         if name == "nexus-ui":
-            for actual in re.findall(r"nexus-ui@v([0-9.]+)/", content):
+            for actual in re.findall(r"nexus-ui/v([0-9.]+)/", content):
                 if actual != expected:
                     problems.append(f"  nexus-ui: 引用 v{actual}, 规范 v{expected}")
+            for actual in re.findall(r"nexus-ui@(?:v)?([0-9.]+)/", content):
+                if actual != expected:
+                    problems.append(f"  nexus-ui(旧CDN): 引用 v{actual}, 规范 v{expected}")
     return problems
 
 

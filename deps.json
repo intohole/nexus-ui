@@ -19,7 +19,7 @@
     },
     "nexus-ui": {
       "version": "2.10.17",
-      "cdn": "https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v{version}/"
+      "cdn": "https://songguokr.com/nexus-ui/v{version}/"
     }
   },
   "ignore_paths": [

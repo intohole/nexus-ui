@@ -1,0 +1,12 @@
+app:
+  name: nexus-ui
+  display_name: "Nexus UI 静态分发"
+  path_prefix: "/nexus-ui"
+  description: "Nexus 设计系统统一静态分发（自托管，nginx 直出）"
+  app_group: "基础设施"
+  tags: ["设计系统", "静态资源", "CDN"]
+  is_public: true
+  app_type: static
+  static_immutable: true
+  workers: 1
+  depends_on: []

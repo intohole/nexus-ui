@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
-"""同步全工作区 HTML 中公共库 CDN 版本到 nexus-ui/deps.json 规范版本。
+"""同步全工作区 HTML/JS 中公共库版本与 nexus-ui/deps.json 规范版本一致。
 
 用法:
     python3 nexus-ui/sync_deps.py [工作区根目录]
 
-先修改 deps.json 中的目标版本,再运行本脚本即可全量同步。
+先修改 deps.json 中的目标版本/分发生成,再运行本脚本即可全量同步。
 """
 import json
 import os
 import re
 import sys
+
+_SKIP_DIRS = {".git", "node_modules", "vendor", "__pycache__"}
 
 
 def load_deps(root: str) -> dict:
@@ -19,8 +21,13 @@ def load_deps(root: str) -> dict:
 
 def replacements_for_dep(name: str, expected: str) -> list:
     if name == "nexus-ui":
-        return [("nexus-ui@v([0-9.]+)/", f"nexus-ui@v{expected}/")]
-    return [(r"ajax/libs/%s/([0-9.]+)/" % re.escape(name), f"ajax/libs/{name}/{expected}/")]
+        base = f"https://songguokr.com/nexus-ui/v{expected}"
+        return [
+            (re.compile(r"https://cdn\.jsdmirror\.com/gh/intohole/nexus-ui@v[0-9.]+"), base),
+            (re.compile(r"static/vendor/nexus-ui/[0-9.]+"), base),
+            (re.compile(r"(?<=https://songguokr\.com/nexus-ui/v)[0-9.]+"), expected),
+        ]
+    return [(re.compile(r"ajax/libs/%s/[0-9.]+" % re.escape(name)), f"ajax/libs/{name}/{expected}")]
 
 
 def sync_file(path: str, deps: dict) -> int:
@@ -29,8 +36,8 @@ def sync_file(path: str, deps: dict) -> int:
     total = 0
     for name, spec in deps.items():
         expected = spec["version"]
-        for pattern, repl in replacements_for_dep(name, expected):
-            content, n = re.subn(pattern, repl, content)
+        for rg, repl in replacements_for_dep(name, expected):
+            content, n = rg.subn(repl, content)
             total += n
     if total:
         with open(path, "w", encoding="utf-8") as f:
@@ -48,11 +55,11 @@ def main() -> int:
     changed = 0
     total_repl = 0
     for dirpath, dirnames, filenames in os.walk(root):
-        dirnames[:] = [d for d in dirnames if d not in (".git", "node_modules", "vendor", "__pycache__")]
-        if any(p in dirpath.lower() for p in ("/node_modules/", "/.git/", "/vendor/")):
+        dirnames[:] = [d for d in dirnames if d not in _SKIP_DIRS]
+        if any(p in dirpath.lower() for p in ("/node_modules/", "/.git/", "/vendor/", "/data/")):
             continue
         for fn in filenames:
-            if not fn.endswith(".html"):
+            if not fn.endswith((".html", ".js")):
                 continue
             path = os.path.join(dirpath, fn)
             if path.lower().startswith(ignore_prefixes):
