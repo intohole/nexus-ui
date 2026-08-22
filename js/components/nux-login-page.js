@@ -28,11 +28,12 @@
             loading: { type: Boolean, default: false },
             smsLoading: { type: Boolean, default: false },
             error: { type: String, default: '' },
-            useCustomRegister: { type: Boolean, default: true }
+            useCustomRegister: { type: Boolean, default: true },
+            defaultMode: { type: String, default: 'login' }
         },
         emits: ['login', 'register', 'registered', 'sms-login', 'send-sms', 'third-party-login'],
         setup(props, { emit }) {
-            const mode = Vue.ref('login');
+            const mode = Vue.ref(props.defaultMode);
             const loginType = Vue.ref('account');
             const localError = Vue.ref('');
             const showPassword = Vue.ref(false);
@@ -54,7 +55,6 @@
             const forgotOpen = Vue.ref(false);
             const forgotLoading = Vue.ref(false);
             const forgotComp = Vue.shallowRef(window.NuxForgotPassword || null);
-
             const combinedError = Vue.computed(() => props.error || localError.value);
             const isSmsMode = Vue.computed(() => props.showSmsLogin && loginType.value === 'sms');
             const effectiveSdk = Vue.computed(function() {
