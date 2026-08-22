@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '1.1.0';
+    const VERSION = '1.2.0';
 
     const LIBS = {
         marked: 'https://cdn.jsdmirror.com/npm/marked@12.0.0/marked.min.js',
@@ -46,15 +46,23 @@
         });
     }
 
+    function hasGlobal(name) { return typeof window[name] !== 'undefined'; }
+
+    function hasHighlightCss() {
+        if (window.__NX_HLJS_CSS__) return true;
+        return Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+            .some(l => (l.href || '').indexOf('highlight') > -1);
+    }
+
     async function injectLibs() {
         if (libsLoaded) return true;
         if (libsLoading) return libsLoading;
         libsLoading = (async () => {
             await Promise.all([
-                loadScript(LIBS.marked),
-                loadScript(LIBS.dompurify),
-                loadScript(LIBS.highlight),
-                loadStylesheet(LIBS.highlightCss)
+                hasGlobal('marked') ? Promise.resolve() : loadScript(LIBS.marked),
+                hasGlobal('DOMPurify') ? Promise.resolve() : loadScript(LIBS.dompurify),
+                hasGlobal('hljs') ? Promise.resolve() : loadScript(LIBS.highlight),
+                hasHighlightCss() ? Promise.resolve() : loadStylesheet(LIBS.highlightCss).then(() => { window.__NX_HLJS_CSS__ = 1; })
             ]).catch(err => console.warn('[NexusMarkdown] lib load fail:', err.message));
             if (window.marked) {
                 marked.setOptions({ breaks: true, gfm: true });
