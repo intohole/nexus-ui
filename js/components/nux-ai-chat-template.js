@@ -1,7 +1,7 @@
 (function () {
     'use strict';
     window.NuxAiChatTemplate = `
-        <div class="nx-ai-chat">
+        <div class="nx-ai-chat" :class="{ 'keyboard-open': kbHeight > 0 }" :style="kbHeight > 0 ? { '--nx-chat-kb': kbHeight + 'px' } : null">
             <div class="nx-ai-chat-messages" ref="scrollEl" @scroll="onScroll">
                 <div class="nx-ai-chat-list" ref="listEl">
                     <div v-if="!list.length && !$slots.empty && !$slots.welcome" class="nx-ai-chat-welcome">
@@ -27,7 +27,21 @@
                             </div>
                             <div class="nx-ai-chat-bubble">
                                 <slot name="message-before" :msg="m"></slot>
-                                <template v-if="m.streaming && !m.content && feat.typingIndicator">
+                                <div v-if="feat.richReasoning && m.thinking" class="nx-ai-chat-reasoning">
+                                    <button type="button" class="nx-ai-chat-reasoning-toggle" @click="m.showReasoning = !m.showReasoning">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" :style="m.showReasoning ? 'transform:rotate(180deg)' : ''"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                        <span>思考过程</span>
+                                        <span v-if="m.streaming">…</span>
+                                    </button>
+                                    <div v-if="m.showReasoning" class="nx-ai-chat-reasoning-body">{{ m.thinking }}</div>
+                                </div>
+                                <div v-if="feat.richTools && m.tools && m.tools.length" class="nx-ai-chat-tools">
+                                    <span v-for="(t, ti) in m.tools" :key="'t' + ti" class="nx-ai-chat-tool-chip">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                                        {{ t }}
+                                    </span>
+                                </div>
+                                <template v-if="m.streaming && !m.content && feat.typingIndicator && !m.thinking">
                                     <div class="nx-ai-chat-typing">
                                         <span></span><span></span><span></span>
                                         <em class="nx-ai-chat-thinking">正在思考…</em>
@@ -37,6 +51,10 @@
                                     <div class="nx-ai-chat-content" v-html="renderMarkdown(m.content)"></div>
                                     <span v-if="m.streaming" class="nx-ai-chat-cursor"></span>
                                 </template>
+                                <div v-if="feat.richReferences && m.references && m.references.length" class="nx-ai-chat-references">
+                                    <p class="nx-ai-chat-ref-title">引用来源</p>
+                                    <a v-for="(r, ri) in m.references" :key="'r' + ri" class="nx-ai-chat-ref-item" :href="typeof r === 'string' ? r : (r.url || r.link || '#')" target="_blank" rel="noopener">{{ typeof r === 'string' ? r : (r.title || r.url || r.link || '#') }}</a>
+                                </div>
                                 <slot name="message-after" :msg="m"></slot>
                             </div>
                             <div v-if="m.error" class="nx-ai-chat-error-bar">

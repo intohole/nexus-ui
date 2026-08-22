@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    const { ref, reactive, computed, onMounted, onBeforeUnmount, watch, nextTick } = Vue;
+    const { ref, reactive, onMounted, onBeforeUnmount, watch, nextTick } = Vue;
 
     const H = window.NuxAiChatHelpers;
     const DEFAULT_FEATURES = H.defaultFeatures;
@@ -9,6 +9,7 @@
     const DEFAULT_ROLES = H.defaultRoles;
     const scrollToBottomEl = H.scrollToBottomEl;
     const isNearBottom = H.isNearBottom;
+    const routeRichEvent = H.routeRichEvent;
 
     const NuxAiChat = {
         name: 'NuxAiChat',
@@ -47,11 +48,10 @@
             const scrollEl = ref(null);
             const inputEl = ref(null);
             const listEl = ref(null);
+            const kbHeight = ref(0);
             let controller = null;
             let rafId = null;
-            let pendingContent = '';
-
-            const mergedMessages = computed(() => list);
+            let unmountKb = null;
 
             function emitMessages() {
                 ctx.emit('update:messages', list.slice());
@@ -117,11 +117,9 @@
             function buildAssistantMsg() {
                 return reactive({
                     id: 'a_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-                    role: 'assistant',
-                    content: '',
-                    streaming: true,
-                    error: false,
-                    created_at: new Date().toISOString()
+                    role: 'assistant', content: '', streaming: true, error: false,
+                    thinking: '', tools: [], references: [], meta: null,
+                    showReasoning: false, created_at: new Date().toISOString()
                 });
             }
 
@@ -145,7 +143,8 @@
                     doneKey: cfg.doneKey || 'done',
                     onChunk: (chunk, full) => callbacks.onChunk(chunk, full),
                     onDone: (full) => callbacks.onDone(full),
-                    onError: (err) => callbacks.onError(err)
+                    onError: (err) => callbacks.onError(err),
+                    onEvent: (ev, data) => { if (callbacks.onEvent) callbacks.onEvent(ev, data); }
                 });
                 callbacks.registerStop(() => ctrl.stop());
                 ctrl.start();
@@ -193,6 +192,11 @@
                         assistantMsg.content = full;
                         smartScroll(false);
                         ctx.emit('chunk', chunk, full, assistantMsg);
+                    },
+                    onEvent: (ev, data) => {
+                        if (routeRichEvent(assistantMsg, ev, data)) {
+                            if (ev === 'meta' || (data && data.type === 'meta')) ctx.emit('meta', data, assistantMsg);
+                        }
                     },
                     onDone: (full) => {
                         if (full && !assistantMsg.content) assistantMsg.content = full;
@@ -361,9 +365,11 @@
                     if (list.length > 0) scrollToBottomEl(scrollEl.value, false);
                     if (window.NexusMarkdown) NexusMarkdown.injectLibs();
                 });
+                unmountKb = H.mountKeyboard(!!feat.keyboardAvoid, kbHeight, () => { if (scrollEl.value && list.length) scrollToBottomEl(scrollEl.value, false); });
             });
 
             onBeforeUnmount(() => {
+                if (unmountKb) unmountKb();
                 if (controller) try { controller.stop(); } catch (e) {}
                 if (rafId) cancelAnimationFrame(rafId);
                 stopElapsed();
@@ -382,7 +388,7 @@
 
             return {
                 list, input, isStreaming, isError, errorMsg, showScrollBtn, newMsgCount,
-                elapsed, scrollEl, inputEl, listEl, feat, inputCfg, roleCfg,
+                elapsed, kbHeight, scrollEl, inputEl, listEl, feat, inputCfg, roleCfg,
                 renderMarkdown, send, stop, retry, clear, copyMessage, scrollToBottom,
                 onScroll, onInput, onKeydown, onCompositionStart, onCompositionEnd,
                 clickQuickReply, smartScroll

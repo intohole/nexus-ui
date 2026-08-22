@@ -1,6 +1,6 @@
 {
   "name": "nexus-ui",
-  "version": "2.10.18",
+  "version": "2.10.20",
   "description": "Nexus Design System — 统一前端基础设施，Vue 3 CDN 全局模式",
   "main": "css/nexus-all.css",
   "files": [
@@ -64,7 +64,9 @@
       "nux-skeleton.js": "骨架屏组件",
       "nux-notification-bell.js": "通知铃铛组件",
       "nux-about-page.js": "关于我们页面组件（自包含CSS，主题色驱动）",
-      "nux-ai-chat.js": "AI对话完整Vue组件（消息列表+流式+输入+停止+滚动+错误重试+快捷回复，支持slots扩展）"
+      "nux-ai-chat.js": "AI对话完整Vue组件（消息列表+流式+输入+停止+滚动+错误重试+快捷回复，支持slots扩展）",
+      "nux-ai-chat-helpers.js": "AI对话组件工具集（默认features/input/roles、滚动判断、键盘高度、富事件路由）",
+      "nux-conversation-list.js": "AI会话列表Vue组件（列表/搜索/新建/删除/归档，对齐统一chat会话CRUD API）"
     },
     "js/composables/": {
       "use-mobile.js": "移动端检测composable",
