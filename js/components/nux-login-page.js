@@ -27,9 +27,10 @@
             minPasswordLength: { type: Number, default: 8 },
             loading: { type: Boolean, default: false },
             smsLoading: { type: Boolean, default: false },
-            error: { type: String, default: '' }
+            error: { type: String, default: '' },
+            useCustomRegister: { type: Boolean, default: true }
         },
-        emits: ['login', 'register', 'sms-login', 'send-sms', 'third-party-login'],
+        emits: ['login', 'register', 'registered', 'sms-login', 'send-sms', 'third-party-login'],
         setup(props, { emit }) {
             const mode = Vue.ref('login');
             const loginType = Vue.ref('account');
@@ -41,6 +42,7 @@
             const smsCode = Vue.ref('');
             const smsCountdown = Vue.ref(0);
             let smsTimer = null;
+            const registering = Vue.ref(false);
             const form = Vue.reactive({
                 username: '',
                 password: '',
@@ -166,14 +168,35 @@
                     localError.value = '请先同意用户协议和隐私政策';
                     return;
                 }
-                emit('register', {
+                var payload = {
                     username: form.username || null,
                     password: form.password,
                     email: form.email || null,
                     phone: form.phone || null,
                     inviteCode: form.inviteCode || null,
                     code: smsCode.value || null
-                });
+                };
+                if (props.useCustomRegister) {
+                    emit('register', payload);
+                    return;
+                }
+                doRegister(payload);
+            }
+
+            async function doRegister(payload) {
+                var sdk = effectiveSdk.value;
+                if (!sdk || typeof sdk.register !== 'function') { localError.value = '注册服务不可用'; return; }
+                registering.value = true;
+                localError.value = '';
+                try {
+                    var res = await sdk.register(payload);
+                    if (!res || !res.success) { localError.value = (res && res.message) || '注册失败，请重试'; return; }
+                    emit('registered', res);
+                } catch (e) {
+                    localError.value = (e && e.message) ? e.message : '注册失败，请重试';
+                } finally {
+                    registering.value = false;
+                }
             }
 
             function switchMode(m) {
@@ -226,7 +249,7 @@
                 mode, loginType, form, smsCode, smsCountdown, agreed, rememberMe,
                 showPassword, showConfirmPassword, combinedError, isSmsMode, effectiveSdk,
                 forgotOpen, forgotLoading, forgotComp,
-                onLogin, onRegister, sendSms, switchMode, switchLoginType, onThirdParty, onForgot
+                onLogin, onRegister, doRegister, sendSms, switchMode, switchLoginType, onThirdParty, onForgot, registering
             };
         },
         template: `
@@ -240,14 +263,11 @@
                             <button :class="['nux-login-tab', { active: mode === 'login' }]" @click="switchMode('login')">登录</button>
                             <button v-if="showRegister" :class="['nux-login-tab', { active: mode === 'register' }]" @click="switchMode('register')">注册</button>
                         </div>
-
                         <div v-if="combinedError" class="nux-login-error">{{ combinedError }}</div>
-
                         <div v-if="showSmsLogin" class="nux-login-subtabs">
                             <button :class="['nux-login-subtab', { active: loginType === 'account' }]" @click="switchLoginType('account')">账号密码</button>
                             <button :class="['nux-login-subtab', { active: loginType === 'sms' }]" @click="switchLoginType('sms')">验证码登录</button>
                         </div>
-
                         <form @submit.prevent="mode === 'login' ? onLogin() : onRegister()">
                             <template v-if="!isSmsMode">
                                 <div class="nux-form-group">
@@ -255,7 +275,6 @@
                                     <input v-model="form.username" type="text" class="nux-input" placeholder="请输入用户名" autocomplete="username">
                                 </div>
                             </template>
-
                             <template v-else>
                                 <div class="nux-form-group">
                                     <label class="nux-form-label">手机号</label>
@@ -271,12 +290,10 @@
                                     </div>
                                 </div>
                             </template>
-
                             <div v-if="mode === 'register' && showEmailField" class="nux-form-group">
                                 <label class="nux-form-label">邮箱</label>
                                 <input v-model="form.email" type="email" class="nux-input" placeholder="请输入邮箱" autocomplete="email">
                             </div>
-
                             <template v-if="mode === 'login' && !isSmsMode">
                                 <div class="nux-form-group">
                                     <label class="nux-form-label">密码</label>
@@ -296,7 +313,6 @@
                                     <button v-if="showForgot" type="button" class="nux-link" @click="onForgot">忘记密码？</button>
                                 </div>
                             </template>
-
                             <template v-else-if="mode === 'register'">
                                 <div class="nux-form-group">
                                     <label class="nux-form-label">密码</label>
@@ -328,24 +344,20 @@
                                     </label>
                                 </div>
                             </template>
-
                             <div v-if="mode === 'register' && showPhoneLogin && !isSmsMode" class="nux-form-group">
                                 <label class="nux-form-label">手机号</label>
                                 <input v-model="form.phone" type="tel" class="nux-input" placeholder="请输入手机号" autocomplete="tel" maxlength="11">
                             </div>
-
                             <div v-if="mode === 'register' && showInviteCode" class="nux-form-group">
                                 <label class="nux-form-label">邀请码</label>
                                 <input v-model="form.inviteCode" type="text" class="nux-input" placeholder="邀请码（选填）">
                             </div>
-
-                            <button type="submit" class="nux-login-submit" :disabled="loading">
-                                <span v-if="loading" class="nx-spinner"></span>
-                                {{ mode === 'login' ? '登 录' : '注 册' }}
+                            <button type="submit" class="nux-login-submit" :disabled="loading || registering">
+                                <span v-if="loading || registering" class="nx-spinner"></span>
+                                {{ mode === 'login' ? (loading ? '登 录 …' : '登 录') : (registering ? '注 册 …' : '注 册') }}
                             </button>
                         </form>
                         </template>
-
                         <div v-if="thirdPartyLogin && thirdPartyLogin.length" class="nux-login-divider"><span>其他登录方式</span></div>
                         <div v-if="thirdPartyLogin && thirdPartyLogin.length" class="nux-login-third">
                             <button v-for="tp in thirdPartyLogin" :key="tp.key" type="button" class="nux-third-btn" :title="tp.name" @click="onThirdParty(tp.key)">
@@ -353,7 +365,6 @@
                                 <span v-else>{{ tp.name }}</span>
                             </button>
                         </div>
-
                         <div class="nux-login-footer">
                             <slot name="footer"></slot>
                         </div>
@@ -385,6 +396,5 @@
             </div>
         `
     };
-
     window.NuxLoginPage = NuxLoginPage;
 })();
