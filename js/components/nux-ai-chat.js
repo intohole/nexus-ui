@@ -194,9 +194,7 @@
                         ctx.emit('chunk', chunk, full, assistantMsg);
                     },
                     onEvent: (ev, data) => {
-                        if (routeRichEvent(assistantMsg, ev, data)) {
-                            if (ev === 'meta' || (data && data.type === 'meta')) ctx.emit('meta', data, assistantMsg);
-                        }
+                        if (routeRichEvent(assistantMsg, ev, data) && (ev === 'meta' || (data && data.type === 'meta'))) ctx.emit('meta', data, assistantMsg);
                     },
                     onDone: (full) => {
                         if (full && !assistantMsg.content) assistantMsg.content = full;
@@ -219,6 +217,8 @@
                             finishStream(false, assistantMsg, errorMsg.value);
                         }
                     },
+                    currentMessage: assistantMsg,
+                    routeRich: (ev, data) => { routeRichEvent(assistantMsg, ev, data); },
                     registerStop: (fn) => { stopFn = fn; }
                 };
 

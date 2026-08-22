@@ -4,10 +4,28 @@
     const { ref, reactive, computed, onMounted, watch } = Vue;
 
     function pickList(res) {
+        if (!res) return [];
         if (Array.isArray(res)) return res;
-        if (res && Array.isArray(res.data)) return res.data;
-        if (res && Array.isArray(res.items)) return res.items;
+        const keys = ['data', 'items', 'records', 'list'];
+        for (const k of keys) { if (Array.isArray(res[k])) return res[k]; }
+        const inner = res.data;
+        if (inner && typeof inner === 'object' && !Array.isArray(inner) && inner !== null) {
+            for (const k of keys) { if (Array.isArray(inner[k])) return inner[k]; }
+        }
         return [];
+    }
+
+    function resolveItem(res) {
+        if (!res) return res;
+        if (res.id !== undefined && res.id !== null) return res;
+        if (res.data) return resolveItem(res.data);
+        return res;
+    }
+
+    function pickTotal(res, items) {
+        const cand = [res && res.pagination && res.pagination.total, res && res.total, res && res.data && res.data.total];
+        for (const v of cand) { if (typeof v === 'number') return v; }
+        return items.length;
     }
 
     const NuxConversationList = {
@@ -20,7 +38,8 @@
             showSearch: { type: Boolean, default: true },
             showArchive: { type: Boolean, default: true },
             pageSize: { type: Number, default: 100 },
-            listAdapter: { type: Function, default: pickList }
+            listAdapter: { type: Function, default: pickList },
+            itemAdapter: { type: Function, default: resolveItem }
         },
         emits: ['select', 'created', 'deleted', 'archive', 'error'],
         setup(props, ctx) {
@@ -44,7 +63,7 @@
                     const res = await api.get(props.conversationUrl, { page: 1, page_size: props.pageSize });
                     const items = props.listAdapter(res);
                     list.value = items;
-                    total.value = (res && res.pagination && res.pagination.total) || (res && res.total) || items.length;
+                    total.value = pickTotal(res, items);
                 } catch (e) {
                     error.value = e && e.message ? e.message : '会话列表加载失败';
                     ctx.emit('error', e);
@@ -80,7 +99,7 @@
                 error.value = '';
                 try {
                     const res = await api.post(props.conversationUrl, { title: customTitle || props.newTitle });
-                    const conv = (res && (res.data || res)) || res;
+                    const conv = props.itemAdapter(res);
                     await load();
                     ctx.emit('created', conv);
                     return conv;
@@ -110,7 +129,7 @@
                 const archived = conv.status === 'active';
                 try {
                     const res = await api.patch(`${props.conversationUrl}/${conv.id}`, { status: archived ? 'archived' : 'active' });
-                    const updated = (res && (res.data || res)) || res;
+                    const updated = props.itemAdapter(res);
                     if (updated && updated.id) conv.status = updated.status;
                     ctx.emit('archive', conv, archived);
                 } catch (e) {
