@@ -204,6 +204,16 @@
         return app;
     }
 
+    var _logoutRedirecting = false;
+
+    function redirectToLogin() {
+        if (_logoutRedirecting) return;
+        _logoutRedirecting = true;
+        setTimeout(function() {
+            try { window.location.reload(); } catch (e) {}
+        }, 150);
+    }
+
     function sync() {
         if (!window.Vue) return false;
         if (!_config || !_config.baseUrl) fetchConfig();
@@ -212,6 +222,7 @@
         var authed = !!(sdk && isAuthed(sdk));
         if (_rootApp && !authed) {
             unmount();
+            redirectToLogin();
         } else if (!_rootApp && authed && sdk) {
             ensureDeps().then(function() {
                 if (_rootApp) return;
