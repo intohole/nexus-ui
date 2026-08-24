@@ -59,6 +59,7 @@
             const forgotComp = Vue.shallowRef(window.NuxForgotPassword || null);
             const combinedError = Vue.computed(() => props.error || localError.value);
             const isSmsMode = Vue.computed(() => props.showSmsLogin && loginType.value === 'sms');
+            const regSms = Vue.computed(() => mode.value === 'register' && props.showSmsLogin);
             const effectiveSdk = Vue.computed(function() {
                 if (props.sdk) return props.sdk;
                 var g = window.ucSDK || window.__UC_SDK__ || window.ucSdk || null;
@@ -162,7 +163,7 @@
                     localError.value = '请填写邮箱';
                     return;
                 }
-                if (isSmsMode.value) {
+                if (isSmsMode.value || regSms.value) {
                     if (!/^1[3-9]\d{9}$/.test(form.phone)) {
                         localError.value = '请输入正确的手机号';
                         return;
@@ -263,7 +264,7 @@
 
             return {
                 mode, loginType, form, smsCode, smsCountdown, agreed, rememberMe,
-                showPassword, showConfirmPassword, combinedError, isSmsMode, effectiveSdk,
+                showPassword, showConfirmPassword, combinedError, isSmsMode, regSms, effectiveSdk,
                 forgotOpen, forgotLoading, forgotComp,
                 onLogin, onRegister, doRegister, sendSms, switchMode, switchLoginType, onThirdParty, onForgot, registering,
                 eyeSvg, eyeSlashSvg
@@ -286,7 +287,7 @@
                             <button :class="['nux-login-subtab', { active: loginType === 'sms' }]" @click="switchLoginType('sms')">验证码登录</button>
                         </div>
                         <form @submit.prevent="mode === 'login' ? onLogin() : onRegister()">
-                            <template v-if="!isSmsMode">
+                            <template v-if="!isSmsMode && !regSms">
                                 <div v-if="phoneLogin && mode === 'login'" class="nux-form-group">
                                     <label class="nux-form-label">手机号</label>
                                     <input v-model="form.phone" type="tel" class="nux-input" placeholder="请输入手机号" autocomplete="tel" maxlength="11">
@@ -296,7 +297,22 @@
                                     <input v-model="form.username" type="text" class="nux-input" placeholder="请输入用户名" autocomplete="username">
                                 </div>
                             </template>
-                            <template v-else>
+                            <template v-else-if="isSmsMode">
+                                <div class="nux-form-group">
+                                    <label class="nux-form-label">手机号</label>
+                                    <input v-model="form.phone" type="tel" class="nux-input" placeholder="请输入手机号" autocomplete="tel" maxlength="11">
+                                </div>
+                                <div class="nux-form-group">
+                                    <label class="nux-form-label">验证码</label>
+                                    <div class="nux-sms-row">
+                                        <input v-model="smsCode" type="text" class="nux-input" placeholder="请输入验证码" autocomplete="one-time-code" maxlength="6">
+                                        <button type="button" class="nux-sms-btn" :disabled="smsCountdown > 0 || smsLoading" @click="sendSms">
+                                            {{ smsCountdown > 0 ? smsCountdown + 's 后重发' : (smsLoading ? '发送中' : '获取验证码') }}
+                                        </button>
+                                    </div>
+                                </div>
+                            </template>
+                            <template v-else-if="regSms">
                                 <div class="nux-form-group">
                                     <label class="nux-form-label">手机号</label>
                                     <input v-model="form.phone" type="tel" class="nux-input" placeholder="请输入手机号" autocomplete="tel" maxlength="11">
@@ -356,7 +372,7 @@
                                     </label>
                                 </div>
                             </template>
-                            <div v-if="mode === 'register' && showPhoneLogin && !isSmsMode" class="nux-form-group">
+                            <div v-if="mode === 'register' && showPhoneLogin && !isSmsMode && !showSmsLogin" class="nux-form-group">
                                 <label class="nux-form-label">手机号</label>
                                 <input v-model="form.phone" type="tel" class="nux-input" placeholder="请输入手机号" autocomplete="tel" maxlength="11">
                             </div>
