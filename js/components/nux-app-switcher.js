@@ -100,7 +100,10 @@
             _apps = _cfg.registryData.filter(keepApp);
             return Promise.resolve();
         }
-        return fetch(_cfg.registryUrl, { headers: { 'Accept': 'application/json' } })
+        var url = /^https?:\/\//i.test(_cfg.registryUrl)
+            ? _cfg.registryUrl
+            : location.origin + ( _cfg.registryUrl.charAt(0) === '/' ? '' : '/' ) + _cfg.registryUrl;
+        return fetch(url, { headers: { 'Accept': 'application/json' } })
             .then(function(r) { if (!r.ok) throw new Error('bad'); return r.json(); })
             .then(function(d) { _apps = ((d && d.apps) || []).filter(keepApp); })
             .catch(function(e) { _err = '暂时无法加载应用清单'; _apps = []; });
