@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>nux-app-switcher 演示</title>
+<script src="https://cdn.bootcdn.net/ajax/libs/vue/3.4.21/vue.global.prod.min.js"></script>
+<style>
+  body{margin:0;background:linear-gradient(160deg,#eef2f7,#f8fafc);font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+  .mock-top{height:56px;background:#fff;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;padding:0 24px;gap:10px;box-shadow:0 1px 3px rgba(15,23,42,.04)}
+  .mock-brand{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#6366f1,#38bdf8);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:12px}
+  .mock-title{font-weight:600;color:#1e293b}
+  .mock-wrap{max-width:680px;margin:48px auto;padding:0 20px}
+  .mock-h1{font-size:24px;font-weight:700;color:#0f172a;margin:0 0 8px}
+  .mock-p{color:#64748b;font-size:14px;line-height:1.7;margin:0 0 20px}
+  .mock-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:20px;box-shadow:0 4px 16px rgba(15,23,42,.05)}
+  .tip{position:fixed;right:18px;top:16px;z-index:5;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:10px 14px;font-size:13px;color:#475569;box-shadow:0 6px 18px rgba(15,23,42,.1)}
+  .tip b{color:#0ea5e9}
+</style>
+</head>
+<body>
+  <header class="mock-top">
+    <span class="mock-brand">汇</span>
+    <span class="mock-title">汇报通 · 演示业务站</span>
+  </header>
+  <div class="tip">左下角 <b>松果氪</b> 即为跨应用导航入口，点击打开 →</div>
+  <main class="mock-wrap">
+    <h1 class="mock-h1">这是一个业务应用</h1>
+    <p class="mock-p">本页模拟任意一个业务站（浅色 nexus-ui 风格）。左侧漂浮的「松果氪」即收归到中间件的跨应用导航条，任何业务页只需引入一个脚本即可获得整站产品族入口：回主站、切换其他应用，按分类分组 + 最近使用智能置顶 + 关键词搜索。</p>
+    <div class="mock-card">这里可以是任意业务内容。导航条用深蓝灰石板玻璃 + 天空蓝点缀，代表"松果氪产品族"，在浅色业务站里自然形成品牌层级，一致且不冲突。</div>
+  </main>
+
+  <script>
+    window.nuxAppSwitcherConfig = {
+      brandName: '松果氪',
+      brandTagline: '你的数字工具箱',
+      registryData: [
+        {name:'WisePath',display_name:'智途志愿',description:'五维融合测评的高考志愿填报',path_prefix:'/wisepath',url:'/wisepath/',app_group:'学习成长',tags:['学习','志愿'],is_public:true,is_dev:false},
+        {name:'geniusStudent',display_name:'天才学伴',description:'懂情绪养习惯的AI学伴',path_prefix:'/geniusStudent',url:'/geniusStudent/',app_group:'学习成长',tags:['学习','孩子'],is_public:true,is_dev:false},
+        {name:'codeBlock',display_name:'编程学伴',description:'小学生可视化编程+AI导师',path_prefix:'/codeBlock',url:'/codeBlock/',app_group:'学习成长',tags:['学习','编程'],is_public:true,is_dev:false},
+        {name:'LifeCompass',display_name:'司南',description:'规划、决策、行动、复盘',path_prefix:'/LifeCompass',url:'/LifeCompass/',app_group:'学习成长',tags:['学习','人生'],is_public:true,is_dev:false},
+        {name:'challengePlanet',display_name:'星轨挑战',description:'习惯养成与目标挑战工具',path_prefix:'/challengePlanet',url:'/challengePlanet/',app_group:'学习成长',tags:['学习','打卡'],is_public:true,is_dev:false},
+        {name:'resumeAI',display_name:'跃职',description:'AI聊天生成专业简历',path_prefix:'/resumeAI',url:'/resumeAI/',app_group:'创作办公',tags:['创作','简历'],is_public:true,is_dev:false},
+        {name:'verseCraft',display_name:'墨韵创作',description:'从灵感到成稿全链路创作',path_prefix:'/verseCraft',url:'/verseCraft/',app_group:'创作办公',tags:['创作','写作'],is_public:true,is_dev:false},
+        {name:'adSmart',display_name:'青鸟',description:'智能广告投放平台',path_prefix:'/adSmart',url:'/adSmart/',app_group:'创作办公',tags:['创作','广告'],is_public:true,is_dev:false},
+        {name:'poster',display_name:'智能海报制作',description:'聊天式AI海报创作',path_prefix:'/poster',url:'/poster/',app_group:'创作办公',tags:['创作','海报'],is_public:true,is_dev:false},
+        {name:'pptCraft',display_name:'汇报通',description:'几分钟生成能直接开讲的汇报',path_prefix:'/pptcraft',url:'/pptcraft/',app_group:'创作办公',tags:['创作','PPT'],is_public:true,is_dev:false},
+        {name:'oneNote',display_name:'拾光',description:'生活剖析笔记',path_prefix:'/onenote',url:'/onenote/',app_group:'生活助手',tags:['生活','笔记'],is_public:true,is_dev:false},
+        {name:'aiPet',display_name:'宠康管家',description:'养宠人的AI健康管家',path_prefix:'/aiPet',url:'/aiPet/',app_group:'生活助手',tags:['生活','宠物'],is_public:true,is_dev:false},
+        {name:'financialKG',display_name:'知识图谱',description:'把非结构化文本变成可查询的知识图谱',path_prefix:'/financialKG',url:'/financialKG/',app_group:'投资理财',tags:['投资','金融'],is_public:true,is_dev:false},
+        {name:'golden',display_name:'金股智投',description:'五层选股引擎+新闻情绪分析',path_prefix:'/golden',url:'/golden/',app_group:'投资理财',tags:['投资','股票'],is_public:true,is_dev:false},
+        {name:'goldenFish',display_name:'金鱼助手',description:'智能闲鱼倒卖助手',path_prefix:'/goldenFish',url:'/goldenFish/',app_group:'投资理财',tags:['投资','闲鱼'],is_public:true,is_dev:false}
+      ]
+    };
+  </script>
+  <script src="../js/components/nux-app-switcher.js"></script>
+  <script>
+    if (location.search.indexOf('auto=1') !== -1) setTimeout(function(){ try{ NuxAppSwitcher.open(); }catch(e){} }, 500);
+  </script>
+</body>
+</html>
