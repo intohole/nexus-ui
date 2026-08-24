@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>nux-layout-sidebar 演示</title>
+<script src="https://cdn.bootcdn.net/ajax/libs/vue/3.4.21/vue.global.prod.min.js"></script>
+<link rel="stylesheet" href="../css/nexus-all.css">
+<style>
+  body{margin:0}
+  .demo-wrap{max-width:760px;margin:88px auto 0;padding:0 20px;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+  .demo-h2{font-size:20px;font-weight:700;color:#0f172a;margin:0 0 8px}
+  .demo-p{color:#64748b;font-size:14px;margin:0 0 12px;line-height:1.7}
+  .demo-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:20px;box-shadow:0 4px 16px rgba(15,23,42,.05)}
+  .demo-switch{position:fixed;right:18px;top:16px;z-index:200;display:flex;gap:8px}
+  .demo-switch button{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:8px 12px;font-size:13px;color:#475569;cursor:pointer;box-shadow:0 2px 8px rgba(15,23,42,.06)}
+  .demo-switch button.active{background:#0ea5e9;border-color:#0ea5e9;color:#fff}
+  .demo-user{display:flex;align-items:center;gap:10px;padding:8px}
+  .demo-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#38bdf8);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none}
+  .demo-user-m{min-width:0;font-size:13px;font-weight:600;color:var(--nx-text-heading)}
+  .demo-user-s{font-size:11px;color:var(--nx-text-muted)}
+  .demo-logout{margin-left:auto;background:none;border:none;color:var(--nx-text-muted);cursor:pointer;padding:6px;font-size:13px}
+</style>
+</head>
+<body class="app-one-note">
+<div class="demo-switch">
+  <button :class="{active: mode==='drawer'}" @click="setMode('drawer')">Drawer</button>
+  <button :class="{active: mode==='bottom'}" @click="setMode('bottom')">BottomNav</button>
+  <button :class="{active: mode==='headerless'}" @click="setMode('headerless')">Headerless</button>
+</div>
+<div id="app" v-cloak>
+  <nux-layout-sidebar v-if="mode==='drawer'" app-name="拾光" app-icon="光" :menu-items="menuItems"
+      :current-path="current" collapsible @navigate="navigate" @toggle-collapsed="onToggle">
+    <template #header-actions>
+      <span style="font-size:13px;color:var(--nx-text-muted)">header-actions 插槽</span>
+    </template>
+    <template #sidebar-footer>
+      <div class="demo-user">
+        <div class="demo-avatar">张</div>
+        <div class="demo-user-m">
+          <div>张三</div>
+          <div class="demo-user-s">管理员</div>
+        </div>
+        <button class="demo-logout" @click="onLogout">退出</button>
+      </div>
+    </template>
+    <div class="demo-wrap">
+      <h2 class="demo-h2">Drawer 模式 + 桌面折叠</h2>
+      <p class="demo-p">桌面端固定侧边栏，点侧边栏底部箭头可折叠为图标栏（仅图标+悬浮标题）；移动端转汉堡抽屉 + 遮罩。当前: <b>{{current}}</b>，折叠状态: <b>{{collapsed}}</b></p>
+      <div class="demo-card">这里可以是任意业务内容。</div>
+    </div>
+  </nux-layout-sidebar>
+  <nux-layout-sidebar v-else-if="mode==='bottom'" app-name="星轨" app-icon="★" :menu-items="menuItems"
+      :current-path="current" mobile-mode="bottom-nav" @navigate="navigate">
+    <div class="demo-wrap">
+      <h2 class="demo-h2">BottomNav 模式</h2>
+      <p class="demo-p">桌面端显示侧边栏，移动端隐藏侧边栏、转为底部固定导航（默认取前 4 项）。当前: <b>{{current}}</b></p>
+      <div class="demo-card">这里可以是任意业务内容。</div>
+    </div>
+  </nux-layout-sidebar>
+  <nux-layout-sidebar v-else app-name="管理后台" :app-icon="logoIcon" :menu-items="menuItems2"
+      :current-path="current" headerless :menu-open="menuOpen" @update:menu-open="v => menuOpen = v" @navigate="navigate">
+    <template #sidebar-footer>
+      <div class="demo-user">
+        <div class="demo-avatar">张</div>
+        <div class="demo-user-m">
+          <div>张三</div>
+          <div class="demo-user-s">管理员</div>
+        </div>
+        <button class="demo-logout" @click="onLogout">退出</button>
+      </div>
+    </template>
+    <div class="demo-wrap">
+      <h2 class="demo-h2">Headerless 模式</h2>
+      <p class="demo-p">无固定顶栏，侧边栏全高（适配应用自带顶栏）；移动端抽屉由外部 <b>:menu-open</b> 受控。当前: <b>{{current}}</b>，抽屉: <b>{{menuOpen}}</b></p>
+      <div class="demo-card">这里可以是任意业务内容。</div>
+    </div>
+  </nux-layout-sidebar>
+</div>
+
+<script src="../js/composables/use-mobile.js"></script>
+<script src="../js/components/nux-layout-sidebar.js"></script>
+<script>
+const app = Vue.createApp({
+  data() {
+    const params = new URLSearchParams(location.search);
+    return {
+      mode: params.get('mode') === 'bottom' ? 'bottom' : (params.get('mode') === 'headerless' ? 'headerless' : 'drawer'),
+      current: params.get('path') || 'overview',
+      collapsed: params.get('collapsed') === '1',
+      menuOpen: params.get('menuOpen') === '1',
+      logoIcon: '<i class="fas fa-cogs"></i>',
+      menuItems: [
+        { path: 'overview', label: '概览', icon: '📊' },
+        { path: 'notes', label: '笔记', icon: '📝' },
+        { path: 'chat', label: '助手', icon: '💬' },
+        { path: 'reminders', label: '提醒', icon: '⏰' },
+        { path: 'settings', label: '设置', icon: '⚙️' }
+      ],
+      menuItems2: [
+        { path: 'dashboard', label: '数据概览', icon: '<i class="fas fa-tachometer-alt"></i>' },
+        { path: 'users', label: '用户管理', icon: '<i class="fas fa-users"></i>' },
+        { path: 'knowledge', label: '知识库管理', icon: '<i class="fas fa-book"></i>' },
+        { path: 'system', label: '系统监控', icon: '<i class="fas fa-server"></i>' }
+      ]
+    };
+  },
+  methods: {
+    setMode(m) { this.mode = m; },
+    navigate(p) { this.current = p; },
+    onToggle(c) { this.collapsed = c; },
+    onLogout() { alert('退出登录'); }
+  }
+});
+app.component('nux-layout-sidebar', NuxLayoutSidebar);
+app.mount('#app');
+</script>
+</body>
+</html>

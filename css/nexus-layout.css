@@ -53,7 +53,9 @@
     top: 56px;
     left: 0;
     bottom: 0;
-    width: 240px;
+    width: var(--nxs-w, 240px);
+    display: flex;
+    flex-direction: column;
     background: var(--nx-bg-surface);
     border-right: 1px solid var(--nx-border);
     overflow-y: auto;
@@ -61,8 +63,12 @@
     transition: transform 0.3s ease;
 }
 
+.nux-layout-sidebar .nux-layout-nav {
+    flex: 1;
+}
+
 .nux-layout-sidebar .nux-layout-main {
-    margin-left: 240px;
+    margin-left: var(--nxs-w, 240px);
     margin-top: 56px;
     padding: var(--nx-space-6);
     min-height: calc(100vh - 56px);
@@ -160,6 +166,22 @@
     flex-shrink: 0;
 }
 
+.nux-layout-nav-icon svg {
+    display: block;
+    margin: 0 auto;
+}
+
+/* ========== Headerless (全高侧边栏，应用自带顶栏) ========== */
+.nux-layout-sidebar.headerless .nux-layout-aside {
+    top: 0;
+}
+
+.nux-layout-sidebar.headerless .nux-layout-main {
+    margin-top: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
 /* ========== Responsive ========== */
 @media (max-width: 768px) {
     .nux-layout-sidebar .nux-layout-aside {
@@ -195,4 +217,88 @@
 @media (max-width: 768px) {
     .nx-hide-mobile { display: none !important; }
     .nx-show-mobile { display: flex !important; }
+}
+
+/* ========== Sidebar Extras ========== */
+.nux-layout-aside.collapsed .nux-layout-nav-item {
+    justify-content: center;
+    padding-left: var(--nx-space-2);
+    padding-right: var(--nx-space-2);
+}
+
+.nux-layout-aside.collapsed .nux-layout-nav-label {
+    display: none;
+}
+
+.nux-layout-aside-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--nx-space-2);
+    border-top: 1px solid var(--nx-border);
+}
+
+.nux-layout-collapse-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    border: none;
+    border-radius: var(--nx-radius-md);
+    background: transparent;
+    color: var(--nx-text-secondary);
+    cursor: pointer;
+    transition: all var(--nx-transition-fast);
+}
+
+.nux-layout-collapse-btn:hover {
+    color: var(--nx-text-heading);
+    background: var(--nx-bg-hover);
+}
+
+.nux-layout-bottom-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+    display: flex;
+    background: var(--nx-bg-surface);
+    border-top: 1px solid var(--nx-border);
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.nux-layout-bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 6px 0 8px;
+    min-height: 52px;
+    font-size: 11px;
+    color: var(--nx-text-muted);
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.nux-layout-bottom-nav-item .nux-layout-nav-icon {
+    font-size: 20px;
+    width: auto;
+}
+
+.nux-layout-bottom-nav-item.active {
+    color: var(--app-accent, var(--nx-primary));
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    .nx-bottom-nav-mode .nux-layout-aside {
+        display: none;
+    }
+
+    .nx-bottom-nav-mode .nux-layout-main {
+        padding-bottom: calc(64px + env(safe-area-inset-bottom));
+    }
 }
