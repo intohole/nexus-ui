@@ -3,7 +3,7 @@
         var sidebar = document.querySelector('.sidebar, .nx-sidebar');
         if (!sidebar) return;
 
-        if (document.querySelector('.nx-hamburger.nx-show-mobile')) return;
+        if (document.querySelector('.nx-hamburger')) return;
 
         if (sidebar.dataset.nxMobileInit === '1') return;
         sidebar.dataset.nxMobileInit = '1';
