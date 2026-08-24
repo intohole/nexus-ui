@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>nux-login-page 多样式演示</title>
+  <link rel="stylesheet" href="../css/nexus-tokens.css">
+  <link rel="stylesheet" href="../css/nexus-base.css">
+  <link rel="stylesheet" href="../css/nexus-components-form.css">
+  <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.4.21/vue.global.prod.min.js"></script>
+  <script src="../js/components/nux-login-page.js"></script>
+  <style>
+    .demo-page { min-height: 100vh; }
+    .demo-toolbar {
+      position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+      z-index: 50; display: flex; gap: 8px; align-items: center;
+      background: #fff; padding: 8px 12px; border-radius: 12px;
+      box-shadow: 0 6px 24px rgba(30,41,59,.12); border: 1px solid #e2e8f0;
+    }
+    .demo-toolbar button {
+      border: 1px solid #e2e8f0; background: #f1f5f9; color: #334155;
+      padding: 6px 14px; border-radius: 8px; font-size: 14px; cursor: pointer;
+    }
+    .demo-toolbar button.active { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+    .demo-tag {
+      position: fixed; top: 60px; right: 14px; z-index: 60;
+      background: rgba(30,41,59,.72); color: #fff; font-size: 12px;
+      padding: 3px 10px; border-radius: 999px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" v-cloak>
+    <div class="demo-toolbar">
+      <button v-for="v in variants" :key="v" :class="{active: current===v}" @click="current=v">{{ v }}</button>
+    </div>
+    <div class="demo-tag">当前样式：{{ current }}（variant="{{ current }}"）</div>
+    <nux-login-page
+      :variant="current"
+      app-name="汇报通"
+      app-icon="📊"
+      slogan="有想法，几分钟生成能直接开讲的汇报"
+      description="AI 帮你完成汇报制作、结构设计到逐字稿的整条链路。"
+      :features="features"
+      :stats="stats"
+      theme-color="#3b82f6"
+      :show-register="true"
+      :show-email-field="true"
+      :show-forgot="true"
+      @login="onLogin"
+      @register="onRegister"
+    ></nux-login-page>
+  </div>
+  <script>
+    const { createApp, ref } = Vue;
+    const app = createApp({
+      setup() {
+        const current = ref('split');
+        const variants = ['split', 'card', 'topbar', 'minimal'];
+        const features = [
+          { icon: '🚀', title: '一键成稿', desc: '输入主题，自动生成汇报结构' },
+          { icon: '🎯', title: '精准表达', desc: '围绕听众关注的成果与价值' }
+        ];
+        const stats = [
+          { value: '10万+', label: '汇报生成' },
+          { value: '4.9', label: '用户评分' }
+        ];
+        function onLogin(payload) { console.log('login', payload); }
+        function onRegister(payload) { console.log('register', payload); }
+        return { current, variants, features, stats, onLogin, onRegister };
+      }
+    });
+    app.component('nux-login-page', window.NuxLoginPage);
+    app.mount('#app');
+  </script>
+</body>
+</html>

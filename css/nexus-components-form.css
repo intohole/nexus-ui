@@ -326,6 +326,57 @@
 .nux-third-btn:hover { color: var(--app-accent, var(--nx-primary)); border-color: var(--app-accent, var(--nx-primary)); }
 .nux-third-btn svg { width: 20px; height: 20px; }
 
+.nux-login-page.nux-login--card,
+.nux-login-page.nux-login--topbar,
+.nux-login-page.nux-login--minimal {
+  flex-direction: column;
+  background: linear-gradient(165deg, #eef2f7 0%, #e3e9f1 55%, #d6dfea 100%);
+}
+.nux-login-page.nux-login--card .nux-login-brand,
+.nux-login-page.nux-login--topbar .nux-login-brand {
+  order: 1; flex: none; overflow: visible;
+}
+.nux-login-page.nux-login--card .nux-login-brand::before,
+.nux-login-page.nux-login--topbar .nux-login-brand::before { content: none; }
+.nux-login-page.nux-login--card .nux-login-form-side,
+.nux-login-page.nux-login--topbar .nux-login-form-side,
+.nux-login-page.nux-login--minimal .nux-login-form-side {
+  order: 2; flex: none; background: transparent;
+}
+.nux-login-page.nux-login--card .nux-login-card,
+.nux-login-page.nux-login--topbar .nux-login-card,
+.nux-login-page.nux-login--minimal .nux-login-card {
+  background: #fff; box-sizing: border-box;
+}
+.nux-login-page.nux-login--card .nux-login-card { border-radius: 18px; padding: 32px 30px; box-shadow: 0 12px 40px rgba(30, 41, 59, .10), 0 2px 6px rgba(30, 41, 59, .06); }
+.nux-login-page.nux-login--topbar .nux-login-card { border-radius: 16px; padding: 32px 30px; box-shadow: 0 10px 32px rgba(30, 41, 59, .09); }
+.nux-login-page.nux-login--minimal .nux-login-card { border-radius: 16px; padding: 32px 30px; box-shadow: 0 8px 28px rgba(30, 41, 59, .06); }
+
+.nux-login-page.nux-login--card .nux-login-brand { background: none; padding: 56px 24px 0; }
+.nux-login-page.nux-login--card .nux-login-brand-content { color: var(--nx-text-heading); }
+.nux-login-page.nux-login--card .nux-login-desc,
+.nux-login-page.nux-login--card .nux-login-features,
+.nux-login-page.nux-login--card .nux-login-stats { display: none; }
+.nux-login-page.nux-login--card .nux-login-icon { font-size: 44px; margin-bottom: var(--nx-space-2); }
+.nux-login-page.nux-login--card .nux-login-app-name { font-size: 26px; margin-bottom: 4px; color: var(--nx-text-heading); }
+.nux-login-page.nux-login--card .nux-login-slogan { font-size: var(--nx-text-base); color: var(--nx-text-secondary); }
+.nux-login-page.nux-login--card .nux-login-form-side { padding: 20px 16px 56px; }
+
+.nux-login-page.nux-login--topbar { background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%); }
+.nux-login-page.nux-login--topbar .nux-login-brand { background: #fff; padding: 14px 24px; box-shadow: 0 1px 0 var(--nx-border); }
+.nux-login-page.nux-login--topbar .nux-login-brand-content { display: flex; align-items: center; justify-content: center; gap: 12px; text-align: left; color: var(--nx-text-heading); }
+.nux-login-page.nux-login--topbar .nux-login-icon { margin: 0; font-size: 28px; line-height: 1; }
+.nux-login-page.nux-login--topbar .nux-login-app-name { font-size: 20px; margin: 0; color: var(--nx-text-heading); }
+.nux-login-page.nux-login--topbar .nux-login-slogan { font-size: var(--nx-text-sm); margin: 0; color: var(--nx-text-secondary); }
+.nux-login-page.nux-login--topbar .nux-login-desc,
+.nux-login-page.nux-login--topbar .nux-login-features,
+.nux-login-page.nux-login--topbar .nux-login-stats { display: none; }
+.nux-login-page.nux-login--topbar .nux-login-form-side { padding: 40px 16px 64px; }
+
+.nux-login-page.nux-login--minimal { background: var(--nx-bg-surface, #f8fafc); }
+.nux-login-page.nux-login--minimal .nux-login-brand { display: none; }
+.nux-login-page.nux-login--minimal .nux-login-form-side { padding: 24px 16px; }
+
 @media (max-width: 768px) {
   .nux-login-page { flex-direction: column; }
   .nux-login-brand { min-height: 0; flex: none; padding: var(--nx-space-6); }

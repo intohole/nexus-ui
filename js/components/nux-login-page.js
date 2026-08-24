@@ -29,7 +29,8 @@
             smsLoading: { type: Boolean, default: false },
             error: { type: String, default: '' },
             useCustomRegister: { type: Boolean, default: true },
-            defaultMode: { type: String, default: 'login' }
+            defaultMode: { type: String, default: 'login' },
+            variant: { type: String, default: 'split' }
         },
         emits: ['login', 'register', 'registered', 'sms-login', 'send-sms', 'third-party-login'],
         setup(props, { emit }) {
@@ -71,6 +72,8 @@
                 const idx = src.lastIndexOf('/');
                 return idx > 0 ? src.slice(0, idx) : '';
             })();
+            const eyeSvg = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+            const eyeSlashSvg = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
 
             function applyTheme() {
                 if (props.themeColor) {
@@ -249,11 +252,12 @@
                 mode, loginType, form, smsCode, smsCountdown, agreed, rememberMe,
                 showPassword, showConfirmPassword, combinedError, isSmsMode, effectiveSdk,
                 forgotOpen, forgotLoading, forgotComp,
-                onLogin, onRegister, doRegister, sendSms, switchMode, switchLoginType, onThirdParty, onForgot, registering
+                onLogin, onRegister, doRegister, sendSms, switchMode, switchLoginType, onThirdParty, onForgot, registering,
+                eyeSvg, eyeSlashSvg
             };
         },
         template: `
-            <div class="nux-login-page">
+            <div :class="['nux-login-page', 'nux-login--' + variant]">
                 <div class="nux-login-form-side">
                     <div class="nux-login-card">
                         <component :is="forgotComp" v-if="showForgot && effectiveSdk && forgotOpen" :sdk="effectiveSdk" @back="forgotOpen = false" @done="forgotOpen = false"></component>
@@ -299,10 +303,7 @@
                                     <label class="nux-form-label">密码</label>
                                     <div class="nux-password-wrap">
                                         <input v-model="form.password" :type="showPassword ? 'text' : 'password'" class="nux-input" placeholder="请输入密码" autocomplete="current-password" required>
-                                        <button type="button" class="nux-password-toggle" :aria-label="showPassword ? '隐藏密码' : '显示密码'" @click="showPassword = !showPassword">
-                                            <svg v-if="!showPassword" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                            <svg v-else viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                                        </button>
+                                        <button type="button" class="nux-password-toggle" :aria-label="showPassword ? '隐藏密码' : '显示密码'" @click="showPassword = !showPassword" v-html="showPassword ? eyeSlashSvg : eyeSvg"></button>
                                     </div>
                                 </div>
                                 <div v-if="showRememberMe || showForgot" class="nux-login-options">
@@ -318,20 +319,14 @@
                                     <label class="nux-form-label">密码</label>
                                     <div class="nux-password-wrap">
                                         <input v-model="form.password" :type="showPassword ? 'text' : 'password'" class="nux-input" placeholder="请输入密码" autocomplete="new-password" required>
-                                        <button type="button" class="nux-password-toggle" :aria-label="showPassword ? '隐藏密码' : '显示密码'" @click="showPassword = !showPassword">
-                                            <svg v-if="!showPassword" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                            <svg v-else viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                                        </button>
+                                        <button type="button" class="nux-password-toggle" :aria-label="showPassword ? '隐藏密码' : '显示密码'" @click="showPassword = !showPassword" v-html="showPassword ? eyeSlashSvg : eyeSvg"></button>
                                     </div>
                                 </div>
                                 <div class="nux-form-group">
                                     <label class="nux-form-label">确认密码</label>
                                     <div class="nux-password-wrap">
                                         <input v-model="form.confirmPassword" :type="showConfirmPassword ? 'text' : 'password'" class="nux-input" placeholder="请再次输入密码" autocomplete="new-password" required>
-                                        <button type="button" class="nux-password-toggle" :aria-label="showConfirmPassword ? '隐藏密码' : '显示密码'" @click="showConfirmPassword = !showConfirmPassword">
-                                            <svg v-if="!showConfirmPassword" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                            <svg v-else viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                                        </button>
+                                        <button type="button" class="nux-password-toggle" :aria-label="showConfirmPassword ? '隐藏密码' : '显示密码'" @click="showConfirmPassword = !showConfirmPassword" v-html="showConfirmPassword ? eyeSlashSvg : eyeSvg"></button>
                                     </div>
                                 </div>
                                 <div v-if="showTerms" class="nux-form-group">
