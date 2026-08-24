@@ -11,6 +11,7 @@
             themeColor: { type: String, default: '' },
             showRegister: { type: Boolean, default: true },
             showPhoneLogin: { type: Boolean, default: false },
+            phoneLogin: { type: Boolean, default: false },
             showEmailField: { type: Boolean, default: false },
             requireEmail: { type: Boolean, default: false },
             showInviteCode: { type: Boolean, default: false },
@@ -105,6 +106,18 @@
                         return;
                     }
                     emit('sms-login', { phone: form.phone, code: smsCode.value });
+                    return;
+                }
+                if (props.phoneLogin) {
+                    if (!/^1[3-9]\d{9}$/.test(form.phone)) {
+                        localError.value = '请输入正确的手机号';
+                        return;
+                    }
+                    if (!form.password) {
+                        localError.value = '请输入密码';
+                        return;
+                    }
+                    emit('login', { username: form.phone, phone: form.phone, password: form.password, rememberMe: rememberMe.value });
                     return;
                 }
                 if (!form.username && !form.email) {
@@ -274,7 +287,11 @@
                         </div>
                         <form @submit.prevent="mode === 'login' ? onLogin() : onRegister()">
                             <template v-if="!isSmsMode">
-                                <div class="nux-form-group">
+                                <div v-if="phoneLogin && mode === 'login'" class="nux-form-group">
+                                    <label class="nux-form-label">手机号</label>
+                                    <input v-model="form.phone" type="tel" class="nux-input" placeholder="请输入手机号" autocomplete="tel" maxlength="11">
+                                </div>
+                                <div v-else class="nux-form-group">
                                     <label class="nux-form-label">用户名</label>
                                     <input v-model="form.username" type="text" class="nux-input" placeholder="请输入用户名" autocomplete="username">
                                 </div>
