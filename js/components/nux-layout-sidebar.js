@@ -53,7 +53,7 @@
             <div :class="['nux-layout-sidebar', themeClass, { 'headerless': headerless, 'nx-bottom-nav-mode': mobileMode === 'bottom-nav' }]"
                  :style="cssVars">
                 <header v-if="!headerless" class="nux-layout-header" :style="{ height: headerHeight }">
-                    <button v-if="mobileMode === 'drawer'" class="nx-hamburger nx-show-mobile" @click="toggleMenu" :class="{'open': mobileMenuOpen}" aria-label="菜单" :aria-expanded="mobileMenuOpen ? 'true' : 'false'">
+                    <button class="nx-hamburger nx-show-mobile" @click="toggleMenu" :class="{'open': mobileMenuOpen}" aria-label="菜单" :aria-expanded="mobileMenuOpen ? 'true' : 'false'">
                         <span class="nx-hamburger-inner">
                             <span class="nx-hamburger-line"></span>
                             <span class="nx-hamburger-line"></span>
