@@ -31,6 +31,7 @@
             const isActive = (item) => props.currentPath === (item.path ?? item.key);
             const badgeOf = (item) => typeof item.badge === 'function' ? item.badge() : item.badge;
             const itemKey = (item) => item.path ?? item.key;
+            const isHtmlIcon = (item) => item.icon && String(item.icon).indexOf('<') >= 0;
             const flattenItems = () => hasGroups.value ? props.menuGroups.flatMap(g => g.items || []) : props.menuItems;
             const bottomItems = Vue.computed(() => props.mobileMode === 'bottom-nav' ? flattenItems().slice(0, props.bottomNavLimit) : []);
             const cssVars = Vue.computed(() => ({ '--nxs-w': effectiveWidth.value }));
@@ -41,7 +42,7 @@
             Vue.watch(isMobile, (mobile) => {
                 if (!mobile && controlled.value && props.menuOpen) emit('update:menuOpen', false);
             });
-            return { isMobile, mobileMenuOpen, toggleMenu, closeMenu, collapsed, toggleCollapsed, asideWidth, hasGroups, isActive, badgeOf, itemKey, bottomItems, cssVars };
+            return { isMobile, mobileMenuOpen, toggleMenu, closeMenu, collapsed, toggleCollapsed, asideWidth, hasGroups, isActive, badgeOf, itemKey, isHtmlIcon, bottomItems, cssVars };
         },
         template: `
             <div :class="['nux-layout-sidebar', themeClass, { 'headerless': headerless, 'nx-bottom-nav-mode': mobileMode === 'bottom-nav' }]"
@@ -75,7 +76,8 @@
                                        :href="item.path || '#'" :title="collapsed ? item.label : ''"
                                        :aria-current="isActive(item) ? 'page' : undefined"
                                        @click.prevent="emit('navigate', itemKey(item)); closeMenu()">
-                                        <span v-if="item.icon" class="nux-layout-nav-icon" v-html="item.icon"></span>
+                                        <span v-if="item.icon && isHtmlIcon(item)" class="nux-layout-nav-icon" v-html="item.icon"></span>
+                                        <i v-else-if="item.icon" :class="['nux-layout-nav-icon', item.icon]"></i>
                                         <span v-if="item.label" class="nux-layout-nav-label">{{ item.label }}</span>
                                         <span v-if="badgeOf(item)" class="nux-layout-nav-badge">{{ badgeOf(item) }}</span>
                                     </a>
@@ -86,7 +88,8 @@
                                :href="item.path || '#'" :title="collapsed ? item.label : ''"
                                :aria-current="isActive(item) ? 'page' : undefined"
                                @click.prevent="emit('navigate', itemKey(item)); closeMenu()">
-                                <span v-if="item.icon" class="nux-layout-nav-icon" v-html="item.icon"></span>
+                                <span v-if="item.icon && isHtmlIcon(item)" class="nux-layout-nav-icon" v-html="item.icon"></span>
+                                <i v-else-if="item.icon" :class="['nux-layout-nav-icon', item.icon]"></i>
                                 <span v-if="item.label" class="nux-layout-nav-label">{{ item.label }}</span>
                                 <span v-if="badgeOf(item)" class="nux-layout-nav-badge">{{ badgeOf(item) }}</span>
                             </a>
@@ -107,7 +110,8 @@
                     <a v-for="item in bottomItems" :key="itemKey(item)"
                        :class="['nux-layout-bottom-nav-item', { active: isActive(item) }]"
                        :href="item.path || '#'" @click.prevent="emit('navigate', itemKey(item))">
-                        <span v-if="item.icon" class="nux-layout-nav-icon" v-html="item.icon"></span>
+                        <span v-if="item.icon && isHtmlIcon(item)" class="nux-layout-nav-icon" v-html="item.icon"></span>
+                        <i v-else-if="item.icon" :class="['nux-layout-nav-icon', item.icon]"></i>
                         <span v-if="item.label" class="nux-layout-nav-label">{{ item.label }}</span>
                     </a>
                 </nav>
