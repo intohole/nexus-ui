@@ -14,6 +14,7 @@
             collapsible: { type: Boolean, default: false },
             mobileMode: { type: String, default: 'drawer' },
             bottomNavLimit: { type: Number, default: 4 },
+            bottomNavItems: { type: Array, default: () => [] },
             headerless: { type: Boolean, default: false },
             menuOpen: { type: Boolean, default: undefined }
         },
@@ -33,7 +34,11 @@
             const itemKey = (item) => item.path ?? item.key;
             const isHtmlIcon = (item) => item.icon && String(item.icon).indexOf('<') >= 0;
             const flattenItems = () => hasGroups.value ? props.menuGroups.flatMap(g => g.items || []) : props.menuItems;
-            const bottomItems = Vue.computed(() => props.mobileMode === 'bottom-nav' ? flattenItems().slice(0, props.bottomNavLimit) : []);
+            const bottomItems = Vue.computed(() => {
+                if (props.mobileMode !== 'bottom-nav') return [];
+                if (props.bottomNavItems && props.bottomNavItems.length) return props.bottomNavItems;
+                return flattenItems().slice(0, props.bottomNavLimit);
+            });
             const cssVars = Vue.computed(() => ({ '--nxs-w': effectiveWidth.value }));
             const controlled = Vue.computed(() => props.menuOpen !== undefined);
             const mobileMenuOpen = Vue.computed(() => controlled.value ? props.menuOpen : _menuOpen.value);
@@ -42,7 +47,7 @@
             Vue.watch(isMobile, (mobile) => {
                 if (!mobile && controlled.value && props.menuOpen) emit('update:menuOpen', false);
             });
-            return { isMobile, mobileMenuOpen, toggleMenu, closeMenu, collapsed, toggleCollapsed, asideWidth, hasGroups, isActive, badgeOf, itemKey, isHtmlIcon, bottomItems, cssVars };
+            return { emit, isMobile, mobileMenuOpen, toggleMenu, closeMenu, collapsed, toggleCollapsed, asideWidth, hasGroups, isActive, badgeOf, itemKey, isHtmlIcon, bottomItems, cssVars };
         },
         template: `
             <div :class="['nux-layout-sidebar', themeClass, { 'headerless': headerless, 'nx-bottom-nav-mode': mobileMode === 'bottom-nav' }]"
@@ -66,6 +71,10 @@
                 <div class="nx-drawer-overlay" :class="{'open': mobileMenuOpen && isMobile}" @click="closeMenu"></div>
                 <aside :class="['nux-layout-aside', {'collapsed': collapsed, 'mobile-open': mobileMenuOpen && isMobile}]"
                        :style="{ width: asideWidth, top: headerless ? 0 : headerHeight }">
+                    <div v-if="headerless && (appIcon || appName)" class="nux-layout-aside-brand">
+                        <span v-if="appIcon" class="nux-layout-brand-icon" v-html="appIcon"></span>
+                        <span v-if="appName && !collapsed" class="nux-layout-brand-name">{{ appName }}</span>
+                    </div>
                     <nav class="nux-layout-nav">
                         <slot name="sidebar">
                             <template v-if="hasGroups">

@@ -222,6 +222,16 @@
     min-height: 100dvh;
 }
 
+.nux-layout-aside-brand {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-4) var(--nx-space-3);
+    font-weight: 600;
+    font-size: var(--nx-text-lg);
+    color: var(--nx-text-heading);
+}
+
 /* ========== Responsive ========== */
 @media (max-width: 768px) {
     .nux-layout-sidebar .nux-layout-aside {
