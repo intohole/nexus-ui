@@ -32,13 +32,16 @@
             const mobileMenuOpen = Vue.computed(() => controlled.value ? props.menuOpen : _menuOpen.value);
             const toggleMenu = () => { if (controlled.value) emit('update:menuOpen', !props.menuOpen); else _toggleMenu(); };
             const closeMenu = () => { if (controlled.value) emit('update:menuOpen', false); else _closeMenu(); };
+            Vue.watch(isMobile, (mobile) => {
+                if (!mobile && controlled.value && props.menuOpen) emit('update:menuOpen', false);
+            });
             return { isMobile, mobileMenuOpen, toggleMenu, closeMenu, collapsed, toggleCollapsed, asideWidth, bottomItems, cssVars };
         },
         template: `
             <div :class="['nux-layout-sidebar', themeClass, { 'headerless': headerless, 'nx-bottom-nav-mode': mobileMode === 'bottom-nav' }]"
                  :style="cssVars">
                 <header v-if="!headerless" class="nux-layout-header" :style="{ height: headerHeight }">
-                    <button v-if="mobileMode === 'drawer'" class="nx-hamburger nx-show-mobile" @click="toggleMenu" :class="{'open': mobileMenuOpen}">
+                    <button v-if="mobileMode === 'drawer'" class="nx-hamburger nx-show-mobile" @click="toggleMenu" :class="{'open': mobileMenuOpen}" aria-label="菜单" :aria-expanded="mobileMenuOpen ? 'true' : 'false'">
                         <span class="nx-hamburger-inner">
                             <span class="nx-hamburger-line"></span>
                             <span class="nx-hamburger-line"></span>
@@ -61,6 +64,7 @@
                             <a v-for="item in menuItems" :key="item.path"
                                :class="['nux-layout-nav-item', { active: currentPath === item.path }]"
                                :href="item.path" :title="collapsed ? item.label : ''"
+                               :aria-current="currentPath === item.path ? 'page' : undefined"
                                @click.prevent="emit('navigate', item.path); closeMenu()">
                                 <span v-if="item.icon" class="nux-layout-nav-icon" v-html="item.icon"></span>
                                 <span v-if="item.label" class="nux-layout-nav-label">{{ item.label }}</span>

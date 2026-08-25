@@ -123,6 +123,7 @@
 
 .nux-layout-topnav-drawer.open {
     transform: translateX(0);
+    z-index: 999;
 }
 
 /* ========== Nav Items ========== */
@@ -190,6 +191,7 @@
 
     .nux-layout-sidebar .nux-layout-aside.mobile-open {
         transform: translateX(0);
+        z-index: 999;
     }
 
     .nux-layout-sidebar .nux-layout-main {
