@@ -68,6 +68,7 @@
                                @click.prevent="emit('navigate', item.path); closeMenu()">
                                 <span v-if="item.icon" class="nux-layout-nav-icon" v-html="item.icon"></span>
                                 <span v-if="item.label" class="nux-layout-nav-label">{{ item.label }}</span>
+                                <span v-if="item.badge" class="nux-layout-nav-badge">{{ item.badge }}</span>
                             </a>
                         </slot>
                     </nav>

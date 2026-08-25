@@ -13,13 +13,14 @@
         emits: ['navigate', 'user-logout'],
         setup(props, { emit }) {
             const { isMobile, mobileMenuOpen, toggleMenu, closeMenu } = useMobile();
-            return { isMobile, mobileMenuOpen, toggleMenu, closeMenu };
+            const drawerStyle = Vue.computed(() => ({ top: props.headerHeight }));
+            return { isMobile, mobileMenuOpen, toggleMenu, closeMenu, drawerStyle };
         },
         template: `
             <div :class="['nux-layout-topnav', themeClass]">
                 <header class="nux-layout-header" :style="{ height: headerHeight }">
                     <div class="nux-layout-brand" v-if="appIcon || appName">
-                        <span v-if="appIcon" class="nux-layout-brand-icon">{{ appIcon }}</span>
+                        <span v-if="appIcon" class="nux-layout-brand-icon" v-html="appIcon"></span>
                         <span v-if="appName" class="nux-layout-brand-name">{{ appName }}</span>
                     </div>
                     <nav class="nux-layout-topnav-nav nx-hide-mobile">
@@ -27,7 +28,7 @@
                            :class="['nux-layout-topnav-item', { active: currentPath === item.path }]"
                            :href="item.path"
                            @click.prevent="emit('navigate', item.path)">
-                            <span v-if="item.icon" class="nux-layout-nav-icon">{{ item.icon }}</span>
+                            <span v-if="item.icon" class="nux-layout-nav-icon" v-html="item.icon"></span>
                             <span>{{ item.label }}</span>
                         </a>
                     </nav>
@@ -44,12 +45,12 @@
                     </button>
                 </header>
                 <div class="nx-drawer-overlay" :class="{'open': mobileMenuOpen && isMobile}" @click="closeMenu"></div>
-                <div :class="['nux-layout-topnav-drawer', {'open': mobileMenuOpen && isMobile}]">
+                <div :class="['nux-layout-topnav-drawer', {'open': mobileMenuOpen && isMobile}]" :style="drawerStyle">
                     <a v-for="item in navItems" :key="item.path"
                        :class="['nux-layout-nav-item', { active: currentPath === item.path }]"
                        :href="item.path"
                        @click.prevent="emit('navigate', item.path); closeMenu()">
-                        <span v-if="item.icon" class="nux-layout-nav-icon">{{ item.icon }}</span>
+                        <span v-if="item.icon" class="nux-layout-nav-icon" v-html="item.icon"></span>
                         <span>{{ item.label }}</span>
                     </a>
                 </div>

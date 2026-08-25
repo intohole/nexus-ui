@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>nux-bottom-nav 演示</title>
+<script src="https://cdn.bootcdn.net/ajax/libs/vue/3.4.21/vue.global.prod.min.js"></script>
+<link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="../css/nexus-all.css">
+<style>
+  body{margin:0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+  .demo-wrap{max-width:760px;margin:24px auto 0;padding:0 20px 120px}
+  .demo-h2{font-size:20px;font-weight:700;color:#0f172a;margin:0 0 8px}
+  .demo-p{color:#64748b;font-size:14px;margin:0 0 12px;line-height:1.7}
+  .demo-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:20px;box-shadow:0 4px 16px rgba(15,23,42,.05)}
+  .demo-btn{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:8px 14px;font-size:13px;color:#475569;cursor:pointer;margin:0 8px 8px 0}
+  .demo-btn.active{background:#0ea5e9;border-color:#0ea5e9;color:#fff}
+  .demo-hint{position:fixed;right:14px;top:12px;z-index:300;background:rgba(15,23,42,.75);color:#fff;font-size:12px;padding:6px 10px;border-radius:8px}
+</style>
+</head>
+<body>
+<div class="demo-hint">请用移动端视口查看底栏</div>
+<div id="app" v-cloak>
+  <div class="demo-wrap">
+    <h2 class="demo-h2">nux-bottom-nav 底栏组件</h2>
+    <p class="demo-p">独立底部导航组件，图标支持 emoji / FontAwesome / SVG（HTML）。点击切换：<b>{{ current }}</b></p>
+    <div class="demo-card">
+      <button v-for="k in keys" :key="k" :class="['demo-btn', {active: current===k}]" @click="current = k">{{ k }}</button>
+    </div>
+  </div>
+  <nux-bottom-nav :items="items" :current-key="current" @navigate="navigate"></nux-bottom-nav>
+</div>
+
+<script src="../js/components/nux-bottom-nav.js"></script>
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      current: 'home',
+      keys: ['home', 'squad', 'rank', 'me', 'settings'],
+      items: [
+        { key: 'home', label: '首页', icon: '<i class="fas fa-house"></i>' },
+        { key: 'squad', label: '小队', icon: '<i class="fas fa-users"></i>', badge: '3' },
+        { key: 'rank', label: '排行', icon: '<i class="fas fa-trophy"></i>' },
+        { key: 'me', label: '我的', icon: '<i class="fas fa-user"></i>' },
+        { key: 'settings', label: '设置', icon: '<i class="fas fa-gear"></i>' }
+      ]
+    };
+  },
+  methods: {
+    navigate(key) { this.current = key; }
+  }
+});
+app.component('nux-bottom-nav', NuxBottomNav);
+app.mount('#app');
+</script>
+</body>
+</html>
