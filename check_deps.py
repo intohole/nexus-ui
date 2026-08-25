@@ -57,6 +57,13 @@ def main() -> int:
     skipped = 0
     bad_files = 0
     for dirpath, dirnames, filenames in os.walk(root):
+        for d in list(dirnames):
+            if d != "vendor":
+                continue
+            vendor_ui = os.path.join(dirpath, d, "nexus-ui")
+            if os.path.isdir(vendor_ui) and not os.path.normpath(vendor_ui).lower().startswith(ignore_prefixes):
+                print(f"[遗留] 本地 vendor/nexus-ui 目录(应走 CDN): {os.path.relpath(vendor_ui, root)}")
+                bad_files += 1
         dirnames[:] = [d for d in dirnames if d not in (".git", "node_modules", "vendor", "__pycache__")]
         if any(p in dirpath.lower() for p in ("/node_modules/", "/.git/", "/vendor/")):
             continue
@@ -79,7 +86,7 @@ def main() -> int:
             else:
                 skipped += 1
 
-    print(f"\n扫描完成: 引用公共库的 HTML {total} 个,一致 {skipped} 个,不一致文件 {bad_files} 个")
+    print(f"\n扫描完成: 引用公共库的 HTML {total} 个,一致 {skipped} 个,异常文件 {bad_files} 个")
     return 1 if bad_files else 0
 
 
