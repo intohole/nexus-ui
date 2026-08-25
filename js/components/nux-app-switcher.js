@@ -216,7 +216,7 @@
             '<img v-if="a.icon_url && !a._icerr" :src="a.icon_url" :alt="a.display_name" @error="a._icerr=true">',
             '<span v-else>{{(a.display_name||a.name).charAt(0)}}</span></span>',
             '<span class="nxs-tile-m"><span class="nxs-tile-name">{{a.display_name}}<span v-if="isCurrent(a)" class="nxs-tile-cur">当前</span></span>',
-            '<span class="nxs-tile-desc">{{a.description}}</span></span></a></div></div></template>',
+            '<span class="nxs-tile-desc" v-if="a.description">{{a.description}}</span></span></a></div></div></template>',
             '</div></div></div></div>'
         ].join('')
     };
