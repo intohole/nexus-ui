@@ -46,7 +46,7 @@
         '.nxs-tile-icon img{width:100%;height:100%;object-fit:contain}',
         '.nxs-tile-m{min-width:0;display:flex;flex-direction:column;gap:2px}',
         '.nxs-tile-name{font-size:14px;font-weight:600;color:#f8fafc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-        '.nxs-tile-desc{font-size:12px;line-height:1.4;color:#94a3b8;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}',
+        '.nxs-tile-desc{max-width:100%;font-size:12px;line-height:1.35;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
         '.nxs-tile-cur{color:#38bdf8;margin-left:6px;font-size:11px;font-weight:500}',
         '.nxs-empty{margin:26px 0;text-align:center;color:#94a3b8;font-size:14px}',
         '@keyframes nxsFade{from{opacity:0}to{opacity:1}}',
