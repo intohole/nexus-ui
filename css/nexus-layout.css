@@ -134,6 +134,22 @@
     padding: var(--nx-space-2);
 }
 
+.nux-layout-nav-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: var(--nx-space-2);
+}
+
+.nux-layout-nav-group-title {
+    padding: var(--nx-space-2) var(--nx-space-3);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--nx-text-tertiary);
+    text-transform: uppercase;
+}
+
 .nux-layout-nav-item {
     display: flex;
     align-items: center;

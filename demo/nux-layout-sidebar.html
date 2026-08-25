@@ -25,6 +25,7 @@
 <body class="app-one-note">
 <div class="demo-switch">
   <button :class="{active: mode==='drawer'}" @click="setMode('drawer')">Drawer</button>
+  <button :class="{active: mode==='groups'}" @click="setMode('groups')">Groups</button>
   <button :class="{active: mode==='bottom'}" @click="setMode('bottom')">BottomNav</button>
   <button :class="{active: mode==='headerless'}" @click="setMode('headerless')">Headerless</button>
 </div>
@@ -47,6 +48,24 @@
     <div class="demo-wrap">
       <h2 class="demo-h2">Drawer 模式 + 桌面折叠</h2>
       <p class="demo-p">桌面端固定侧边栏，点侧边栏底部箭头可折叠为图标栏（仅图标+悬浮标题）；移动端转汉堡抽屉 + 遮罩。当前: <b>{{current}}</b>，折叠状态: <b>{{collapsed}}</b></p>
+      <div class="demo-card">这里可以是任意业务内容。</div>
+    </div>
+  </nux-layout-sidebar>
+  <nux-layout-sidebar v-else-if="mode==='groups'" app-name="金鱼助手" app-icon="🐟" :menu-groups="menuGroups"
+      :current-path="current" collapsible @navigate="navigate">
+    <template #sidebar-footer>
+      <div class="demo-user">
+        <div class="demo-avatar">张</div>
+        <div class="demo-user-m">
+          <div>张三</div>
+          <div class="demo-user-s">管理员</div>
+        </div>
+        <button class="demo-logout" @click="onLogout">退出</button>
+      </div>
+    </template>
+    <div class="demo-wrap">
+      <h2 class="demo-h2">Groups 模式（分组导航 + 函数徽标）</h2>
+      <p class="demo-p">通过 <b>menu-groups</b> 声明分组导航，支持 badge 函数实时计算（如交易中心待确认数）。当前: <b>{{current}}</b></p>
       <div class="demo-card">这里可以是任意业务内容。</div>
     </div>
   </nux-layout-sidebar>
@@ -85,7 +104,7 @@ const app = Vue.createApp({
   data() {
     const params = new URLSearchParams(location.search);
     return {
-      mode: params.get('mode') === 'bottom' ? 'bottom' : (params.get('mode') === 'headerless' ? 'headerless' : 'drawer'),
+      mode: params.get('mode') === 'groups' ? 'groups' : (params.get('mode') === 'bottom' ? 'bottom' : (params.get('mode') === 'headerless' ? 'headerless' : 'drawer')),
       current: params.get('path') || 'overview',
       collapsed: params.get('collapsed') === '1',
       menuOpen: params.get('menuOpen') === '1',
@@ -96,6 +115,19 @@ const app = Vue.createApp({
         { path: 'chat', label: '助手', icon: '💬' },
         { path: 'reminders', label: '提醒', icon: '⏰' },
         { path: 'settings', label: '设置', icon: '⚙️' }
+      ],
+      menuGroups: [
+        { title: '核心功能', items: [
+          { path: 'dashboard', label: '工作台', icon: '🏠' },
+          { path: 'selection', label: '选品雷达', icon: '🔍' },
+          { path: 'inventory', label: '库存管理', icon: '📦' },
+          { path: 'pricing', label: '智能定价', icon: '💰' },
+          { path: 'trading', label: '交易中心', icon: '💬', badge: function () { return 3; } }
+        ]},
+        { title: '安全运维', items: [
+          { path: 'risk', label: '风控中心', icon: '🛡️' },
+          { path: 'system', label: '系统管理', icon: '⚙️' }
+        ]}
       ],
       menuItems2: [
         { path: 'dashboard', label: '数据概览', icon: '<i class="fas fa-tachometer-alt"></i>' },
