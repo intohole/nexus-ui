@@ -74,8 +74,8 @@
                 }
             };
 
-            const handleClick = async (item) => {
-                if (!item.is_read) await notif.markRead(item.id);
+            const handleClick = (item) => {
+                if (!item.is_read) notif.markRead(item.id);
                 emit('notification-click', item);
                 open.value = false;
                 if (item.link) window.location.href = item.link;

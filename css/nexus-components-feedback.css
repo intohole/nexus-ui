@@ -7,6 +7,10 @@
   justify-content: center;
   background: var(--nx-overlay-bg, rgba(0, 0, 0, 0.5));
   backdrop-filter: blur(4px);
+  transition: opacity 0.2s ease;
+}
+.nx-modal-overlay.is-leaving {
+  opacity: 0;
 }
 .nx-modal {
   background: var(--nx-bg-elevated);
