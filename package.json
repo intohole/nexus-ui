@@ -40,7 +40,8 @@
       "nexus-chat.js": "AI对话工具集（ChatController流式管理+错误气泡，渲染委托NexusMarkdown）",
       "nexus-store.js": "Vue 3响应式状态管理（持久化）",
       "user-center-sdk.js": "用户中心SDK（登录/注册/Token/权限/VIP）",
-      "user-center-api.js": "用户中心管理API（用户/应用/权限/邀请码/VIP）"
+      "user-center-api.js": "用户中心管理API（用户/应用/权限/邀请码/VIP）",
+      "notification.js": "独立通知管理器（非Vue，任何应用可直接使用）"
     },
     "js/components/": {
       "nux-toast.js": "Toast通知组件",
@@ -63,6 +64,7 @@
       "nux-avatar.js": "头像组件",
       "nux-skeleton.js": "骨架屏组件",
       "nux-notification-bell.js": "通知铃铛组件",
+      "nux-notification-panel.js": "通知管理面板组件（完整列表/分页/标记已读/删除）",
       "nux-about-page.js": "关于我们页面组件（自包含CSS，主题色驱动）",
       "nux-ai-chat.js": "AI对话完整Vue组件（消息列表+流式+输入+停止+滚动+错误重试+快捷回复，支持slots扩展）",
       "nux-ai-chat-helpers.js": "AI对话组件工具集（默认features/input/roles、滚动判断、键盘高度、富事件路由）",
@@ -77,7 +79,8 @@
       "use-theme.js": "主题切换composable",
       "use-sse.js": "SSE连接composable",
       "use-auth.js": "认证composable",
-      "use-collection.js": "集合CRUD composable"
+      "use-collection.js": "集合CRUD composable",
+      "use-notification.js": "通知中心composable（SSE/列表/已读/轮询）"
     }
   },
   "usage": {
