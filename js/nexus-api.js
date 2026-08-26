@@ -1,7 +1,7 @@
 (function() {
     const DEFAULT_BASE_URL = (window.PATH_PREFIX || '') + '/api';
     const MAX_RETRY = 3;
-    const MAX_ABORT_CONTROLLERS = 100;
+    const MAX_ABORT_CONTROLLERS = 500;
     const BASE_DELAY = 1000;
     const MAX_DELAY = 30000;
     const ApiError = window.NexusApiError || Error;
@@ -52,7 +52,6 @@
         _registerController(requestId, controller) {
             if (this.abortControllers.size >= MAX_ABORT_CONTROLLERS) {
                 const oldestKey = this.abortControllers.keys().next().value;
-                try { this.abortControllers.get(oldestKey).abort(); } catch (e) {}
                 this.abortControllers.delete(oldestKey);
             }
             this.abortControllers.set(requestId, controller);
