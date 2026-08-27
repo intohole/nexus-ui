@@ -381,7 +381,7 @@
 
 @media (max-width: 768px) {
   .nux-login-page { flex-direction: column; }
-  .nux-login-brand { min-height: 0; flex: none; padding: var(--nx-space-6); }
+  .nux-login-brand { min-height: 0; flex: none; padding: var(--nx-space-6); order: -1; }
   .nux-login-brand-content { text-align: center; }
   .nux-login-desc,
   .nux-login-features,
