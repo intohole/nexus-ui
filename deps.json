@@ -1,28 +1,120 @@
 {
   "公共库版本统一清单": {
-    "说明": "全工作区线上应用统一引用的公共CDN库版本，作为唯一事实来源。新增/升级公共库版本必须同步更新此文件，并运行 check_deps.py 校验全工作区一致性。公共库统一使用 npmmirror(阿里)国内源：https://registry.npmmirror.com/{包名}/{版本}/files/ ，仅自研nexus-ui与国内源缺失的库自托管。",
+    "说明": "全工作区线上应用统一引用的公共CDN库版本，作为唯一事实来源。新增/升级公共库版本必须同步更新此文件，并运行 check_deps.py 校验全工作区一致性。统一CDN为 registry.npmmirror.com(国内npm镜像,大陆用户友好,缓存命中共享)；bootcdn 曾出现恶意脚本注入已弃用，jsdmirror/jsdelivr 仅保留个别库(mermaid/icons)。",
     "用途": "跨项目统一版本号与来源URL，浏览器缓存命中共享，减少重复下载与加载时间。"
   },
   "deps": {
     "vue": {
       "version": "3.4.21",
-      "file": "dist/vue.global.prod.js",
+      "pkg": "vue",
       "cdn": "https://registry.npmmirror.com/vue/{version}/files/dist/vue.global.prod.js"
     },
     "element-plus": {
       "version": "2.6.1",
+      "pkg": "element-plus",
       "cdn": "https://registry.npmmirror.com/element-plus/{version}/files/dist/"
     },
     "axios": {
       "version": "1.6.8",
+      "pkg": "axios",
       "cdn": "https://registry.npmmirror.com/axios/{version}/files/dist/axios.min.js"
     },
     "nexus-ui": {
       "version": "2.10.48",
+      "pkg": null,
       "cdn": "https://songguokr.com/nexus-ui/v{version}/"
+    },
+    "font-awesome": {
+      "version": "6.5.1",
+      "pkg": "@fortawesome/fontawesome-free",
+      "cdn": "https://registry.npmmirror.com/@fortawesome/fontawesome-free/{version}/files/css/all.min.css"
+    },
+    "vue-router": {
+      "version": "4.3.2",
+      "pkg": "vue-router",
+      "cdn": "https://registry.npmmirror.com/vue-router/{version}/files/dist/vue-router.global.prod.js"
+    },
+    "dompurify": {
+      "version": "3.2.4",
+      "pkg": "dompurify",
+      "cdn": "https://registry.npmmirror.com/dompurify/{version}/files/dist/purify.min.js"
+    },
+    "echarts": {
+      "version": "5.5.0",
+      "pkg": "echarts",
+      "cdn": "https://registry.npmmirror.com/echarts/{version}/files/dist/echarts.min.js"
+    },
+    "dayjs": {
+      "version": "1.11.10",
+      "pkg": "dayjs",
+      "cdn": "https://registry.npmmirror.com/dayjs/{version}/files/"
+    },
+    "marked": {
+      "version": "9.1.6",
+      "pkg": "marked",
+      "cdn": "https://registry.npmmirror.com/marked/{version}/files/marked.min.js"
+    },
+    "xlsx": {
+      "version": "0.18.5",
+      "pkg": "xlsx",
+      "cdn": "https://registry.npmmirror.com/xlsx/{version}/files/dist/xlsx.full.min.js"
+    },
+    "chart.js": {
+      "version": "4.4.1",
+      "pkg": "chart.js",
+      "cdn": "https://registry.npmmirror.com/chart.js/{version}/files/dist/chart.umd.js"
+    },
+    "html2canvas": {
+      "version": "1.4.1",
+      "pkg": "html2canvas",
+      "cdn": "https://registry.npmmirror.com/html2canvas/{version}/files/dist/html2canvas.min.js"
+    },
+    "qrcodejs": {
+      "version": "1.0.0",
+      "pkg": "qrcodejs",
+      "cdn": "https://registry.npmmirror.com/qrcodejs/{version}/files/qrcode.min.js"
+    },
+    "highlight.js": {
+      "version": "11.9.0",
+      "pkg": "@highlightjs/cdn-assets",
+      "cdn": "https://registry.npmmirror.com/@highlightjs/cdn-assets/{version}/files/"
+    },
+    "js-yaml": {
+      "version": "4.1.0",
+      "pkg": "js-yaml",
+      "cdn": "https://registry.npmmirror.com/js-yaml/{version}/files/dist/js-yaml.min.js"
+    },
+    "d3": {
+      "version": "7.8.5",
+      "pkg": "d3",
+      "cdn": "https://registry.npmmirror.com/d3/{version}/files/dist/d3.min.js"
+    },
+    "@element-plus/icons-vue": {
+      "version": "2.1.0",
+      "pkg": "@element-plus/icons-vue",
+      "cdn": "https://cdn.jsdmirror.com/npm/@element-plus/icons-vue@{version}/dist/index.iife.min.js"
+    },
+    "mermaid": {
+      "version": "10.9.1",
+      "pkg": "mermaid",
+      "cdn": "https://cdn.jsdmirror.com/npm/mermaid@{version}/dist/mermaid.min.js"
+    },
+    "tailwindcss": {
+      "version": "3.4.17",
+      "pkg": "tailwindcss",
+      "cdn": "https://cdn.tailwindcss.com/{version}"
+    },
+    "blockly": {
+      "version": "10.4.3",
+      "pkg": "blockly",
+      "cdn": "https://registry.npmmirror.com/blockly/{version}/files/"
     }
   },
   "ignore_paths": [
-    "usercenter/sdk/example.html"
+    "usercenter/sdk/example.html",
+    "usercenter/sdk/demo",
+    "nexus-ui/readme.html",
+    "fastRPC/readme.html",
+    "promptManager/readme.html"
   ]
 }
