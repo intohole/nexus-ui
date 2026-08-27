@@ -220,6 +220,7 @@
                 localError.value = '';
                 mode.value = m;
                 loginType.value = 'account';
+                form.confirmPassword = '';
             }
 
             function switchLoginType(t) {
@@ -358,7 +359,7 @@
                                 <div class="nux-form-group">
                                     <label class="nux-form-label">确认密码</label>
                                     <div class="nux-password-wrap">
-                                        <input v-model="form.confirmPassword" :type="showConfirmPassword ? 'text' : 'password'" class="nux-input" placeholder="请再次输入密码" autocomplete="new-password" required>
+                                        <input v-model="form.confirmPassword" :type="showConfirmPassword ? 'text' : 'password'" class="nux-input" placeholder="请再次输入密码" autocomplete="off" required>
                                         <button type="button" class="nux-password-toggle" :aria-label="showConfirmPassword ? '隐藏密码' : '显示密码'" @click="showConfirmPassword = !showConfirmPassword" v-html="showConfirmPassword ? eyeSlashSvg : eyeSvg"></button>
                                     </div>
                                 </div>
