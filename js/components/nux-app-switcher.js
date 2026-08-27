@@ -76,9 +76,9 @@
             registryUrl: g.registryUrl || (s && s.getAttribute('data-registry-url')) || '/api/portal/apps',
             registryData: g.registryData || null,
             brandName: g.brandName || '松果氪',
-            brandTagline: g.brandTagline || '你的数字工具箱',
+            brandTagline: g.brandTagline || '把想做的事，交给 AI',
             portalUrl: g.portalUrl || '/',
-            portalAction: g.portalAction || '回到松果氪 · 全站工具箱'
+            portalAction: g.portalAction || '回到松果氪 · 全部应用'
         };
     }
 
@@ -110,8 +110,19 @@
     }
 
     function groupOf(a) {
+        var s = (a.scene_name || '').trim();
+        if (s) return s;
         var g = (a.app_group || '').split(',')[0].trim();
         return g || '其他应用';
+    }
+
+    function loadScenes() {
+        if (_cfg.registryData) return Promise.resolve([]);
+        var url = location.origin + '/api/portal/scenes';
+        return fetch(url, { headers: { 'Accept': 'application/json' } })
+            .then(function(r) { if (!r.ok) throw new Error('bad'); return r.json(); })
+            .then(function(d) { return (d && d.scenes) || []; })
+            .catch(function() { return []; });
     }
 
     function recents() {
@@ -143,7 +154,7 @@
 
     var Root = {
         name: 'NuxAppSwitcher',
-        data: function() { return { open: false, q: '', apps: [], loading: true, err: _err }; },
+        data: function() { return { open: false, q: '', apps: [], sceneOrder: [], loading: true, err: _err }; },
         computed: {
             cfg() { return _cfg; },
             brandFirst() { return (_cfg.brandName || '松').charAt(0); },
@@ -158,7 +169,15 @@
                 });
                 var out = [];
                 if (recentsArr.length && recentsArr.length < this.apps.length) out.push({ name: '最近使用', apps: recentsArr });
-                Object.keys(map).forEach(function(k) { out.push({ name: k, apps: map[k] }); });
+                var pushed = {};
+                this.sceneOrder.forEach(function(s) {
+                    if (s.id === 'all') return;
+                    if (map[s.name] && map[s.name].length) {
+                        out.push({ name: s.name, apps: map[s.name] });
+                        pushed[s.name] = true;
+                    }
+                });
+                Object.keys(map).forEach(function(k) { if (!pushed[k]) out.push({ name: k, apps: map[k] }); });
                 return out;
             },
             viewGroups() {
@@ -167,7 +186,7 @@
                 var flat = this.apps.filter(function(a) {
                     return (a.display_name || '').toLowerCase().indexOf(qv) !== -1 ||
                            (a.description || '').toLowerCase().indexOf(qv) !== -1 ||
-                           ((a.tags || []).join(' ')).toLowerCase().indexOf(qv) !== -1;
+                           ((a.scene_name || '') + ' ' + (a.tags || []).join(' ')).toLowerCase().indexOf(qv) !== -1;
                 });
                 return [{ name: '搜索结果', apps: flat }];
             }
@@ -178,6 +197,7 @@
             loadApps().then(function() {
                 self.apps = _apps; self.loading = false; self.err = _err;
             });
+            loadScenes().then(function(list) { self.sceneOrder = list; });
             document.addEventListener('keydown', function(e) { if (e.key === 'Escape') self.open = false; });
         },
         methods: {
