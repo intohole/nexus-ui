@@ -26,9 +26,10 @@ def check_file(path: str, deps: dict, ignore_prefixes: tuple) -> list:
     for name, spec in deps.items():
         expected = spec["version"]
         if name == "vue":
-            pattern = r"ajax/libs/vue/([0-9.]+)/"
+            pattern = r"(?:ajax/libs/vue|npmmirror\.com/vue)/([0-9.]+)/"
         else:
-            pattern = r"ajax/libs/%s/([0-9.]+)/" % re.escape(name)
+            pattern = r"(?:ajax/libs/%s|npmmirror\.com/(?:@[^/]+/)?%s)/([0-9.]+)" % (
+                re.escape(name), re.escape(name))
         for actual in re.findall(pattern, content):
             if actual != expected:
                 problems.append(f"  {name}: 引用 {actual}, 规范 {expected}")

@@ -1025,10 +1025,10 @@
     const VERSION = '1.2.0';
 
     const LIBS = {
-        marked: 'https://cdn.jsdmirror.com/npm/marked@12.0.0/marked.min.js',
-        dompurify: 'https://cdn.jsdmirror.com/npm/dompurify@3.0.6/dist/purify.min.js',
-        highlight: 'https://songguokr.com/nexus-ui/vendor/highlight.js/11.9.0/highlight.min.js',
-        highlightCss: 'https://songguokr.com/nexus-ui/vendor/highlight.js/11.9.0/styles/atom-one-dark.min.css'
+        marked: 'https://registry.npmmirror.com/marked/12.0.0/files/lib/marked.umd.js',
+        dompurify: 'https://registry.npmmirror.com/dompurify/3.0.6/files/dist/purify.min.js',
+        highlight: 'https://registry.npmmirror.com/@highlightjs/cdn-assets/11.9.0/files/highlight.min.js',
+        highlightCss: 'https://registry.npmmirror.com/@highlightjs/cdn-assets/11.9.0/files/styles/atom-one-dark.min.css'
     };
 
     const DEFAULT_ALLOWED_TAGS = [
