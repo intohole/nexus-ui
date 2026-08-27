@@ -137,6 +137,27 @@
                 .replace(/'/g, '&#39;');
         },
 
+        hexToRgba(hex, alpha = 1) {
+            if (typeof hex !== 'string') return `rgba(99, 102, 241, ${alpha})`;
+            let h = hex.trim().replace('#', '');
+            if (h.length === 3) h = h.split('').map(c => c + c).join('');
+            if (!/^[0-9a-fA-F]{6}$/.test(h)) return `rgba(99, 102, 241, ${alpha})`;
+            const r = parseInt(h.slice(0, 2), 16);
+            const g = parseInt(h.slice(2, 4), 16);
+            const b = parseInt(h.slice(4, 6), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        },
+
+        isDarkColor(hex) {
+            if (typeof hex !== 'string' || hex.length < 7) return false;
+            const h = hex.trim().replace('#', '');
+            if (!/^[0-9a-fA-F]{6}$/.test(h)) return false;
+            const r = parseInt(h.slice(0, 2), 16);
+            const g = parseInt(h.slice(2, 4), 16);
+            const b = parseInt(h.slice(4, 6), 16);
+            return (0.299 * r + 0.587 * g + 0.114 * b) / 255 < 0.5;
+        },
+
         matchGrade(value, rules, mode = 'eq') {
             if (value === undefined || value === null) return null;
             const v = String(value).toLowerCase();
