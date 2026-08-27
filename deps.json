@@ -20,7 +20,7 @@
       "cdn": "https://registry.npmmirror.com/axios/{version}/files/dist/axios.min.js"
     },
     "nexus-ui": {
-      "version": "2.10.48",
+      "version": "2.10.49",
       "pkg": null,
       "cdn": "https://songguokr.com/nexus-ui/v{version}/"
     },

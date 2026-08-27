@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <title>关于我们</title>
+  <link rel="stylesheet" href="https://registry.npmmirror.com/@fortawesome/fontawesome-free/6.5.1/files/css/all.min.css">
+  <link rel="stylesheet" href="css/nexus-all.css">
+  <style>[v-cloak]{display:none}</style>
+</head>
+<body>
+<div id="app" v-cloak>
+  <nux-about-page :app-name="appName" :app-icon="appIcon" :slogan="slogan" :description="description"
+    :story="story" :features="features" :promises="promises" :version="version" :back-url="backUrl"></nux-about-page>
+</div>
+<script src="https://registry.npmmirror.com/vue/3.4.21/files/dist/vue.global.prod.js"></script>
+<script src="js/data/nux-about-data.js"></script>
+<script src="js/components/nux-about-page.js"></script>
+<script>
+(function () {
+  var key = (new URLSearchParams(location.search).get('app') || '').replace(/^\/|\/$/g, '').toLowerCase();
+  var data = (window.NuxAboutData || {})[key] || {};
+  function hexToRgb(hex) {
+    var m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return m ? parseInt(m[1], 16) + ', ' + parseInt(m[2], 16) + ', ' + parseInt(m[3], 16) : '';
+  }
+  if (data.accent) {
+    var root = document.documentElement;
+    root.style.setProperty('--app-accent', data.accent);
+    root.style.setProperty('--app-accent-rgb', hexToRgb(data.accent));
+    if (data.accentHover) root.style.setProperty('--app-accent-hover', data.accentHover);
+  }
+  if (data.appName) document.title = '关于我们 - ' + data.appName;
+  Vue.createApp({ setup: function () { return {
+    appName: data.appName || '',
+    appIcon: data.appIcon || '',
+    slogan: data.slogan || '',
+    description: data.description || '',
+    story: data.story || [],
+    features: data.features || [],
+    promises: data.promises || [],
+    version: data.version || '',
+    backUrl: data.home || ('/' + key + '/')
+  }; } })
+    .component('nux-about-page', window.NuxAboutPage)
+    .mount('#app');
+})();
+</script>
+</body>
+</html>
