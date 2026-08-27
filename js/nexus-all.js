@@ -187,6 +187,19 @@
             return (Number(value) * 100).toFixed(decimals) + '%';
         },
 
+        formatUsd(amount, decimals = 4) {
+            if (amount === undefined || amount === null || isNaN(amount)) return Number(0).toFixed(decimals);
+            return Number(amount).toFixed(decimals);
+        },
+
+        isDarkTheme() {
+            return document.documentElement.getAttribute('data-theme') === 'dark';
+        },
+
+        chartText(darkColor = '#a0a0a0', lightColor = '#333') {
+            return this.isDarkTheme() ? darkColor : lightColor;
+        },
+
         formatChatTime(timeStr) {
             if (!timeStr) return '';
             const date = new Date(timeStr);
