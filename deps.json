@@ -1,21 +1,21 @@
 {
   "公共库版本统一清单": {
-    "说明": "全工作区线上应用统一引用的公共CDN库版本，作为唯一事实来源。新增/升级公共库版本必须同步更新此文件，并运行 check_deps.py 校验全工作区一致性。",
-    "用途": "跨项目统一版本号，浏览器缓存命中共享，减少重复下载与加载时间。"
+    "说明": "全工作区线上应用统一引用的公共CDN库版本，作为唯一事实来源。新增/升级公共库版本必须同步更新此文件，并运行 check_deps.py 校验全工作区一致性。第三方CDN(bootcdn)曾出现恶意脚本注入，公共库统一自托管于 songguokr.com/nexus-ui/vendor 站内路径。",
+    "用途": "跨项目统一版本号与来源URL，浏览器缓存命中共享，减少重复下载与加载时间。"
   },
   "deps": {
     "vue": {
       "version": "3.4.21",
       "file": "vue.global.prod.min.js",
-      "cdn": "https://cdn.bootcdn.net/ajax/libs/vue/{version}/vue.global.prod.min.js"
+      "cdn": "https://songguokr.com/nexus-ui/vendor/vue/{version}/vue.global.prod.min.js"
     },
     "element-plus": {
       "version": "2.6.1",
-      "cdn": "https://cdn.bootcdn.net/ajax/libs/element-plus/{version}/"
+      "cdn": "https://songguokr.com/nexus-ui/vendor/element-plus/{version}/"
     },
     "axios": {
       "version": "1.6.8",
-      "cdn": "https://cdn.bootcdn.net/ajax/libs/axios/{version}/axios.min.js"
+      "cdn": "https://songguokr.com/nexus-ui/vendor/axios/{version}/axios.min.js"
     },
     "nexus-ui": {
       "version": "2.10.47",
