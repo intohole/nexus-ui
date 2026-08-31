@@ -43,6 +43,18 @@
       ],
       promises: PROMISES, version: '1.0.0', accent: '#059669', accentHover: '#10b981'
     },
+    gezhi: {
+      home: '/gezhi/', appName: '格致', appIcon: '🧭', slogan: '东西在哪？格致一下',
+      description: '给家里每件东西一个明确的"住址"，找东西不再翻箱倒柜',
+      story: ['「剪刀放哪了？」「上次买的备用数据线呢？」家里东西明明都在，就是想不起来放在哪。翻箱倒柜十分钟，最后往往还是没找到。', '格致给每件东西记一个"住址"——卧室、衣柜、第二格。放进去时顺手记一下，下次直接问格致，几秒定位。'],
+      features: [
+        { icon: 'fas fa-location-dot', title: '位置住址', desc: '房间/柜子/格子逐级定位，一句话就能记' },
+        { icon: 'fas fa-camera', title: '拍照建档', desc: '拍一张照，AI帮你填好物品信息' },
+        { icon: 'fas fa-hand-pointer', title: '拖拽归位', desc: '东西挪了地方，拖一下就更新' },
+        { icon: 'fas fa-users', title: '家人共享', desc: '全家共用一本物品账，谁放的都知道' }
+      ],
+      promises: PROMISES, version: '1.0.0', accent: '#1f4e79', accentHover: '#2563a8'
+    },
     goldenfish: {
       home: '/goldenfish/', appName: '金鱼助手', appIcon: '🐟', slogan: '智能闲鱼交易助手',
       description: 'AI帮你选品定价、管理交易',
