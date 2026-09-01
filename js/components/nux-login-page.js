@@ -43,6 +43,11 @@
             const showConfirmPassword = Vue.ref(false);
             const rememberMe = Vue.ref(false);
             const agreed = Vue.ref(false);
+
+            function markAgreement() {
+                if (!props.showTerms || !agreed.value || !props.appName) return;
+                try { localStorage.setItem('nux_agreement_pending_' + props.appName, '1'); } catch (e) {}
+            }
             const smsCode = Vue.ref('');
             const smsCountdown = Vue.ref(0);
             let smsTimer = null;
@@ -113,6 +118,7 @@
                         localError.value = '请输入验证码';
                         return;
                     }
+                    markAgreement();
                     emit('sms-login', { phone: form.phone, code: smsCode.value });
                     return;
                 }
@@ -125,6 +131,7 @@
                         localError.value = '请输入密码';
                         return;
                     }
+                    markAgreement();
                     emit('login', { username: form.phone, phone: form.phone, password: form.password, rememberMe: rememberMe.value });
                     return;
                 }
@@ -141,6 +148,7 @@
                     if (ident && (rememberMe.value || !props.showRememberMe)) localStorage.setItem(REMEMBER_KEY, ident);
                     else localStorage.removeItem(REMEMBER_KEY);
                 } catch (e) {}
+                markAgreement();
                 emit('login', { username: form.username || '', password: form.password, rememberMe: rememberMe.value });
             }
 
@@ -197,6 +205,7 @@
                     localError.value = '请先同意用户协议和隐私政策';
                     return;
                 }
+                markAgreement();
                 var payload = {
                     username: form.username || null,
                     password: form.password,

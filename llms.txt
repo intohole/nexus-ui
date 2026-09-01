@@ -230,19 +230,22 @@ from nexus import create_agreement_router
 app.include_router(create_agreement_router(app_name="MyApp"))
 ```
 
-前端（3步接入）：
+前端（标准接入 = 登录页勾选 + 登录后静默存证）：
 
 ```html
 <script src="https://songguokr.com/nexus-ui/v2.10.52/js/components/nux-agreement-modal.js"></script>
 ```
 
 ```html
+<nux-login-page app-name="MyApp" :show-terms="true" terms-url="https://songguokr.com/nexus-ui/agreement.html" privacy-url="https://songguokr.com/nexus-ui/agreement.html" @login="handleLogin"></nux-login-page>
 <nux-agreement-modal v-if="isAuthenticated" app-name="MyApp" @accepted="onAgreementAccepted"></nux-agreement-modal>
 ```
 
 ```javascript
 app.component('nux-agreement-modal', window.NuxAgreementModal)
 ```
+
+协同机制：登录页勾选后提交登录，写 pending 标记；登录成功进入应用，nux-agreement-modal 读取标记直接调 accept 静默落库（不弹窗），仅未勾选/版本升级/无标记用户才会看到弹窗。
 
 Props: appName(必填，与后端app_name一致)/autoCheck(默认true，挂载后自动检查)/tip(默认'同意后即可开始使用，您的数据始终归您所有')
 

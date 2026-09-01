@@ -55,12 +55,28 @@
             const submitting = ref(false);
             const meta = ref({ version: '', terms: '', privacy: '' });
             const storageKey = computed(() => 'nux_agreement_' + props.appName);
+            const pendingKey = computed(() => 'nux_agreement_pending_' + props.appName);
 
             const readCache = () => {
                 try { return JSON.parse(localStorage.getItem(storageKey.value) || 'null'); } catch (e) { return null; }
             };
             const writeCache = (version) => {
                 try { localStorage.setItem(storageKey.value, JSON.stringify({ version, at: Date.now() })); } catch (e) {}
+            };
+            const takePending = () => {
+                try {
+                    if (localStorage.getItem(pendingKey.value) === '1') {
+                        localStorage.removeItem(pendingKey.value);
+                        return true;
+                    }
+                } catch (e) {}
+                return false;
+            };
+
+            const acceptRemote = async (version) => {
+                await window.NexusApi.post('/agreement/accept', { version });
+                writeCache(version);
+                emit('accepted');
             };
 
             const check = async () => {
@@ -71,6 +87,12 @@
                     meta.value = data;
                     const cached = readCache();
                     if (cached && cached.version === data.version) return;
+                    if (takePending()) {
+                        try {
+                            await acceptRemote(data.version);
+                            return;
+                        } catch (e) {}
+                    }
                     const statusRes = await window.NexusApi.get('/agreement/status');
                     const status = statusRes.data || statusRes;
                     if (status.accepted) { writeCache(data.version); return; }
@@ -83,10 +105,8 @@
                 if (!agreed.value || submitting.value) return;
                 submitting.value = true;
                 try {
-                    await window.NexusApi.post('/agreement/accept', { version: meta.value.version });
-                    writeCache(meta.value.version);
+                    await acceptRemote(meta.value.version);
                     visible.value = false;
-                    emit('accepted');
                 } catch (e) {}
                 finally { submitting.value = false; }
             };
