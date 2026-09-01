@@ -1,4 +1,5 @@
 (function() {
+    const REMEMBER_KEY = 'nux_remembered_identifier';
     const NuxLoginPage = {
         name: 'NuxLoginPage',
         props: {
@@ -89,7 +90,13 @@
                 }
             }
 
-            Vue.onMounted(applyTheme);
+            Vue.onMounted(function() {
+                applyTheme();
+                try {
+                    var saved = localStorage.getItem(REMEMBER_KEY);
+                    if (saved && !form.username && !props.phoneLogin) form.username = saved;
+                } catch (e) {}
+            });
             Vue.onUnmounted(function() {
                 restoreTheme();
                 if (smsTimer) clearInterval(smsTimer);
@@ -129,6 +136,11 @@
                     localError.value = '请输入密码';
                     return;
                 }
+                try {
+                    var ident = props.phoneLogin ? (form.phone || '').trim() : (form.username || '').trim();
+                    if (ident && (rememberMe.value || !props.showRememberMe)) localStorage.setItem(REMEMBER_KEY, ident);
+                    else localStorage.removeItem(REMEMBER_KEY);
+                } catch (e) {}
                 emit('login', { username: form.username || '', password: form.password, rememberMe: rememberMe.value });
             }
 
