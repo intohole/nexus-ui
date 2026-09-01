@@ -179,6 +179,8 @@
             root.id = 'nux-float-user-center-root';
             document.body.appendChild(root);
         }
+        root.style.height = '0';
+        root.style.overflow = 'visible';
         var app = Vue.createApp({
             name: 'NuxFloatUserCenterRoot',
             setup: function() {
