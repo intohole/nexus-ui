@@ -107,6 +107,14 @@
                 if (smsTimer) clearInterval(smsTimer);
             });
 
+            function requireAgreed() {
+                if (props.showTerms && !agreed.value) {
+                    localError.value = '请先同意用户协议和隐私政策';
+                    return false;
+                }
+                return true;
+            }
+
             function onLogin() {
                 localError.value = '';
                 if (isSmsMode.value) {
@@ -118,6 +126,7 @@
                         localError.value = '请输入验证码';
                         return;
                     }
+                    if (!requireAgreed()) return;
                     markAgreement();
                     emit('sms-login', { phone: form.phone, code: smsCode.value });
                     return;
@@ -131,6 +140,7 @@
                         localError.value = '请输入密码';
                         return;
                     }
+                    if (!requireAgreed()) return;
                     markAgreement();
                     emit('login', { username: form.phone, phone: form.phone, password: form.password, rememberMe: rememberMe.value });
                     return;
@@ -143,6 +153,7 @@
                     localError.value = '请输入密码';
                     return;
                 }
+                if (!requireAgreed()) return;
                 try {
                     var ident = props.phoneLogin ? (form.phone || '').trim() : (form.username || '').trim();
                     if (ident && (rememberMe.value || !props.showRememberMe)) localStorage.setItem(REMEMBER_KEY, ident);
@@ -349,6 +360,15 @@
                                     </div>
                                 </div>
                             </template>
+                            <div v-if="showTerms" class="nux-form-group">
+                                <label class="nux-checkbox nux-terms">
+                                    <input type="checkbox" v-model="agreed">
+                                    <span v-if="termsUrl || privacyUrl">我已阅读并同意
+                                        <a v-if="termsUrl" :href="termsUrl" target="_blank" rel="noopener">《用户协议》</a><a v-if="privacyUrl" :href="privacyUrl" target="_blank" rel="noopener">《隐私政策》</a>
+                                    </span>
+                                    <span v-else>{{ termsText }}</span>
+                                </label>
+                            </div>
                             <div v-if="mode === 'register' && showEmailField" class="nux-form-group">
                                 <label class="nux-form-label">邮箱</label>
                                 <input v-model="form.email" type="email" class="nux-input" placeholder="请输入邮箱" autocomplete="email">
@@ -383,15 +403,6 @@
                                         <input v-model="form.confirmPassword" :type="showConfirmPassword ? 'text' : 'password'" class="nux-input" placeholder="请再次输入密码" autocomplete="off" required>
                                         <button type="button" class="nux-password-toggle" :aria-label="showConfirmPassword ? '隐藏密码' : '显示密码'" @click="showConfirmPassword = !showConfirmPassword" v-html="showConfirmPassword ? eyeSlashSvg : eyeSvg"></button>
                                     </div>
-                                </div>
-                                <div v-if="showTerms" class="nux-form-group">
-                                    <label class="nux-checkbox nux-terms">
-                                        <input type="checkbox" v-model="agreed">
-                                        <span v-if="termsUrl || privacyUrl">我已阅读并同意
-                                            <a v-if="termsUrl" :href="termsUrl" target="_blank" rel="noopener">《用户协议》</a><a v-if="privacyUrl" :href="privacyUrl" target="_blank" rel="noopener">《隐私政策》</a>
-                                        </span>
-                                        <span v-else>{{ termsText }}</span>
-                                    </label>
                                 </div>
                             </template>
                             <div v-if="mode === 'register' && showPhoneLogin && !isSmsMode && !showSmsLogin" class="nux-form-group">
