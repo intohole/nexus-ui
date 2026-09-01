@@ -219,6 +219,39 @@ Props: appName/appIcon/slogan/description/features/themeColor/showRegister(默�
 
 Events: login(emit {username,password,rememberMe})/register(emit {username,password,email,phone,inviteCode,code})/sms-login(emit {phone,code})/send-sms(emit {phone,mode})/third-party-login(emit {key})/forgot-password
 
+### nux-agreement-modal 用户协议弹窗
+
+统一用户协议能力，解决"上线应用无用户协议、用户担心数据归属"问题。协议内容由后端一处下发，前端自动完成"检查→弹窗→记录同意"，已同意用户不再打扰。需配合 nexus-backend(>=1.14.0) 的 `create_agreement_router` 使用。
+
+后端（main.py 一行接入）：
+
+```python
+from nexus import create_agreement_router
+app.include_router(create_agreement_router(app_name="MyApp"))
+```
+
+前端（3步接入）：
+
+```html
+<script src="https://songguokr.com/nexus-ui/v2.10.52/js/components/nux-agreement-modal.js"></script>
+```
+
+```html
+<nux-agreement-modal v-if="isAuthenticated" app-name="MyApp" @accepted="onAgreementAccepted"></nux-agreement-modal>
+```
+
+```javascript
+app.component('nux-agreement-modal', window.NuxAgreementModal)
+```
+
+Props: appName(必填，与后端app_name一致)/autoCheck(默认true，挂载后自动检查)/tip(默认'同意后即可开始使用，您的数据始终归您所有')
+
+Events: accepted/declined
+
+行为说明：挂载后先查本地缓存(nux_agreement_{appName})，版本一致直接跳过；否则请求 `/api/agreement/status`，未同意当前版本则弹窗展示协议全文，勾选后 POST `/agreement/accept` 落库。协议版本升级（后端 version 变更）后自动重新弹窗。独立协议页（登录页 termsUrl 可用）：`https://songguokr.com/nexus-ui/agreement.html`
+
+协议文案唯一事实源：`nexus-backend/nexus/agreement.py` 的 DEFAULT_TERMS/DEFAULT_PRIVACY，版本升级时同步修改 agreement.html。
+
 ### Composables
 
 ```javascript
