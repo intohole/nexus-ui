@@ -1,4 +1,9 @@
 (function() {
+    const SCRIPT_BASE = (function() {
+        const src = (document.currentScript && document.currentScript.src) || '';
+        const idx = src.lastIndexOf('/');
+        return idx > 0 ? src.slice(0, idx) : '';
+    })();
     const REMEMBER_KEY = 'nux_remembered_identifier';
     const NuxLoginPage = {
         name: 'NuxLoginPage',
@@ -75,11 +80,7 @@
                 }
                 return null;
             });
-            const compBase = (function() {
-                const src = (document.currentScript && document.currentScript.src) || '';
-                const idx = src.lastIndexOf('/');
-                return idx > 0 ? src.slice(0, idx) : '';
-            })();
+            const compBase = SCRIPT_BASE;
             const defaultAgreementUrl = compBase.replace(/\/js\/components$/, '') + '/agreement.html';
             const effectiveTermsUrl = Vue.computed(function() { return props.termsUrl || defaultAgreementUrl; });
             const effectivePrivacyUrl = Vue.computed(function() { return props.privacyUrl || defaultAgreementUrl; });
