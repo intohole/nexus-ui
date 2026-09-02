@@ -114,6 +114,8 @@
     "usercenter/sdk/example.html",
     "usercenter/sdk/demo",
     "nexus-ui/readme.html",
+    "nexus-ui/index.html",
+    "nexus-ui/playground.html",
     "fastRPC/readme.html",
     "promptManager/readme.html"
   ]

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Playground — Nexus UI 组件在线体验</title>
+<meta name="description" content="在浏览器里逐个试用 Nexus UI 的 56 个开源组件：基础控件、表单、反馈弹层、数据表格、AI 对话，全部真实渲染，附示例代码。">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/nexus-all.css">
+<link rel="stylesheet" href="site/site.css">
+<link rel="stylesheet" href="site/playground.css">
+</head>
+<body class="app-nexus-ui">
+<div id="pg" v-cloak>
+<nux-toast></nux-toast>
+<header class="site-nav">
+  <div class="wrap">
+    <a class="wordmark" href="index.html"><span class="mark">N</span>NEXUS UI</a>
+    <nav aria-label="主导航">
+      <a href="index.html#features">特性</a>
+      <a href="index.html#quickstart">接入</a>
+      <a class="nav-cta" href="playground.html" aria-current="page">Playground</a>
+    </nav>
+  </div>
+</header>
+<div class="pg-layout">
+  <aside class="pg-side" aria-label="分类导航">
+    <a class="pg-back" href="index.html"><span class="mark">N</span>返回产品页</a>
+    <nav class="pg-cats">
+      <a v-for="c in cats" :key="c.id" :href="'#' + c.id">{{ c.name }} · {{ c.demos.length }}</a>
+    </nav>
+    <div class="dial" role="group" aria-label="切换主题色">
+      <span class="dial-label">主题罗盘</span>
+      <button v-for="t in themes" :key="t.cls" class="dial-dot"
+              :class="{ active: current === t.cls }" :style="{ backgroundColor: t.color }"
+              :title="t.name" :aria-label="'切换主题到 ' + t.name"
+              @click="setTheme(t.cls)"></button>
+    </div>
+  </aside>
+  <main class="pg-main">
+    <div class="pg-hero">
+      <p class="eyebrow">Playground · 全部真实渲染</p>
+      <h1>每个组件，摸过再决定</h1>
+      <p>下面的组件全部由 nexus-ui 当前版本实时渲染，没有任何静态截图。点「代码」看用法，右上角色点整页换肤。</p>
+    </div>
+    <section class="pg-cat" v-for="c in cats" :key="c.id" :id="c.id">
+      <div class="pg-cat-head">
+        <h2>{{ c.name }}</h2>
+        <span class="mono-count">{{ c.demos.length }} 个演示</span>
+      </div>
+      <article class="pg-card" v-for="d in c.demos" :key="d.id">
+        <header class="pg-card-head">
+          <span class="pg-tag">{{ d.tag }}</span>
+          <h3>{{ d.title }}</h3>
+          <button class="pg-toggle" :class="{ open: open[d.id] }"
+                  :aria-expanded="open[d.id] ? 'true' : 'false'"
+                  @click="toggleCode(d)">{{ open[d.id] ? '收起代码' : '查看代码' }}</button>
+          <p class="pg-card-desc">{{ d.desc }}</p>
+        </header>
+        <div class="pg-stage">
+          <component :is="'pg-' + d.id"></component>
+        </div>
+        <div class="pg-code" v-if="open[d.id]">
+          <button class="code-copy" @click="copyCode(d, $event)">复制</button>
+          <pre>{{ d.code }}</pre>
+        </div>
+      </article>
+    </section>
+  </main>
+</div>
+</div>
+<script src="https://registry.npmmirror.com/vue/3.4.21/files/dist/vue.global.prod.js"></script>
+<script src="js/nexus-all.js"></script>
+<script src="js/components/nux-button.js"></script>
+<script src="js/components/nux-input.js"></script>
+<script src="js/components/nux-textarea.js"></script>
+<script src="js/components/nux-select.js"></script>
+<script src="js/components/nux-switch.js"></script>
+<script src="js/components/nux-checkbox.js"></script>
+<script src="js/components/nux-search-box.js"></script>
+<script src="js/components/nux-segmented.js"></script>
+<script src="js/components/nux-chip-group.js"></script>
+<script src="js/components/nux-steps.js"></script>
+<script src="js/components/nux-progress.js"></script>
+<script src="js/components/nux-loading.js"></script>
+<script src="js/components/nux-accordion.js"></script>
+<script src="js/components/nux-tab-group.js"></script>
+<script src="js/components/nux-toast.js"></script>
+<script src="js/components/nux-modal.js"></script>
+<script src="js/components/nux-drawer.js"></script>
+<script src="js/components/nux-confirm.js"></script>
+<script src="js/components/nux-empty.js"></script>
+<script src="js/components/nux-skeleton.js"></script>
+<script src="js/components/nux-stat-card.js"></script>
+<script src="js/components/nux-badge.js"></script>
+<script src="js/components/nux-avatar.js"></script>
+<script src="js/components/nux-data-table.js"></script>
+<script src="js/components/nux-pagination.js"></script>
+<script src="js/components/nux-ai-chat-template.js"></script>
+<script src="js/components/nux-ai-chat-helpers.js"></script>
+<script src="js/components/nux-ai-chat.js"></script>
+<script src="site/site.js"></script>
+<script src="site/playground-data.js"></script>
+<script src="site/playground-data-2.js"></script>
+<script src="site/playground.js"></script>
+</body>
+</html>

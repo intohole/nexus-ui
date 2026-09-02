@@ -1,8 +1,8 @@
 app:
   name: nexus-ui
-  display_name: "Nexus UI 静态分发"
+  display_name: "Nexus UI"
   path_prefix: "/nexus-ui"
-  description: "Nexus 设计系统统一静态分发（自托管，nginx 直出）"
+  description: "开源 Vue 3 设计系统 · CDN 引入即用 · 在线 Playground"
   app_group: "基础设施"
   tags: ["设计系统", "静态资源", "CDN"]
   is_public: true

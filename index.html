@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Nexus UI — 开源 Vue 3 设计系统，引入即用</title>
+<meta name="description" content="Nexus UI 是一套开源的 Vue 3 CDN 设计系统：56 个组件、27 套应用主题、移动端适配内置，两行代码引入即用，零构建。">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/nexus-all.css">
+<link rel="stylesheet" href="site/site.css">
+</head>
+<body class="app-nexus-ui">
+<div id="app" v-cloak>
+<header class="site-nav">
+  <div class="wrap">
+    <a class="wordmark" href="index.html"><span class="mark">N</span>NEXUS UI</a>
+    <nav aria-label="主导航">
+      <a href="#features">特性</a>
+      <a href="#components">组件</a>
+      <a href="#quickstart">接入</a>
+      <a class="nav-cta" href="playground.html">Playground</a>
+    </nav>
+  </div>
+</header>
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-title">
+        <p class="eyebrow">Nexus UI · v2.10.52 · MIT 开源</p>
+        <h1>引入两行，<br><em>设计系统</em>就位</h1>
+        <p class="lede">为 Vue 3 CDN 应用打造的开源设计系统。56 个组件、27 套应用主题、移动端适配全部内置——把时间留给产品本身。</p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="playground.html">打开 Playground</a>
+          <a class="btn btn-ghost" href="#quickstart">两行接入</a>
+        </div>
+        <div class="hero-meta" role="list" aria-label="关键数据">
+          <span class="meta-pill">56 组件</span>
+          <span class="meta-pill">13 Composables</span>
+          <span class="meta-pill">27 主题</span>
+          <span class="meta-pill">0 构建</span>
+        </div>
+      </div>
+      <div class="board" aria-label="实时组件演示">
+        <div class="board-head">
+          <span class="board-title"><span class="live-dot" aria-hidden="true"></span>活的组件 · 就在当前页</span>
+          <div class="dial" role="group" aria-label="切换主题色">
+            <span class="dial-label">主题罗盘</span>
+            <button v-for="t in themes" :key="t.cls" class="dial-dot"
+                    :class="{ active: current === t.cls }" :style="{ backgroundColor: t.color }"
+                    :title="t.name" :aria-label="'切换主题到 ' + t.name"
+                    @click="setTheme(t.cls)"></button>
+          </div>
+        </div>
+        <div class="board-row">
+          <nux-switch v-model="notify" label="接收通知"></nux-switch>
+          <nux-segmented v-model="seg" :options="segs"></nux-segmented>
+        </div>
+        <nux-progress :value="pct" :label="'同步进度 ' + pct + '%'" status="success"></nux-progress>
+        <div class="board-row">
+          <nux-chip-group v-model="chips" :options="chipOpts" :multiple="true"></nux-chip-group>
+        </div>
+        <div class="board-row">
+          <nux-stat-card icon="🧩" value="56" label="组件"></nux-stat-card>
+          <nux-stat-card icon="🎨" value="27" label="主题"></nux-stat-card>
+          <nux-button :loading="busy" @click="poke">试试交互</nux-button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="spec" id="features">
+    <div class="wrap">
+      <div class="spec-head reveal">
+        <div>
+          <p class="eyebrow">为什么是 Nexus UI</p>
+          <h2 class="h2">为 CDN 应用而生，不为构建工具而生</h2>
+        </div>
+      </div>
+      <div class="spec-grid">
+        <div class="spec-col">
+          <article class="spec-card big reveal">
+            <div class="spec-num">01</div>
+            <h3>零构建，两行接入</h3>
+            <p>不装依赖、不搭脚手架，一行 CSS 一行 JS 即刻生效。全集群共享浏览器缓存，从第二个应用起，加载成本趋近于零。</p>
+          </article>
+          <article class="spec-card big reveal">
+            <div class="spec-num">02</div>
+            <h3>27 套主题，一套组件</h3>
+            <p>点右上角「主题罗盘」，整页即时换肤。每个应用只需一个 body class，主色与浅色、深色模式全部联动。</p>
+          </article>
+        </div>
+        <div class="spec-col">
+          <article class="spec-card reveal">
+            <div class="spec-num">03</div>
+            <h3>移动端适配收口</h3>
+            <p>安全区、dvh、44px 触摸命中区、软键盘适配都在中间件完成，业务代码不写一行媒体查询。</p>
+          </article>
+          <article class="spec-card reveal">
+            <div class="spec-num">04</div>
+            <h3>生产级 API 客户端</h3>
+            <p>重试、超时、取消、401 统一处理、CRUD 工厂、SSE 流式。AI 对话与 Markdown 安全渲染开箱即用。</p>
+          </article>
+          <article class="spec-card reveal">
+            <div class="spec-num">05</div>
+            <h3>版本统一收口</h3>
+            <p>deps.json 是全工作区 CDN 版本的唯一事实来源，check_deps.py 一键校验，杜绝版本漂移。</p>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="comp" id="components">
+    <div class="wrap">
+      <div class="spec-head reveal">
+        <div>
+          <p class="eyebrow">组件总览</p>
+          <h2 class="h2">56 个组件，按需引入</h2>
+        </div>
+        <a class="btn btn-ghost" href="playground.html">在 Playground 逐个试用</a>
+      </div>
+      <div class="reveal">
+        <div class="comp-row" v-for="c in compCats" :key="c.name">
+          <div class="comp-cat">{{ c.name }}<span class="mono-count">{{ c.count }}</span></div>
+          <div class="comp-chips">
+            <span class="chip" v-for="n in c.items" :key="n">{{ n }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="quick" id="quickstart">
+    <div class="wrap quick-grid">
+      <div class="reveal">
+        <p class="eyebrow">快速开始</p>
+        <h2 class="h2">三步接入</h2>
+        <div class="step">
+          <span class="step-n" aria-hidden="true">1</span>
+          <div><h4>引样式</h4><p>nexus-all.css 包含全部组件样式与主题变量。</p></div>
+        </div>
+        <div class="step">
+          <span class="step-n" aria-hidden="true">2</span>
+          <div><h4>引 Vue 与组件脚本</h4><p>用到哪个引哪个，也可以用 nexus-all.js 全量引入。</p></div>
+        </div>
+        <div class="step">
+          <span class="step-n" aria-hidden="true">3</span>
+          <div><h4>注册并使用</h4><p>app.component('nux-button', NuxButton)，然后像写 HTML 一样使用。</p></div>
+        </div>
+      </div>
+      <div class="codeblock reveal">
+        <button class="code-copy" @click="copyQuick">复制</button>
+<pre><span class="c-t">&lt;link</span> <span class="c-a">rel=</span><span class="c-s">"stylesheet"</span>
+      <span class="c-a">href=</span><span class="c-s">"https://songguokr.com/nexus-ui/v2.10.52/css/nexus-all.css"</span><span class="c-t">&gt;</span>
+<span class="c-t">&lt;script</span> <span class="c-a">src=</span><span class="c-s">"https://registry.npmmirror.com/vue/3.4.21/files/dist/vue.global.prod.js"</span><span class="c-t">&gt;&lt;/script&gt;</span>
+<span class="c-t">&lt;script</span> <span class="c-a">src=</span><span class="c-s">"https://songguokr.com/nexus-ui/v2.10.52/js/nexus-all.js"</span><span class="c-t">&gt;&lt;/script&gt;</span>
+<span class="c-t">&lt;script</span> <span class="c-a">src=</span><span class="c-s">"https://songguokr.com/nexus-ui/v2.10.52/js/components/nux-button.js"</span><span class="c-t">&gt;&lt;/script&gt;</span>
+
+app.component(<span class="c-s">'nux-button'</span>, NuxButton)</pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="prod">
+    <div class="wrap reveal">
+      <p class="eyebrow">生产验证</p>
+      <h2 class="h2">正在这些线上应用服役</h2>
+      <div class="prod-names">
+        <span class="prod-name" v-for="n in apps" :key="n">{{ n }}</span>
+      </div>
+      <p class="prod-note">每天为真实用户渲染界面的，就是你在 Playground 里摸到的这套组件。</p>
+    </div>
+  </section>
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <span class="brand">NEXUS UI</span>
+    <span>MIT License</span>
+    <span>v2.10.52</span>
+    <div class="sp">
+      <a href="https://github.com/intohole/nexus-ui" target="_blank" rel="noopener">GitHub</a>
+      <a href="playground.html">Playground</a>
+      <a href="https://songguokr.com" target="_blank" rel="noopener">songguokr.com</a>
+    </div>
+  </div>
+</footer>
+</div>
+<script src="https://registry.npmmirror.com/vue/3.4.21/files/dist/vue.global.prod.js"></script>
+<script src="js/nexus-all.js"></script>
+<script src="js/components/nux-button.js"></script>
+<script src="js/components/nux-switch.js"></script>
+<script src="js/components/nux-segmented.js"></script>
+<script src="js/components/nux-chip-group.js"></script>
+<script src="js/components/nux-progress.js"></script>
+<script src="js/components/nux-stat-card.js"></script>
+<script src="js/components/nux-toast.js"></script>
+<script src="site/site.js"></script>
+<script src="site/landing.js"></script>
+</body>
+</html>
