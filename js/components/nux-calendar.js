@@ -25,11 +25,22 @@
     emits: ['update:modelValue', 'date-select', 'month-change'],
     data() {
       const now = new Date()
-      return { viewYear: this.year || now.getFullYear(), viewMonth: this.month || now.getMonth() + 1 }
+      return { viewYear: this.year || now.getFullYear(), viewMonth: this.month || now.getMonth() + 1, heatStep: 15 }
     },
     watch: {
       year(v) { if (v) this.viewYear = v },
-      month(v) { if (v) this.viewMonth = v }
+      month(v) { if (v) this.viewMonth = v },
+      cells() { this.$nextTick(this.measureHeat) }
+    },
+    mounted() {
+      this.$nextTick(this.measureHeat)
+      if (typeof ResizeObserver !== 'undefined') {
+        this._heatRO = new ResizeObserver(() => this.measureHeat())
+        this._heatRO.observe(this.$el)
+      }
+    },
+    unmounted() {
+      if (this._heatRO) { this._heatRO.disconnect(); this._heatRO = null }
     },
     computed: {
       weekLabels() {
@@ -99,12 +110,18 @@
       },
       heatFlat() {
         return this.heatWeeks.weeks.flat()
-      },
-      heatStep() {
-        return 15
       }
     },
     methods: {
+      measureHeat() {
+        if (this.mode !== 'heatmap' || !this.$el) return
+        const el = this.$el.querySelector('.nux-cal-heat-scroll')
+        if (!el) return
+        const weeks = this.heatWeeks.weeks.length || 1
+        const step = Math.floor((el.clientWidth - 26) / weeks)
+        const next = Math.max(15, Math.min(26, step))
+        if (next !== this.heatStep) this.heatStep = next
+      },
       addDays(ds, n) {
         const d = parseKey(ds)
         d.setDate(d.getDate() + n)
@@ -182,7 +199,7 @@
           <template v-else>
             <div v-if="!cells.length" class="nux-cal-heat-empty">暂无数据</div>
             <div v-else class="nux-cal-heat-scroll">
-              <div class="nux-cal-heat" :style="{ width: (heatWeeks.weeks.length * heatStep + 30) + 'px' }">
+              <div class="nux-cal-heat" :style="{ '--nux-heat-cell': (heatStep - 2) + 'px' }">
                 <div class="nux-cal-heat-months">
                   <span v-for="m in heatWeeks.months" :key="m.idx" class="nux-cal-heat-month" :style="heatStyle(m.idx)">{{ m.label }}</span>
                 </div>

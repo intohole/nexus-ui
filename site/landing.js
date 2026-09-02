@@ -23,10 +23,10 @@
         ],
         busy: false,
         quickCode: [
-          '<link rel="stylesheet" href="https://songguokr.com/nexus-ui/v2.10.53/css/nexus-all.css">',
+          '<link rel="stylesheet" href="https://songguokr.com/nexus-ui/v2.10.54/css/nexus-all.css">',
           '<script src="https://registry.npmmirror.com/vue/3.4.21/files/dist/vue.global.prod.js"><\/script>',
-          '<script src="https://songguokr.com/nexus-ui/v2.10.53/js/nexus-all.js"><\/script>',
-          '<script src="https://songguokr.com/nexus-ui/v2.10.53/js/components/nux-button.js"><\/script>'
+          '<script src="https://songguokr.com/nexus-ui/v2.10.54/js/nexus-all.js"><\/script>',
+          '<script src="https://songguokr.com/nexus-ui/v2.10.54/js/components/nux-button.js"><\/script>'
         ],
         compCats: [
           { name: '基础控件', count: 10, items: ['nux-button', 'nux-input', 'nux-textarea', 'nux-select', 'nux-switch', 'nux-checkbox', 'nux-search-box', 'nux-segmented', 'nux-chip-group', 'nux-form-group'] },

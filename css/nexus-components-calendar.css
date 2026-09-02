@@ -169,7 +169,7 @@
   padding-bottom: 4px;
 }
 
-.nux-cal-heat { position: relative; }
+.nux-cal-heat { position: relative; width: 100%; }
 
 .nux-cal-heat-months {
   position: relative;
@@ -193,7 +193,7 @@
 
 .nux-cal-heat-wds {
   display: grid;
-  grid-template-rows: repeat(7, 14px);
+  grid-template-rows: repeat(7, var(--nux-heat-cell, 14px));
   gap: 2px;
   width: 22px;
 }
@@ -201,23 +201,23 @@
 .nux-cal-heat-wds span {
   font-size: 10px;
   color: var(--nx-text-muted);
-  line-height: 14px;
+  line-height: var(--nux-heat-cell, 14px);
 }
 
 .nux-cal-heat-grid {
   display: grid;
-  grid-template-rows: repeat(7, 14px);
+  grid-template-rows: repeat(7, var(--nux-heat-cell, 14px));
   grid-auto-flow: column;
-  grid-auto-columns: 14px;
+  grid-auto-columns: var(--nux-heat-cell, 14px);
   gap: 2px;
 }
 
 .nux-cal-heat-cell {
-  width: 14px;
-  height: 14px;
+  width: var(--nux-heat-cell, 14px);
+  height: var(--nux-heat-cell, 14px);
   padding: 0;
   border: none;
-  border-radius: 3px;
+  border-radius: max(3px, calc(var(--nux-heat-cell, 14px) / 5));
   cursor: pointer;
   transition: transform 0.12s;
 }
