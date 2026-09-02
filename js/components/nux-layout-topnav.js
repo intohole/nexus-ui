@@ -14,7 +14,7 @@
         setup(props, { emit }) {
             const { isMobile, mobileMenuOpen, toggleMenu, closeMenu } = useMobile();
             const drawerStyle = Vue.computed(() => ({ top: props.headerHeight }));
-            return { isMobile, mobileMenuOpen, toggleMenu, closeMenu, drawerStyle };
+            return { emit, isMobile, mobileMenuOpen, toggleMenu, closeMenu, drawerStyle };
         },
         template: `
             <div :class="['nux-layout-topnav', themeClass]">
