@@ -1,6 +1,6 @@
 {
   "name": "nexus-ui",
-  "version": "2.10.52",
+  "version": "2.10.53",
   "description": "Nexus Design System — 统一前端基础设施，Vue 3 CDN 全局模式",
   "main": "css/nexus-all.css",
   "files": [
@@ -28,6 +28,8 @@
       "nexus-themes.css": "24个应用特色色主题配置",
       "nexus-mobile.css": "移动端基础设施（dvh、安全区域、抽屉、触摸优化）",
       "nexus-components-feedback.css": "反馈组件样式（Toast/Modal/Drawer/Confirm/Skeleton等）",
+      "nexus-components-checkin.css": "打卡组件样式（Checkin streak/日历网格/操作按钮）",
+      "nexus-components-calendar.css": "日历组件样式（month月视图/sequence序列/heatmap热力图三模式）",
       "nexus-components-data.css": "数据组件样式（Table/Pagination/Badge/Avatar/StatCard等）",
       "nexus-components-form.css": "表单组件样式（FormGroup/输入控件等）",
       "nexus-components-controls.css": "基础控件样式（Button/Input/Textarea/Select/Switch/Checkbox/SearchBox/Segmented/ChipGroup/Loading）",
@@ -54,6 +56,7 @@
       "nux-confirm.js": "确认对话框组件",
       "nux-tab-group.js": "标签页组件",
       "nux-pagination.js": "分页组件",
+      "nux-calendar.js": "日历组件（month月视图/sequence挑战序列/heatmap热力图三模式，levels/counts/records/cells数据驱动，色阶随主题色流动）",
       "nux-breadcrumb.js": "面包屑组件",
       "nux-error-state.js": "错误状态组件",
       "nux-layout-sidebar.js": "侧边栏布局组件",

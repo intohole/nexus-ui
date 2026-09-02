@@ -255,9 +255,9 @@ Events: accepted/declined
 
 协议文案唯一事实源：`nexus-backend/nexus/agreement.py` 的 DEFAULT_TERMS/DEFAULT_PRIVACY，版本升级时同步修改 agreement.html。
 
-### 基础组件（v2.10.52+，样式已并入 nexus-all.css，多端适配内置无需业务写媒体查询）
+### 基础组件（v2.10.53+，样式已并入 nexus-all.css，多端适配内置无需业务写媒体查询）
 
-引入方式统一为 `<script src="https://songguokr.com/nexus-ui/v2.10.52/js/components/nux-xxx.js"></script>` 后 `app.component('nux-xxx', window.NuxXxx)`。基准样式=桌面端，≤820px 自动收敛，触屏自动 44px 命中区与 16px 输入字号。
+引入方式统一为 `<script src="https://songguokr.com/nexus-ui/v2.10.53/js/components/nux-xxx.js"></script>` 后 `app.component('nux-xxx', window.NuxXxx)`。基准样式=桌面端，≤820px 自动收敛，触屏自动 44px 命中区与 16px 输入字号。
 
 | 组件 | 核心用法 |
 |------|---------|
@@ -277,6 +277,7 @@ Events: accepted/declined
 | nux-grid | `<nux-grid :cols="4">子元素</nux-grid>`（桌面4列，移动端自动单列）或 `<nux-grid min="220px">`（auto-fill自适应） |
 | nux-section | `<nux-section title="标题" description="描述"><template #actions>操作</template>内容</nux-section>`（flat属性去卡片） |
 | nux-backtop | `<nux-backtop :threshold="300"></nux-backtop>` |
+| nux-calendar | `<nux-calendar mode="month" v-model="sel" :levels="{'2026-09-02': 3}" :counts="{'2026-09-02': 5}" @date-select="fn" @month-change="fn"></nux-calendar>`（三模式：month自然月活跃度/sequence挑战序列 `:start-date :total-days :records`/heatmap周列热力 `:cells="[{date,level,value,unit}]"`；level 0-4 色阶随 --app-accent 流动；loading 骨架内置） |
 
 ### Composables
 

@@ -23,15 +23,15 @@
         ],
         busy: false,
         quickCode: [
-          '<link rel="stylesheet" href="https://songguokr.com/nexus-ui/v2.10.52/css/nexus-all.css">',
+          '<link rel="stylesheet" href="https://songguokr.com/nexus-ui/v2.10.53/css/nexus-all.css">',
           '<script src="https://registry.npmmirror.com/vue/3.4.21/files/dist/vue.global.prod.js"><\/script>',
-          '<script src="https://songguokr.com/nexus-ui/v2.10.52/js/nexus-all.js"><\/script>',
-          '<script src="https://songguokr.com/nexus-ui/v2.10.52/js/components/nux-button.js"><\/script>'
+          '<script src="https://songguokr.com/nexus-ui/v2.10.53/js/nexus-all.js"><\/script>',
+          '<script src="https://songguokr.com/nexus-ui/v2.10.53/js/components/nux-button.js"><\/script>'
         ],
         compCats: [
           { name: '基础控件', count: 10, items: ['nux-button', 'nux-input', 'nux-textarea', 'nux-select', 'nux-switch', 'nux-checkbox', 'nux-search-box', 'nux-segmented', 'nux-chip-group', 'nux-form-group'] },
           { name: '反馈状态', count: 9, items: ['nux-toast', 'nux-modal', 'nux-drawer', 'nux-confirm', 'nux-empty', 'nux-error-state', 'nux-skeleton', 'nux-loading', 'nux-undo-toast'] },
-          { name: '数据展示', count: 10, items: ['nux-stat-card', 'nux-badge', 'nux-avatar', 'nux-data-table', 'nux-pagination', 'nux-breadcrumb', 'nux-progress', 'nux-steps', 'nux-radar-chart', 'nux-checkin'] },
+          { name: '数据展示', count: 11, items: ['nux-stat-card', 'nux-badge', 'nux-avatar', 'nux-data-table', 'nux-pagination', 'nux-calendar', 'nux-breadcrumb', 'nux-progress', 'nux-steps', 'nux-radar-chart', 'nux-checkin'] },
           { name: '导航布局', count: 9, items: ['nux-tab-group', 'nux-accordion', 'nux-grid', 'nux-section', 'nux-backtop', 'nux-layout-sidebar', 'nux-layout-topnav', 'nux-bottom-nav', 'nux-app-switcher'] },
           { name: 'AI 对话', count: 5, items: ['nux-ai-chat', 'nux-conversation-list', 'nux-history-list', 'nux-clarify-card', 'NexusMarkdown 渲染引擎'] },
           { name: '业务套件', count: 11, items: ['nux-login-page', 'nux-register-page', 'nux-forgot-password', 'nux-user-center', 'nux-about-page', 'nux-agreement-modal', 'nux-float-user-center', 'nux-float-about', 'nux-notification-bell', 'nux-notification-panel', 'nux-selection-bar'] },

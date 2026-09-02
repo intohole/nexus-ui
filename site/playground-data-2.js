@@ -192,6 +192,104 @@ if (ok) showToast('已删除', 'success');`,
   });
 
   window.PG_CATS.push({
+    id: 'calendar',
+    name: '日历',
+    demos: [
+      {
+        id: 'cal-month',
+        tag: 'nux-calendar',
+        title: '月视图',
+        desc: '活跃度色阶随主题色流动，计数角标、今天描边、切月回调',
+        tpl: `
+<nux-calendar v-model="sel" :levels="levels" :counts="counts"
+              @date-select="d => showToast('选中 ' + d, 'info')"
+              @month-change="m => showToast(m.year + ' 年 ' + m.month + ' 月', 'info')"></nux-calendar>`,
+        code: `<nux-calendar v-model="sel"
+  :levels="{'2026-09-02': 3}" :counts="{'2026-09-02': 5}"
+  @date-select="onPick" @month-change="loadMonth"></nux-calendar>`,
+        data() {
+          const pad = n => String(n).padStart(2, '0')
+          const now = new Date()
+          const y = now.getFullYear(), m = now.getMonth() + 1
+          const total = new Date(y, m, 0).getDate()
+          const seed = [2, 0, 3, 4, 1, 2, 0, 4, 2, 1, 3, 4, 2, 0, 1, 3, 4, 4, 2, 1, 0, 3, 2, 4, 1, 2, 3, 0, 2, 4, 1]
+          const levels = {}, counts = {}
+          for (let d = 1; d <= total; d++) {
+            const k = y + '-' + pad(m) + '-' + pad(d)
+            levels[k] = seed[(d * 7) % seed.length]
+            if (levels[k] > 0) counts[k] = (d * 3) % 9 + 1
+          }
+          return { levels, counts, sel: '' }
+        },
+        methods: {
+          showToast(msg, type) { window.showToast(msg, type); }
+        }
+      },
+      {
+        id: 'cal-sequence',
+        tag: 'nux-calendar',
+        title: '序列打卡',
+        desc: '挑战期第 N 天序列，状态枚举着色，适配打卡、养成类场景',
+        tpl: `
+<nux-calendar mode="sequence" :start-date="start" :total-days="30" :records="records"
+              @date-select="(d, c) => showToast('查看第 ' + (c.index + 1) + ' 天', 'info')"></nux-calendar>`,
+        code: `<nux-calendar mode="sequence"
+  :start-date="'2026-08-13'" :total-days="30"
+  :records="[{'date': '2026-08-13', 'status': 'checked'}]"
+  @date-select="openDay"></nux-calendar>`,
+        data() {
+          const pad = n => String(n).padStart(2, '0')
+          const key = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate())
+          const start = new Date()
+          start.setDate(start.getDate() - 20)
+          const records = []
+          for (let i = 0; i < 30; i++) {
+            const d = new Date(start)
+            d.setDate(d.getDate() + i)
+            if (d > new Date()) break
+            const st = i % 7 === 3 ? 'frozen' : (i % 11 === 5 ? 'mended' : (i % 5 === 4 ? null : 'checked'))
+            if (st) records.push({ date: key(d), status: st })
+          }
+          return { start: key(start), records }
+        },
+        methods: {
+          showToast(msg, type) { window.showToast(msg, type); }
+        }
+      },
+      {
+        id: 'cal-heatmap',
+        tag: 'nux-calendar',
+        title: '热力图',
+        desc: 'GitHub 式周列热力，月份标签自动定位，移动端横向滑动',
+        tpl: `
+<nux-calendar mode="heatmap" :cells="cells" @date-select="(d, c) => showToast(d + ' · ' + (c.value || 0) + ' 次', 'info')"></nux-calendar>`,
+        code: `<nux-calendar mode="heatmap"
+  :cells="[{'date': '2026-09-01', 'level': 3, 'value': 6, 'unit': '次'}]"
+  @date-select="onPick"></nux-calendar>`,
+        data() {
+          const pad = n => String(n).padStart(2, '0')
+          const key = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate())
+          const cells = []
+          const start = new Date()
+          start.setDate(start.getDate() - 90)
+          const today = new Date()
+          for (let i = 0; i <= 90; i++) {
+            const d = new Date(start)
+            d.setDate(d.getDate() + i)
+            if (d > today) break
+            const v = (i * 13) % 7
+            cells.push({ date: key(d), level: v >= 6 ? 4 : v >= 4 ? 3 : v >= 2 ? 2 : v >= 1 ? 1 : 0, value: v * 2, unit: '次' })
+          }
+          return { cells }
+        },
+        methods: {
+          showToast(msg, type) { window.showToast(msg, type); }
+        }
+      }
+    ]
+  });
+
+  window.PG_CATS.push({
     id: 'ai',
     name: 'Markdown 与 AI',
     demos: [

@@ -48,6 +48,7 @@
     ['nux-avatar', 'NuxAvatar'],
     ['nux-data-table', 'NuxDataTable'],
     ['nux-pagination', 'NuxPagination'],
+    ['nux-calendar', 'NuxCalendar'],
     ['nux-ai-chat', 'NuxAiChat']
   ].forEach(([tag, name]) => {
     if (window[name]) app.component(tag, window[name]);
