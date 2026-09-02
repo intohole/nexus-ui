@@ -20,7 +20,7 @@
             showRememberMe: { type: Boolean, default: false },
             showForgot: { type: Boolean, default: true },
             sdk: { type: Object, default: null },
-            showTerms: { type: Boolean, default: false },
+            showTerms: { type: Boolean, default: true },
             termsText: { type: String, default: '我已阅读并同意《用户协议》和《隐私政策》' },
             termsUrl: { type: String, default: '' },
             privacyUrl: { type: String, default: '' },
@@ -80,6 +80,9 @@
                 const idx = src.lastIndexOf('/');
                 return idx > 0 ? src.slice(0, idx) : '';
             })();
+            const defaultAgreementUrl = compBase.replace(/\/js\/components$/, '') + '/agreement.html';
+            const effectiveTermsUrl = Vue.computed(function() { return props.termsUrl || defaultAgreementUrl; });
+            const effectivePrivacyUrl = Vue.computed(function() { return props.privacyUrl || defaultAgreementUrl; });
             const eyeSvg = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
             const eyeSlashSvg = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
 
@@ -298,6 +301,7 @@
             return {
                 mode, loginType, form, smsCode, smsCountdown, agreed, rememberMe,
                 showPassword, showConfirmPassword, combinedError, isSmsMode, regSms, effectiveSdk,
+                effectiveTermsUrl, effectivePrivacyUrl,
                 forgotOpen, forgotLoading, forgotComp,
                 onLogin, onRegister, doRegister, sendSms, switchMode, switchLoginType, onThirdParty, onForgot, registering,
                 eyeSvg, eyeSlashSvg
@@ -363,8 +367,8 @@
                             <div v-if="showTerms" class="nux-form-group">
                                 <label class="nux-checkbox nux-terms">
                                     <input type="checkbox" v-model="agreed">
-                                    <span v-if="termsUrl || privacyUrl">我已阅读并同意
-                                        <a v-if="termsUrl" :href="termsUrl" target="_blank" rel="noopener">《用户协议》</a><a v-if="privacyUrl" :href="privacyUrl" target="_blank" rel="noopener">《隐私政策》</a>
+                                    <span v-if="effectiveTermsUrl || effectivePrivacyUrl">我已阅读并同意
+                                        <a v-if="effectiveTermsUrl" :href="effectiveTermsUrl" target="_blank" rel="noopener">《用户协议》</a><a v-if="effectivePrivacyUrl" :href="effectivePrivacyUrl" target="_blank" rel="noopener">《隐私政策》</a>
                                     </span>
                                     <span v-else>{{ termsText }}</span>
                                 </label>
