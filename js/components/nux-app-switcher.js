@@ -55,6 +55,7 @@
         '.nxs-overlay{align-items:flex-end}',
         '.nxs-panel{width:100%;max-height:92vh;border-radius:22px 22px 0 0;animation:nxsUp .25s cubic-bezier(.34,1.2,.5,1)}',
         '.nxs-trigger{left:14px;bottom:calc(14px + env(safe-area-inset-bottom))}',
+        'body:has(.nux-layout-bottom-nav) .nxs-trigger{bottom:calc(74px + env(safe-area-inset-bottom))}',
         '.nxs-trigger-label{display:none}',
         '.nxs-grid{grid-template-columns:repeat(2,1fr);gap:8px}',
         '@keyframes nxsUp{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}',
