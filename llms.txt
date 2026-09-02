@@ -255,6 +255,29 @@ Events: accepted/declined
 
 协议文案唯一事实源：`nexus-backend/nexus/agreement.py` 的 DEFAULT_TERMS/DEFAULT_PRIVACY，版本升级时同步修改 agreement.html。
 
+### 基础组件（v2.10.52+，样式已并入 nexus-all.css，多端适配内置无需业务写媒体查询）
+
+引入方式统一为 `<script src="https://songguokr.com/nexus-ui/v2.10.52/js/components/nux-xxx.js"></script>` 后 `app.component('nux-xxx', window.NuxXxx)`。基准样式=桌面端，≤820px 自动收敛，触屏自动 44px 命中区与 16px 输入字号。
+
+| 组件 | 核心用法 |
+|------|---------|
+| nux-button | `<nux-button variant="primary|ghost|danger|text" size="sm|md|lg" :block="true" :loading="loading" @click="fn">文案</nux-button>` |
+| nux-input | `<nux-input v-model="text" label="标题" placeholder required :maxlength="50" clearable hint error @enter="fn"><template #prefix>¥</template></nux-input>` |
+| nux-textarea | `<nux-textarea v-model="text" :rows="4" :auto-resize="true" :maxlength="500" label error hint></nux-textarea>` |
+| nux-select | `<nux-select v-model="val" :options="[{label,value}]" label placeholder></nux-select>`（原生select，移动端原生picker） |
+| nux-switch | `<nux-switch v-model="on" label="开启" description="说明文字"></nux-switch>` |
+| nux-checkbox | `<nux-checkbox v-model="on" label="同意"></nux-checkbox>` |
+| nux-search-box | `<nux-search-box v-model="kw" :delay="300" @search="fn"></nux-search-box>`（防抖search+回车确认） |
+| nux-segmented | `<nux-segmented v-model="tab" :options="[{label,value}]"></nux-segmented>`（滑动指示器） |
+| nux-chip-group | `<nux-chip-group v-model="sel" :options="[{label,value}]" :multiple="true" :removable="true" @remove="fn"></nux-chip-group>` |
+| nux-steps | `<nux-steps :items="[{title,desc}]" :current="1"></nux-steps>` |
+| nux-progress | `<nux-progress :value="66" label="标题"></nux-progress>` 或 `<nux-progress type="circle" :value="66" status="success"></nux-progress>` |
+| nux-loading | `<nux-loading text="加载中" size="md" :inline="true"></nux-loading>` |
+| nux-accordion | `<nux-accordion v-model="idx" :items="[{title,content}]"><template #item-0="{item}">自定义</template></nux-accordion>`（单开） |
+| nux-grid | `<nux-grid :cols="4">子元素</nux-grid>`（桌面4列，移动端自动单列）或 `<nux-grid min="220px">`（auto-fill自适应） |
+| nux-section | `<nux-section title="标题" description="描述"><template #actions>操作</template>内容</nux-section>`（flat属性去卡片） |
+| nux-backtop | `<nux-backtop :threshold="300"></nux-backtop>` |
+
 ### Composables
 
 ```javascript
