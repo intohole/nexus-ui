@@ -22,4 +22,36 @@
         `
     };
     window.NuxFooter = NuxFooter;
+    (function autoMount() {
+        var tries = 0;
+        function mount() {
+            const el = document.querySelector('nux-footer-placeholder');
+            if (!el) {
+                return;
+            }
+            if (!window.Vue) {
+                if (tries < 50) {
+                    tries++;
+                    setTimeout(mount, 200);
+                }
+                return;
+            }
+            if (el.getAttribute('data-mounted') === 'yes') {
+                return;
+            }
+            const appName = el.getAttribute('app-name') || '';
+            el.setAttribute('data-mounted', 'yes');
+            const mounted = window.Vue.createApp({
+                components: { NuxFooter },
+                data() { return { appName: appName }; },
+                template: '<nux-footer :app-name="appName"></nux-footer>'
+            });
+            mounted.mount(el);
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', mount);
+        } else {
+            mount();
+        }
+    })();
 })();
