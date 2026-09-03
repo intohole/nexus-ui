@@ -214,6 +214,10 @@
                     localError.value = '密码至少' + props.minPasswordLength + '位';
                     return;
                 }
+                if (!/[a-zA-Z]/.test(form.password) || !/\d/.test(form.password)) {
+                    localError.value = '密码需同时包含字母和数字';
+                    return;
+                }
                 if (form.password !== form.confirmPassword) {
                     localError.value = '两次密码不一致';
                     return;

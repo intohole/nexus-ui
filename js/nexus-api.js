@@ -164,7 +164,8 @@
 
                         if (!response.ok) {
                             const errorMsg = this._extractError(data);
-                            if (response.status === 401 && !skipAuthRefresh && this.refreshUrl) {
+                            const skipUnauthorized = options.skipUnauthorized === true;
+                            if (response.status === 401 && !skipUnauthorized && !skipAuthRefresh && this.refreshUrl) {
                                 try {
                                     await this._tryRefresh();
                                     const retryResult = await this._doFetch(url, options, controller);
@@ -174,15 +175,18 @@
                                     }
                                     return retryResult.data;
                                 } catch (refreshErr) {
+                                    if (refreshErr && refreshErr.status) throw refreshErr;
                                     this._clearAuth();
                                     if (this.onUnauthorized) this.onUnauthorized();
                                     throw new ApiError('登录已过期，请重新登录', 401, null);
                                 }
                             }
                             if (response.status === 401) {
-                                this._clearAuth();
-                                if (this.onUnauthorized) this.onUnauthorized();
-                                const msg401 = skipAuthRefresh ? (errorMsg || '认证失败') : '登录已过期，请重新登录';
+                                if (!skipUnauthorized) {
+                                    this._clearAuth();
+                                    if (this.onUnauthorized) this.onUnauthorized();
+                                }
+                                const msg401 = skipUnauthorized ? (errorMsg || '认证失败') : (skipAuthRefresh ? (errorMsg || '认证失败') : '登录已过期，请重新登录');
                                 throw new ApiError(msg401, 401, data);
                             }
                             if (this.onError) this.onError(response.status, errorMsg);

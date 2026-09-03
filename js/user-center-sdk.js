@@ -228,6 +228,7 @@ class UserCenterSDK {
             await this._request('POST', '/api/auth/logout', null, true, true);
         } catch (e) {}
         this.clearTokens();
+        try { localStorage.removeItem('nux_remembered_identifier'); } catch (e) {}
     }
 
     async clientCredentials() {
