@@ -220,3 +220,39 @@
   .nux-acc-head { min-height: 48px; }
   .nux-backtop { right: 16px; }
 }
+
+.nux-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nx-space-2);
+  padding: var(--nx-space-5) var(--nx-space-4);
+  color: var(--nx-text-muted);
+  font-size: 12px;
+  line-height: 1.7;
+  text-align: center;
+}
+.nux-footer-brand {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--nx-text-secondary);
+}
+.nux-footer-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nx-space-1) var(--nx-space-3);
+}
+.nux-footer-copy { color: var(--nx-text-muted); }
+.nux-footer-sep { color: var(--nx-text-muted); opacity: .5; }
+.nux-footer .nux-footer-link {
+  color: var(--nx-text-muted);
+  text-decoration: none;
+  transition: color .2s;
+}
+.nux-footer .nux-footer-link:hover {
+  color: var(--nx-text-accent);
+  text-decoration: underline;
+}
