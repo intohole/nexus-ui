@@ -80,6 +80,29 @@
             contactText: { type: String, default: '反馈建议' }
         },
         setup(props) {
+            const ecoApps = Vue.ref(props.ecosystem);
+            const ECO_PALETTE = ['#6366f1', '#0891b2', '#059669', '#d97706', '#ec4899', '#0d9488', '#1d4ed8', '#8b5cf6'];
+            function colorOf(name) {
+                let h = 0;
+                for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+                return ECO_PALETTE[h % ECO_PALETTE.length];
+            }
+            async function loadEcosystem() {
+                try {
+                    const resp = await fetch(location.origin + '/api/portal/apps');
+                    if (!resp.ok) return;
+                    const data = await resp.json();
+                    const apps = (data.apps || []).filter(a => a.name && a.url);
+                    if (apps.length) {
+                        ecoApps.value = apps.map(a => ({
+                            name: a.display_name || a.name,
+                            desc: a.description || '',
+                            color: colorOf(a.name),
+                            url: a.url
+                        }));
+                    }
+                } catch (e) {}
+            }
             function applyTheme(color) {
                 if (color) {
                     document.documentElement.style.setProperty('--app-accent', color);
@@ -91,8 +114,8 @@
                 const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
                 return m ? `${parseInt(m[1],16)}, ${parseInt(m[2],16)}, ${parseInt(m[3],16)}` : null;
             }
-            Vue.onMounted(() => { injectStyle(); });
-            return { applyTheme };
+            Vue.onMounted(() => { injectStyle(); if (props.showEcosystem) loadEcosystem(); });
+            return { applyTheme, ecoApps };
         },
         template: `
             <div class="nux-about-wrap">
@@ -133,12 +156,12 @@
                         </div>
                     </div>
                 </div>
-                <div v-if="showEcosystem && ecosystem.length" class="nux-about-section">
+                <div v-if="showEcosystem && ecoApps.length" class="nux-about-section">
                     <p class="nux-about-section-title">应用生态</p>
                     <h2>不止这一个产品</h2>
                     <p style="color:var(--nx-text-secondary);font-size:14px;margin:0 0 16px">这是一个持续构建的AI应用矩阵，每个产品都专注解决一个真实问题。</p>
                     <div class="nux-about-eco">
-                        <a v-for="(e, i) in ecosystem" :key="i" class="nux-about-eco-item" :href="e.url || '#'">
+                        <a v-for="(e, i) in ecoApps" :key="i" class="nux-about-eco-item" :href="e.url || '#'">
                             <span class="nux-about-eco-dot" :style="{background: e.color}"></span>
                             {{ e.name }}
                         </a>
