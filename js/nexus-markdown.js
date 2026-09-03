@@ -5,9 +5,9 @@
 
     const FALLBACK_LIBS = {
         marked: 'https://registry.npmmirror.com/marked/9.1.6/files/lib/marked.umd.js',
-        dompurify: 'https://registry.npmmirror.com/dompurify/3.2.4/files/dist/purify.min.js',
-        highlight: 'https://registry.npmmirror.com/@highlightjs/cdn-assets/11.9.0/files/highlight.min.js',
-        highlightCss: 'https://registry.npmmirror.com/@highlightjs/cdn-assets/11.9.0/files/styles/atom-one-dark.min.css'
+        dompurify: 'https://songguokr.com/nexus-ui/v2.10.57/vendor/purify.min.js',
+        highlight: 'https://songguokr.com/nexus-ui/v2.10.57/vendor/highlight.min.js',
+        highlightCss: 'https://songguokr.com/nexus-ui/v2.10.57/vendor/styles/atom-one-dark.min.css'
     };
 
     const LIB_BASE = (function () {

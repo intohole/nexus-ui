@@ -24,7 +24,7 @@
         busy: false,
         quickCode: [
           '<link rel="stylesheet" href="https://songguokr.com/nexus-ui/v2.10.57/css/nexus-all.css">',
-          '<script src="https://registry.npmmirror.com/vue/3.4.21/files/dist/vue.global.prod.js"><\/script>',
+          '<script src="https://songguokr.com/nexus-ui/v2.10.57/vendor/vue.global.prod.js"><\/script>',
           '<script src="https://songguokr.com/nexus-ui/v2.10.57/js/nexus-all.js"><\/script>',
           '<script src="https://songguokr.com/nexus-ui/v2.10.57/js/components/nux-button.js"><\/script>'
         ],
