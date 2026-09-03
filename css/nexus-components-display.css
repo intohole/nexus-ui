@@ -237,6 +237,14 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--nx-text-secondary);
+  margin-bottom: var(--nx-space-1);
+}
+.nux-footer-disclaimer {
+  max-width: 720px;
+  margin: 0 auto var(--nx-space-2);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--nx-text-muted);
 }
 .nux-footer-row {
   display: flex;

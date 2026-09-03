@@ -6,11 +6,13 @@
             showIcp: { type: Boolean, default: true },
             icpNumber: { type: String, default: '浙ICP备2024109932号' },
             company: { type: String, default: '杭州子晨科技有限公司' },
-            email: { type: String, default: 'songguokr@126.com' }
+            email: { type: String, default: 'songguokr@126.com' },
+            disclaimer: { type: String, default: '本站内容由人工智能生成，结果仅供参考，不构成任何建议或承诺。' }
         },
         template: `
             <footer class="nux-footer">
                 <span v-if="appName" class="nux-footer-brand">{{ appName }}</span>
+                <div v-if="disclaimer" class="nux-footer-disclaimer">{{ disclaimer }}</div>
                 <div class="nux-footer-row">
                     <span class="nux-footer-copy">© {{ company }}</span>
                     <span class="nux-footer-sep">·</span>
@@ -40,11 +42,12 @@
                 return;
             }
             const appName = el.getAttribute('app-name') || '';
+            const disclaimer = el.getAttribute('disclaimer') || '';
             el.setAttribute('data-mounted', 'yes');
             const mounted = window.Vue.createApp({
                 components: { NuxFooter },
-                data() { return { appName: appName }; },
-                template: '<nux-footer :app-name="appName"></nux-footer>'
+                data() { return { appName: appName, disclaimer: disclaimer }; },
+                template: '<nux-footer :app-name="appName" :disclaimer="disclaimer"></nux-footer>'
             });
             mounted.mount(el);
         }
