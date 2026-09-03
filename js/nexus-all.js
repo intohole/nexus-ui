@@ -1024,12 +1024,29 @@
 
     const VERSION = '1.2.0';
 
-    const LIBS = {
-        marked: 'https://registry.npmmirror.com/marked/12.0.0/files/lib/marked.umd.js',
-        dompurify: 'https://registry.npmmirror.com/dompurify/3.0.6/files/dist/purify.min.js',
+    const FALLBACK_LIBS = {
+        marked: 'https://registry.npmmirror.com/marked/9.1.6/files/lib/marked.umd.js',
+        dompurify: 'https://registry.npmmirror.com/dompurify/3.2.4/files/dist/purify.min.js',
         highlight: 'https://registry.npmmirror.com/@highlightjs/cdn-assets/11.9.0/files/highlight.min.js',
         highlightCss: 'https://registry.npmmirror.com/@highlightjs/cdn-assets/11.9.0/files/styles/atom-one-dark.min.css'
     };
+
+    const LIB_BASE = (function () {
+        const scripts = document.scripts || [];
+        for (let i = 0; i < scripts.length; i++) {
+            const src = scripts[i].getAttribute('src') || '';
+            const m = src.match(/^(.*)\/js\/nexus-(?:all|markdown)\.js(?:[?#].*)?$/);
+            if (m) return m[1] + '/vendor/';
+        }
+        return '';
+    })();
+
+    const LIBS = LIB_BASE ? {
+        marked: LIB_BASE + 'marked.umd.js',
+        dompurify: LIB_BASE + 'purify.min.js',
+        highlight: LIB_BASE + 'highlight.min.js',
+        highlightCss: LIB_BASE + 'styles/atom-one-dark.min.css'
+    } : FALLBACK_LIBS;
 
     const DEFAULT_ALLOWED_TAGS = [
         'p', 'br', 'strong', 'em', 'code', 'pre', 'span',

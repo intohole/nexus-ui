@@ -1,13 +1,29 @@
 (function() {
+    const CN_TZ = 'Asia/Shanghai';
     const utils = {
+        parseDate(value) {
+            if (!value) return null;
+            if (value instanceof Date) return isNaN(value.getTime()) ? null : value;
+            if (typeof value === 'number') return new Date(value);
+            const s = String(value).trim();
+            if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+                const d = new Date(s + 'T00:00:00');
+                return isNaN(d.getTime()) ? null : d;
+            }
+            let str = s.replace(' ', 'T');
+            if (!/(?:Z|[+-]\d{2}:?\d{2})$/i.test(str)) str += 'Z';
+            const d = new Date(str);
+            return isNaN(d.getTime()) ? null : d;
+        },
+
         formatDate(dateString, options = {}) {
-            if (!dateString) return '';
+            const date = this.parseDate(dateString);
+            if (!date) return '';
             try {
-                const date = new Date(dateString);
-                if (isNaN(date.getTime())) return '';
                 return date.toLocaleString('zh-CN', {
                     year: 'numeric', month: '2-digit', day: '2-digit',
                     hour: '2-digit', minute: '2-digit',
+                    timeZone: CN_TZ,
                     ...options
                 });
             } catch (e) { return ''; }
@@ -172,9 +188,8 @@
         },
 
         formatRelativeTime(dateString) {
-            if (!dateString) return '';
-            const date = new Date(dateString);
-            if (isNaN(date.getTime())) return '';
+            const date = this.parseDate(dateString);
+            if (!date) return '';
             const now = Date.now();
             const diff = now - date.getTime();
             const seconds = Math.floor(diff / 1000);
@@ -189,13 +204,13 @@
         },
 
         formatDateTime(dateString, options = {}) {
-            if (!dateString) return '';
+            const date = this.parseDate(dateString);
+            if (!date) return '';
             try {
-                const date = new Date(dateString);
-                if (isNaN(date.getTime())) return '';
                 return date.toLocaleString('zh-CN', {
                     year: 'numeric', month: '2-digit', day: '2-digit',
                     hour: '2-digit', minute: '2-digit', second: '2-digit',
+                    timeZone: CN_TZ,
                     ...options
                 });
             } catch (e) { return ''; }

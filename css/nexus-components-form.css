@@ -478,6 +478,15 @@
   color: var(--nx-text-primary);
 }
 .nux-forgot-tabs { margin-bottom: var(--nx-space-4); }
+.nux-forgot-hint {
+  font-size: var(--nx-text-sm, 13px);
+  color: var(--nx-text-secondary, #64748b);
+  background: var(--nx-bg-secondary, #f1f5f9);
+  border-radius: var(--nx-radius-md, 8px);
+  padding: var(--nx-space-2, 8px) var(--nx-space-3, 12px);
+  margin-bottom: var(--nx-space-4, 16px);
+  line-height: 1.6;
+}
 .nux-forgot-done { text-align: center; padding: var(--nx-space-8) 0; }
 .nux-forgot-done-icon {
   width: 56px;

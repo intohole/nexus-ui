@@ -351,6 +351,7 @@
                 const val = item.value || item.text;
                 input.value = val;
                 send(val);
+                if (input.value === val) input.value = '';
             }
 
             watch(() => props.messages, (newVal) => {
