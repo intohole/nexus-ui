@@ -1,13 +1,15 @@
 (function () {
     'use strict';
 
-    const VERSION = '1.2.0';
+    const VERSION = '1.3.0';
 
     const FALLBACK_LIBS = {
         marked: 'https://registry.npmmirror.com/marked/9.1.6/files/lib/marked.umd.js',
         dompurify: 'https://songguokr.com/nexus-ui/v2.10.64/vendor/purify.min.js',
         highlight: 'https://songguokr.com/nexus-ui/v2.10.64/vendor/highlight.min.js',
-        highlightCss: 'https://songguokr.com/nexus-ui/v2.10.64/vendor/styles/atom-one-dark.min.css'
+        highlightCss: 'https://songguokr.com/nexus-ui/v2.10.64/vendor/styles/atom-one-dark.min.css',
+        katex: 'https://registry.npmmirror.com/katex/0.18.5/files/dist/katex.min.js',
+        katexCss: 'https://registry.npmmirror.com/katex/0.18.5/files/dist/katex.min.css'
     };
 
     const LIB_BASE = (function () {
@@ -24,7 +26,9 @@
         marked: LIB_BASE + 'marked.umd.js',
         dompurify: LIB_BASE + 'purify.min.js',
         highlight: LIB_BASE + 'highlight.min.js',
-        highlightCss: LIB_BASE + 'styles/atom-one-dark.min.css'
+        highlightCss: LIB_BASE + 'styles/atom-one-dark.min.css',
+        katex: LIB_BASE + 'katex/katex.min.js',
+        katexCss: LIB_BASE + 'katex/katex.min.css'
     } : FALLBACK_LIBS;
 
     const DEFAULT_ALLOWED_TAGS = [
@@ -71,6 +75,12 @@
             .some(l => (l.href || '').indexOf('highlight') > -1);
     }
 
+    function hasKaTeXCss() {
+        if (window.__NX_KATEX_CSS__) return true;
+        return Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+            .some(l => (l.href || '').indexOf('katex') > -1);
+    }
+
     async function injectLibs() {
         if (libsLoaded) return true;
         if (libsLoading) return libsLoading;
@@ -79,7 +89,9 @@
                 hasGlobal('marked') ? Promise.resolve() : loadScript(LIBS.marked),
                 hasGlobal('DOMPurify') ? Promise.resolve() : loadScript(LIBS.dompurify),
                 hasGlobal('hljs') ? Promise.resolve() : loadScript(LIBS.highlight),
-                hasHighlightCss() ? Promise.resolve() : loadStylesheet(LIBS.highlightCss).then(() => { window.__NX_HLJS_CSS__ = 1; })
+                hasGlobal('katex') ? Promise.resolve() : loadScript(LIBS.katex),
+                hasHighlightCss() ? Promise.resolve() : loadStylesheet(LIBS.highlightCss).then(() => { window.__NX_HLJS_CSS__ = 1; }),
+                hasKaTeXCss() ? Promise.resolve() : loadStylesheet(LIBS.katexCss)
             ]).catch(err => console.warn('[NexusMarkdown] lib load fail:', err.message));
             if (window.marked) {
                 marked.setOptions({ breaks: true, gfm: true });
@@ -97,16 +109,57 @@
             .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
+    function protectMath(text) {
+        const mathBlocks = [];
+        const codeBlocks = [];
+        const noCode = String(text).replace(/(```[\s\S]*?```|`[^`\n]*`)/g, function (m) {
+            codeBlocks.push(m);
+            return '\u0003NXMDCODE' + (codeBlocks.length - 1) + '\u0004';
+        });
+        const noMath = noCode.replace(/\$\$\s*([\s\S]+?)\s*\$\$|\$([^\s$][^$\n]{0,98}[^\s$])\$/g, function (m) {
+            mathBlocks.push(m);
+            return '\u0001NXMDMATH' + (mathBlocks.length - 1) + '\u0002';
+        });
+        return {
+            mathBlocks: mathBlocks,
+            text: noMath.replace(/\u0003NXMDCODE(\d+)\u0004/g, function (m, i) {
+                return codeBlocks[Number(i)];
+            })
+        };
+    }
+
+    function restoreMath(html, mathBlocks) {
+        if (!mathBlocks || !mathBlocks.length) return html;
+        return html.replace(/\u0001NXMDMATH(\d+)\u0002/g, function (m, i) {
+            const expr = mathBlocks[Number(i)];
+            if (expr === undefined) return '';
+            const display = expr.indexOf('$$') === 0 && expr.lastIndexOf('$$') === expr.length - 2;
+            const body = (display ? expr.slice(2, -2) : expr.slice(1, -1)).trim();
+            if (!body) return '';
+            if (window.katex) {
+                try {
+                    const hasCJK = /[\u4e00-\u9fff]/.test(body);
+                    const looksMath = /[\\^_{}]/.test(body);
+                    if (hasCJK && !looksMath) return escapeHtml(body);
+                    return katex.renderToString(body, { displayMode: display, throwOnError: false, strict: false });
+                } catch (e) {}
+            }
+            return escapeHtml(body);
+        });
+    }
+
     function render(text, options) {
         if (!text) return '';
         const opts = options || {};
         if (window.marked && window.DOMPurify) {
             try {
-                const raw = marked.parse(text);
-                return DOMPurify.sanitize(raw, {
+                const protected_ = protectMath(text);
+                const raw = marked.parse(protected_.text);
+                const sanitized = DOMPurify.sanitize(raw, {
                     ADD_ATTR: ['target', 'rel'],
                     ALLOWED_TAGS: opts.allowTags || DEFAULT_ALLOWED_TAGS
                 });
+                return restoreMath(sanitized, protected_.mathBlocks);
             } catch (e) {
                 console.warn('[NexusMarkdown] render fail:', e);
             }

@@ -20,7 +20,7 @@
       "cdn": "https://registry.npmmirror.com/axios/{version}/files/dist/axios.min.js"
     },
     "nexus-ui": {
-      "version": "2.10.66",
+      "version": "2.10.67",
       "pkg": null,
       "cdn": "https://songguokr.com/nexus-ui/v{version}/"
     },
@@ -108,6 +108,11 @@
       "version": "10.4.3",
       "pkg": "blockly",
       "cdn": "https://registry.npmmirror.com/blockly/{version}/files/"
+    },
+    "katex": {
+      "version": "0.18.5",
+      "pkg": "katex",
+      "cdn": "https://registry.npmmirror.com/katex/{version}/files/dist/"
     }
   },
   "ignore_paths": [
