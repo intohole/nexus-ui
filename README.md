@@ -126,6 +126,19 @@ window.showUnlock({ icon: '🏆', title: '首次点亮', desc: '完成第一个�
 </nux-empty-state>
 ```
 
+## 复制文本统一出口（copyText）
+
+统一「复制 + 反馈提示」，替代各项目在复制按钮上各自手写 `navigator.clipboard` + execCommand 回退 + “已复制” toast 的重复逻辑。底层复用 `NexusUtils.copyToClipboard`（内置 execCommand 回退）。
+
+```javascript
+await NexusUtils.copyText(text);                                    // 复制成功，无提示
+await NexusUtils.copyText(text, { success: '链接已复制' });          // 成功提示
+await NexusUtils.copyText(text, { success: '已复制', type: 'info' }); // 自定义提示类型
+await NexusUtils.copyText(text, { success: '已复制', fail: '复制失败' }); // 失败提示
+```
+
+返回 `Promise<boolean>`，成功为 `true`；失败时可自行处理或传 `fail` 文案提示。
+
 ## 项目结构
 
 ```

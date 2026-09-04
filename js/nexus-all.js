@@ -303,6 +303,17 @@
             return ok;
         },
 
+        copyText(text, opts = {}) {
+            return this.copyToClipboard(text).then((ok) => {
+                if (ok) {
+                    if (opts.success) this.showToast(opts.success, opts.type || 'success');
+                } else if (opts.fail) {
+                    this.showToast(opts.fail, 'error');
+                }
+                return ok;
+            });
+        },
+
         showToast(message, type = 'info', options = {}) {
             if (!window.ElementPlus || !ElementPlus.ElMessage) return;
             ElementPlus.ElMessage({ message, type, duration: options.duration || 3000, ...options });
