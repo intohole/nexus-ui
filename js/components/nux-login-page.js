@@ -334,17 +334,17 @@
                             <template v-if="!isSmsMode && !regSms">
                                 <div v-if="phoneLogin && mode === 'login'" class="nux-form-group">
                                     <label class="nux-form-label">手机号</label>
-                                    <input v-model="form.phone" type="tel" class="nux-input" placeholder="请输入手机号" autocomplete="tel" maxlength="11">
+                                    <input v-model="form.phone" type="tel" class="nux-input" placeholder="请输入手机号" autocomplete="tel" maxlength="11" required>
                                 </div>
                                 <div v-else class="nux-form-group">
                                     <label class="nux-form-label">用户名</label>
-                                    <input v-model="form.username" type="text" class="nux-input" placeholder="请输入用户名" autocomplete="username">
+                                    <input v-model="form.username" type="text" class="nux-input" placeholder="请输入用户名" autocomplete="username" required>
                                 </div>
                             </template>
                             <template v-else-if="isSmsMode">
                                 <div class="nux-form-group">
                                     <label class="nux-form-label">手机号</label>
-                                    <input v-model="form.phone" type="tel" class="nux-input" placeholder="请输入手机号" autocomplete="tel" maxlength="11">
+                                    <input v-model="form.phone" type="tel" class="nux-input" placeholder="请输入手机号" autocomplete="tel" maxlength="11" required>
                                 </div>
                                 <div class="nux-form-group">
                                     <label class="nux-form-label">验证码</label>
@@ -359,7 +359,7 @@
                             <template v-else-if="regSms">
                                 <div class="nux-form-group">
                                     <label class="nux-form-label">手机号</label>
-                                    <input v-model="form.phone" type="tel" class="nux-input" placeholder="请输入手机号" autocomplete="tel" maxlength="11">
+                                    <input v-model="form.phone" type="tel" class="nux-input" placeholder="请输入手机号" autocomplete="tel" maxlength="11" required>
                                 </div>
                                 <div class="nux-form-group">
                                     <label class="nux-form-label">验证码</label>
