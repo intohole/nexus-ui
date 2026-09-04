@@ -8,7 +8,7 @@
     var aboutUrl = (function () {
       var src = ((document.currentScript && document.currentScript.src) || '').split('?')[0];
       var m = src.match(/^(.*)\/js\/components\/nux-float-about\.js$/);
-      return (m ? m[1] : 'https://songguokr.com/nexus-ui/v2.10.61') + '/about.html';
+      return (m ? m[1] : 'https://songguokr.com/nexus-ui/v2.10.62') + '/about.html';
     })();
     var prefix = (window.PATH_PREFIX || '').replace(/\/$/, '');
     btn.href = aboutUrl + '?app=' + encodeURIComponent(prefix);

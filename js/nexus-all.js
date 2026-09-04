@@ -51,6 +51,16 @@
             return text.substring(0, maxLength) + '...';
         },
 
+        getGreeting() {
+            const hour = new Date().getHours();
+            if (hour < 6) return '夜深了';
+            if (hour < 9) return '早上好';
+            if (hour < 12) return '上午好';
+            if (hour < 14) return '中午好';
+            if (hour < 18) return '下午好';
+            return '晚上好';
+        },
+
         debounce(func, wait) {
             let timeout;
             return function(...args) {
@@ -1041,9 +1051,9 @@
 
     const FALLBACK_LIBS = {
         marked: 'https://registry.npmmirror.com/marked/9.1.6/files/lib/marked.umd.js',
-        dompurify: 'https://songguokr.com/nexus-ui/v2.10.61/vendor/purify.min.js',
-        highlight: 'https://songguokr.com/nexus-ui/v2.10.61/vendor/highlight.min.js',
-        highlightCss: 'https://songguokr.com/nexus-ui/v2.10.61/vendor/styles/atom-one-dark.min.css'
+        dompurify: 'https://songguokr.com/nexus-ui/v2.10.62/vendor/purify.min.js',
+        highlight: 'https://songguokr.com/nexus-ui/v2.10.62/vendor/highlight.min.js',
+        highlightCss: 'https://songguokr.com/nexus-ui/v2.10.62/vendor/styles/atom-one-dark.min.css'
     };
 
     const LIB_BASE = (function () {
