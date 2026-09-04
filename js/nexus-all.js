@@ -2245,3 +2245,142 @@ P.checkVipExpiry = function() {
 
 window.UserCenterAPI = { loaded: true };
 })();
+
+/* ===== nexus-structured.js ===== */
+(function () {
+    'use strict';
+
+    function extractBody(result) {
+        if (result && typeof result === 'object' && !Array.isArray(result)
+            && 'data' in result && result.data !== undefined && result.data !== null) {
+            return result.data;
+        }
+        return result;
+    }
+
+    function stringifyVal(v) {
+        if (v === null || v === undefined) return '';
+        if (typeof v === 'object') {
+            try { return JSON.stringify(v); } catch (e) { return String(v); }
+        }
+        return String(v);
+    }
+
+    function isEmpty(obj) {
+        return Object.keys(obj).length === 0;
+    }
+
+    function format(result) {
+        if (result === null || result === undefined) return '无';
+        if (typeof result === 'string') return result;
+        try {
+            return JSON.stringify(result, null, 2);
+        } catch (e) {
+            return String(result);
+        }
+    }
+
+    function isError(result) {
+        return result !== null && typeof result === 'object'
+            && !Array.isArray(result) && 'error' in result;
+    }
+
+    function buildTable(rows) {
+        if (!Array.isArray(rows) || rows.length === 0 || typeof rows[0] !== 'object') {
+            return { kind: 'raw', text: format(rows) };
+        }
+        const columns = Object.keys(rows[0]);
+        const data = rows.map(function (r) {
+            const row = {};
+            columns.forEach(function (c) {
+                row[c] = stringifyVal(r[c]);
+            });
+            return row;
+        });
+        return { kind: 'table', columns, rows: data, summary: null };
+    }
+
+    function build(result) {
+        if (result === null || result === undefined) {
+            return { kind: 'raw', text: '空' };
+        }
+        const body = extractBody(result);
+        if (Array.isArray(body)) {
+            return buildTable(body);
+        }
+        if (typeof body === 'object' && body !== null) {
+            const arrKey = Object.keys(body).find(function (k) {
+                return Array.isArray(body[k]) && body[k].length > 0;
+            });
+            if (arrKey) {
+                const summary = {};
+                Object.keys(body).forEach(function (k) {
+                    if (k !== arrKey) summary[k] = body[k];
+                });
+                const table = buildTable(body[arrKey]);
+                table.summary = isEmpty(summary) ? null : summary;
+                return table;
+            }
+            const pairs = Object.keys(body).map(function (k) {
+                return { k, v: stringifyVal(body[k]) };
+            });
+            return { kind: 'kv', pairs };
+        }
+        return { kind: 'raw', text: stringifyVal(body) };
+    }
+
+    window.NexusStructured = { build, format, isError };
+})();
+
+/* ===== components/nux-result-view.js ===== */
+(function () {
+    'use strict';
+
+    if (!document.getElementById('nrv-css')) {
+        const style = document.createElement('style');
+        style.id = 'nrv-css';
+        style.textContent = [
+            '.nrv { margin-top: 4px; }',
+            '.nrv-summary { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }',
+            '.nrv-summary-item { font-size: 11px; padding: 2px 8px; background: var(--route-bg, #eef3fb); color: var(--primary-dark, #2c5aa8); border-radius: 6px; }',
+            '.nrv-table-wrap { overflow-x: auto; max-height: 220px; overflow-y: auto; background: #fff; border-radius: 6px; }',
+            '.nrv-table { width: 100%; border-collapse: collapse; font-size: 11px; }',
+            '.nrv-table th, .nrv-table td { padding: 5px 8px; border: 1px solid var(--border, #e5e7eb); text-align: left; white-space: nowrap; max-width: 240px; overflow: hidden; text-overflow: ellipsis; }',
+            '.nrv-table th { background: var(--route-bg, #eef3fb); color: var(--primary-dark, #2c5aa8); font-weight: 600; position: sticky; top: 0; }',
+            '.nrv-table tr:nth-child(even) td { background: var(--bg, #f7f8fa); }',
+            '.nrv-kv-item { display: flex; gap: 8px; padding: 3px 0; font-size: 11px; border-bottom: 1px dashed var(--border, #e5e7eb); }',
+            '.nrv-kv-key { color: var(--text-muted, #8a93a6); flex: 0 0 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
+            '.nrv-kv-val { color: var(--text, #29303f); word-break: break-word; }'
+        ].join('\n');
+        document.head.appendChild(style);
+    }
+
+    const NuxResultView = {
+        name: 'NuxResultView',
+        props: { struct: { type: Object, default: null } },
+        template: `
+            <div v-if="struct" class="nrv">
+                <div v-if="struct.kind === 'table'" class="nrv-table-wrap">
+                    <div v-if="struct.summary" class="nrv-summary">
+                        <span v-for="(v, k) in struct.summary" :key="k" class="nrv-summary-item">{{ k }}: {{ v }}</span>
+                    </div>
+                    <table class="nrv-table">
+                        <thead><tr><th v-for="c in struct.columns" :key="c">{{ c }}</th></tr></thead>
+                        <tbody>
+                            <tr v-for="(r, ri) in struct.rows" :key="ri">
+                                <td v-for="c in struct.columns" :key="c">{{ r[c] }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div v-else-if="struct.kind === 'kv'" class="nrv-kv">
+                    <div v-for="p in struct.pairs" :key="p.k" class="nrv-kv-item">
+                        <span class="nrv-kv-key">{{ p.k }}</span><span class="nrv-kv-val">{{ p.v }}</span>
+                    </div>
+                </div>
+            </div>
+        `
+    };
+
+    window.NuxResultView = NuxResultView;
+})();

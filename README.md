@@ -139,6 +139,29 @@ await NexusUtils.copyText(text, { success: '已复制', fail: '复制失败' });
 
 返回 `Promise<boolean>`，成功为 `true`；失败时可自行处理或传 `fail` 文案提示。
 
+## 结构化结果渲染（NuxResultView + NexusStructured）
+
+统一「AI/接口返回结构化数据 → 表格/键值对展示」，自动探测 `{data:[...]}` 数组为表格（带 summary）、纯键值对象为 KV 列表、其余回退原始 `pre`。替代过去各项目在工具调用结果里手写同一套 table/kv 渲染模板。
+
+```html
+<script src="https://songguokr.com/nexus-ui/v2.10.66/js/nexus-structured.js"></script>
+<script src="https://songguokr.com/nexus-ui/v2.10.66/js/components/nux-result-view.js"></script>
+```
+
+```javascript
+app.component('nux-result-view', window.NuxResultView);
+const st = window.NexusStructured.build(result); // {kind:'table'|'kv'|'raw', ...}
+```
+
+```html
+<nux-result-view :struct="st"></nux-result-view>
+```
+
+工具函数：
+- `NexusStructured.build(result)` → 探测并归一为 `{kind, ...}`。
+- `NexusStructured.format(result)` → 格式化兜底文本（对应旧 `formatResult`）。
+- `NexusStructured.isError(result)` → 是否为错误对象（含 `error` 字段）。
+
 ## 项目结构
 
 ```
