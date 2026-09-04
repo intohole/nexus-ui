@@ -2384,3 +2384,179 @@ window.UserCenterAPI = { loaded: true };
 
     window.NuxResultView = NuxResultView;
 })();
+
+/* ===== core/nexus-user.js ===== */
+(function () {
+    'use strict';
+
+    const UC_PREFIX = "uc_";
+
+    function isUcFallback(value) {
+        return typeof value === "string" && value.indexOf(UC_PREFIX) === 0;
+    }
+
+    function getDisplayName(user) {
+        if (!user) return "";
+        const candidates = ["nickname", "full_name", "display_name", "name"];
+        for (let i = 0; i < candidates.length; i++) {
+            const v = user[candidates[i]];
+            if (v && String(v).trim() && !isUcFallback(v)) return String(v).trim();
+        }
+        const username = user.username;
+        if (username && String(username).trim() && !isUcFallback(username)) return String(username).trim();
+        return "";
+    }
+
+    function resolveName(user, fallback) {
+        const name = getDisplayName(user);
+        return name || fallback || "";
+    }
+
+    const NexusUser = { getDisplayName: getDisplayName, resolveName: resolveName, isUcFallback: isUcFallback };
+
+    if (window.NexusUtils && typeof window.NexusUtils === "object") {
+        window.NexusUtils.getDisplayName = getDisplayName;
+    }
+
+    window.NexusUser = NexusUser;
+})();
+
+/* ===== core/nexus-app.js ===== */
+(function () {
+    "use strict";
+
+    function _status(err) {
+        return err && (err.status !== undefined ? err.status : err.response && err.response.status) || null;
+    }
+
+    const _toastState = { last: 0 };
+    let _authHandler = null;
+
+    const NexusApp = {
+        get authHandler() { return _authHandler; },
+        setAuthHandler(fn) {
+            if (typeof fn === "function") _authHandler = fn;
+        },
+
+        handleError(err, instance, info) {
+            if (!err) return;
+            if (err && err.name === "NexusStreamError") {
+                this.handleErrorPayload(err.message, err.status || 401, err);
+                return;
+            }
+            const status = _status(err);
+            const message = (window.mapHttpError && typeof window.mapHttpError === "function")
+                ? window.mapHttpError(err)
+                : (err.message || "操作失败");
+            this.handleErrorPayload(message, status, err);
+        },
+
+        handleErrorPayload(message, status, err) {
+            if (status === 401) {
+                if (NexusApp.clearStaleAuth) NexusApp.clearStaleAuth();
+                if (_authHandler) { _authHandler(message); return; }
+                NexusApp.notify("登录已过期，请重新登录", "error");
+                return;
+            }
+            if (!message) return;
+            const now = Date.now();
+            if (now - _toastState.last < 1000) return;
+            _toastState.last = now;
+            NexusApp.notify(message, "error");
+            if (typeof console !== "undefined" && console.error) console.error("[NexusApp]", err || message);
+        },
+
+        notify(message, type) {
+            if (window.ElementPlus && ElementPlus.ElMessage) {
+                try { ElementPlus.ElMessage({ message: message, type: type || "error", duration: 3000 }); return; } catch (e) {}
+            }
+            if (window.NexusUtils && typeof NexusUtils.showToast === "function") {
+                NexusUtils.showToast(message, type || "error", { duration: 3000 });
+                return;
+            }
+        },
+
+        bindGlobal() {
+            if (NexusApp._bound) return;
+            NexusApp._bound = true;
+            window.addEventListener("unhandledrejection", function (evt) {
+                if (!evt || !evt.reason) return;
+                if (evt.reason && evt.reason.__nxHandled) return;
+                if (evt.reason && evt.reason.name === "AbortError") return;
+                const status = _status(evt.reason);
+                if (status === 401 || (evt.reason && evt.reason.name === "NexusStreamError")) {
+                    NexusApp.handleError(evt.reason);
+                    evt.reason.__nxHandled = true;
+                }
+            });
+        },
+
+        clearStaleAuth() {
+            const keys = ["uc_access_token", "uc_refresh_token", "uc_token_expires_at", "uc_token", "access_token", "refresh_token", "user"];
+            keys.forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
+        },
+
+        registerCoreComponents(app) {
+            if (!app || !app.component) return;
+            const map = {
+                "nux-ai-badge": window.NuxAiBadge,
+                "nux-error-state": window.NuxErrorState,
+                "nux-skeleton": window.NuxSkeleton,
+                "nux-empty-state": window.NuxEmptyState
+            };
+            Object.keys(map).forEach(function (name) {
+                const comp = map[name];
+                if (comp && !app.component(name)) {
+                    try { app.component(name, comp); } catch (e) {}
+                }
+            });
+        },
+
+        install(app) {
+            if (!app) return;
+            NexusApp.registerCoreComponents(app);
+            if (app.config) app.config.errorHandler = NexusApp.handleError;
+            NexusApp.bindGlobal();
+            NexusApp.initAppLoading();
+        },
+
+        initAppLoading() {
+            if (NexusApp._loadingInit) return;
+            NexusApp._loadingInit = true;
+            const overlay = document.getElementById("app-loading");
+            if (!overlay) return;
+            const hide = function () {
+                if (!overlay || !overlay.parentNode || overlay.dataset.nxHidden) return;
+                overlay.dataset.nxHidden = "1";
+                overlay.classList.add("nx-app-loading-done");
+                setTimeout(function () {
+                    if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+                }, 320);
+            };
+            if (typeof MutationObserver === "function") {
+                const el = document.getElementById("app");
+                if (el && el.getAttribute("data-v-app") !== null) { hide(); return; }
+                const root = el || document.body;
+                const mo = new MutationObserver(function (mutations, obs) {
+                    const cur = document.getElementById("app");
+                    if (cur && cur.getAttribute("data-v-app") !== null) { obs.disconnect(); hide(); }
+                });
+                mo.observe(root, { attributes: true, subtree: true, childList: true });
+                setTimeout(function () { mo.disconnect(); hide(); }, 6000);
+            } else {
+                setTimeout(hide, 6000);
+            }
+        }
+    };
+
+    window.NexusApp = NexusApp;
+
+    if (typeof window !== "undefined") {
+        NexusApp.bindGlobal();
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", function () { NexusApp.initAppLoading(); });
+        } else {
+            NexusApp.initAppLoading();
+        }
+    }
+})();

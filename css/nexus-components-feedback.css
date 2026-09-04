@@ -664,3 +664,31 @@
 @media (prefers-reduced-motion: reduce) {
   .nux-unlock-card::after, .nux-unlock-icon, .nux-unlock-burst { animation: none; }
 }
+
+/* ===== AI 生成标识 ===== */
+.nx-ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  vertical-align: middle;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  border-radius: var(--nx-radius-sm, 4px);
+  white-space: nowrap;
+}
+.nx-ai-badge-sm { font-size: 0.625rem; padding: 2px 6px; }
+.nx-ai-badge-md { font-size: 0.6875rem; padding: 3px 8px; }
+.nx-ai-badge[data-tone="accent"] {
+  background: var(--nx-accent-soft, rgba(79, 70, 229, 0.1));
+  color: var(--nx-accent, rgb(79, 70, 229));
+}
+.nx-ai-badge[data-tone="slate"] {
+  background: var(--nx-border, rgba(100, 116, 139, 0.14));
+  color: var(--nx-text-secondary, rgb(100, 116, 139));
+}
+.nx-ai-badge-icon { flex: 0 0 auto; }
+.nx-ai-badge-text { display: inline-block; }
+
+/* ===== 标准应用启动加载 ===== */
+.nx-app-loading-done { opacity: 0 !important; transition: opacity 0.3s ease; }

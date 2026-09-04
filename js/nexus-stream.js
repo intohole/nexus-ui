@@ -1,6 +1,14 @@
 (function () {
     const DEFAULT_IDLE_TIMEOUT = 90000;
 
+    class NexusStreamError extends Error {
+        constructor(message, status) {
+            super(message);
+            this.name = 'NexusStreamError';
+            this.status = status;
+        }
+    }
+
     function _parseEvent(line, defaultEvent) {
         const match = /^data:\s?/.exec(line);
         if (!match) return null;
@@ -48,7 +56,7 @@
                 if (resp.status === 401) {
                     if (clearAuth) clearAuth();
                     if (onUnauthorized) onUnauthorized();
-                    return;
+                    throw new NexusStreamError('登录已过期，请重新登录', 401);
                 }
                 const text = await resp.text().catch(() => '');
                 throw new Error('HTTP ' + resp.status + ' ' + text.slice(0, 200));
