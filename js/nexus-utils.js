@@ -7,11 +7,11 @@
             if (typeof value === 'number') return new Date(value);
             const s = String(value).trim();
             if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
-                const d = new Date(s + 'T00:00:00');
+                const d = new Date(s + 'T00:00:00+08:00');
                 return isNaN(d.getTime()) ? null : d;
             }
             let str = s.replace(' ', 'T');
-            if (!/(?:Z|[+-]\d{2}:?\d{2})$/i.test(str)) str += 'Z';
+            if (!/(?:Z|[+-]\d{2}:?\d{2})$/i.test(str)) str += '+08:00';
             const d = new Date(str);
             return isNaN(d.getTime()) ? null : d;
         },
