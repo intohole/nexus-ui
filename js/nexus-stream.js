@@ -85,6 +85,38 @@
         }
     }
 
+    async function read(response, options = {}) {
+        const { onChunk, onDone, onError } = options;
+        if (!response || !response.body) {
+            if (onDone) onDone();
+            return;
+        }
+        try {
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+                for (const line of lines) {
+                    const evt = _parseEvent(line, 'message');
+                    if (evt && onChunk) onChunk(evt.data, evt.event);
+                }
+            }
+            if (buffer) {
+                const evt = _parseEvent(buffer, 'message');
+                if (evt && onChunk) onChunk(evt.data, evt.event);
+            }
+            if (onDone) onDone();
+        } catch (e) {
+            if (onError) onError(e);
+            else throw e;
+        }
+    }
+
     async function consume(url, options = {}) {
         const { onEvent, onDone, onError } = options;
         try {
@@ -98,5 +130,5 @@
         }
     }
 
-    window.NexusStream = { post, consume };
+    window.NexusStream = { post, read, consume };
 })();

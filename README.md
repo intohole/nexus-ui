@@ -80,6 +80,52 @@ python3 nexus-ui/check_deps.py [工作区根目录]
 
 扫描全工作区，公共库版本与 deps.json 不一致即报错并返回非零退出码。
 
+## 流式对话客户端（nexus-stream.js）
+
+统一 POST+SSE 流式解析，替代各项目手写的 fetch+getReader 解析重复。
+
+```html
+<script src="https://songguokr.com/nexus-ui/v2.10.64/js/nexus-stream.js"></script>
+```
+
+```javascript
+// 生成器风格：按事件逐一消费
+for await (const evt of window.NexusStream.post('/chat', {
+    headers, body: JSON.stringify(message), signal, idleTimeout: 90000,
+    clearAuth: clearToken, onUnauthorized: globalLogin
+})) {
+    // evt = { event: <json.type 或 defaultEvent>, data: <已 JSON.parse>, raw }
+}
+
+// 回调风格：onEvent/onDone/onError
+window.NexusStream.consume(url, { signal, onEvent, onDone, onError });
+
+// 已 fetch 到的 response 解析（WisePath/challengePlanet/codeBlock 原 readSSE 收敛点）
+window.NexusStream.read(response, { onChunk, onDone, onError });
+```
+
+行为约定：HTTP 401 先清 token 再触发 onUnauthorized（统一登录流，不抛错）；空闲 idleTimeout 内无数据判定超时并抛 `连接超时`；外部 signal 中止抛原始 `AbortError`（用于区分"用户停止"）。
+
+## 成就解锁与空状态引导组件
+
+```html
+<script src="https://songguokr.com/nexus-ui/v2.10.64/js/components/nux-unlock.js"></script>
+<script src="https://songguokr.com/nexus-ui/v2.10.64/js/components/nux-empty-state.js"></script>
+```
+
+```javascript
+app.component('nux-unlock', window.NuxUnlock);
+app.component('nux-empty-state', window.NuxEmptyState);
+
+window.showUnlock({ icon: '🏆', title: '首次点亮', desc: '完成第一个里程碑' }); // 成就解锁庆祝卡片
+```
+
+```html
+<nux-empty-state icon="📚" title="还没有收藏的知识" description="..." hint="..."
+    primary-text="去逛逛" secondary-text="使用指南" @primary="fn" @secondary="fn">
+</nux-empty-state>
+```
+
 ## 项目结构
 
 ```
