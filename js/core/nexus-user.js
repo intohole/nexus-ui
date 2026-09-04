@@ -2,9 +2,11 @@
     'use strict';
 
     const UC_PREFIX = 'uc_';
+    const AUTO_PREFIX = 'user_';
 
     function isUcFallback(value) {
-        return typeof value === 'string' && value.indexOf(UC_PREFIX) === 0;
+        if (typeof value !== 'string') return false;
+        return value.indexOf(UC_PREFIX) === 0 || value.indexOf(AUTO_PREFIX) === 0;
     }
 
     function getDisplayName(user) {
