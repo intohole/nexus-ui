@@ -644,6 +644,18 @@
   font-size: var(--nx-text-sm);
 }
 .nux-uc-logout:hover { background: rgba(239, 68, 68, 0.08); }
+.nux-uc-divider { height: 1px; background: var(--nx-border, #e2e8f0); margin: var(--nx-space-4) 0; }
+.nux-uc-action {
+  width: 100%;
+  padding: var(--nx-space-3);
+  border: 1px solid var(--nx-primary, #3b82f6);
+  border-radius: var(--nx-radius-md);
+  background: none;
+  color: var(--nx-primary, #3b82f6);
+  cursor: pointer;
+  font-size: var(--nx-text-sm);
+}
+.nux-uc-action:hover { background: rgba(59, 130, 246, 0.08); }
 .nux-uc-tip { color: var(--nx-text-secondary); font-size: var(--nx-text-sm); margin-top: var(--nx-space-3); }
 .nux-uc-sessions-head {
   display: flex;

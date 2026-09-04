@@ -1051,9 +1051,9 @@
 
     const FALLBACK_LIBS = {
         marked: 'https://registry.npmmirror.com/marked/9.1.6/files/lib/marked.umd.js',
-        dompurify: 'https://songguokr.com/nexus-ui/v2.10.63/vendor/purify.min.js',
-        highlight: 'https://songguokr.com/nexus-ui/v2.10.63/vendor/highlight.min.js',
-        highlightCss: 'https://songguokr.com/nexus-ui/v2.10.63/vendor/styles/atom-one-dark.min.css'
+        dompurify: 'https://songguokr.com/nexus-ui/v2.10.64/vendor/purify.min.js',
+        highlight: 'https://songguokr.com/nexus-ui/v2.10.64/vendor/highlight.min.js',
+        highlightCss: 'https://songguokr.com/nexus-ui/v2.10.64/vendor/styles/atom-one-dark.min.css'
     };
 
     const LIB_BASE = (function () {

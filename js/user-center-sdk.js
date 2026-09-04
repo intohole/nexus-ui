@@ -143,7 +143,7 @@ class UserCenterSDK {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), this.timeout);
         const options = { method, headers, signal: controller.signal };
-        if (data && (method === 'POST' || method === 'PUT')) {
+        if (data && (method === 'POST' || method === 'PUT' || method === 'DELETE')) {
             options.body = JSON.stringify(data);
         }
         try {
@@ -289,6 +289,12 @@ class UserCenterSDK {
     async getSessions() { return this._request('GET', '/api/auth/sessions'); }
     async revokeSession(sessionId) { return this._request('DELETE', `/api/auth/sessions/${sessionId}`); }
     async revokeAllSessions() { return this._request('DELETE', '/api/auth/sessions'); }
+
+    async getAccountExport() { return this._request('GET', '/api/auth/account/export'); }
+
+    async deleteAccount({ password }) {
+        return this._request('DELETE', '/api/auth/account', { password }, true);
+    }
 
     async sendBindCode({ email = null, phone = null }) {
         const data = {};

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>nexus-ui 组件验证</title>
+<link rel="stylesheet" href="/nexus-ui/vendor/vue_css_placeholder">
+</head>
+<body style="font-family:-apple-system,'PingFang SC',sans-serif;">
+<style>
+  :root { --app-accent:#6366f1; --app-accent-rgb:99,102,241; --app-accent-hover:#4f46e5; --app-bg:#f8fafc; }
+  .page { max-width: 640px; margin: 24px auto; padding: 0 16px; }
+  .card { background:#fff; border:1px solid #e5e9f0; border-radius:16px; padding:24px; margin-bottom:24px; }
+  .card h3 { margin:0 0 16px; font-size:15px; color:#1e293b; }
+  .row { display:flex; gap:12px; flex-wrap:wrap; }
+</style>
+<link rel="stylesheet" href="http://localhost:8765/nexus-ui/css/nexus-tokens.css">
+<link rel="stylesheet" href="http://localhost:8765/nexus-ui/css/nexus-components-controls.css">
+<link rel="stylesheet" href="http://localhost:8765/nexus-ui/css/nexus-components-feedback.css">
+<script src="http://localhost:8765/nexus-ui/vendor/vue.global.prod.js"></script>
+<script src="http://localhost:8765/nexus-ui/js/components/nux-unlock.js"></script>
+<script src="http://localhost:8765/nexus-ui/js/components/nux-empty-state.js"></script>
+</head>
+<body>
+<div id="app" v-cloak class="page">
+  <div class="card">
+    <h3>① 成就解锁卡片（showUnlock）</h3>
+    <div class="row">
+      <button class="nux-btn nux-btn--primary" @click="unlock('🏆','首次点亮','完成第一个里程碑，继续保持')">解锁成就</button>
+      <button class="nux-btn nux-btn--primary" @click="unlock('🔥','坚持一周','连续打卡 7 天达成')">连续解锁</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3>② 智能空状态引导（nux-empty-state）</h3>
+    <nux-empty-state
+      icon="📚"
+      title="还没有收藏的知识"
+      description="把喜欢的内容收集到这里，随时回看温习"
+      hint="提示：在任意内容页点击「收藏」即可加入"
+      primary-text="去逛逛"
+      secondary-text="查看使用指南"
+      @primary="toast('primary')" @secondary="toast('secondary')">
+    </nux-empty-state>
+  </div>
+  <div class="card">
+    <h3>③ 加载中空状态引导</h3>
+    <nux-empty-state icon="⏳" title="正在为你整理" description="稍等片刻，马上就好"
+      :primary-loading="true" primary-text="重试">
+    </nux-empty-state>
+  </div>
+  <nux-unlock></nux-unlock>
+</div>
+<script>
+  const { createApp } = Vue;
+  const app = createApp({
+    setup() {
+      const unlock = (icon, title, desc) => window.showUnlock({ icon, title, desc });
+      const toast = (t) => { const el = document.createElement('div'); el.textContent = 'emitted: ' + t; el.style.cssText='position:fixed;bottom:20px;right:20px;background:#6366f1;color:#fff;padding:8px 14px;border-radius:8px;z-index:9999;'; document.body.appendChild(el); setTimeout(()=>el.remove(),1200); };
+      return { unlock, toast };
+    }
+  });
+  app.component('nux-unlock', window.NuxUnlock);
+  app.component('nux-empty-state', window.NuxEmptyState);
+  app.mount('#app');
+</script>
+</body>
+</html>

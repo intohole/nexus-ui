@@ -161,6 +161,11 @@
                 });
             }
 
+            function gotoDatacenter() {
+                drawerOpen.value = false;
+                window.location.href = '/static/user-center.html';
+            }
+
             function startBindCountdown() {
                 bindCountdown.value = 60;
                 if (bindTimer) clearInterval(bindTimer);
@@ -257,7 +262,7 @@
                 oldPassword, newPassword, confirmPassword, passwordError, submitting, userError,
                 showOldPwd, showNewPwd, showConfirmPwd, confirmMismatch,
                 bindError, bindTarget, bindCode, bindType, bindSending, bindSubmitting, bindCountdown,
-                toggleOpen, loadSessions, changePassword, revokeSession, revokeAll, doLogout,
+                toggleOpen, loadSessions, changePassword, revokeSession, revokeAll, doLogout, gotoDatacenter,
                 sendBindCode, submitBind, switchBindType, boundContact,
                 avatarName, avatarInitial, deviceLabel, timeLabel
             };
@@ -295,6 +300,8 @@
                                 <div class="nux-uc-info-row"><span>手机号</span><b>{{ (user && user.phone) || '—' }}</b></div>
                             </div>
                             <button type="button" class="nux-uc-logout" @click="doLogout">退出登录</button>
+                            <div class="nux-uc-divider"></div>
+                            <button type="button" class="nux-uc-action" @click="gotoDatacenter">我的数据中心</button>
                         </div>
                         <div v-if="tab === 'password'" class="nux-uc-pane">
                             <div v-if="passwordError" class="nux-login-error">{{ passwordError }}</div>
