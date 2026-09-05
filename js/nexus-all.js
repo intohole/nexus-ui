@@ -2541,6 +2541,126 @@ window.UserCenterAPI = { loaded: true };
     window.NexusErrorText = NexusErrorText;
 })();
 
+/* ===== components/nux-skeleton.js ===== */
+(function() {
+    const NuxSkeleton = {
+        name: 'NuxSkeleton',
+        props: {
+            loading: { type: Boolean, default: true },
+            rows: { type: Number, default: 3 },
+            avatar: { type: Boolean, default: false },
+            variant: { type: String, default: 'list' },
+            cards: { type: Number, default: 4 },
+            ariaLabel: { type: String, default: '' }
+        },
+        template: `
+            <div v-if="loading" class="nux-skeleton" :class="'is-'+variant" role="status" aria-busy="true" :aria-label="ariaLabel || '加载中'">
+                <div v-if="variant==='grid'" class="nux-skeleton-grid" aria-hidden="true">
+                    <div v-for="i in cards" :key="i" class="nux-skeleton-card">
+                        <div class="nux-skeleton-card-cover"></div>
+                        <div class="nux-skeleton-card-body">
+                            <div class="nux-skeleton-card-line" style="width:100%"></div>
+                            <div class="nux-skeleton-card-line" style="width:70%"></div>
+                        </div>
+                    </div>
+                </div>
+                <template v-else>
+                    <div v-if="avatar" class="nux-skeleton-avatar" aria-hidden="true"></div>
+                    <div class="nux-skeleton-content" aria-hidden="true">
+                        <div v-for="i in rows" :key="i" class="nux-skeleton-row" :style="{ width: i === rows ? '60%' : '100%' }"></div>
+                    </div>
+                </template>
+            </div>
+            <slot v-else></slot>
+        `
+    };
+    window.NuxSkeleton = NuxSkeleton;
+})();
+
+/* ===== components/nux-empty.js ===== */
+(function() {
+    const NuxEmpty = {
+        name: 'NuxEmpty',
+        props: {
+            icon: { type: String, default: '📭' },
+            title: { type: String, default: '暂无数据' },
+            description: { type: String, default: '' }
+        },
+        template: `
+            <div class="nx-empty" role="status" aria-live="polite">
+                <div class="nx-empty-icon" aria-hidden="true">{{ icon }}</div>
+                <p class="nx-empty-text" style="font-size: var(--nx-text-base); font-weight: 500; color: var(--nx-text-heading); margin-bottom: var(--nx-space-2);">{{ title }}</p>
+                <p v-if="description" class="nx-empty-text">{{ description }}</p>
+            </div>
+        `
+    };
+
+    window.NuxEmpty = NuxEmpty;
+})();
+
+/* ===== components/nux-empty-state.js ===== */
+(function () {
+    const NuxEmptyState = {
+        name: 'NuxEmptyState',
+        props: {
+            icon: { type: String, default: '💡' },
+            title: { type: String, default: '这里还空着' },
+            description: { type: String, default: '' },
+            hint: { type: String, default: '' },
+            primaryText: { type: String, default: '' },
+            secondaryText: { type: String, default: '' },
+            primaryLoading: { type: Boolean, default: false },
+        },
+        emits: ['primary', 'secondary'],
+        template: `
+            <div class="nx-empty-state" role="status" aria-live="polite">
+                <i v-if="icon" aria-hidden="true">{{ icon }}</i>
+                <h3>{{ title }}</h3>
+                <p v-if="description">{{ description }}</p>
+                <div v-if="hint" class="nx-empty-hint">{{ hint }}</div>
+                <div v-if="primaryText || secondaryText" class="nx-empty-actions">
+                    <button v-if="primaryText" class="nux-btn nux-btn--primary"
+                            :disabled="primaryLoading" @click="$emit('primary')">
+                        <span v-if="primaryLoading" class="nx-spinner" style="width:14px;height:14px;margin-right:6px;"></span>
+                        {{ primaryLoading ? '…' : primaryText }}
+                    </button>
+                    <button v-if="secondaryText" class="nux-btn nux-btn--ghost" @click="$emit('secondary')">
+                        {{ secondaryText }}
+                    </button>
+                </div>
+            </div>
+        `
+    };
+
+    window.NuxEmptyState = NuxEmptyState;
+})();
+
+/* ===== components/nux-error-state.js ===== */
+(function() {
+    const NuxErrorState = {
+        name: 'NuxErrorState',
+        props: {
+            icon: { type: String, default: '⚠️' },
+            title: { type: String, default: '加载失败' },
+            message: { type: String, default: '' },
+            code: { type: String, default: '' },
+            retryText: { type: String, default: '重试' }
+        },
+        emits: ['retry'],
+        template: `
+            <div class="nx-empty nux-error-state" role="alert" aria-live="assertive">
+                <div class="nx-empty-icon">{{ icon }}</div>
+                <p class="nx-empty-text" style="font-size: var(--nx-text-base); font-weight: 500; color: var(--nx-text-heading);">{{ title }}</p>
+                <p v-if="message" class="nx-empty-text">{{ message }}</p>
+                <button v-if="retryText" class="nx-btn nx-btn-primary nx-btn-sm" style="margin-top: var(--nx-space-4);" @click="$emit('retry')">{{ retryText }}</button>
+                <p v-if="code" class="nux-error-code">{{ code }}</p>
+            </div>
+        `
+    };
+
+    window.NuxErrorState = NuxErrorState;
+})();
+
 /* ===== core/nexus-app.js ===== */
 (function () {
     "use strict";

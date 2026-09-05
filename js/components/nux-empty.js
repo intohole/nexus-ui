@@ -7,8 +7,8 @@
             description: { type: String, default: '' }
         },
         template: `
-            <div class="nx-empty">
-                <div class="nx-empty-icon">{{ icon }}</div>
+            <div class="nx-empty" role="status" aria-live="polite">
+                <div class="nx-empty-icon" aria-hidden="true">{{ icon }}</div>
                 <p class="nx-empty-text" style="font-size: var(--nx-text-base); font-weight: 500; color: var(--nx-text-heading); margin-bottom: var(--nx-space-2);">{{ title }}</p>
                 <p v-if="description" class="nx-empty-text">{{ description }}</p>
             </div>

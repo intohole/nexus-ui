@@ -12,8 +12,8 @@
         },
         emits: ['primary', 'secondary'],
         template: `
-            <div class="nx-empty-state" role="status">
-                <i v-if="icon">{{ icon }}</i>
+            <div class="nx-empty-state" role="status" aria-live="polite">
+                <i v-if="icon" aria-hidden="true">{{ icon }}</i>
                 <h3>{{ title }}</h3>
                 <p v-if="description">{{ description }}</p>
                 <div v-if="hint" class="nx-empty-hint">{{ hint }}</div>
