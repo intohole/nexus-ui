@@ -12,7 +12,7 @@
         },
         emits: ['primary', 'secondary'],
         template: `
-            <div class="nx-empty-state">
+            <div class="nx-empty-state" role="status">
                 <i v-if="icon">{{ icon }}</i>
                 <h3>{{ title }}</h3>
                 <p v-if="description">{{ description }}</p>

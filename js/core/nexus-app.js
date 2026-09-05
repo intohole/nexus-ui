@@ -22,6 +22,11 @@
                 return;
             }
             const status = _status(err);
+            if (window.NexusErrorText && typeof window.NexusErrorText.fromError === 'function') {
+                const mapped = window.NexusErrorText.fromError(err, err.message || '操作失败');
+                this.handleErrorPayload(mapped.message || mapped.title, status, err);
+                return;
+            }
             const message = (window.mapHttpError && typeof window.mapHttpError === 'function')
                 ? window.mapHttpError(err)
                 : (err.message || '操作失败');
@@ -36,10 +41,14 @@
                 return;
             }
             if (!message) return;
+            const safe = (window.NexusErrorText && typeof window.NexusErrorText.safeMessage === 'function')
+                ? window.NexusErrorText.safeMessage(message)
+                : message;
+            if (!safe) return;
             const now = Date.now();
             if (now - _toastState.last < 1000) return;
             _toastState.last = now;
-            NexusApp.notify(message, 'error');
+            NexusApp.notify(safe, 'error');
             if (typeof console !== 'undefined' && console.error) console.error('[NexusApp]', err || message);
         },
 
