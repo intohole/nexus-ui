@@ -699,3 +699,120 @@
 
 /* ===== 标准应用启动加载 ===== */
 .nx-app-loading-done { opacity: 0 !important; transition: opacity 0.3s ease; }
+
+/* ===== AI 流式指示器 ===== */
+.nux-ai-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: var(--nx-radius-md, 12px);
+  color: var(--nx-text-secondary, rgb(100, 116, 139));
+  font-size: 0.875rem;
+  background: var(--nx-bg-muted, rgb(241, 245, 249));
+}
+.nux-ai-indicator-dots {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 14px;
+}
+.nux-ai-indicator-dots i {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--nx-primary, rgb(14, 165, 233));
+  animation: nuxAiBounce 1.2s infinite ease-in-out;
+}
+.nux-ai-indicator-dots i:nth-child(2) { animation-delay: 0.15s; }
+.nux-ai-indicator-dots i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes nuxAiBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.45; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+.nux-ai-indicator-text { white-space: nowrap; }
+
+/* ===== 导出按钮 ===== */
+.nux-export-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: var(--nx-radius-sm, 8px);
+  border: 1px solid var(--nx-border, rgba(100, 116, 139, 0.25));
+  background: var(--nx-primary, rgb(14, 165, 233));
+  color: var(--nx-text-on-accent, #fff);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.nux-export-button:hover:not(:disabled) { opacity: 0.9; }
+.nux-export-button:disabled { opacity: 0.6; cursor: not-allowed; }
+.nux-export-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: nuxExportSpin 0.8s linear infinite;
+}
+@keyframes nuxExportSpin { to { transform: rotate(360deg); } }
+
+/* ===== 计划进度聚合卡 ===== */
+.nux-plan-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  border-radius: var(--nx-radius-lg, 16px);
+  background: var(--nx-bg-elevated, #fff);
+  border: 1px solid var(--nx-border, rgba(100, 116, 139, 0.18));
+}
+.nux-plan-progress-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.nux-plan-progress-titles { display: flex; flex-direction: column; gap: 2px; }
+.nux-plan-progress-title { font-size: 1rem; font-weight: 600; color: var(--nx-text-heading, rgb(15, 23, 42)); }
+.nux-plan-progress-subtitle { font-size: 0.8125rem; color: var(--nx-text-secondary, rgb(100, 116, 139)); }
+.nux-plan-progress-day {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--nx-text-accent, rgb(14, 165, 233));
+  white-space: nowrap;
+}
+.nux-plan-progress-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--nx-bg-hover, rgb(241, 245, 249));
+  overflow: hidden;
+}
+.nux-plan-progress-bar-val {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--nx-primary, rgb(14, 165, 233)), var(--nx-accent, rgb(99, 102, 241)));
+  transition: width 0.4s ease;
+}
+.nux-plan-progress-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.nux-plan-progress-pct { font-size: 0.875rem; font-weight: 600; color: var(--nx-text-heading, rgb(15, 23, 42)); }
+.nux-plan-progress-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.nux-plan-progress-stat { display: flex; align-items: baseline; gap: 5px; }
+.nux-plan-progress-stat-k { font-size: 0.75rem; color: var(--nx-text-secondary, rgb(100, 116, 139)); }
+.nux-plan-progress-stat-v { font-size: 0.8125rem; font-weight: 600; color: var(--nx-text-body, rgb(51, 65, 85)); }

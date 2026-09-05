@@ -98,7 +98,10 @@
                 'nux-ai-badge': window.NuxAiBadge,
                 'nux-error-state': window.NuxErrorState,
                 'nux-skeleton': window.NuxSkeleton,
-                'nux-empty-state': window.NuxEmptyState
+                'nux-empty-state': window.NuxEmptyState,
+                'nux-ai-indicator': window.NuxAiIndicator,
+                'nux-export-button': window.NuxExportButton,
+                'nux-plan-progress': window.NuxPlanProgress
             };
             Object.keys(map).forEach(function (name) {
                 const comp = map[name];

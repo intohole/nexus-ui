@@ -122,7 +122,7 @@ def main() -> int:
                 continue
             rel = os.path.relpath(path, root)
             content = open(path, encoding="utf-8").read()
-            if not any(h in content for h in CDN_HOSTS):
+            if not any(h in content for h in CDN_HOSTS) and "nexus-ui/v" not in content:
                 continue
             problems, file_warns = check_file_content(content, deps, pkg2dep, nx_version)
             total += 1

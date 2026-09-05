@@ -2661,6 +2661,173 @@ window.UserCenterAPI = { loaded: true };
     window.NuxErrorState = NuxErrorState;
 })();
 
+/* ===== components/nux-ai-indicator.js ===== */
+(function() {
+    if (window.NuxAiIndicator) return;
+    if (!window.Vue) return;
+
+    const NuxAiIndicator = {
+        name: 'NuxAiIndicator',
+        props: {
+            state: { type: String, default: 'awaiting' },
+            label: { type: String, default: '' }
+        },
+        computed: {
+            text() {
+                if (this.state === 'tool') return '已调度能力，正在为你处理…';
+                if (this.state === 'routing') return '正在寻找最合适的能力…';
+                if (this.state === 'streaming') return '正在生成回答…';
+                return this.label || '正在理解你的需求…';
+            },
+            isTyping() {
+                return !this.state || this.state === 'awaiting' || this.state === 'streaming';
+            }
+        },
+        template: `
+            <div class="nux-ai-indicator" role="status" :aria-live="'polite'">
+                <span class="nux-ai-indicator-dots" aria-hidden="true">
+                    <i></i><i></i><i></i>
+                </span>
+                <span class="nux-ai-indicator-text">{{ text }}</span>
+            </div>
+        `
+    };
+
+    if (window.Vue && Vue.component) {
+        try { Vue.component('nux-ai-indicator', NuxAiIndicator); } catch (e) {}
+    }
+
+    window.NuxAiIndicator = NuxAiIndicator;
+})();
+
+/* ===== components/nux-export-button.js ===== */
+(function() {
+    if (window.NuxExportButton) return;
+    if (!window.Vue) return;
+
+    const NuxExportButton = {
+        name: 'NuxExportButton',
+        props: {
+            label: { type: String, default: '导出' },
+            loadingLabel: { type: String, default: '导出中…' },
+            variant: { type: String, default: 'primary' },
+            successMsg: { type: String, default: '导出成功' },
+            handler: { type: Function, default: null }
+        },
+        data() {
+            return { busy: false };
+        },
+        methods: {
+            notify(message, type) {
+                if (window.NexusApp && typeof window.NexusApp.notify === 'function') {
+                    window.NexusApp.notify(message, type || 'success');
+                } else if (window.NexusUtils && typeof window.NexusUtils.showToast === 'function') {
+                    window.NexusUtils.showToast(message, type || 'success');
+                } else if (window.ElementPlus && ElementPlus.ElMessage) {
+                    try { ElementPlus.ElMessage({ message, type: type || 'success' }); } catch (e) {}
+                }
+            },
+            triggerDownload(url, filename) {
+                if (!url) return;
+                if (filename) {
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                } else {
+                    window.open(url, '_blank');
+                }
+            },
+            async run() {
+                if (this.busy) return;
+                this.busy = true;
+                try {
+                    if (typeof this.handler === 'function') {
+                        const result = await this.handler();
+                        const r = result || {};
+                        if (r.downloadUrl) this.triggerDownload(r.downloadUrl, r.filename);
+                        if (r.toast !== false) this.notify(r.message || this.successMsg, r.type || 'success');
+                        return result;
+                    }
+                    this.notify(this.successMsg, 'success');
+                } catch (e) {
+                    const msg = (e && (e.message || e.detail)) || '导出失败，请重试';
+                    this.notify(msg, 'error');
+                } finally {
+                    this.busy = false;
+                }
+            }
+        },
+        template: `
+            <button type="button" class="nux-export-button" :disabled="busy" @click="run">
+                <i v-if="busy" class="nux-export-spinner" aria-hidden="true"></i>
+                <span>{{ busy ? loadingLabel : label }}</span>
+            </button>
+        `
+    };
+
+    if (window.Vue && Vue.component) {
+        try { Vue.component('nux-export-button', NuxExportButton); } catch (e) {}
+    }
+
+    window.NuxExportButton = NuxExportButton;
+})();
+
+/* ===== components/nux-plan-progress.js ===== */
+(function() {
+    if (window.NuxPlanProgress) return;
+    if (!window.Vue) return;
+
+    const NuxPlanProgress = {
+        name: 'NuxPlanProgress',
+        props: {
+            stats: { type: Object, default: null },
+            title: { type: String, default: '' },
+            subtitle: { type: String, default: '' },
+            showPercent: { type: Boolean, default: true }
+        },
+        computed: {
+            s() {
+                return this.stats || (window.NexusUseProgress ? window.NexusUseProgress.computeStats({}) : { percent: 0, currentDayLabel: '', statLines: [] });
+            },
+            percentText() {
+                return Math.round(this.s.percent) + '%';
+            }
+        },
+        template: `
+            <div class="nux-plan-progress" role="region" aria-label="进度总览">
+                <div class="nux-plan-progress-head" v-if="title || subtitle">
+                    <div class="nux-plan-progress-titles">
+                        <span v-if="title" class="nux-plan-progress-title">{{ title }}</span>
+                        <span v-if="subtitle" class="nux-plan-progress-subtitle">{{ subtitle }}</span>
+                    </div>
+                    <span v-if="s.currentDayLabel" class="nux-plan-progress-day">{{ s.currentDayLabel }}</span>
+                </div>
+                <div class="nux-plan-progress-bar" role="progressbar" :aria-valuenow="Math.round(s.percent)" aria-valuemin="0" aria-valuemax="100">
+                    <div class="nux-plan-progress-bar-val" :style="{ width: s.percent + '%' }"></div>
+                </div>
+                <div class="nux-plan-progress-foot">
+                    <span v-if="showPercent" class="nux-plan-progress-pct">{{ percentText }}</span>
+                    <ul v-if="s.statLines && s.statLines.length" class="nux-plan-progress-stats">
+                        <li v-for="line in s.statLines" :key="line.k" class="nux-plan-progress-stat">
+                            <span class="nux-plan-progress-stat-k">{{ line.k }}</span>
+                            <span class="nux-plan-progress-stat-v">{{ line.v }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        `
+    };
+
+    if (window.Vue && Vue.component) {
+        try { Vue.component('nux-plan-progress', NuxPlanProgress); } catch (e) {}
+    }
+
+    window.NuxPlanProgress = NuxPlanProgress;
+})();
+
 /* ===== core/nexus-app.js ===== */
 (function () {
     "use strict";
@@ -2751,7 +2918,10 @@ window.UserCenterAPI = { loaded: true };
                 "nux-ai-badge": window.NuxAiBadge,
                 "nux-error-state": window.NuxErrorState,
                 "nux-skeleton": window.NuxSkeleton,
-                "nux-empty-state": window.NuxEmptyState
+                "nux-empty-state": window.NuxEmptyState,
+                "nux-ai-indicator": window.NuxAiIndicator,
+                "nux-export-button": window.NuxExportButton,
+                "nux-plan-progress": window.NuxPlanProgress
             };
             Object.keys(map).forEach(function (name) {
                 const comp = map[name];
