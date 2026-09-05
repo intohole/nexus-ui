@@ -63,7 +63,6 @@
     ].join('');
 
     var PALETTE = ['#38bdf8', '#818cf8', '#34d399', '#fbbf24', '#f472b6', '#60a5fa', '#a78bfa', '#22d3ee'];
-    var RECENT_KEY = 'nxs-app-switcher-recents';
 
     var _cfg = readConfig();
     var _apps = [];
@@ -126,17 +125,27 @@
             .catch(function() { return []; });
     }
 
-    function recents() {
+    function recentNames() {
+        if (window.NexusUseRecent) return window.NexusUseRecent.recents(8);
         var raw = '';
-        try { raw = localStorage.getItem(RECENT_KEY) || ''; } catch (e) {}
+        try { raw = localStorage.getItem('nxs-app-switcher-recents') || ''; } catch (e) {}
         if (!raw) return [];
-        try { var arr = JSON.parse(raw); return Array.isArray(arr) ? arr : []; } catch (e) { return []; }
+        try { var arr = JSON.parse(raw); return Array.isArray(arr) ? arr.map(function (r) { return r.name; }) : []; } catch (e) { return []; }
     }
 
     function touch(name) {
-        var list = recents().filter(function(r) { return r.name !== name; });
+        if (window.NexusUseRecent) { window.NexusUseRecent.recordVisit(name); return; }
+        var list = recentRaw();
+        list = list.filter(function (r) { return r.name !== name; });
         list.unshift({ name: name, at: Date.now() });
-        try { localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, 8))); } catch (e) {}
+        try { localStorage.setItem('nxs-app-switcher-recents', JSON.stringify(list.slice(0, 8))); } catch (e) {}
+    }
+
+    function recentRaw() {
+        var raw = '';
+        try { raw = localStorage.getItem('nxs-app-switcher-recents') || ''; } catch (e) {}
+        if (!raw) return [];
+        try { var arr = JSON.parse(raw); return Array.isArray(arr) ? arr : []; } catch (e) { return []; }
     }
 
     function isCurrent(a) {
@@ -160,8 +169,8 @@
             cfg() { return _cfg; },
             brandFirst() { return (_cfg.brandName || '松').charAt(0); },
             groups() {
-                var recentsArr = recents().map(function(r) {
-                    for (var i = 0; i < this.apps.length; i++) if (this.apps[i].name === r.name) return this.apps[i];
+                var recentsArr = recentNames().map(function (name) {
+                    for (var i = 0; i < this.apps.length; i++) if (this.apps[i].name === name) return this.apps[i];
                 }.bind(this)).filter(Boolean);
                 var map = {};
                 this.apps.forEach(function(a) {
