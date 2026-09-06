@@ -77,7 +77,8 @@
             showEcosystem: { type: Boolean, default: true },
             version: { type: String, default: '' },
             backUrl: { type: String, default: '/' },
-            contactText: { type: String, default: '反馈建议' }
+            contactText: { type: String, default: '反馈建议' },
+            contactEmail: { type: String, default: 'songguokr@126.com' }
         },
         setup(props) {
             const ecoApps = Vue.ref(props.ecosystem);
@@ -170,7 +171,7 @@
                 <div class="nux-about-footer">
                     <p v-if="version">版本 {{ version }}</p>
                     <p>用心打磨，持续迭代</p>
-                    <a href="mailto:feedback@example.com" class="nux-about-contact"><i class="fas fa-comment-dots"></i> {{ contactText }}</a>
+                    <a :href="'mailto:' + contactEmail" class="nux-about-contact"><i class="fas fa-comment-dots"></i> {{ contactText }}</a>
                 </div>
             </div>
         `
