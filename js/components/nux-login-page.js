@@ -10,6 +10,7 @@
         props: {
             appName: { type: String, default: '' },
             appIcon: { type: String, default: '' },
+            appLogo: { type: String, default: '' },
             slogan: { type: String, default: '' },
             description: { type: String, default: '' },
             features: { type: Array, default: () => [] },
@@ -37,7 +38,9 @@
             error: { type: String, default: '' },
             useCustomRegister: { type: Boolean, default: true },
             defaultMode: { type: String, default: 'login' },
-            variant: { type: String, default: 'split' }
+            variant: { type: String, default: 'split' },
+            ageGate: { type: Boolean, default: false },
+            minorAge: { type: Number, default: 14 }
         },
         emits: ['login', 'register', 'registered', 'sms-login', 'send-sms', 'third-party-login'],
         setup(props, { emit }) {
@@ -48,6 +51,8 @@
             const showConfirmPassword = Vue.ref(false);
             const rememberMe = Vue.ref(false);
             const agreed = Vue.ref(false);
+            const age = Vue.ref(10);
+            const guardianAgreed = Vue.ref(false);
 
             function markAgreement() {
                 if (!props.showTerms || !agreed.value || !props.appName) return;
@@ -222,6 +227,10 @@
                     localError.value = '两次密码不一致';
                     return;
                 }
+                if (props.ageGate && props.minorAge && age.value < props.minorAge && !guardianAgreed.value) {
+                    localError.value = '未满' + props.minorAge + '周岁使用需获得监护人授权';
+                    return;
+                }
                 if (props.showTerms && !agreed.value) {
                     localError.value = '请先同意用户协议和隐私政策';
                     return;
@@ -306,7 +315,7 @@
             }
 
             return {
-                mode, loginType, form, smsCode, smsCountdown, agreed, rememberMe,
+                mode, loginType, form, smsCode, smsCountdown, agreed, age, guardianAgreed, rememberMe,
                 showPassword, showConfirmPassword, combinedError, isSmsMode, regSms, effectiveSdk,
                 effectiveTermsUrl, effectivePrivacyUrl,
                 forgotOpen, forgotLoading, forgotComp,
@@ -415,6 +424,17 @@
                                         <button type="button" class="nux-password-toggle" :aria-label="showConfirmPassword ? '隐藏密码' : '显示密码'" @click="showConfirmPassword = !showConfirmPassword" v-html="showConfirmPassword ? eyeSlashSvg : eyeSvg"></button>
                                     </div>
                                 </div>
+                            <div v-if="mode === 'register' && ageGate" class="nux-form-group">
+                                    <label class="nux-form-label">使用者年龄：{{ age }}岁</label>
+                                    <input v-model.number="age" type="range" min="6" max="18" class="nux-input nux-age-slider" aria-label="使用者年龄">
+                                    <p class="nux-age-notice">本服务供未成年人使用时，须由法定监护人授权并陪同。</p>
+                                </div>
+                                <div v-if="mode === 'register' && ageGate && age < minorAge" class="nux-form-group">
+                                    <label class="nux-checkbox nux-terms">
+                                        <input type="checkbox" v-model="guardianAgreed">
+                                        <span>我确认本人为该未成年人的法定监护人，授权其使用本服务，并将作为家长账号统一管理其学习数据。</span>
+                                    </label>
+                                </div>
                             </template>
                             <div v-if="mode === 'register' && showPhoneLogin && !isSmsMode && !showSmsLogin" class="nux-form-group">
                                 <label class="nux-form-label">手机号</label>
@@ -444,7 +464,8 @@
                 </div>
                 <div class="nux-login-brand">
                     <div class="nux-login-brand-content">
-                        <span v-if="appIcon" class="nux-login-icon">{{ appIcon }}</span>
+                        <img v-if="appLogo" :src="appLogo" class="nux-login-logo" alt="">
+                        <span v-else-if="appIcon" class="nux-login-icon">{{ appIcon }}</span>
                         <h1 v-if="appName" class="nux-login-app-name">{{ appName }}</h1>
                         <p v-if="slogan" class="nux-login-slogan">{{ slogan }}</p>
                         <p v-if="description" class="nux-login-desc">{{ description }}</p>
