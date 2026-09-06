@@ -79,3 +79,17 @@
 /* ---- 六、辅助过渡分类（供组件精修复用） ---- */
 .nx-transition-collapse { transition: height var(--nx-transition-base), opacity var(--nx-transition-base), transform var(--nx-transition-base); }
 .nx-transition-expand { transition: all var(--nx-transition-base); }
+
+/* ---- 七、历史/网格/筛选系列组件统一反馈（data.css 入口） ---- */
+.nx-hf-chip, .nx-ht-chip, .nx-hv-btn, .nx-hl-batch-del,
+.nx-hl-select-all, .nx-hl-sort { will-change: transform; }
+.nx-hf-chip:active:not(:disabled), .nx-ht-chip:active:not(:disabled),
+.nx-hv-btn:active:not(:disabled), .nx-hl-batch-del:active:not(:disabled),
+.nx-hl-select-all:active, .nx-hl-card:active { transform: scale(0.97); }
+.nx-hl-card { transition: transform var(--nx-transition-fast), box-shadow var(--nx-transition-fast), border-color var(--nx-transition-fast); }
+.nx-hl-card:hover { transform: translateY(-1px); }
+:where(.nx-hf-chip, .nx-ht-chip, .nx-hv-btn, .nx-hl-batch-del,
+       .nx-hl-select-all, .nx-hl-card, .nx-hl-sort, .nx-cal-today-btn):focus-visible {
+  outline: 2px solid rgba(var(--app-accent-rgb), 0.6);
+  outline-offset: 2px;
+}
