@@ -143,6 +143,7 @@
   font-weight: 700;
   color: var(--nx-text-heading);
   line-height: 1.2;
+  font-variant-numeric: tabular-nums;
 }
 .nux-stat-label { font-size: var(--nx-text-sm); color: var(--nx-text-secondary); margin-top: 2px; }
 .nux-stat-sub { font-size: var(--nx-text-xs); color: var(--nx-text-muted); margin-top: 2px; }
