@@ -5,6 +5,7 @@
         return idx > 0 ? src.slice(0, idx) : '';
     })();
     const REMEMBER_KEY = 'nux_remembered_identifier';
+    const GLOBAL_AGREED_KEY = 'nux_terms_agreed_v1';
     const NuxLoginPage = {
         name: 'NuxLoginPage',
         props: {
@@ -56,7 +57,10 @@
 
             function markAgreement() {
                 if (!props.showTerms || !agreed.value || !props.appName) return;
-                try { localStorage.setItem('nux_agreement_pending_' + props.appName, '1'); } catch (e) {}
+                try {
+                    localStorage.setItem('nux_agreement_pending_' + props.appName, '1');
+                    localStorage.setItem(GLOBAL_AGREED_KEY, String(Date.now()));
+                } catch (e) {}
             }
             const smsCode = Vue.ref('');
             const smsCountdown = Vue.ref(0);
@@ -111,6 +115,9 @@
                 try {
                     var saved = localStorage.getItem(REMEMBER_KEY);
                     if (saved && !form.username && !props.phoneLogin) form.username = saved;
+                    if (props.showTerms && localStorage.getItem(GLOBAL_AGREED_KEY)) {
+                        agreed.value = true;
+                    }
                 } catch (e) {}
             });
             Vue.onUnmounted(function() {
