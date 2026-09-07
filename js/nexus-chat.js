@@ -58,7 +58,16 @@
             this.controller = new AbortController();
             const requestId = `chat_${Date.now()}_${Math.random().toString(36).slice(2)}`;
             this.api._registerController(requestId, this.controller);
-            const timeoutId = setTimeout(() => this.controller.abort(), this.timeout);
+            let timedOut = false;
+            let idleTimer = null;
+            const resetIdle = () => {
+                if (idleTimer) clearTimeout(idleTimer);
+                idleTimer = setTimeout(() => {
+                    timedOut = true;
+                    try { this.controller.abort(); } catch (e) {}
+                }, this.timeout);
+            };
+            resetIdle();
             try {
                 const response = await fetch(`${this.api.baseUrl}${this.url}`, {
                     method: 'POST',
@@ -78,6 +87,7 @@
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) break;
+                    resetIdle();
                     buffer += decoder.decode(value, { stream: true });
                     let newlineIdx;
                     while ((newlineIdx = buffer.indexOf('\n')) !== -1) {
@@ -98,12 +108,18 @@
                 this.onDone(this.receivedChunks);
             } catch (error) {
                 if (error.name === 'AbortError') {
-                    this.onDone(this.receivedChunks);
+                    if (timedOut) {
+                        this.onError(this.receivedChunks
+                            ? '响应超时，已保留前面生成的内容，请重试或缩短问题'
+                            : '响应超时，请重试或更换问题');
+                    } else {
+                        this.onDone(this.receivedChunks);
+                    }
                 } else {
                     this.onError(error.message || '网络错误');
                 }
             } finally {
-                clearTimeout(timeoutId);
+                if (idleTimer) clearTimeout(idleTimer);
                 this.api.abortControllers.delete(requestId);
                 this.controller = null;
                 this._currentEvent = null;

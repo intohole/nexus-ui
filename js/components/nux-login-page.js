@@ -380,15 +380,6 @@
                                     </div>
                                 </div>
                             </template>
-                            <div v-if="showTerms" class="nux-form-group">
-                                <label class="nux-checkbox nux-terms">
-                                    <input type="checkbox" v-model="agreed">
-                                    <span v-if="effectiveTermsUrl || effectivePrivacyUrl">我已阅读并同意
-                                        <a v-if="effectiveTermsUrl" :href="effectiveTermsUrl" target="_blank" rel="noopener">《用户协议》</a><a v-if="effectivePrivacyUrl" :href="effectivePrivacyUrl" target="_blank" rel="noopener">《隐私政策》</a>
-                                    </span>
-                                    <span v-else>{{ termsText }}</span>
-                                </label>
-                            </div>
                             <div v-if="mode === 'register' && showEmailField" class="nux-form-group">
                                 <label class="nux-form-label">邮箱</label>
                                 <input v-model="form.email" type="email" class="nux-input" placeholder="请输入邮箱" autocomplete="email">
@@ -443,6 +434,15 @@
                             <div v-if="mode === 'register' && showInviteCode" class="nux-form-group">
                                 <label class="nux-form-label">邀请码</label>
                                 <input v-model="form.inviteCode" type="text" class="nux-input" placeholder="邀请码（选填）">
+                            </div>
+                            <div v-if="showTerms" class="nux-form-group">
+                                <label class="nux-checkbox nux-terms">
+                                    <input type="checkbox" v-model="agreed">
+                                    <span v-if="effectiveTermsUrl || effectivePrivacyUrl">我已阅读并同意
+                                        <a v-if="effectiveTermsUrl" :href="effectiveTermsUrl" target="_blank" rel="noopener">《用户协议》</a><a v-if="effectivePrivacyUrl" :href="effectivePrivacyUrl" target="_blank" rel="noopener">《隐私政策》</a>
+                                    </span>
+                                    <span v-else>{{ termsText }}</span>
+                                </label>
                             </div>
                             <button type="submit" class="nux-login-submit" :disabled="loading || registering">
                                 <span v-if="loading || registering" class="nx-spinner"></span>
