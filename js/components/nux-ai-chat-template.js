@@ -55,6 +55,12 @@
                                     <p class="nx-ai-chat-ref-title">引用来源</p>
                                     <a v-for="(r, ri) in m.references" :key="'r' + ri" class="nx-ai-chat-ref-item" :href="typeof r === 'string' ? r : (r.url || r.link || '#')" target="_blank" rel="noopener">{{ typeof r === 'string' ? r : (r.title || r.url || r.link || '#') }}</a>
                                 </div>
+                                <div v-if="m.warnings && m.warnings.length" class="nx-ai-chat-warnings">
+                                    <div v-for="(w, wi) in m.warnings" :key="'w' + wi" class="nx-ai-chat-warning">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                                        <span>{{ w }}</span>
+                                    </div>
+                                </div>
                                 <slot name="message-after" :msg="m"></slot>
                             </div>
                             <div v-if="m.error" class="nx-ai-chat-error-bar">

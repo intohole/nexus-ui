@@ -72,6 +72,10 @@
                 if (label) tools.push(label);
             } else if (type === 'references' || type === 'reference') {
                 msg.references = payload.references || payload.items || [];
+            } else if (type === 'warning' || type === 'credibility') {
+                const warnings = msg.warnings || (msg.warnings = []);
+                const text = payload.content || payload.message || payload.text || '';
+                if (text) warnings.push(text);
             } else {
                 handled = false;
             }

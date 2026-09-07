@@ -612,6 +612,31 @@
     word-break: break-all;
 }
 
+.nx-ai-chat-warnings {
+    margin-top: var(--nx-space-2, 0.5rem);
+    display: grid;
+    gap: var(--nx-space-1, 0.25rem);
+}
+
+.nx-ai-chat-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--nx-space-2, 0.5rem);
+    font-size: var(--nx-text-xs, 0.75rem);
+    line-height: 1.6;
+    color: var(--nx-warning-text, rgb(146, 64, 14));
+    background: var(--nx-warning-soft, rgba(251, 191, 36, 0.12));
+    border: 1px solid rgba(217, 119, 6, 0.25);
+    border-radius: var(--nx-radius-sm, 0.25rem);
+    padding: var(--nx-space-2, 0.5rem) var(--nx-space-2, 0.5rem);
+}
+
+.nx-ai-chat-warning svg {
+    flex: none;
+    margin-top: 2px;
+    color: rgb(217, 119, 6);
+}
+
 .nx-ai-chat-assistant .nx-ai-chat-content a { color: var(--nx-accent, rgb(79, 70, 229)); }
 
 [data-theme="dark"] .nx-ai-chat-reasoning { background: var(--nx-bg-tertiary, rgba(0, 0, 0, 0.2)); border-color: var(--nx-border, rgb(51, 65, 85)); }

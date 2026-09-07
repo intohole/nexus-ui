@@ -118,7 +118,7 @@
                 return reactive({
                     id: 'a_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
                     role: 'assistant', content: '', streaming: true, error: false,
-                    thinking: '', tools: [], references: [], meta: null,
+                    thinking: '', tools: [], references: [], warnings: [], meta: null,
                     showReasoning: false, created_at: new Date().toISOString()
                 });
             }
