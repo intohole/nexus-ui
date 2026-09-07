@@ -69,12 +69,29 @@
             self._total = resp.total || 0;
             self._loading = false;
             self._render();
+            self._autoReadVisible();
         }).catch(function () {
             self._loading = false;
             if (self._container) {
                 var list = self._container.querySelector('.nux-notif-panel-list');
                 if (list) list.innerHTML = '<div class="nux-notif-panel-error"><i class="fa-solid fa-triangle-exclamation"></i><span>加载失败</span></div>';
             }
+        });
+    };
+
+    NuxNotificationPanel.prototype._autoReadVisible = function () {
+        var self = this;
+        var unread = (self._list || []).filter(function (n) { return !n.is_read; });
+        if (!unread.length || !self._manager) return;
+        var readIds = unread.map(function (n) { return n.id; });
+        var done = 0;
+        readIds.forEach(function (id) {
+            self._manager.markRead(id).then(function () {
+                done++;
+                if (done === readIds.length && self._onNotificationClick) {
+                    self._onNotificationClick(null);
+                }
+            }).catch(function () { done++; });
         });
     };
 

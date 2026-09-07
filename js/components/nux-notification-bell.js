@@ -52,6 +52,8 @@
 
             const loadList = async () => {
                 await notif.getList({ page: 1, page_size: 10 });
+                const unread = notif.notifications.value.filter((n) => !n.is_read);
+                unread.forEach((n) => notif.markRead(n.id));
             };
 
             const focusFirstItem = () => {
