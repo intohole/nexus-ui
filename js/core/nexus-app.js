@@ -18,19 +18,19 @@
         handleError(err, instance, info) {
             if (!err) return;
             if (err && err.name === 'NexusStreamError') {
-                this.handleErrorPayload(err.message, err.status || 401, err);
+                NexusApp.handleErrorPayload(err.message, err.status || 401, err);
                 return;
             }
             const status = _status(err);
             if (window.NexusErrorText && typeof window.NexusErrorText.fromError === 'function') {
                 const mapped = window.NexusErrorText.fromError(err, err.message || '操作失败');
-                this.handleErrorPayload(mapped.message || mapped.title, status, err);
+                NexusApp.handleErrorPayload(mapped.message || mapped.title, status, err);
                 return;
             }
             const message = (window.mapHttpError && typeof window.mapHttpError === 'function')
                 ? window.mapHttpError(err)
                 : (err.message || '操作失败');
-            this.handleErrorPayload(message, status, err);
+            NexusApp.handleErrorPayload(message, status, err);
         },
 
         handleErrorPayload(message, status, err) {
@@ -114,7 +114,10 @@
         install(app) {
             if (!app) return;
             NexusApp.registerCoreComponents(app);
-            if (app.config) app.config.errorHandler = NexusApp.handleError;
+            if (app.config) {
+                app.config.errorHandler = function (err, instance, info) { NexusApp.handleError(err, instance, info); };
+                if (window.NexusUtils) app.config.globalProperties.NexusUtils = window.NexusUtils;
+            }
             NexusApp.bindGlobal();
             NexusApp.initAppLoading();
         },
