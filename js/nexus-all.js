@@ -2185,6 +2185,15 @@ class UserCenterSDK {
 }
 
 window.UserCenterSDK = UserCenterSDK;
+
+try {
+    window.addEventListener('storage', function (e) {
+        if (!e || e.key !== TOKEN_KEY) return;
+        var sdk = window.ucSDK || window.__UC_SDK__ || window.ucSdk || null;
+        if (sdk && typeof sdk.syncFromStorage === 'function') sdk.syncFromStorage();
+        window.dispatchEvent(new CustomEvent('uc:authchange', { detail: { authenticated: !!e.newValue } }));
+    });
+} catch (e) {}
 })();
 
 /* ===== user-center-api.js ===== */
