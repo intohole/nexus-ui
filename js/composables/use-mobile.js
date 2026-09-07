@@ -1,4 +1,8 @@
 (function() {
+    if (typeof Vue === 'undefined') {
+        console.error('[nexus-ui] 依赖 Vue 未加载：请先引入 vue.global.prod.js 再加载 use-mobile.js。');
+        return;
+    }
     const { ref, onMounted, onUnmounted } = Vue;
 
     const useMobile = (breakpoint = 768) => {

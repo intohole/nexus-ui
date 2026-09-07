@@ -1538,6 +1538,10 @@
 
 /* ===== nexus-store.js ===== */
 (function() {
+    if (typeof Vue === 'undefined') {
+        console.error('[nexus-ui] 依赖 Vue 未加载：请先引入 vue.global.prod.js 再加载 nexus-ui 脚本，参考 nexus-ui/demo 的引用顺序。');
+        return;
+    }
     const { reactive, computed, watch } = Vue;
 
     class NexusStore {
