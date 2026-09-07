@@ -7,8 +7,8 @@
             icpNumber: { type: String, default: '浙ICP备2024109932号' },
             company: { type: String, default: '杭州子晨科技有限公司' },
             email: { type: String, default: 'songguokr@126.com' },
-            disclaimer: { type: String, default: '本站内容由人工智能生成，结果仅供参考，不构成任何建议或承诺。' },
-            showAiBadge: { type: Boolean, default: true },
+            disclaimer: { type: String, default: '部分内容由 AI 生成，仅供参考，不构成任何专业建议或承诺。' },
+            showAiBadge: { type: Boolean, default: false },
             showGongan: { type: Boolean, default: false },
             gonganNumber: { type: String, default: '' },
             gonganLink: { type: String, default: '' }
@@ -55,7 +55,7 @@
             }
             const appName = el.getAttribute('app-name') || '';
             const disclaimer = el.getAttribute('disclaimer') || '';
-            const showAiBadge = el.getAttribute('show-ai-badge') !== 'false';
+            const showAiBadge = el.getAttribute('show-ai-badge') === 'true';
             const showGongan = el.getAttribute('show-gongan') === 'true';
             const gonganNumber = el.getAttribute('gongan-number') || '';
             const gonganLink = el.getAttribute('gongan-link') || '';
