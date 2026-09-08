@@ -264,3 +264,198 @@
   color: var(--nx-text-accent);
   text-decoration: underline;
 }
+
+.nux-portal-footer{
+  background: var(--nx-bg-card, #fff);
+  border-top: 1px solid var(--nx-border, rgba(15,23,42,0.08));
+  padding: 28px 24px;
+}
+.nux-portal-footer-inner{
+  max-width: 1140px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.nux-portal-footer-brand{ display: flex; align-items: center; gap: 10px; }
+.nux-portal-footer-logo{ width: 24px; height: 24px; border-radius: 7px; overflow: hidden; }
+.nux-portal-footer-logo img{ width: 100%; height: 100%; }
+.nux-portal-footer-name{ font-size: 14px; font-weight: 600; color: var(--nx-text-heading, #0f172a); }
+.nux-portal-footer-copy{ font-size: 13px; color: var(--nx-text-muted, #64748b); }
+.nux-portal-footer-link{ color: var(--nx-text-muted, #64748b); text-decoration: none; font-weight: 500; font-size: 13px; transition: color .3s; }
+.nux-portal-footer-link:hover{ color: var(--nx-text-accent, #4f46e5); }
+@media (max-width: 768px){
+  .nux-portal-footer-inner{ flex-direction: column; text-align: center; }
+}
+
+.nux-app-card{
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  background: var(--nx-bg-card, #fff);
+  border: 1px solid var(--nx-border, rgba(15,23,42,0.08));
+  border-radius: var(--nx-radius-lg, 18px);
+  text-decoration: none;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: var(--nx-shadow-sm, 0 1px 3px rgba(15,23,42,0.05));
+  transition: transform .3s cubic-bezier(0.4,0,0.2,1), box-shadow .3s cubic-bezier(0.4,0,0.2,1), border-color .3s;
+  color: inherit;
+}
+.nux-app-card:hover{
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px -14px var(--app-accent-glow, rgba(79,70,229,0.22));
+  border-color: var(--app-accent, rgba(79,70,229,0.4));
+}
+.nux-app-card:hover .nux-app-card-name{ color: var(--app-accent, var(--nx-text-accent, #6366f1)); }
+.nux-app-card-glow{
+  position: absolute;
+  top: -40%;
+  right: -30%;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--app-accent-soft, rgba(79,70,229,0.08)), transparent 70%);
+  pointer-events: none;
+}
+.nux-app-card-badge{
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--app-accent, #4f46e5);
+  background: var(--app-accent-soft, rgba(79,70,229,0.08));
+  border: 1px solid currentColor;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+.nux-app-card-badge i{ font-size: 10px; }
+.nux-app-card-badge-recent{ background: rgba(13,148,136,0.10); border-color: rgba(13,148,136,0.22); color: #0d9488; }
+.nux-app-card-badge-fav{ background: rgba(217,119,6,0.12); border-color: rgba(217,119,6,0.28); color: #d97706; }
+.nux-app-card-badge-featured{ background: rgba(217,119,6,0.12); border-color: rgba(217,119,6,0.28); color: #d97706; }
+.nux-app-card-badge--pos{
+  top: 14px;
+  left: 14px;
+  right: auto;
+}
+.nux-app-card-fav{
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(79,70,229,0.4);
+  background: rgba(255,255,255,0.85);
+  color: #64748b;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity .3s, color .3s, transform .3s;
+  font-family: inherit;
+}
+.nux-app-card:hover .nux-app-card-fav{ opacity: 1; }
+.nux-app-card-fav:hover{ transform: scale(1.12); }
+.nux-app-card-fav.on{
+  opacity: 1;
+  color: #d97706;
+  background: rgba(217,119,6,0.12);
+  border-color: rgba(217,119,6,0.35);
+}
+@media (hover: none){ .nux-app-card-fav{ opacity: 1; background: rgba(255,255,255,0.6); } }
+.nux-app-card-edit{
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 9px;
+  background: rgba(79,70,229,0.08);
+  border: 1px solid rgba(79,70,229,0.18);
+  color: #4f46e5;
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all .3s;
+  flex-shrink: 0;
+}
+.nux-app-card:hover .nux-app-card-edit{ opacity: 1; }
+.nux-app-card-edit:hover{ background: rgba(79,70,229,0.16); border-color: rgba(79,70,229,0.4); transform: scale(1.06); }
+@media (hover: none), (max-width: 768px){ .nux-app-card-edit{ opacity: 1; } }
+.nux-app-card-top{ position: relative; display: flex; align-items: center; }
+.nux-app-card-icon{
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  object-fit: cover;
+  background: var(--nx-bg-muted, #f7f8fc);
+}
+.nux-app-card-icon-fallback{
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: var(--app-accent, #6366f1);
+  background: var(--app-accent-soft, rgba(79,70,229,0.08));
+}
+.nux-app-card-body{ position: relative; min-width: 0; }
+.nux-app-card-name{
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--nx-text-heading, #0f172a);
+  margin-bottom: 4px;
+  transition: color .3s;
+  padding-right: 52px;
+}
+.nux-app-card-desc{
+  font-size: 12.5px;
+  color: var(--nx-text-muted, #475569);
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.nux-app-card-enter{
+  position: relative;
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--app-accent, #4f46e5);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: gap .3s;
+}
+.nux-app-card-enter i{ transition: transform .3s; }
+.nux-app-card:hover .nux-app-card-enter{ gap: 9px; }
+.nux-app-card:hover .nux-app-card-enter i{ transform: translateX(3px); }
+@media (max-width: 768px){
+  .nux-app-card{ padding: 14px; gap: 8px; }
+  .nux-app-card-icon, .nux-app-card-icon-fallback{ width: 40px; height: 40px; font-size: 18px; }
+  .nux-app-card-name{ font-size: 14.5px; }
+  .nux-app-card-desc{ font-size: 12px; line-height: 1.55; }
+  .nux-app-card-badge{ top: 10px; right: 10px; font-size: 10px; padding: 2px 6px; }
+  .nux-app-card-badge--pos{ top: 10px; left: 10px; right: auto; }
+}
