@@ -190,6 +190,7 @@
                 const callbacks = {
                     onChunk: (chunk, full) => {
                         assistantMsg.content = full;
+                        if (assistantMsg.thinking) assistantMsg.thinking = '';
                         smartScroll(false);
                         ctx.emit('chunk', chunk, full, assistantMsg);
                     },

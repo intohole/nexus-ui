@@ -1061,12 +1061,12 @@
     const VERSION = '1.3.0';
 
     const FALLBACK_LIBS = {
-        marked: 'https://registry.npmmirror.com/marked/9.1.6/files/lib/marked.umd.js',
-        dompurify: 'https://songguokr.com/nexus-ui/v2.10.74/vendor/purify.min.js',
-        highlight: 'https://songguokr.com/nexus-ui/v2.10.74/vendor/highlight.min.js',
-        highlightCss: 'https://songguokr.com/nexus-ui/v2.10.74/vendor/styles/atom-one-dark.min.css',
-        katex: 'https://registry.npmmirror.com/katex/0.18.5/files/dist/katex.min.js',
-        katexCss: 'https://registry.npmmirror.com/katex/0.18.5/files/dist/katex.min.css'
+        marked: 'https://songguokr.com/nexus-ui/v2.10.77/vendor/marked.umd.js',
+        dompurify: 'https://songguokr.com/nexus-ui/v2.10.77/vendor/purify.min.js',
+        highlight: 'https://songguokr.com/nexus-ui/v2.10.77/vendor/highlight.min.js',
+        highlightCss: 'https://songguokr.com/nexus-ui/v2.10.77/vendor/styles/atom-one-dark.min.css',
+        katex: 'https://songguokr.com/nexus-ui/v2.10.77/vendor/katex/katex.min.js',
+        katexCss: 'https://songguokr.com/nexus-ui/v2.10.77/vendor/katex/katex.min.css'
     };
 
     const LIB_BASE = (function () {
@@ -1332,6 +1332,7 @@
 
     window.NexusMarkdown = NexusMarkdown;
 })();
+
 /* ===== nexus-chat.js ===== */
 (function () {
     'use strict';

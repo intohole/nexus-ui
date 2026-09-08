@@ -2,7 +2,7 @@
     'use strict';
     window.NuxAiChatTemplate = `
         <div class="nx-ai-chat" :class="{ 'keyboard-open': kbHeight > 0 }" :style="kbHeight > 0 ? { '--nx-chat-kb': kbHeight + 'px' } : null">
-            <div class="nx-ai-chat-messages" ref="scrollEl" @scroll="onScroll">
+            <div class="nx-ai-chat-messages" ref="scrollEl" role="log" aria-live="polite" aria-relevant="additions" @scroll="onScroll">
                 <div class="nx-ai-chat-list" ref="listEl">
                     <div v-if="!list.length && !$slots.empty && !$slots.welcome" class="nx-ai-chat-welcome">
                         <div class="nx-ai-chat-welcome-icon">{{ welcome.icon || '👋' }}</div>
@@ -94,6 +94,7 @@
                         v-model="input"
                         class="nx-ai-chat-input"
                         :placeholder="placeholder"
+                        :aria-label="placeholder || '输入消息'"
                         :disabled="disabled"
                         :maxlength="inputCfg.maxLength"
                         rows="1"
