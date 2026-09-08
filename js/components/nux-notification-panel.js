@@ -198,6 +198,7 @@
                 self._manager.markAllRead().then(function () {
                     self._list.forEach(function (n) { n.is_read = true; });
                     self._render();
+                    if (self._onNotificationClick) self._onNotificationClick(null);
                     if (window.showToast) window.showToast('已全部标记为已读', 'success');
                 }).catch(function () {
                     if (window.showToast) window.showToast('操作失败', 'error');
