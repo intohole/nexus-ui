@@ -50,13 +50,27 @@
         },
 
         getGreeting() {
-            const hour = new Date().getHours();
+            const hour = this.getLocalHour();
             if (hour < 6) return '夜深了';
             if (hour < 9) return '早上好';
             if (hour < 12) return '上午好';
             if (hour < 14) return '中午好';
             if (hour < 18) return '下午好';
             return '晚上好';
+        },
+
+        getLocalHour() {
+            const now = new Date();
+            try {
+                const parts = now.toLocaleTimeString('zh-CN', {
+                    hour: 'numeric',
+                    hour12: false,
+                    timeZone: CN_TZ
+                });
+                const hour = parseInt(parts, 10);
+                if (!isNaN(hour) && hour >= 0 && hour <= 23) return hour;
+            } catch (e) { /* fallthrough */ }
+            return now.getHours();
         },
 
         debounce(func, wait) {
