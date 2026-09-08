@@ -346,7 +346,7 @@
                             <button :class="['nux-login-subtab', { active: loginType === 'account' }]" @click="switchLoginType('account')">账号密码</button>
                             <button :class="['nux-login-subtab', { active: loginType === 'sms' }]" @click="switchLoginType('sms')">验证码登录</button>
                         </div>
-                        <form @submit.prevent="mode === 'login' ? onLogin() : onRegister()">
+                        <form @submit.prevent="mode === 'login' ? onLogin() : onRegister()" novalidate>
                             <template v-if="!isSmsMode && !regSms">
                                 <div v-if="phoneLogin && mode === 'login'" class="nux-form-group">
                                     <label class="nux-form-label">手机号</label>
