@@ -43,6 +43,14 @@
             return Number(num).toLocaleString('zh-CN', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
         },
 
+        smartNumber(num) {
+            if (num === undefined || num === null || isNaN(Number(num))) return '0';
+            const n = Number(num);
+            if (!isFinite(n)) return String(n);
+            if (Number.isInteger(n)) return String(n);
+            return String(Number(n.toFixed(2)));
+        },
+
         truncateText(text, maxLength = 100) {
             if (!text) return '';
             if (text.length <= maxLength) return text;
