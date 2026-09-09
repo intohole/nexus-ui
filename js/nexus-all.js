@@ -86,6 +86,44 @@
             return now.getHours();
         },
 
+        cnTodayStr() {
+            const now = new Date();
+            try {
+                const parts = new Intl.DateTimeFormat('zh-CN', {
+                    year: 'numeric', month: '2-digit', day: '2-digit',
+                    timeZone: CN_TZ
+                }).formatToParts(now);
+                let y = '', m = '', d = '';
+                for (const p of parts) {
+                    if (p.type === 'year') y = p.value;
+                    else if (p.type === 'month') m = p.value;
+                    else if (p.type === 'day') d = p.value;
+                }
+                if (y && m && d) return `${y}-${m}-${d}`;
+            } catch (e) { /* fallthrough */ }
+            return this.formatDateShort(now).replace(/\//g, '-');
+        },
+
+        cnDateLabel() {
+            const now = new Date();
+            try {
+                const parts = new Intl.DateTimeFormat('zh-CN', {
+                    month: 'numeric', day: 'numeric', weekday: 'short',
+                    timeZone: CN_TZ
+                }).formatToParts(now);
+                let m = '', d = '', w = '';
+                for (const p of parts) {
+                    if (p.type === 'month') m = p.value;
+                    else if (p.type === 'day') d = p.value;
+                    else if (p.type === 'weekday') w = p.value;
+                }
+                if (m && d && w) return `${m}月${d}日 ${w}`;
+            } catch (e) { /* fallthrough */ }
+            const today = new Date();
+            const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+            return `${today.getMonth() + 1}月${today.getDate()}日 ${weekdays[today.getDay()]}`;
+        },
+
         debounce(func, wait) {
             let timeout;
             return function(...args) {
