@@ -38,18 +38,18 @@
             emitOpen(e) {
                 if (this.app && this.app.url) {
                     e.preventDefault();
-                    this.$emit('open', this.app, e);
+                    this.$emit('open', e);
                 }
             },
             emitFav(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                this.$emit('fav', this.app, e);
+                this.$emit('fav', e);
             },
             emitEdit(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                this.$emit('edit', this.app, e);
+                this.$emit('edit', e);
             }
         },
         template: `

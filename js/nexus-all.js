@@ -1,4 +1,3 @@
-
 /* ===== nexus-utils.js ===== */
 (function() {
     const CN_TZ = 'Asia/Shanghai';
@@ -52,13 +51,27 @@
         },
 
         getGreeting() {
-            const hour = new Date().getHours();
+            const hour = this.getLocalHour();
             if (hour < 6) return '夜深了';
             if (hour < 9) return '早上好';
             if (hour < 12) return '上午好';
             if (hour < 14) return '中午好';
             if (hour < 18) return '下午好';
             return '晚上好';
+        },
+
+        getLocalHour() {
+            const now = new Date();
+            try {
+                const parts = now.toLocaleTimeString('zh-CN', {
+                    hour: 'numeric',
+                    hour12: false,
+                    timeZone: CN_TZ
+                });
+                const hour = parseInt(parts, 10);
+                if (!isNaN(hour) && hour >= 0 && hour <= 23) return hour;
+            } catch (e) { /* fallthrough */ }
+            return now.getHours();
         },
 
         debounce(func, wait) {
@@ -814,7 +827,8 @@
 
                         if (!response.ok) {
                             const errorMsg = this._extractError(data);
-                            if (response.status === 401 && !skipAuthRefresh && this.refreshUrl) {
+                            const skipUnauthorized = options.skipUnauthorized === true;
+                            if (response.status === 401 && !skipUnauthorized && !skipAuthRefresh && this.refreshUrl) {
                                 try {
                                     await this._tryRefresh();
                                     const retryResult = await this._doFetch(url, options, controller);
@@ -824,15 +838,18 @@
                                     }
                                     return retryResult.data;
                                 } catch (refreshErr) {
+                                    if (refreshErr && refreshErr.status) throw refreshErr;
                                     this._clearAuth();
                                     if (this.onUnauthorized) this.onUnauthorized();
                                     throw new ApiError('登录已过期，请重新登录', 401, null);
                                 }
                             }
                             if (response.status === 401) {
-                                this._clearAuth();
-                                if (this.onUnauthorized) this.onUnauthorized();
-                                const msg401 = skipAuthRefresh ? (errorMsg || '认证失败') : '登录已过期，请重新登录';
+                                if (!skipUnauthorized) {
+                                    this._clearAuth();
+                                    if (this.onUnauthorized) this.onUnauthorized();
+                                }
+                                const msg401 = skipUnauthorized ? (errorMsg || '认证失败') : (skipAuthRefresh ? (errorMsg || '认证失败') : '登录已过期，请重新登录');
                                 throw new ApiError(msg401, 401, data);
                             }
                             if (this.onError) this.onError(response.status, errorMsg);
@@ -1394,7 +1411,16 @@
             this.controller = new AbortController();
             const requestId = `chat_${Date.now()}_${Math.random().toString(36).slice(2)}`;
             this.api._registerController(requestId, this.controller);
-            const timeoutId = setTimeout(() => this.controller.abort(), this.timeout);
+            let timedOut = false;
+            let idleTimer = null;
+            const resetIdle = () => {
+                if (idleTimer) clearTimeout(idleTimer);
+                idleTimer = setTimeout(() => {
+                    timedOut = true;
+                    try { this.controller.abort(); } catch (e) {}
+                }, this.timeout);
+            };
+            resetIdle();
             try {
                 const response = await fetch(`${this.api.baseUrl}${this.url}`, {
                     method: 'POST',
@@ -1414,6 +1440,7 @@
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) break;
+                    resetIdle();
                     buffer += decoder.decode(value, { stream: true });
                     let newlineIdx;
                     while ((newlineIdx = buffer.indexOf('\n')) !== -1) {
@@ -1434,12 +1461,18 @@
                 this.onDone(this.receivedChunks);
             } catch (error) {
                 if (error.name === 'AbortError') {
-                    this.onDone(this.receivedChunks);
+                    if (timedOut) {
+                        this.onError(this.receivedChunks
+                            ? '响应超时，已保留前面生成的内容，请重试或缩短问题'
+                            : '响应超时，请重试或更换问题');
+                    } else {
+                        this.onDone(this.receivedChunks);
+                    }
                 } else {
                     this.onError(error.message || '网络错误');
                 }
             } finally {
-                clearTimeout(timeoutId);
+                if (idleTimer) clearTimeout(idleTimer);
                 this.api.abortControllers.delete(requestId);
                 this.controller = null;
                 this._currentEvent = null;
@@ -1535,6 +1568,236 @@
     };
 
     window.NexusChat = NexusChat;
+})();
+
+/* ===== nexus-structured.js ===== */
+(function () {
+    'use strict';
+
+    const STRUCTURED_VERSION = '1.1.0';
+
+    function extractBody(result) {
+        if (result && typeof result === 'object' && !Array.isArray(result)
+            && 'data' in result && result.data !== undefined && result.data !== null) {
+            return result.data;
+        }
+        return result;
+    }
+
+    function stringifyVal(v) {
+        if (v === null || v === undefined) return '';
+        if (typeof v === 'object') {
+            try { return JSON.stringify(v); } catch (e) { return String(v); }
+        }
+        return String(v);
+    }
+
+    function isEmpty(obj) {
+        return Object.keys(obj).length === 0;
+    }
+
+    function format(result) {
+        if (result === null || result === undefined) return '无';
+        if (typeof result === 'string') return result;
+        try {
+            return JSON.stringify(result, null, 2);
+        } catch (e) {
+            return String(result);
+        }
+    }
+
+    function isError(result) {
+        return result !== null && typeof result === 'object'
+            && !Array.isArray(result) && 'error' in result;
+    }
+
+    function buildTable(rows) {
+        if (!Array.isArray(rows) || rows.length === 0 || typeof rows[0] !== 'object') {
+            return { kind: 'raw', text: format(rows) };
+        }
+        const columns = Object.keys(rows[0]);
+        const data = rows.map(function (r) {
+            const row = {};
+            columns.forEach(function (c) {
+                row[c] = stringifyVal(r[c]);
+            });
+            return row;
+        });
+        return { kind: 'table', columns, rows: data, summary: null };
+    }
+
+    function build(result) {
+        if (result === null || result === undefined) {
+            return { kind: 'raw', text: '空' };
+        }
+        const body = extractBody(result);
+        if (Array.isArray(body)) {
+            return buildTable(body);
+        }
+        if (typeof body === 'object' && body !== null) {
+            const arrKey = Object.keys(body).find(function (k) {
+                return Array.isArray(body[k]) && body[k].length > 0;
+            });
+            if (arrKey) {
+                const summary = {};
+                Object.keys(body).forEach(function (k) {
+                    if (k !== arrKey) summary[k] = body[k];
+                });
+                const table = buildTable(body[arrKey]);
+                table.summary = isEmpty(summary) ? null : summary;
+                return table;
+            }
+            const pairs = Object.keys(body).map(function (k) {
+                return { k, v: stringifyVal(body[k]) };
+            });
+            return { kind: 'kv', pairs };
+        }
+        return { kind: 'raw', text: stringifyVal(body) };
+    }
+
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    async function injectLibs() {
+        if (window.NexusMarkdown && typeof window.NexusMarkdown.injectLibs === 'function') {
+            return window.NexusMarkdown.injectLibs();
+        }
+        return false;
+    }
+
+    class StructuredController {
+        constructor(options) {
+            const opts = options || {};
+            this.url = opts.url || '';
+            this.body = opts.body || {};
+            this.headers = opts.headers || {};
+            this.timeout = opts.timeout || 120000;
+            this.onText = opts.onText || (function () {});
+            this.onAction = opts.onAction || (function () {});
+            this.onDone = opts.onDone || (function () {});
+            this.onError = opts.onError || (function () {});
+            this.itemCount = 0;
+            this.controller = null;
+        }
+
+        get isStreaming() { return this.controller !== null; }
+
+        async start() {
+            if (!this.url) { this.onError('未配置请求URL'); return; }
+            this.itemCount = 0;
+            this.controller = new AbortController();
+            let timedOut = false;
+            let idleTimer = null;
+            const resetIdle = () => {
+                if (idleTimer) clearTimeout(idleTimer);
+                idleTimer = setTimeout(() => {
+                    timedOut = true;
+                    try { this.controller.abort(); } catch (e) {}
+                }, this.timeout);
+            };
+            resetIdle();
+            try {
+                const response = await fetch(this.url, {
+                    method: 'POST',
+                    headers: Object.assign({ 'Accept': 'text/event-stream', 'Content-Type': 'application/json' }, this.headers),
+                    body: JSON.stringify(this.body),
+                    signal: this.controller.signal
+                });
+                if (!response.ok) {
+                    let errData;
+                    try { errData = await response.json(); } catch (e) { errData = {}; }
+                    this.onError((errData && errData.message) ? errData.message : ('请求失败 ' + response.status));
+                    return;
+                }
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    resetIdle();
+                    buffer += decoder.decode(value, { stream: true });
+                    let idx;
+                    while ((idx = buffer.indexOf('\n')) !== -1) {
+                        const line = buffer.slice(0, idx).replace(/\r$/, '');
+                        buffer = buffer.slice(idx + 1);
+                        if (line.startsWith('data:')) {
+                            const payload = line.slice(5).trim();
+                            if (payload) {
+                                try { this._handleData(JSON.parse(payload)); }
+                                catch (e) {}
+                            }
+                        }
+                    }
+                }
+                this.onDone(this.itemCount);
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    if (timedOut) { this.onError('响应超时，请重试'); }
+                    else { this.onDone(this.itemCount); }
+                } else {
+                    this.onError(error.message || '网络错误');
+                }
+            } finally {
+                if (idleTimer) clearTimeout(idleTimer);
+                this.controller = null;
+            }
+        }
+
+        _handleData(data) {
+            const type = data.type;
+            if (type === 'structured_text' || type === 'text') {
+                const content = data.content || '';
+                if (content) this.onText(content, data);
+            } else if (type === 'structured_item' || type === 'item') {
+                this.itemCount = (typeof data.item_count === 'number') ? data.item_count : (this.itemCount + 1);
+                const item = data.item || {};
+                if (item.type === 'action' || (item.name && item.params !== undefined)) {
+                    this.onAction(item, data);
+                } else if (item.type === 'text') {
+                    const content = item.content || '';
+                    if (content) this.onText(content, data);
+                }
+                if (data.last === true) {
+                    this.onDone(this.itemCount, data);
+                }
+            } else if (type === 'structured_done' || type === 'done') {
+                this.itemCount = (typeof data.item_count === 'number') ? data.item_count : this.itemCount;
+                this.onDone(this.itemCount, data);
+            } else if (type === 'error') {
+                this.onError(data.message || 'AI处理出错');
+            }
+        }
+
+        stop() {
+            if (this.controller) {
+                try { this.controller.abort(); } catch (e) {}
+            }
+        }
+    }
+
+    async function consume(url, options = {}) {
+        const controller = new StructuredController(Object.assign({ url }, options));
+        await controller.start();
+        return controller;
+    }
+
+    const NexusStructured = {
+        version: STRUCTURED_VERSION,
+        build: build,
+        format: format,
+        isError: isError,
+        escapeHtml: escapeHtml,
+        injectLibs: injectLibs,
+        StructuredController: StructuredController,
+        consume: consume
+    };
+
+    window.NexusStructured = NexusStructured;
 })();
 
 /* ===== nexus-store.js ===== */
@@ -1975,7 +2238,7 @@ class UserCenterSDK {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), this.timeout);
         const options = { method, headers, signal: controller.signal };
-        if (data && (method === 'POST' || method === 'PUT')) {
+        if (data && (method === 'POST' || method === 'PUT' || method === 'DELETE')) {
             options.body = JSON.stringify(data);
         }
         try {
@@ -2060,6 +2323,7 @@ class UserCenterSDK {
             await this._request('POST', '/api/auth/logout', null, true, true);
         } catch (e) {}
         this.clearTokens();
+        try { localStorage.removeItem('nux_remembered_identifier'); } catch (e) {}
     }
 
     async clientCredentials() {
@@ -2120,6 +2384,12 @@ class UserCenterSDK {
     async getSessions() { return this._request('GET', '/api/auth/sessions'); }
     async revokeSession(sessionId) { return this._request('DELETE', `/api/auth/sessions/${sessionId}`); }
     async revokeAllSessions() { return this._request('DELETE', '/api/auth/sessions'); }
+
+    async getAccountExport() { return this._request('GET', '/api/auth/account/export'); }
+
+    async deleteAccount({ password }) {
+        return this._request('DELETE', '/api/auth/account', { password }, true);
+    }
 
     async sendBindCode({ email = null, phone = null }) {
         const data = {};
@@ -2313,237 +2583,6 @@ P.checkVipExpiry = function() {
 window.UserCenterAPI = { loaded: true };
 })();
 
-/* ===== nexus-structured.js ===== */
-(function () {
-    'use strict';
-
-    const STRUCTURED_VERSION = '1.1.0';
-
-    function extractBody(result) {
-        if (result && typeof result === 'object' && !Array.isArray(result)
-            && 'data' in result && result.data !== undefined && result.data !== null) {
-            return result.data;
-        }
-        return result;
-    }
-
-    function stringifyVal(v) {
-        if (v === null || v === undefined) return '';
-        if (typeof v === 'object') {
-            try { return JSON.stringify(v); } catch (e) { return String(v); }
-        }
-        return String(v);
-    }
-
-    function isEmpty(obj) {
-        return Object.keys(obj).length === 0;
-    }
-
-    function format(result) {
-        if (result === null || result === undefined) return '无';
-        if (typeof result === 'string') return result;
-        try {
-            return JSON.stringify(result, null, 2);
-        } catch (e) {
-            return String(result);
-        }
-    }
-
-    function isError(result) {
-        return result !== null && typeof result === 'object'
-            && !Array.isArray(result) && 'error' in result;
-    }
-
-    function buildTable(rows) {
-        if (!Array.isArray(rows) || rows.length === 0 || typeof rows[0] !== 'object') {
-            return { kind: 'raw', text: format(rows) };
-        }
-        const columns = Object.keys(rows[0]);
-        const data = rows.map(function (r) {
-            const row = {};
-            columns.forEach(function (c) {
-                row[c] = stringifyVal(r[c]);
-            });
-            return row;
-        });
-        return { kind: 'table', columns, rows: data, summary: null };
-    }
-
-    function build(result) {
-        if (result === null || result === undefined) {
-            return { kind: 'raw', text: '空' };
-        }
-        const body = extractBody(result);
-        if (Array.isArray(body)) {
-            return buildTable(body);
-        }
-        if (typeof body === 'object' && body !== null) {
-            const arrKey = Object.keys(body).find(function (k) {
-                return Array.isArray(body[k]) && body[k].length > 0;
-            });
-            if (arrKey) {
-                const summary = {};
-                Object.keys(body).forEach(function (k) {
-                    if (k !== arrKey) summary[k] = body[k];
-                });
-                const table = buildTable(body[arrKey]);
-                table.summary = isEmpty(summary) ? null : summary;
-                return table;
-            }
-            const pairs = Object.keys(body).map(function (k) {
-                return { k, v: stringifyVal(body[k]) };
-            });
-            return { kind: 'kv', pairs };
-        }
-        return { kind: 'raw', text: stringifyVal(body) };
-    }
-
-    function escapeHtml(str) {
-        if (str === null || str === undefined) return '';
-        return String(str)
-            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    }
-
-    async function injectLibs() {
-        if (window.NexusMarkdown && typeof window.NexusMarkdown.injectLibs === 'function') {
-            return window.NexusMarkdown.injectLibs();
-        }
-        return false;
-    }
-
-    class StructuredController {
-        constructor(options) {
-            const opts = options || {};
-            this.url = opts.url || '';
-            this.body = opts.body || {};
-            this.headers = opts.headers || {};
-            this.timeout = opts.timeout || 120000;
-            this.onText = opts.onText || (function () {});
-            this.onAction = opts.onAction || (function () {});
-            this.onDone = opts.onDone || (function () {});
-            this.onError = opts.onError || (function () {});
-            this.itemCount = 0;
-            this.controller = null;
-        }
-
-        get isStreaming() { return this.controller !== null; }
-
-        async start() {
-            if (!this.url) { this.onError('未配置请求URL'); return; }
-            this.itemCount = 0;
-            this.controller = new AbortController();
-            let timedOut = false;
-            let idleTimer = null;
-            const resetIdle = () => {
-                if (idleTimer) clearTimeout(idleTimer);
-                idleTimer = setTimeout(() => {
-                    timedOut = true;
-                    try { this.controller.abort(); } catch (e) {}
-                }, this.timeout);
-            };
-            resetIdle();
-            try {
-                const response = await fetch(this.url, {
-                    method: 'POST',
-                    headers: Object.assign({ 'Accept': 'text/event-stream', 'Content-Type': 'application/json' }, this.headers),
-                    body: JSON.stringify(this.body),
-                    signal: this.controller.signal
-                });
-                if (!response.ok) {
-                    let errData;
-                    try { errData = await response.json(); } catch (e) { errData = {}; }
-                    this.onError((errData && errData.message) ? errData.message : ('请求失败 ' + response.status));
-                    return;
-                }
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let buffer = '';
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    resetIdle();
-                    buffer += decoder.decode(value, { stream: true });
-                    let idx;
-                    while ((idx = buffer.indexOf('
-')) !== -1) {
-                        const line = buffer.slice(0, idx).replace(/$/, '');
-                        buffer = buffer.slice(idx + 1);
-                        if (line.startsWith('data:')) {
-                            const payload = line.slice(5).trim();
-                            if (payload) {
-                                try { this._handleData(JSON.parse(payload)); }
-                                catch (e) {}
-                            }
-                        }
-                    }
-                }
-                this.onDone(this.itemCount);
-            } catch (error) {
-                if (error.name === 'AbortError') {
-                    if (timedOut) { this.onError('响应超时，请重试'); }
-                    else { this.onDone(this.itemCount); }
-                } else {
-                    this.onError(error.message || '网络错误');
-                }
-            } finally {
-                if (idleTimer) clearTimeout(idleTimer);
-                this.controller = null;
-            }
-        }
-
-        _handleData(data) {
-            const type = data.type;
-            if (type === 'structured_text' || type === 'text') {
-                const content = data.content || '';
-                if (content) this.onText(content, data);
-            } else if (type === 'structured_item' || type === 'item') {
-                this.itemCount = (typeof data.item_count === 'number') ? data.item_count : (this.itemCount + 1);
-                const item = data.item || {};
-                if (item.type === 'action' || (item.name && item.params !== undefined)) {
-                    this.onAction(item, data);
-                } else if (item.type === 'text') {
-                    const content = item.content || '';
-                    if (content) this.onText(content, data);
-                }
-                if (data.last === true) {
-                    this.onDone(this.itemCount, data);
-                }
-            } else if (type === 'structured_done' || type === 'done') {
-                this.itemCount = (typeof data.item_count === 'number') ? data.item_count : this.itemCount;
-                this.onDone(this.itemCount, data);
-            } else if (type === 'error') {
-                this.onError(data.message || 'AI处理出错');
-            }
-        }
-
-        stop() {
-            if (this.controller) {
-                try { this.controller.abort(); } catch (e) {}
-            }
-        }
-    }
-
-    async function consume(url, options = {}) {
-        const controller = new StructuredController(Object.assign({ url }, options));
-        await controller.start();
-        return controller;
-    }
-
-    const NexusStructured = {
-        version: STRUCTURED_VERSION,
-        build: build,
-        format: format,
-        isError: isError,
-        escapeHtml: escapeHtml,
-        injectLibs: injectLibs,
-        StructuredController: StructuredController,
-        consume: consume
-    };
-
-    window.NexusStructured = NexusStructured;
-})();
-
 /* ===== components/nux-result-view.js ===== */
 (function () {
     'use strict';
@@ -2601,75 +2640,75 @@ window.UserCenterAPI = { loaded: true };
 (function () {
     'use strict';
 
-    const UC_PREFIX = "uc_";
-    const AUTO_PREFIX = "user_";
-    const GUEST_PREFIX = "guest_";
-    const DEFAULT_NAME = "星友";
-    const PLACEHOLDER_TOKENS = { unknown: 1, 未知: 1, undefined: 1, null: 1, none: 1, "n/a": 1, "未设置": 1, "未命名": 1, "匿名": 1 };
-    const SYNTHETIC_EMAIL_MARK = "@users.internal";
+    const UC_PREFIX = 'uc_';
+    const AUTO_PREFIX = 'user_';
+    const GUEST_PREFIX = 'guest_';
+    const DEFAULT_NAME = '星友';
+    const PLACEHOLDER_TOKENS = { unknown: 1, 未知: 1, undefined: 1, null: 1, none: 1, 'n/a': 1, '未设置': 1, '未命名': 1, '匿名': 1 };
+    const SYNTHETIC_EMAIL_MARK = '@users.internal';
 
     function isUcFallback(value) {
-        if (typeof value !== "string") return false;
+        if (typeof value !== 'string') return false;
         return value.indexOf(UC_PREFIX) === 0 || value.indexOf(AUTO_PREFIX) === 0 || value.indexOf(GUEST_PREFIX) === 0;
     }
 
     function isSyntheticEmail(email) {
-        return typeof email === "string" && email.trim().toLowerCase().indexOf(SYNTHETIC_EMAIL_MARK) > 0;
+        return typeof email === 'string' && email.trim().toLowerCase().indexOf(SYNTHETIC_EMAIL_MARK) > 0;
     }
 
     function isAutoGenerated(name, userId) {
-        if (typeof name !== "string") return true;
+        if (typeof name !== 'string') return true;
         const value = name.trim();
         if (!value) return true;
         if (/^\d+$/.test(value)) return true;
         if (PLACEHOLDER_TOKENS[value.toLowerCase()]) return true;
         if (userId && value === String(userId)) return true;
-        if (value.indexOf("用户") === 0) return true;
+        if (value.indexOf('用户') === 0) return true;
         return isUcFallback(value);
     }
 
     function maskPhone(phone) {
-        if (typeof phone !== "string") return "";
+        if (typeof phone !== 'string') return '';
         const p = phone.trim();
-        if (p.length >= 7) return p.slice(0, 3) + "****" + p.slice(-4);
-        return p ? "****" : "";
+        if (p.length >= 7) return p.slice(0, 3) + '****' + p.slice(-4);
+        return p ? '****' : '';
     }
 
     function maskEmail(email) {
-        if (typeof email !== "string") return "";
+        if (typeof email !== 'string') return '';
         const e = email.trim();
-        const at = e.indexOf("@");
+        const at = e.indexOf('@');
         if (at <= 0) return e;
         const local = e.slice(0, at);
         const domain = e.slice(at + 1);
-        if (local.length <= 1) return local + "***@" + domain;
-        return local[0] + "***" + local[local.length - 1] + "@" + domain;
+        if (local.length <= 1) return local + '***@' + domain;
+        return local[0] + '***' + local[local.length - 1] + '@' + domain;
     }
 
     function getDisplayName(user) {
-        if (!user) return "";
-        const userId = user.user_id != null ? String(user.user_id) : "";
-        const candidates = ["resolved_display_name", "display_name", "nickname", "username", "full_name", "name"];
+        if (!user) return '';
+        const userId = user.user_id != null ? String(user.user_id) : '';
+        const candidates = ['resolved_display_name', 'display_name', 'nickname', 'username', 'full_name', 'name'];
         for (let i = 0; i < candidates.length; i++) {
             const raw = user[candidates[i]];
             if (raw === undefined || raw === null) continue;
             if (!isAutoGenerated(raw, userId)) return String(raw).trim();
         }
-        const email = String(user.email || "").trim();
+        const email = String(user.email || '').trim();
         if (email && !isSyntheticEmail(email)) return maskEmail(email);
-        const phone = String(user.phone || "").trim();
+        const phone = String(user.phone || '').trim();
         if (phone) return maskPhone(phone);
         return DEFAULT_NAME;
     }
 
     function resolveName(user, fallback) {
         const name = getDisplayName(user);
-        return name || fallback || "";
+        return name || fallback || '';
     }
 
     const NexusUser = { getDisplayName: getDisplayName, resolveName: resolveName, isUcFallback: isUcFallback };
 
-    if (window.NexusUtils && typeof window.NexusUtils === "object") {
+    if (window.NexusUtils && typeof window.NexusUtils === 'object') {
         window.NexusUtils.getDisplayName = getDisplayName;
     }
 
@@ -2678,9 +2717,9 @@ window.UserCenterAPI = { loaded: true };
 
 /* ===== core/nexus-error-text.js ===== */
 (function () {
-    "use strict";
+    'use strict';
 
-    const STACK_MARKERS = ["Traceback", "sqlalche.me", "DetachedInstanceError", " at 0x", 'File "', "raise "];
+    const STACK_MARKERS = ['Traceback', 'sqlalche.me', 'DetachedInstanceError', ' at 0x', 'File "', 'raise '];
     const MAX_LEN = 80;
 
     function looksLikeStack(text) {
@@ -2691,50 +2730,50 @@ window.UserCenterAPI = { loaded: true };
     }
 
     function safeMessage(raw, maxLen) {
-        if (raw == null) return "";
+        if (raw == null) return '';
         let s = String(raw);
-        if (looksLikeStack(s)) return "服务开小差了，请稍后重试";
-        s = s.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+        if (looksLikeStack(s)) return '服务开小差了，请稍后重试';
+        s = s.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
         const limit = maxLen || MAX_LEN;
-        return s.length > limit ? s.slice(0, limit) + "…" : s;
+        return s.length > limit ? s.slice(0, limit) + '…' : s;
     }
 
     function extractCode(e) {
         if (e && e.code) return String(e.code);
         const status = (e && e.response && e.response.status) || (e && e.status) || 0;
-        if (status) return "HTTP " + status;
-        if (e && e.name && e.name !== "Error") return e.name;
-        return "";
+        if (status) return 'HTTP ' + status;
+        if (e && e.name && e.name !== 'Error') return e.name;
+        return '';
     }
 
     function extractServerMessage(e) {
-        if (!e) return "";
+        if (!e) return '';
         const d = (e.response && e.response.data) || e.data;
-        if (d && typeof d === "object") return d.detail || d.message || d.error || "";
-        return e.message || "";
+        if (d && typeof d === 'object') return d.detail || d.message || d.error || '';
+        return e.message || '';
     }
 
     function fromError(e, fallback) {
         const code = extractCode(e);
         const status = (e && e.response && e.response.status) || (e && e.status) || 0;
         if (status === 401 || status === 403) {
-            return { title: "登录已失效，请重新登录", message: "", code: code || "HTTP " + status };
+            return { title: '登录已失效，请重新登录', message: '', code: code || 'HTTP ' + status };
         }
         const raw = extractServerMessage(e);
-        const net = e && (e.code === "ECONNABORTED" || e.code === "ERR_NETWORK" || /network|timeout|socket/i.test(String(e.message || "")));
-        if (net || /failed to fetch/i.test(String(raw || e.message || ""))) {
-            return { title: "网络异常，请检查网络后重试", message: "", code: code || "NETWORK" };
+        const net = e && (e.code === 'ECONNABORTED' || e.code === 'ERR_NETWORK' || /network|timeout|socket/i.test(String(e.message || '')));
+        if (net || /failed to fetch/i.test(String(raw || e.message || ''))) {
+            return { title: '网络异常，请检查网络后重试', message: '', code: code || 'NETWORK' };
         }
         if (status >= 500 || looksLikeStack(raw)) {
-            return { title: "服务开小差了", message: "请稍后重试，若持续出现请联系我们", code: code || "SERVER" };
+            return { title: '服务开小差了', message: '请稍后重试，若持续出现请联系我们', code: code || 'SERVER' };
         }
-        const safe = safeMessage(raw) || (fallback || "操作失败");
-        return { title: fallback || "操作失败", message: safe === (fallback || "操作失败") ? "" : safe, code: code };
+        const safe = safeMessage(raw) || (fallback || '操作失败');
+        return { title: fallback || '操作失败', message: safe === (fallback || '操作失败') ? '' : safe, code: code };
     }
 
     const NexusErrorText = { fromError: fromError, safeMessage: safeMessage, looksLikeStack: looksLikeStack };
 
-    if (window.NexusUtils && typeof window.NexusUtils === "object") {
+    if (window.NexusUtils && typeof window.NexusUtils === 'object') {
         window.NexusUtils.safeErrorText = safeMessage;
     }
 
@@ -2742,7 +2781,7 @@ window.UserCenterAPI = { loaded: true };
 })();
 
 /* ===== components/nux-ai-badge.js ===== */
-(function() {
+(function () {
     'use strict';
 
     const NuxAiBadge = {
@@ -3020,7 +3059,7 @@ window.UserCenterAPI = { loaded: true };
         },
         computed: {
             s() {
-                return this.stats || (window.NexusUseProgress ? window.NexusUseProgress.computeStats({}) : { percent: 0, currentDayLabel: '', statLines: [] });
+                return this.stats || window.NexusUseProgress.computeStats({});
             },
             percentText() {
                 return Math.round(this.s.percent) + '%';
@@ -3059,8 +3098,9 @@ window.UserCenterAPI = { loaded: true };
 })();
 
 /* ===== core/nexus-app.js ===== */
+/* ===== core/nexus-app.js ===== */
 (function () {
-    "use strict";
+    'use strict';
 
     function _status(err) {
         return err && (err.status !== undefined ? err.status : err.response && err.response.status) || null;
@@ -3072,24 +3112,24 @@ window.UserCenterAPI = { loaded: true };
     const NexusApp = {
         get authHandler() { return _authHandler; },
         setAuthHandler(fn) {
-            if (typeof fn === "function") _authHandler = fn;
+            if (typeof fn === 'function') _authHandler = fn;
         },
 
         handleError(err, instance, info) {
             if (!err) return;
-            if (err && err.name === "NexusStreamError") {
+            if (err && err.name === 'NexusStreamError') {
                 NexusApp.handleErrorPayload(err.message, err.status || 401, err);
                 return;
             }
             const status = _status(err);
-            if (window.NexusErrorText && typeof window.NexusErrorText.fromError === "function") {
-                const mapped = window.NexusErrorText.fromError(err, err.message || "操作失败");
+            if (window.NexusErrorText && typeof window.NexusErrorText.fromError === 'function') {
+                const mapped = window.NexusErrorText.fromError(err, err.message || '操作失败');
                 NexusApp.handleErrorPayload(mapped.message || mapped.title, status, err);
                 return;
             }
-            const message = (window.mapHttpError && typeof window.mapHttpError === "function")
+            const message = (window.mapHttpError && typeof window.mapHttpError === 'function')
                 ? window.mapHttpError(err)
-                : (err.message || "操作失败");
+                : (err.message || '操作失败');
             NexusApp.handleErrorPayload(message, status, err);
         },
 
@@ -3097,61 +3137,71 @@ window.UserCenterAPI = { loaded: true };
             if (status === 401) {
                 if (NexusApp.clearStaleAuth) NexusApp.clearStaleAuth();
                 if (_authHandler) { _authHandler(message); return; }
-                NexusApp.notify("登录已过期，请重新登录", "error");
+                NexusApp.notify('登录已过期，请重新登录', 'error');
                 return;
             }
             if (!message) return;
-            const safe = (window.NexusErrorText && typeof window.NexusErrorText.safeMessage === "function")
+            const safe = (window.NexusErrorText && typeof window.NexusErrorText.safeMessage === 'function')
                 ? window.NexusErrorText.safeMessage(message)
                 : message;
             if (!safe) return;
             const now = Date.now();
             if (now - _toastState.last < 1000) return;
             _toastState.last = now;
-            NexusApp.notify(safe, "error");
-            if (typeof console !== "undefined" && console.error) console.error("[NexusApp]", err || message);
+            NexusApp.notify(safe, 'error');
+            if (typeof console !== 'undefined' && console.error) console.error('[NexusApp]', err || message);
         },
 
         notify(message, type) {
             if (window.ElementPlus && ElementPlus.ElMessage) {
-                try { ElementPlus.ElMessage({ message: message, type: type || "error", duration: 3000 }); return; } catch (e) {}
+                try { ElementPlus.ElMessage({ message, type: type || 'error', duration: 3000 }); return; } catch (e) {}
             }
-            if (window.NexusUtils && typeof NexusUtils.showToast === "function") {
-                NexusUtils.showToast(message, type || "error", { duration: 3000 });
+            if (window.NexusUtils && typeof NexusUtils.showToast === 'function') {
+                NexusUtils.showToast(message, type || 'error', { duration: 3000 });
                 return;
             }
+            if (message) window.alert ? window.alert(message) : void 0;
         },
 
         bindGlobal() {
             if (NexusApp._bound) return;
             NexusApp._bound = true;
-            window.addEventListener("unhandledrejection", function (evt) {
+            window.addEventListener('unhandledrejection', function (evt) {
                 if (!evt || !evt.reason) return;
                 if (evt.reason && evt.reason.__nxHandled) return;
-                if (evt.reason && evt.reason.name === "AbortError") return;
+                if (evt.reason && evt.reason.name === 'AbortError') return;
+                if (evt.reason && evt.reason.name === 'NexusStreamError') {
+                    NexusApp.handleError(evt.reason);
+                    evt.reason.__nxHandled = true;
+                    return;
+                }
                 const status = _status(evt.reason);
-                if (status === 401 || (evt.reason && evt.reason.name === "NexusStreamError")) {
+                if (status === 401) {
                     NexusApp.handleError(evt.reason);
                     evt.reason.__nxHandled = true;
                 }
             });
+            window.addEventListener('error', function (evt) {
+                if (evt && evt.error && evt.error.name === 'AbortError') return;
+            });
         },
 
         clearStaleAuth() {
-            const keys = ["uc_access_token", "uc_refresh_token", "uc_token_expires_at", "uc_token", "access_token", "refresh_token", "user"];
+            const keys = ['uc_access_token', 'uc_refresh_token', 'uc_token_expires_at', 'uc_token', 'access_token', 'refresh_token', 'user'];
             keys.forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
+            if (window.NexusStore) { try { NexusStore.prototype.logout && new NexusStore().logout(); } catch (e) {} }
         },
 
         registerCoreComponents(app) {
             if (!app || !app.component) return;
             const map = {
-                "nux-ai-badge": window.NuxAiBadge,
-                "nux-error-state": window.NuxErrorState,
-                "nux-skeleton": window.NuxSkeleton,
-                "nux-empty-state": window.NuxEmptyState,
-                "nux-ai-indicator": window.NuxAiIndicator,
-                "nux-export-button": window.NuxExportButton,
-                "nux-plan-progress": window.NuxPlanProgress
+                'nux-ai-badge': window.NuxAiBadge,
+                'nux-error-state': window.NuxErrorState,
+                'nux-skeleton': window.NuxSkeleton,
+                'nux-empty-state': window.NuxEmptyState,
+                'nux-ai-indicator': window.NuxAiIndicator,
+                'nux-export-button': window.NuxExportButton,
+                'nux-plan-progress': window.NuxPlanProgress
             };
             Object.keys(map).forEach(function (name) {
                 const comp = map[name];
@@ -3172,26 +3222,50 @@ window.UserCenterAPI = { loaded: true };
             NexusApp.initAppLoading();
         },
 
+        bootstrap(__options) {
+            const options = __options || {};
+            const root = options.el || '#app';
+            const imports = options.components || {};
+            const mount = options.mount !== false;
+            let app;
+            if (options.app) {
+                app = options.app;
+            } else if (window.Vue && typeof window.Vue.createApp === 'function') {
+                app = window.Vue.createApp(options.setup || {});
+            } else {
+                return null;
+            }
+            Object.keys(imports).forEach(function (name) {
+                if (imports[name]) { try { app.component(name, imports[name]); } catch (e) {} }
+            });
+            NexusApp.install(app);
+            if (mount) {
+                const el = typeof root === 'string' ? document.querySelector(root) : root;
+                if (el) { try { app.mount(el); } catch (e) {} }
+            }
+            return app;
+        },
+
         initAppLoading() {
             if (NexusApp._loadingInit) return;
             NexusApp._loadingInit = true;
-            const overlay = document.getElementById("app-loading");
+            const overlay = document.getElementById('app-loading');
             if (!overlay) return;
             const hide = function () {
                 if (!overlay || !overlay.parentNode || overlay.dataset.nxHidden) return;
-                overlay.dataset.nxHidden = "1";
-                overlay.classList.add("nx-app-loading-done");
+                overlay.dataset.nxHidden = '1';
+                overlay.classList.add('nx-app-loading-done');
                 setTimeout(function () {
                     if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
                 }, 320);
             };
-            if (typeof MutationObserver === "function") {
-                const el = document.getElementById("app");
-                if (el && el.getAttribute("data-v-app") !== null) { hide(); return; }
-                const root = el || document.body;
-                const mo = new MutationObserver(function (mutations, obs) {
-                    const cur = document.getElementById("app");
-                    if (cur && cur.getAttribute("data-v-app") !== null) { obs.disconnect(); hide(); }
+            if (typeof MutationObserver === 'function') {
+                const target = document.querySelector('#app[data-v-app]') || document.getElementById('app');
+                if (target && target.dataset.vApp !== undefined) { hide(); return; }
+                const root = document.getElementById('app') || document.body;
+                const mo = new MutationObserver(function (mutations) {
+                    const el = document.getElementById('app');
+                    if (el && el.getAttribute('data-v-app') !== null) { mo.disconnect(); hide(); }
                 });
                 mo.observe(root, { attributes: true, subtree: true, childList: true });
                 setTimeout(function () { mo.disconnect(); hide(); }, 6000);
@@ -3203,10 +3277,10 @@ window.UserCenterAPI = { loaded: true };
 
     window.NexusApp = NexusApp;
 
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
         NexusApp.bindGlobal();
-        if (document.readyState === "loading") {
-            document.addEventListener("DOMContentLoaded", function () { NexusApp.initAppLoading(); });
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function () { NexusApp.initAppLoading(); });
         } else {
             NexusApp.initAppLoading();
         }
