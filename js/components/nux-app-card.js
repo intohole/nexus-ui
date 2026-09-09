@@ -64,7 +64,7 @@
                         </span>
                         <button v-if="showFav" type="button" class="nux-app-card-fav" :class="{on: faved}"
                                 :title="faved ? '取消收藏' : '收藏'" :aria-label="faved ? '取消收藏' : '收藏'" @click="emitFav">
-                            <i class="fa" :class="faved ? 'fa-star' : 'fa-star-o'"></i>
+                            <i class="fa" :class="faved ? 'fa-star' : 'fa-regular fa-star'"></i>
                         </button>
                         <button v-if="editable" type="button" class="nux-app-card-edit" title="编辑应用信息与跳转" @click="emitEdit">
                             <i class="fa fa-sliders"></i>
