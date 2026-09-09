@@ -301,11 +301,24 @@
   border-radius: var(--nx-radius-lg, 18px);
   text-decoration: none;
   overflow: hidden;
-  cursor: pointer;
   box-shadow: var(--nx-shadow-sm, 0 1px 3px rgba(15,23,42,0.05));
   transition: transform .3s cubic-bezier(0.4,0,0.2,1), box-shadow .3s cubic-bezier(0.4,0,0.2,1), border-color .3s;
   color: inherit;
 }
+.nux-app-card-cover{
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  cursor: pointer;
+  border-radius: inherit;
+  text-decoration: none;
+}
+.nux-app-card-glow,
+.nux-app-card-top,
+.nux-app-card-body,
+.nux-app-card-enter{ position: relative; z-index: 0; }
+.nux-app-card-fav,
+.nux-app-card-edit{ position: relative; z-index: 2; }
 .nux-app-card:hover{
   transform: translateY(-4px);
   box-shadow: 0 18px 40px -14px var(--app-accent-glow, rgba(79,70,229,0.22));
@@ -443,5 +456,5 @@
   .nux-app-card-name{ font-size: 14.5px; }
   .nux-app-card-desc{ font-size: 12px; line-height: 1.55; }
   .nux-app-card-badge{ font-size: 10px; padding: 2px 6px; }
-  .nux-app-card-fav{ width: 32px; height: 32px; min-width: 32px; min-height: 32px; }
+  .nux-app-card-fav, .nux-app-card-edit{ width: 40px; height: 40px; min-width: 40px; min-height: 40px; }
 }

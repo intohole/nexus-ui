@@ -53,7 +53,8 @@
             }
         },
         template: `
-            <a :href="href" class="nux-app-card" :style="vars" @click="emitOpen">
+            <div class="nux-app-card" :style="vars">
+                <a class="nux-app-card-cover" :href="href" @click="emitOpen" :aria-label="'打开' + name"></a>
                 <span class="nux-app-card-glow"></span>
                 <div class="nux-app-card-top">
                     <img v-if="icon" :src="icon" :alt="name" class="nux-app-card-icon">
@@ -76,7 +77,7 @@
                     <p class="nux-app-card-desc">{{ desc }}</p>
                 </div>
                 <span class="nux-app-card-enter">打开 <i class="fa fa-arrow-right"></i></span>
-            </a>
+            </div>
         `
     };
     window.NuxAppCard = NuxAppCard;

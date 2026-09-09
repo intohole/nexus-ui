@@ -71,13 +71,17 @@
         getLocalHour() {
             const now = new Date();
             try {
-                const parts = now.toLocaleTimeString('zh-CN', {
+                const parts = new Intl.DateTimeFormat('zh-CN', {
                     hour: 'numeric',
-                    hour12: false,
+                    hourCycle: 'h23',
                     timeZone: CN_TZ
-                });
-                const hour = parseInt(parts, 10);
-                if (!isNaN(hour) && hour >= 0 && hour <= 23) return hour;
+                }).formatToParts(now);
+                for (const p of parts) {
+                    if (p.type === 'hour') {
+                        const hour = parseInt(p.value, 10);
+                        if (!isNaN(hour) && hour >= 0 && hour <= 23) return hour;
+                    }
+                }
             } catch (e) { /* fallthrough */ }
             return now.getHours();
         },
