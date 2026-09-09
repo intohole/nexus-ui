@@ -323,10 +323,6 @@
   pointer-events: none;
 }
 .nux-app-card-badge{
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  z-index: 2;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -337,52 +333,43 @@
   border: 1px solid currentColor;
   padding: 3px 8px;
   border-radius: 999px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .nux-app-card-badge i{ font-size: 10px; }
 .nux-app-card-badge-recent{ background: rgba(13,148,136,0.10); border-color: rgba(13,148,136,0.22); color: #0d9488; }
 .nux-app-card-badge-fav{ background: rgba(217,119,6,0.12); border-color: rgba(217,119,6,0.28); color: #d97706; }
 .nux-app-card-badge-featured{ background: rgba(217,119,6,0.12); border-color: rgba(217,119,6,0.28); color: #d97706; }
-.nux-app-card-badge--pos{
-  top: 14px;
-  left: 14px;
-  right: auto;
-}
 .nux-app-card-fav{
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 3;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  min-height: 30px;
   border-radius: 999px;
-  border: 1px solid rgba(79,70,229,0.4);
-  background: rgba(255,255,255,0.85);
+  border: 1px solid rgba(15,23,42,0.18);
+  background: rgba(255,255,255,0.9);
   color: #64748b;
-  font-size: 12px;
+  font-size: 13px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0;
-  transition: opacity .3s, color .3s, transform .3s;
+  transition: color .3s, background .3s, border-color .3s, transform .3s;
   font-family: inherit;
+  flex-shrink: 0;
 }
-.nux-app-card:hover .nux-app-card-fav{ opacity: 1; }
-.nux-app-card-fav:hover{ transform: scale(1.12); }
+.nux-app-card:hover .nux-app-card-fav{ color: var(--app-accent, #4f46e5); border-color: rgba(79,70,229,0.35); }
+.nux-app-card-fav:hover{ transform: scale(1.1); background: rgba(255,255,255,0.95); }
 .nux-app-card-fav.on{
-  opacity: 1;
   color: #d97706;
   background: rgba(217,119,6,0.12);
   border-color: rgba(217,119,6,0.35);
 }
-@media (hover: none){ .nux-app-card-fav{ opacity: 1; background: rgba(255,255,255,0.6); } }
 .nux-app-card-edit{
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 3;
   width: 30px;
   height: 30px;
+  min-width: 30px;
+  min-height: 30px;
   border: none;
   border-radius: 9px;
   background: rgba(79,70,229,0.08);
@@ -393,14 +380,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  opacity: 0;
   transition: all .3s;
   flex-shrink: 0;
 }
-.nux-app-card:hover .nux-app-card-edit{ opacity: 1; }
 .nux-app-card-edit:hover{ background: rgba(79,70,229,0.16); border-color: rgba(79,70,229,0.4); transform: scale(1.06); }
-@media (hover: none), (max-width: 768px){ .nux-app-card-edit{ opacity: 1; } }
-.nux-app-card-top{ position: relative; display: flex; align-items: center; }
+.nux-app-card-top{ display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.nux-app-card-actions{ display: flex; align-items: center; gap: 6px; min-width: 0; }
 .nux-app-card-icon{
   width: 46px;
   height: 46px;
@@ -426,7 +411,6 @@
   color: var(--nx-text-heading, #0f172a);
   margin-bottom: 4px;
   transition: color .3s;
-  padding-right: 52px;
 }
 .nux-app-card-desc{
   font-size: 12.5px;
@@ -453,9 +437,11 @@
 .nux-app-card:hover .nux-app-card-enter i{ transform: translateX(3px); }
 @media (max-width: 768px){
   .nux-app-card{ padding: 14px; gap: 8px; }
+  .nux-app-card-top{ gap: 8px; }
+  .nux-app-card-actions{ gap: 4px; }
   .nux-app-card-icon, .nux-app-card-icon-fallback{ width: 40px; height: 40px; font-size: 18px; }
   .nux-app-card-name{ font-size: 14.5px; }
   .nux-app-card-desc{ font-size: 12px; line-height: 1.55; }
-  .nux-app-card-badge{ top: 10px; right: 10px; font-size: 10px; padding: 2px 6px; }
-  .nux-app-card-badge--pos{ top: 10px; left: 10px; right: auto; }
+  .nux-app-card-badge{ font-size: 10px; padding: 2px 6px; }
+  .nux-app-card-fav{ width: 32px; height: 32px; min-width: 32px; min-height: 32px; }
 }

@@ -55,19 +55,21 @@
         template: `
             <a :href="href" class="nux-app-card" :style="vars" @click="emitOpen">
                 <span class="nux-app-card-glow"></span>
-                <span v-if="badge" :class="['nux-app-card-badge', badge.tone ? 'nux-app-card-badge-' + badge.tone : '', badge.pos === 'left' ? 'nux-app-card-badge--pos' : '']">
-                    <i v-if="badge.icon" :class="badge.icon"></i>{{ badge.label }}
-                </span>
-                <button v-if="showFav" type="button" class="nux-app-card-fav" :class="{on: faved}"
-                        :title="faved ? '取消收藏' : '收藏'" @click="emitFav">
-                    <i class="fa" :class="faved ? 'fa-star' : 'fa-star-o'"></i>
-                </button>
-                <button v-if="editable" type="button" class="nux-app-card-edit" title="编辑应用信息与跳转" @click="emitEdit">
-                    <i class="fa fa-sliders"></i>
-                </button>
                 <div class="nux-app-card-top">
                     <img v-if="icon" :src="icon" :alt="name" class="nux-app-card-icon">
                     <div v-else class="nux-app-card-icon-fallback"><i class="fa fa-cube"></i></div>
+                    <div class="nux-app-card-actions">
+                        <span v-if="badge" :class="['nux-app-card-badge', badge.tone ? 'nux-app-card-badge-' + badge.tone : '']">
+                            <i v-if="badge.icon" :class="badge.icon"></i>{{ badge.label }}
+                        </span>
+                        <button v-if="showFav" type="button" class="nux-app-card-fav" :class="{on: faved}"
+                                :title="faved ? '取消收藏' : '收藏'" :aria-label="faved ? '取消收藏' : '收藏'" @click="emitFav">
+                            <i class="fa" :class="faved ? 'fa-star' : 'fa-star-o'"></i>
+                        </button>
+                        <button v-if="editable" type="button" class="nux-app-card-edit" title="编辑应用信息与跳转" @click="emitEdit">
+                            <i class="fa fa-sliders"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="nux-app-card-body">
                     <h4 class="nux-app-card-name">{{ name }}</h4>
