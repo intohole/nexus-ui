@@ -76,6 +76,21 @@
                 const warnings = msg.warnings || (msg.warnings = []);
                 const text = payload.content || payload.message || payload.text || '';
                 if (text) warnings.push(text);
+            } else if (type === 'widget' || type === 'component') {
+                const widgets = msg.widgets || (msg.widgets = []);
+                widgets.push({
+                    id: payload.id || ('w_' + widgets.length + '_' + Date.now()),
+                    type: payload.widget || payload.component || payload.type || '',
+                    title: payload.title || '',
+                    data: payload.data || payload
+                });
+            } else if (type === 'widget_update' || type === 'component_update') {
+                const widgets = msg.widgets || (msg.widgets = []);
+                const target = widgets.find((w) => w.id === payload.id);
+                if (target) {
+                    if (payload.data) target.data = payload.data;
+                    if (payload.title) target.title = payload.title;
+                }
             } else {
                 handled = false;
             }

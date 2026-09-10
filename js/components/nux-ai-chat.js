@@ -27,7 +27,8 @@
             scrollThreshold: { type: Number, default: 150 },
             streaming: { type: Boolean, default: false }
         },
-        emits: ['update:messages', 'send', 'chunk', 'done', 'error', 'stop', 'retry', 'clear', 'stream-start', 'stream-end'],
+        emits: ['update:messages', 'send', 'chunk', 'done', 'error', 'stop', 'retry', 'clear', 'stream-start', 'stream-end', 'meta', 'widget-action'],
+        components: { NuxAiWidgets: window.NuxAiWidgets },
         setup(props, ctx) {
             const feat = Object.assign({}, DEFAULT_FEATURES, props.features);
             const inputCfg = Object.assign({}, DEFAULT_INPUT, props.inputConfig);
@@ -118,7 +119,7 @@
                 return reactive({
                     id: 'a_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
                     role: 'assistant', content: '', streaming: true, error: false,
-                    thinking: '', tools: [], references: [], warnings: [], meta: null,
+                    thinking: '', tools: [], references: [], warnings: [], widgets: [], meta: null,
                     showReasoning: false, created_at: new Date().toISOString()
                 });
             }
@@ -336,6 +337,15 @@
                 }
             }
 
+            function onWidgetAction(ev, msg) {
+                if (!ev) return;
+                if (ev.action === 'send') {
+                    const text = ev.payload && (ev.payload.text || ev.payload.value || ev.payload);
+                    if (text && typeof text === 'string') { send(text); return; }
+                }
+                ctx.emit('widget-action', ev, msg);
+            }
+
             function onInput() { autoResize(); }
             function onKeydown(e) {
                 if (!inputCfg.enterToSend) return;
@@ -393,7 +403,7 @@
                 elapsed, kbHeight, scrollEl, inputEl, listEl, feat, inputCfg, roleCfg,
                 renderMarkdown, send, stop, retry, clear, copyMessage, scrollToBottom,
                 onScroll, onInput, onKeydown, onCompositionStart, onCompositionEnd,
-                clickQuickReply, smartScroll
+                clickQuickReply, smartScroll, onWidgetAction
             };
         },
         template: window.NuxAiChatTemplate

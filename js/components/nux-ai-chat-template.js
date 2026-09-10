@@ -61,6 +61,7 @@
                                         <span>{{ w }}</span>
                                     </div>
                                 </div>
+                                <nux-ai-widgets v-if="m.widgets && m.widgets.length" :widgets="m.widgets" @action="(ev) => onWidgetAction(ev, m)"></nux-ai-widgets>
                                 <slot name="message-after" :msg="m"></slot>
                             </div>
                             <div v-if="m.error" class="nx-ai-chat-error-bar">
