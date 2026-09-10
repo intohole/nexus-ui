@@ -87,6 +87,8 @@
       "nux-notification-bell.js": "通知铃铛组件",
       "nux-notification-panel.js": "通知管理面板组件（完整列表/分页/标记已读/删除）",
       "nux-about-page.js": "关于我们页面组件（自包含CSS，主题色驱动）",
+      "nux-menu-user.js": "用户中心菜单栏入口（inline布局放入应用顶栏，未登录显示登录图标、已登录显示头像抽屉，移动端零遮挡）",
+      "nux-menu-about.js": "关于菜单栏入口（inline布局放入应用顶栏，图标链接到about.html）",
       "nux-ai-chat.js": "AI对话完整Vue组件（消息列表+流式+输入+停止+滚动+错误重试+快捷回复，支持slots扩展）",
       "nux-ai-chat-helpers.js": "AI对话组件工具集（默认features/input/roles、滚动判断、键盘高度、富事件路由）",
       "nux-conversation-list.js": "AI会话列表Vue组件（列表/搜索/新建/删除/归档，对齐统一chat会话CRUD API）"

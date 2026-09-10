@@ -93,7 +93,7 @@
                     const resp = await fetch(location.origin + '/api/portal/apps');
                     if (!resp.ok) return;
                     const data = await resp.json();
-                    const apps = (data.apps || []).filter(a => a.name && a.url);
+                    const apps = (data.apps || []).filter(a => !!a.name && !!a.url && !a.is_dev && !((a.app_group || '').includes('内部')));
                     if (apps.length) {
                         ecoApps.value = apps.map(a => ({
                             name: a.display_name || a.name,
