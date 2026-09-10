@@ -100,16 +100,20 @@
     const WidgetCards = {
         name: 'WidgetCards',
         props: { data: { type: Object, default: null } },
+        emits: ['open'],
         template: `
             <div v-if="data" class="nxw-body nxw-cards">
-                <div v-for="(item, i) in data.items" :key="i" class="nxw-card-row">
+                <div v-for="(item, i) in data.items" :key="i" class="nxw-card-row"
+                    :class="{ 'is-clickable': !!item.url || item.action }"
+                    :style="(item.url || item.action) ? 'cursor:pointer' : null"
+                    @click="$emit('open', item)">
                     <div class="nxw-card-icon">{{ item.icon || '📄' }}</div>
                     <div class="nxw-card-main">
                         <div class="nxw-card-title">{{ item.title || '' }}</div>
                         <div v-if="item.desc" class="nxw-card-desc">{{ item.desc }}</div>
                         <div v-if="item.meta" class="nxw-card-meta">{{ item.meta }}</div>
                         <div v-if="item.url" class="nxw-card-meta">
-                            <a :href="item.url" target="_blank" rel="noopener">查看详情 →</a>
+                            <a :href="item.url" target="_blank" rel="noopener" @click.stop>查看详情 →</a>
                         </div>
                     </div>
                 </div>
@@ -250,7 +254,8 @@
                     <component :is="comOf(w.type)" v-if="comOf(w.type)" :data="w.data"
                         @pick="(item) => dispatch(w, 'send', item)"
                         @submit="(val) => dispatch(w, 'submit', val)"
-                        @rate="(val) => dispatch(w, 'feedback', val)">
+                        @rate="(val) => dispatch(w, 'feedback', val)"
+                        @open="(item) => dispatch(w, 'open', item)">
                     </component>
                 </div>
             </div>
