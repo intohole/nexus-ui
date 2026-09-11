@@ -279,6 +279,11 @@
                 mode.value = m;
                 loginType.value = 'account';
                 form.confirmPassword = '';
+                form.password = '';
+                form.email = '';
+                form.phone = '';
+                form.smsCode = '';
+                smsCode.value = '';
             }
 
             function switchLoginType(t) {
