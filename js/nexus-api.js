@@ -116,6 +116,13 @@
             return '请求失败';
         }
 
+        _extractErrorCode(data) {
+            if (!data || typeof data !== 'object') return null;
+            const code = data.error_code || data.errorCode || data.code;
+            if (code == null) return null;
+            return typeof code === 'string' ? code : String(code);
+        }
+
         async _tryRefresh() {
             if (this._refreshPromise) return this._refreshPromise;
             const refreshToken = this._getRefreshToken();
@@ -163,35 +170,36 @@
                         const { response, data } = await this._doFetch(url, options, controller);
 
                         if (!response.ok) {
-                            const errorMsg = this._extractError(data);
-                            const skipUnauthorized = options.skipUnauthorized === true;
-                            if (response.status === 401 && !skipUnauthorized && !skipAuthRefresh && this.refreshUrl) {
-                                try {
-                                    await this._tryRefresh();
-                                    const retryResult = await this._doFetch(url, options, controller);
-                                    if (!retryResult.response.ok) {
-                                        const retryMsg = this._extractError(retryResult.data);
-                                        throw new ApiError(retryMsg, retryResult.response.status, retryResult.data);
+                                const errorMsg = this._extractError(data);
+                                const errorCode = this._extractErrorCode(data);
+                                const skipUnauthorized = options.skipUnauthorized === true;
+                                if (response.status === 401 && !skipUnauthorized && !skipAuthRefresh && this.refreshUrl) {
+                                    try {
+                                        await this._tryRefresh();
+                                        const retryResult = await this._doFetch(url, options, controller);
+                                        if (!retryResult.response.ok) {
+                                            const retryMsg = this._extractError(retryResult.data);
+                                            throw new ApiError(retryMsg, retryResult.response.status, retryResult.data, this._extractErrorCode(retryResult.data));
+                                        }
+                                        return retryResult.data;
+                                    } catch (refreshErr) {
+                                        if (refreshErr && refreshErr.status) throw refreshErr;
+                                        this._clearAuth();
+                                        if (this.onUnauthorized) this.onUnauthorized();
+                                        throw new ApiError('登录已过期，请重新登录', 401, null);
                                     }
-                                    return retryResult.data;
-                                } catch (refreshErr) {
-                                    if (refreshErr && refreshErr.status) throw refreshErr;
-                                    this._clearAuth();
-                                    if (this.onUnauthorized) this.onUnauthorized();
-                                    throw new ApiError('登录已过期，请重新登录', 401, null);
                                 }
-                            }
-                            if (response.status === 401) {
-                                if (!skipUnauthorized) {
-                                    this._clearAuth();
-                                    if (this.onUnauthorized) this.onUnauthorized();
+                                if (response.status === 401) {
+                                    if (!skipUnauthorized) {
+                                        this._clearAuth();
+                                        if (this.onUnauthorized) this.onUnauthorized();
+                                    }
+                                    const msg401 = skipUnauthorized ? (errorMsg || '认证失败') : (skipAuthRefresh ? (errorMsg || '认证失败') : '登录已过期，请重新登录');
+                                    throw new ApiError(msg401, 401, data, errorCode);
                                 }
-                                const msg401 = skipUnauthorized ? (errorMsg || '认证失败') : (skipAuthRefresh ? (errorMsg || '认证失败') : '登录已过期，请重新登录');
-                                throw new ApiError(msg401, 401, data);
+                                if (this.onError) this.onError(response.status, errorMsg);
+                                throw new ApiError(errorMsg, response.status, data, errorCode);
                             }
-                            if (this.onError) this.onError(response.status, errorMsg);
-                            throw new ApiError(errorMsg, response.status, data);
-                        }
 
                         return data;
                     } catch (error) {
@@ -248,7 +256,7 @@
                 let data; const ct = res.headers.get('content-type') || '';
                 if (ct.includes('application/json')) data = await res.json();
                 else { const t = await res.text(); try { data = JSON.parse(t); } catch { data = { detail: t }; } }
-                if (!res.ok) throw new ApiError(this._extractError(data), res.status, data);
+                if (!res.ok) throw new ApiError(this._extractError(data), res.status, data, this._extractErrorCode(data));
                 return data;
             }).catch((err) => {
                 if (err.name === 'NexusApiError') throw err;
@@ -273,6 +281,7 @@
                     let errData;
                     try { errData = await response.json(); } catch { errData = {}; }
                     const errorMsg = this._extractError(errData);
+                    const errorCode = this._extractErrorCode(errData);
                     if (response.status === 401) {
                         this._clearAuth();
                         if (this.onUnauthorized) this.onUnauthorized();
@@ -280,7 +289,7 @@
                         return;
                     }
                     if (this.onError) this.onError(response.status, errorMsg);
-                    if (onError) onError(errorMsg);
+                    if (onError) onError(errorMsg, errorCode);
                     return;
                 }
                 const reader = response.body.getReader();
@@ -352,9 +361,11 @@
                 throw _isNetworkErr(err) ? new ApiError('网络连接失败，请检查网络后重试', null, null) : new ApiError(err.message || '下载失败', null, null);
             }
             if (!response.ok) {
-                const errorMsg = `下载失败 (${response.status})`;
+                let errData;
+                try { errData = await response.json(); } catch { errData = {}; }
+                const errorMsg = this._extractError(errData) || `下载失败 (${response.status})`;
                 if (this.onError) this.onError(response.status, errorMsg);
-                throw new ApiError(errorMsg, response.status, null);
+                throw new ApiError(errorMsg, response.status, errData, this._extractErrorCode(errData));
             }
             return await response.blob();
         }

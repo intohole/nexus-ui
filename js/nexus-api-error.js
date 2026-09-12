@@ -34,9 +34,26 @@
             this.status = status;
             this.response = response;
             this.code = code;
+            this.errorCode = code;
             this.isNetwork = false;
         }
     }
+
+    const ERROR_CODE_TEXT_MAP = {
+        'RATE_LIMIT_EXCEEDED': '操作过于频繁，请稍后再试',
+        'AUTH_ERROR': '登录已失效，请重新登录',
+        'FORBIDDEN': '没有权限执行此操作',
+        'NOT_FOUND': '请求的资源不存在',
+        'VALIDATION_ERROR': '提交的数据有误，请检查后重试',
+        'CONFLICT': '数据冲突，请刷新后重试',
+        'BAD_REQUEST': '请求参数有误，请检查后重试',
+        'INTERNAL_ERROR': '服务器开小差了，请稍后重试',
+        'EXTERNAL_SERVICE_ERROR': '外部服务暂时不可用，请稍后重试',
+        'SERVICE_UNAVAILABLE': '服务暂时不可用，请稍后重试',
+        'XIANYU_AUTH_ERROR': '闲鱼认证失效，请重新登录闲鱼',
+        'XIANYU_RATE_LIMIT': '闲鱼请求过于频繁，请稍后再试',
+        'RATE_LIMITED': '操作过于频繁，请稍后再试'
+    };
 
     function isNetworkError(err) {
         if (!err) return false;
@@ -54,6 +71,9 @@
 
     function mapHttpError(err, context = {}) {
         if (!err) return '未知错误';
+        if (err.errorCode && ERROR_CODE_TEXT_MAP[err.errorCode]) {
+            return ERROR_CODE_TEXT_MAP[err.errorCode];
+        }
         if (err.name === 'NexusApiError' && err.status) {
             const custom = context[err.status];
             if (custom) return custom;
