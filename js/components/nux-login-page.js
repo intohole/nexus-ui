@@ -41,7 +41,9 @@
             defaultMode: { type: String, default: 'login' },
             variant: { type: String, default: 'split' },
             ageGate: { type: Boolean, default: false },
-            minorAge: { type: Number, default: 14 }
+            minorAge: { type: Number, default: 14 },
+            captchaEnabled: { type: Boolean, default: true },
+            captchaBase: { type: String, default: '' }
         },
         emits: ['login', 'register', 'registered', 'sms-login', 'send-sms', 'third-party-login'],
         setup(props, { emit }) {
@@ -72,8 +74,13 @@
                 confirmPassword: '',
                 email: '',
                 phone: '',
-                inviteCode: ''
+                inviteCode: '',
+                captchaCode: ''
             });
+            const captchaRequired = Vue.ref(false);
+            const captchaId = Vue.ref('');
+            const captchaImg = Vue.ref('');
+            const captchaLoading = Vue.ref(false);
             const forgotOpen = Vue.ref(false);
             const forgotLoading = Vue.ref(false);
             const forgotComp = Vue.shallowRef(window.NuxForgotPassword || null);
@@ -93,6 +100,49 @@
             const docBase = compBase.replace(/\/js\/components$/, '');
             const defaultAgreementUrl = docBase + '/agreement.html';
             const defaultPrivacyUrl = docBase + '/privacy.html';
+
+            function captchaApiBase() {
+                if (props.captchaBase) return props.captchaBase;
+                if (effectiveSdk.value && effectiveSdk.value.baseUrl) return effectiveSdk.value.baseUrl;
+                return '/uc-api';
+            }
+
+            async function loadCaptchaImage() {
+                if (!props.captchaEnabled || captchaLoading.value) return;
+                captchaLoading.value = true;
+                try {
+                    const resp = await fetch(captchaApiBase() + '/api/auth/captcha/image', { cache: 'no-store', credentials: 'same-origin' });
+                    const cid = resp.headers.get('X-Captcha-Id');
+                    const blob = await resp.blob();
+                    if (captchaImg.value) URL.revokeObjectURL(captchaImg.value);
+                    captchaImg.value = URL.createObjectURL(blob);
+                    captchaId.value = cid || '';
+                    form.captchaCode = '';
+                } catch (e) {
+                    captchaImg.value = '';
+                } finally {
+                    captchaLoading.value = false;
+                }
+            }
+
+            async function checkCaptchaRequired() {
+                if (!props.captchaEnabled) return;
+                try {
+                    const resp = await fetch(captchaApiBase() + '/api/auth/captcha/required', { cache: 'no-store', credentials: 'same-origin' });
+                    if (!resp.ok) return;
+                    const body = await resp.json();
+                    var data = body && body.data ? body.data : body;
+                    captchaRequired.value = !!(data && data.required);
+                    if (captchaRequired.value) await loadCaptchaImage();
+                } catch (e) {}
+            }
+
+            function captchaPayload() {
+                if (captchaRequired.value && captchaId.value && form.captchaCode) {
+                    return { captchaId: captchaId.value, captchaCode: form.captchaCode };
+                }
+                return null;
+            }
             const effectiveTermsUrl = Vue.computed(function() { return props.termsUrl || defaultAgreementUrl; });
             const effectivePrivacyUrl = Vue.computed(function() { return props.privacyUrl || defaultPrivacyUrl; });
             const eyeSvg = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
@@ -119,6 +169,7 @@
                         agreed.value = true;
                     }
                 } catch (e) {}
+                checkCaptchaRequired();
             });
             Vue.onUnmounted(function() {
                 restoreTheme();
@@ -178,7 +229,8 @@
                     else localStorage.removeItem(REMEMBER_KEY);
                 } catch (e) {}
                 markAgreement();
-                emit('login', { username: form.username || '', password: form.password, rememberMe: rememberMe.value });
+                var captcha = captchaPayload();
+                emit('login', captcha ? { username: form.username || '', password: form.password, rememberMe: rememberMe.value, captchaId: captcha.captchaId, captchaCode: captcha.captchaCode } : { username: form.username || '', password: form.password, rememberMe: rememberMe.value });
             }
 
             function sendSms() {
@@ -199,6 +251,12 @@
                         smsCountdown.value -= 1;
                         if (smsCountdown.value <= 0) clearInterval(smsTimer);
                     }, 1000);
+                }
+            });
+
+            Vue.watch(combinedError, function(v) {
+                if (v && captchaRequired.value) {
+                    loadCaptchaImage();
                 }
             });
 
@@ -243,13 +301,16 @@
                     return;
                 }
                 markAgreement();
+                var captcha = captchaPayload();
                 var payload = {
                     username: form.username || null,
                     password: form.password,
                     email: form.email || null,
                     phone: form.phone || null,
                     inviteCode: form.inviteCode || null,
-                    code: smsCode.value || null
+                    code: smsCode.value || null,
+                    captchaId: captcha ? captcha.captchaId : null,
+                    captchaCode: captcha ? captcha.captchaCode : null
                 };
                 if (props.useCustomRegister) {
                     emit('register', payload);
@@ -264,7 +325,12 @@
                 registering.value = true;
                 localError.value = '';
                 try {
-                    var res = await sdk.register(payload);
+                    var captcha = captchaPayload();
+                    var res = await sdk.register({
+                        username: payload.username, password: payload.password,
+                        email: payload.email, phone: payload.phone, inviteCode: payload.inviteCode,
+                        captcha: captcha
+                    });
                     if (!res || !res.success) { localError.value = (res && res.message) || '注册失败，请重试'; return; }
                     emit('registered', res);
                 } catch (e) {
@@ -332,6 +398,7 @@
                 effectiveTermsUrl, effectivePrivacyUrl,
                 forgotOpen, forgotLoading, forgotComp,
                 onLogin, onRegister, doRegister, sendSms, switchMode, switchLoginType, onThirdParty, onForgot, registering,
+                captchaRequired, captchaImg, captchaLoading, loadCaptchaImage,
                 eyeSvg, eyeSlashSvg
             };
         },
@@ -446,6 +513,16 @@
                             <div v-if="mode === 'register' && showInviteCode" class="nux-form-group">
                                 <label class="nux-form-label">邀请码</label>
                                 <input v-model="form.inviteCode" type="text" class="nux-input" placeholder="邀请码（选填）">
+                            </div>
+                            <div v-if="captchaRequired" class="nux-form-group">
+                                <label class="nux-form-label">图形验证码</label>
+                                <div class="nux-captcha-row">
+                                    <input v-model="form.captchaCode" type="text" class="nux-input" placeholder="请输入验证码" maxlength="6" autocomplete="off" aria-label="图形验证码">
+                                    <button type="button" class="nux-captcha-img" :aria-label="loading ? '验证码加载中' : '点击刷新验证码'" :disabled="captchaLoading" @click="loadCaptchaImage">
+                                        <img v-if="captchaImg" :src="captchaImg" alt="验证码">
+                                        <span v-else class="nux-captcha-loading">加载中…</span>
+                                    </button>
+                                </div>
                             </div>
                             <div v-if="showTerms" class="nux-form-group">
                                 <label class="nux-checkbox nux-terms">

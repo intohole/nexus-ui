@@ -245,6 +245,23 @@
 .nux-password-toggle:hover { color: var(--nx-text-heading); }
 .nux-sms-row { display: flex; gap: var(--nx-space-2); }
 .nux-sms-row .nux-input { flex: 1; }
+.nux-captcha-row { display: flex; gap: var(--nx-space-2); }
+.nux-captcha-row .nux-input { flex: 1; }
+.nux-captcha-img {
+  flex-shrink: 0;
+  width: 130px;
+  height: 44px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--nx-border);
+  border-radius: var(--nx-radius-md);
+  background: var(--nx-bg-surface);
+  cursor: pointer;
+  transition: border-color var(--nx-transition-fast);
+}
+.nux-captcha-img:hover { border-color: var(--app-accent, var(--nx-primary)); }
+.nux-captcha-img img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.nux-captcha-loading { display: flex; align-items: center; justify-content: center; height: 100%; font-size: var(--nx-text-sm); color: var(--nx-text-muted); }
 .nux-sms-btn {
   flex-shrink: 0;
   padding: 0 var(--nx-space-3);

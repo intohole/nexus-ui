@@ -172,36 +172,40 @@ class UserCenterSDK {
         }
     }
 
-    async login(username, password, inviteCode = null) {
+    async login(username, password, inviteCode = null, captcha = null) {
         const data = { username, password, app_key: this.appKey };
         if (inviteCode) data.invite_code = inviteCode;
+        if (captcha) { data.captcha_id = captcha.captchaId; data.captcha_code = captcha.captchaCode; }
         const result = await this._request('POST', '/api/auth/login', data, false);
         if (result.success && result.data) { this._setTokens(result.data); }
         return result;
     }
 
-    async loginWithEmail(email, password, inviteCode = null) {
+    async loginWithEmail(email, password, inviteCode = null, captcha = null) {
         const data = { email, password, app_key: this.appKey };
         if (inviteCode) data.invite_code = inviteCode;
+        if (captcha) { data.captcha_id = captcha.captchaId; data.captcha_code = captcha.captchaCode; }
         const result = await this._request('POST', '/api/auth/login', data, false);
         if (result.success && result.data) { this._setTokens(result.data); }
         return result;
     }
 
-    async loginWithPhone(phone, password, inviteCode = null) {
+    async loginWithPhone(phone, password, inviteCode = null, captcha = null) {
         const data = { phone, password, app_key: this.appKey };
         if (inviteCode) data.invite_code = inviteCode;
+        if (captcha) { data.captcha_id = captcha.captchaId; data.captcha_code = captcha.captchaCode; }
         const result = await this._request('POST', '/api/auth/login', data, false);
         if (result.success && result.data) { this._setTokens(result.data); }
         return result;
     }
 
-    async register({ username, password, email = null, phone = null, inviteCode = null }) {
+    async register({ username, password, email = null, phone = null, inviteCode = null, captcha = null }) {
         const data = { password, app_key: this.appKey };
         if (username) data.username = username;
         if (email) data.email = email;
         if (phone) data.phone = phone;
         if (inviteCode) data.invite_code = inviteCode;
+        if (captcha) { data.captcha_id = captcha.captchaId; data.captcha_code = captcha.captchaCode; }
         const result = await this._request('POST', '/api/auth/register', data, false);
         if (result.success && result.data) { this._setTokens(result.data); }
         return result;
