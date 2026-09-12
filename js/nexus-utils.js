@@ -389,6 +389,29 @@
                 type: 'warning',
                 ...options
             }).then(() => true).catch(() => false);
+        },
+
+        createDualStorage(tokenKey = 'uc_access_token') {
+            const read = (s, k) => { try { return s.getItem(k); } catch (e) { return null; } };
+            const write = (s, k, v) => { try { s.setItem(k, v); } catch (e) {} };
+            const clear = (s, k) => { try { s.removeItem(k); } catch (e) {} };
+            const preferSession = () => read(window.sessionStorage, tokenKey) !== null;
+            return {
+                getItem(key) {
+                    const v = read(window.sessionStorage, key);
+                    if (v !== null) return v;
+                    return read(window.localStorage, key);
+                },
+                setItem(key, value) {
+                    const useSession = preferSession();
+                    write(useSession ? window.sessionStorage : window.localStorage, key, value);
+                    clear(useSession ? window.localStorage : window.sessionStorage, key);
+                },
+                removeItem(key) {
+                    clear(window.sessionStorage, key);
+                    clear(window.localStorage, key);
+                }
+            };
         }
     };
 

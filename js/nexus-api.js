@@ -37,7 +37,9 @@
             this.onError = config.onError || null;
             this.timeout = config.timeout || 30000;
             this.responseAdapter = config.responseAdapter || null;
-            this.storage = config.storage || localStorage;
+            this.storage = config.dualStorage && window.NexusUtils && typeof window.NexusUtils.createDualStorage === 'function'
+                ? window.NexusUtils.createDualStorage(this.tokenKey)
+                : (config.storage || localStorage);
             this.abortControllers = new Map();
             this._requestCounter = 0;
             this._refreshPromise = null;
@@ -143,7 +145,7 @@
                 if (!newToken) throw new Error('no token in refresh response');
                 this._setToken(newToken);
                 if (newRefresh) this._setRefreshToken(newRefresh);
-                if (this.onRefreshSuccess) this.onRefreshSuccess(rdata);
+                if (this.onRefreshSuccess) this.onRefreshSuccess(rdata, this);
                 return newToken;
             }).catch((err) => {
                 throw err.name === 'AbortError' ? new Error('refresh timeout') : err;
@@ -152,22 +154,20 @@
         }
 
         async request(url, options = {}) {
-            const controller = new AbortController();
-            const requestId = this._generateRequestId(url);
-            this._registerController(requestId, controller);
-
             const timeoutValue = options.timeout !== undefined ? options.timeout : this.timeout;
-            const timeoutId = setTimeout(() => controller.abort(), timeoutValue);
 
             const isIdempotent = !options.method || options.method === 'GET';
             const maxAttempts = isIdempotent ? this.maxRetry : 1;
             const skipAuthRefresh = options.skipAuthRefresh === true;
             let lastError;
 
-            try {
-                for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-                    try {
-                        const { response, data } = await this._doFetch(url, options, controller);
+            for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                const controller = new AbortController();
+                const requestId = this._generateRequestId(url);
+                this._registerController(requestId, controller);
+                const timeoutId = setTimeout(() => controller.abort(), timeoutValue);
+                try {
+                    const { response, data } = await this._doFetch(url, options, controller);
 
                         if (!response.ok) {
                                 const errorMsg = this._extractError(data);
@@ -204,7 +204,14 @@
                         return data;
                     } catch (error) {
                         lastError = error;
-                        if (error.name === 'AbortError') throw new ApiError('请求超时，请稍后重试', 408, null);
+                        if (error.name === 'AbortError') {
+                            if (attempt < maxAttempts) {
+                                const delay = Math.min(MAX_DELAY, BASE_DELAY * 2 ** (attempt - 1)) * (0.5 + Math.random() * 0.5);
+                                await new Promise(r => setTimeout(r, delay));
+                                continue;
+                            }
+                            throw new ApiError('请求超时，请稍后重试', 408, null);
+                        }
                         if (_isNetworkErr(error)) {
                             const e = new ApiError('网络连接失败，请检查网络后重试', null, null);
                             e.isNetwork = true; throw e;
@@ -214,13 +221,12 @@
                             const delay = Math.min(MAX_DELAY, BASE_DELAY * 2 ** (attempt - 1)) * (0.5 + Math.random() * 0.5);
                             await new Promise(r => setTimeout(r, delay));
                         }
+                    } finally {
+                        clearTimeout(timeoutId);
+                        this.abortControllers.delete(requestId);
                     }
                 }
                 throw lastError;
-            } finally {
-                clearTimeout(timeoutId);
-                this.abortControllers.delete(requestId);
-            }
         }
 
         get(url, params = {}, options = {}) {
