@@ -4,7 +4,7 @@
 
     var CSS = [
         '.nux-app-switcher,.nxs-root{all:initial;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:#f1f5f9}',
-        '.nxs-trigger{position:fixed;left:18px;bottom:18px;z-index:2147483001;display:flex;align-items:center;gap:9px;height:46px;padding:0 18px;border-radius:999px;background:rgba(15,23,42,.92);backdrop-filter:blur(14px);border:1px solid rgba(56,189,248,.28);box-shadow:0 10px 28px rgba(15,23,42,.35),inset 0 1px 0 rgba(255,255,255,.06);color:#f1f5f9;cursor:pointer;transition:transform .25s cubic-bezier(.4,0,.2,1),border-color .25s,box-shadow .25s;-webkit-tap-highlight-color:transparent}',
+        '.nxs-trigger{position:fixed;left:var(--nxs-left,18px);bottom:18px;z-index:2147483001;display:flex;align-items:center;gap:9px;height:46px;padding:0 18px;border-radius:999px;background:rgba(15,23,42,.92);backdrop-filter:blur(14px);border:1px solid rgba(56,189,248,.28);box-shadow:0 10px 28px rgba(15,23,42,.35),inset 0 1px 0 rgba(255,255,255,.06);color:#f1f5f9;cursor:pointer;transition:transform .25s cubic-bezier(.4,0,.2,1),border-color .25s,box-shadow .25s;-webkit-tap-highlight-color:transparent}',
         '.nxs-trigger:hover{transform:translateY(-2px);border-color:rgba(56,189,248,.55);box-shadow:0 14px 34px rgba(15,23,42,.4),0 0 22px rgba(56,189,248,.22)}',
         '.nxs-trigger:active{transform:translateY(0)}',
         '.nxs-trigger-glyph{width:20px;height:20px;flex:none}',
@@ -55,7 +55,7 @@
         '@media(max-width:640px){',
         '.nxs-overlay{align-items:flex-end}',
         '.nxs-panel{width:100%;max-height:92vh;border-radius:22px 22px 0 0;animation:nxsUp .25s cubic-bezier(.34,1.2,.5,1)}',
-        '.nxs-trigger{left:14px;bottom:calc(14px + env(safe-area-inset-bottom))}',
+        '.nxs-trigger{left:var(--nxs-left,14px);bottom:calc(14px + env(safe-area-inset-bottom))}',
         '.nxs-trigger-label{display:none}',
         '.nxs-grid{grid-template-columns:repeat(2,1fr);gap:8px}',
         '@keyframes nxsUp{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}',

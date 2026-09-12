@@ -196,6 +196,12 @@
 }
 .nux-login-submit:hover { opacity: 0.9; }
 .nux-login-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+.nux-terms-hint {
+  margin-top: var(--nx-space-2);
+  font-size: var(--nx-text-xs);
+  color: var(--nx-danger, #ef4444);
+  text-align: center;
+}
 .nux-login-footer {
   margin-top: var(--nx-space-4);
   text-align: center;

@@ -567,6 +567,7 @@
                                 <span v-if="loading || registering || loginBusy" class="nx-spinner"></span>
                                 {{ mode === 'login' ? ((loading || loginBusy) ? '登 录 …' : '登 录') : (registering ? '注 册 …' : '注 册') }}
                             </button>
+                            <div v-if="showTerms && !agreed" class="nux-terms-hint">请先勾选同意用户协议和隐私政策</div>
                         </form>
                         </template>
                         <div v-if="thirdPartyLogin && thirdPartyLogin.length" class="nux-login-divider"><span>其他登录方式</span></div>
