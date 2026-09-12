@@ -43,9 +43,10 @@
             ageGate: { type: Boolean, default: false },
             minorAge: { type: Number, default: 14 },
             captchaEnabled: { type: Boolean, default: true },
-            captchaBase: { type: String, default: '' }
+            captchaBase: { type: String, default: '' },
+            autoLogin: { type: Boolean, default: false }
         },
-        emits: ['login', 'register', 'registered', 'sms-login', 'send-sms', 'third-party-login'],
+        emits: ['login', 'register', 'registered', 'sms-login', 'send-sms', 'third-party-login', 'success'],
         setup(props, { emit }) {
             const mode = Vue.ref(props.defaultMode);
             const loginType = Vue.ref('account');
@@ -230,7 +231,35 @@
                 } catch (e) {}
                 markAgreement();
                 var captcha = captchaPayload();
-                emit('login', captcha ? { username: form.username || '', password: form.password, rememberMe: rememberMe.value, captchaId: captcha.captchaId, captchaCode: captcha.captchaCode } : { username: form.username || '', password: form.password, rememberMe: rememberMe.value });
+                var loginPayload = captcha ? { username: form.username || '', email: form.email || '', password: form.password, rememberMe: rememberMe.value, captchaId: captcha.captchaId, captchaCode: captcha.captchaCode } : { username: form.username || '', email: form.email || '', password: form.password, rememberMe: rememberMe.value };
+                if (props.autoLogin) { doLogin(loginPayload); return; }
+                emit('login', loginPayload);
+            }
+
+            var loginBusy = Vue.ref(false);
+
+            async function doLogin(payload) {
+                var sdk = effectiveSdk.value;
+                if (!sdk || typeof sdk.login !== 'function') { localError.value = '登录服务不可用'; return; }
+                if (loginBusy.value) return;
+                loginBusy.value = true;
+                localError.value = '';
+                try {
+                    var identifier = payload.email || payload.username;
+                    var captcha = payload.captchaId ? { captchaId: payload.captchaId, captchaCode: payload.captchaCode } : null;
+                    var res = await sdk.login(identifier, payload.password, null, captcha, payload.rememberMe !== false);
+                    if (res && res.success) {
+                        emit('success', res);
+                    } else {
+                        localError.value = (res && res.message) || '登录失败，请重试';
+                        checkCaptchaRequired();
+                    }
+                } catch (e) {
+                    localError.value = (e && e.message) ? e.message : '登录失败，请重试';
+                    checkCaptchaRequired();
+                } finally {
+                    loginBusy.value = false;
+                }
             }
 
             function sendSms() {
@@ -398,6 +427,7 @@
                 effectiveTermsUrl, effectivePrivacyUrl,
                 forgotOpen, forgotLoading, forgotComp,
                 onLogin, onRegister, doRegister, sendSms, switchMode, switchLoginType, onThirdParty, onForgot, registering,
+                loginBusy,
                 captchaRequired, captchaImg, captchaLoading, loadCaptchaImage,
                 eyeSvg, eyeSlashSvg
             };
@@ -533,9 +563,9 @@
                                     <span v-else>{{ termsText }}</span>
                                 </label>
                             </div>
-                            <button type="submit" class="nux-login-submit" :disabled="loading || registering || (showTerms && !agreed)">
-                                <span v-if="loading || registering" class="nx-spinner"></span>
-                                {{ mode === 'login' ? (loading ? '登 录 …' : '登 录') : (registering ? '注 册 …' : '注 册') }}
+                            <button type="submit" class="nux-login-submit" :disabled="loading || registering || loginBusy || (showTerms && !agreed)">
+                                <span v-if="loading || registering || loginBusy" class="nx-spinner"></span>
+                                {{ mode === 'login' ? ((loading || loginBusy) ? '登 录 …' : '登 录') : (registering ? '注 册 …' : '注 册') }}
                             </button>
                         </form>
                         </template>
