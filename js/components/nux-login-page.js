@@ -533,7 +533,7 @@
                                     <span v-else>{{ termsText }}</span>
                                 </label>
                             </div>
-                            <button type="submit" class="nux-login-submit" :disabled="loading || registering">
+                            <button type="submit" class="nux-login-submit" :disabled="loading || registering || (showTerms && !agreed)">
                                 <span v-if="loading || registering" class="nx-spinner"></span>
                                 {{ mode === 'login' ? (loading ? '登 录 …' : '登 录') : (registering ? '注 册 …' : '注 册') }}
                             </button>
