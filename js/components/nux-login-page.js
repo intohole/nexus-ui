@@ -52,7 +52,7 @@
             const localError = Vue.ref('');
             const showPassword = Vue.ref(false);
             const showConfirmPassword = Vue.ref(false);
-            const rememberMe = Vue.ref(false);
+            const rememberMe = Vue.ref(true);
             const agreed = Vue.ref(false);
             const age = Vue.ref(10);
             const guardianAgreed = Vue.ref(false);
@@ -474,7 +474,7 @@
                                 <div v-if="showRememberMe || showForgot" class="nux-login-options">
                                     <label v-if="showRememberMe" class="nux-checkbox">
                                         <input type="checkbox" v-model="rememberMe">
-                                        <span>记住我</span>
+                                        <span>记住我（7天免登录）</span>
                                     </label>
                                     <button v-if="showForgot" type="button" class="nux-link" @click="onForgot">忘记密码？</button>
                                 </div>

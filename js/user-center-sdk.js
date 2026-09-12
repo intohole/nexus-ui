@@ -8,6 +8,50 @@ const LEGACY_KEYS = [
     ['ucToken', 'ucRefreshToken', 'ucTokenExpiresAt']
 ];
 
+function storageOf(rememberMe) {
+    try {
+        return rememberMe ? window.localStorage : window.sessionStorage;
+    } catch (e) {
+        return window.localStorage;
+    }
+}
+
+function getStored(key) {
+    try {
+        const s = window.sessionStorage ? window.sessionStorage.getItem(key) : null;
+        if (s) return s;
+    } catch (e) {}
+    try {
+        return window.localStorage ? window.localStorage.getItem(key) : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+function setStored(key, value, rememberMe) {
+    const s = storageOf(rememberMe);
+    try { s.setItem(key, value); } catch (e) {}
+    try {
+        const other = rememberMe ? window.sessionStorage : window.localStorage;
+        if (other) other.removeItem(key);
+    } catch (e) {}
+}
+
+function removeStored(key) {
+    try { window.localStorage && window.localStorage.removeItem(key); } catch (e) {}
+    try { window.sessionStorage && window.sessionStorage.removeItem(key); } catch (e) {}
+}
+
+function persistedIn() {
+    try {
+        if (window.sessionStorage && window.sessionStorage.getItem(TOKEN_KEY)) return 'session';
+    } catch (e) {}
+    try {
+        if (window.localStorage && window.localStorage.getItem(TOKEN_KEY)) return 'local';
+    } catch (e) {}
+    return null;
+}
+
 class UserCenterSDK {
     constructor(config) {
         this.baseUrl = (config.baseUrl || '').replace(/^https?:\/\//, '//').replace(/\/+$/, '');
@@ -30,27 +74,27 @@ class UserCenterSDK {
 
     _migrateLegacyTokens() {
         for (const [oldAccess, oldRefresh, oldExpires] of LEGACY_KEYS) {
-            const access = localStorage.getItem(oldAccess);
+            const access = getStored(oldAccess);
             if (access && !this._accessToken) {
                 this._accessToken = access;
-                this._refreshToken = localStorage.getItem(oldRefresh);
-                const exp = localStorage.getItem(oldExpires);
+                this._refreshToken = getStored(oldRefresh);
+                const exp = getStored(oldExpires);
                 this._tokenExpiresAt = exp ? parseInt(exp) : null;
-                localStorage.removeItem(oldAccess);
-                localStorage.removeItem(oldRefresh);
-                localStorage.removeItem(oldExpires);
+                removeStored(oldAccess);
+                removeStored(oldRefresh);
+                removeStored(oldExpires);
             }
         }
         if (this._accessToken) {
-            this._persistTokens();
+            this._persistTokens(true);
         }
     }
 
     _loadPersistedTokens() {
         try {
-            this._accessToken = localStorage.getItem(TOKEN_KEY);
-            this._refreshToken = localStorage.getItem(REFRESH_KEY);
-            const expiresAt = localStorage.getItem(EXPIRES_KEY);
+            this._accessToken = getStored(TOKEN_KEY);
+            this._refreshToken = getStored(REFRESH_KEY);
+            const expiresAt = getStored(EXPIRES_KEY);
             this._tokenExpiresAt = expiresAt ? parseInt(expiresAt) : null;
             if (!this._accessToken) {
                 this._migrateLegacyTokens();
@@ -58,22 +102,23 @@ class UserCenterSDK {
         } catch (e) {}
     }
 
-    _persistTokens() {
+    _persistTokens(rememberMe) {
         try {
+            const keep = rememberMe !== false;
             if (this._accessToken) {
-                localStorage.setItem(TOKEN_KEY, this._accessToken);
+                setStored(TOKEN_KEY, this._accessToken, keep);
             } else {
-                localStorage.removeItem(TOKEN_KEY);
+                removeStored(TOKEN_KEY);
             }
             if (this._refreshToken) {
-                localStorage.setItem(REFRESH_KEY, this._refreshToken);
+                setStored(REFRESH_KEY, this._refreshToken, keep);
             } else {
-                localStorage.removeItem(REFRESH_KEY);
+                removeStored(REFRESH_KEY);
             }
             if (this._tokenExpiresAt) {
-                localStorage.setItem(EXPIRES_KEY, String(this._tokenExpiresAt));
+                setStored(EXPIRES_KEY, String(this._tokenExpiresAt), keep);
             } else {
-                localStorage.removeItem(EXPIRES_KEY);
+                removeStored(EXPIRES_KEY);
             }
         } catch (e) {}
     }
@@ -84,13 +129,13 @@ class UserCenterSDK {
         } catch (e) {}
     }
 
-    _setTokens(data) {
+    _setTokens(data, rememberMe) {
         this._accessToken = data.access_token;
         this._refreshToken = data.refresh_token || this._refreshToken;
         this._tokenExpiresAt = data.expires_in
             ? Date.now() + data.expires_in * 1000
             : null;
-        this._persistTokens();
+        this._persistTokens(rememberMe);
         this._emitAuthChange();
         if (this._onTokenUpdate) {
             this._onTokenUpdate({
@@ -101,15 +146,15 @@ class UserCenterSDK {
         }
     }
 
-    setTokens(data) {
-        this._setTokens(data);
+    setTokens(data, rememberMe) {
+        this._setTokens(data, rememberMe);
     }
 
     syncFromStorage() {
         try {
-            var t = localStorage.getItem(TOKEN_KEY);
+            var t = getStored(TOKEN_KEY);
             if (t && t !== this._accessToken) this._accessToken = t;
-            var r = localStorage.getItem(REFRESH_KEY);
+            var r = getStored(REFRESH_KEY);
             if (r) this._refreshToken = r;
         } catch (e) {}
     }
@@ -127,7 +172,7 @@ class UserCenterSDK {
         this._accessToken = null;
         this._refreshToken = null;
         this._tokenExpiresAt = null;
-        this._persistTokens();
+        this._persistTokens(true);
         this._emitAuthChange();
     }
 
@@ -172,30 +217,30 @@ class UserCenterSDK {
         }
     }
 
-    async login(username, password, inviteCode = null, captcha = null) {
+    async login(username, password, inviteCode = null, captcha = null, rememberMe = true) {
         const data = { username, password, app_key: this.appKey };
         if (inviteCode) data.invite_code = inviteCode;
         if (captcha) { data.captcha_id = captcha.captchaId; data.captcha_code = captcha.captchaCode; }
         const result = await this._request('POST', '/api/auth/login', data, false);
-        if (result.success && result.data) { this._setTokens(result.data); }
+        if (result.success && result.data) { this._setTokens(result.data, rememberMe); }
         return result;
     }
 
-    async loginWithEmail(email, password, inviteCode = null, captcha = null) {
+    async loginWithEmail(email, password, inviteCode = null, captcha = null, rememberMe = true) {
         const data = { email, password, app_key: this.appKey };
         if (inviteCode) data.invite_code = inviteCode;
         if (captcha) { data.captcha_id = captcha.captchaId; data.captcha_code = captcha.captchaCode; }
         const result = await this._request('POST', '/api/auth/login', data, false);
-        if (result.success && result.data) { this._setTokens(result.data); }
+        if (result.success && result.data) { this._setTokens(result.data, rememberMe); }
         return result;
     }
 
-    async loginWithPhone(phone, password, inviteCode = null, captcha = null) {
+    async loginWithPhone(phone, password, inviteCode = null, captcha = null, rememberMe = true) {
         const data = { phone, password, app_key: this.appKey };
         if (inviteCode) data.invite_code = inviteCode;
         if (captcha) { data.captcha_id = captcha.captchaId; data.captcha_code = captcha.captchaCode; }
         const result = await this._request('POST', '/api/auth/login', data, false);
-        if (result.success && result.data) { this._setTokens(result.data); }
+        if (result.success && result.data) { this._setTokens(result.data, rememberMe); }
         return result;
     }
 
@@ -218,7 +263,7 @@ class UserCenterSDK {
                 refresh_token: this._refreshToken
             }, false, true);
             if (result.success && result.data) {
-                this._setTokens(result.data);
+                this._setTokens(result.data, persistedIn() !== 'session');
                 return true;
             }
         } catch (e) {
@@ -314,12 +359,12 @@ class UserCenterSDK {
         return this._request('PUT', '/api/auth/bind-contact', data);
     }
 
-    async thirdPartyLogin(provider, code, state = null, extra = null) {
+    async thirdPartyLogin(provider, code, state = null, extra = null, rememberMe = true) {
         const data = { app_key: this.appKey, provider, code };
         if (state) data.state = state;
         if (extra) data.extra = extra;
         const result = await this._request('POST', '/api/auth/third-party', data, false);
-        if (result.success && result.data) { this._setTokens(result.data); }
+        if (result.success && result.data) { this._setTokens(result.data, rememberMe); }
         return result;
     }
 
@@ -361,6 +406,16 @@ class UserCenterSDK {
         const sdk = new UserCenterSDK({ baseUrl: cfg.baseUrl, appKey: cfg.appKey, silent: true });
         window.ucSDK = sdk;
         return sdk;
+    }
+
+    static getToken() {
+        return getStored(TOKEN_KEY);
+    }
+
+    static clearTokens() {
+        removeStored(TOKEN_KEY);
+        removeStored(REFRESH_KEY);
+        removeStored(EXPIRES_KEY);
     }
 }
 
