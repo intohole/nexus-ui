@@ -255,8 +255,8 @@
             });
 
             Vue.watch(combinedError, function(v) {
-                if (v && captchaRequired.value) {
-                    loadCaptchaImage();
+                if (v) {
+                    checkCaptchaRequired();
                 }
             });
 
