@@ -238,6 +238,14 @@
 
             var loginBusy = Vue.ref(false);
 
+            function friendlyLoginError(e) {
+                var msg = (e && e.message) || '';
+                if (!msg) return '登录失败，请重试';
+                if (/请求超时/.test(msg)) return msg;
+                if (/network|failed to fetch|load failed|timed? ?out|超时|网络/i.test(msg)) return '网络异常，请检查网络后重试';
+                return msg;
+            }
+
             async function doLogin(payload) {
                 var sdk = effectiveSdk.value;
                 if (!sdk || typeof sdk.login !== 'function') { localError.value = '登录服务不可用'; return; }
@@ -255,7 +263,7 @@
                         checkCaptchaRequired();
                     }
                 } catch (e) {
-                    localError.value = (e && e.message) ? e.message : '登录失败，请重试';
+                    localError.value = friendlyLoginError(e);
                     checkCaptchaRequired();
                 } finally {
                     loginBusy.value = false;
@@ -287,6 +295,12 @@
                 if (v) {
                     checkCaptchaRequired();
                 }
+            });
+
+            Vue.watch(function() {
+                return [form.username, form.password, form.email, form.phone, smsCode.value, form.captchaCode].join('|');
+            }, function() {
+                localError.value = '';
             });
 
             function onRegister() {
