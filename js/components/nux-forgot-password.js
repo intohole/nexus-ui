@@ -108,7 +108,7 @@
                         <h3 class="nux-forgot-title">找回密码</h3>
                     </div>
                     <div v-if="error" class="nux-login-error">{{ error }}</div>
-                    <div class="nux-forgot-hint">仅支持已绑定邮箱或手机号的账号。若注册时未绑定，请先登录，在「账号中心-账号与安全」中绑定后再设置找回方式。</div>
+                    <div class="nux-forgot-hint">仅支持已绑定邮箱或手机号的账号找回密码。未绑定：能登录请在「我的数据中心-账号与安全」绑定后重试；无法登录请联系 songguokr@126.com 协助处理。</div>
                     <div class="nux-login-subtabs nux-forgot-tabs">
                         <button :class="['nux-login-subtab', { active: type === 'email' }]" type="button" @click="switchType('email')">邮箱找回</button>
                         <button :class="['nux-login-subtab', { active: type === 'phone' }]" type="button" @click="switchType('phone')">手机找回</button>

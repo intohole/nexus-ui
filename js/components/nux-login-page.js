@@ -504,8 +504,8 @@
                                 </div>
                             </template>
                             <div v-if="mode === 'register' && showEmailField" class="nux-form-group">
-                                <label class="nux-form-label">邮箱</label>
-                                <input v-model="form.email" type="email" class="nux-input" placeholder="请输入邮箱" autocomplete="email">
+                                <label class="nux-form-label">邮箱{{requireEmail ? '（用于找回密码）' : ''}}</label>
+                                <input v-model="form.email" type="email" class="nux-input" placeholder="请输入邮箱" autocomplete="email" :required="requireEmail">
                             </div>
                             <template v-if="mode === 'login' && !isSmsMode">
                                 <div class="nux-form-group">
@@ -569,7 +569,7 @@
                                 </div>
                             </div>
                             <div v-if="showTerms" class="nux-form-group">
-                                <label class="nux-checkbox nux-terms">
+                                <label :class="['nux-checkbox', 'nux-terms', { 'nux-terms-warn': showTerms && !agreed }]">
                                     <input type="checkbox" v-model="agreed">
                                     <span v-if="effectiveTermsUrl || effectivePrivacyUrl">我已阅读并同意
                                         <a v-if="effectiveTermsUrl" :href="effectiveTermsUrl" target="_blank" rel="noopener">《用户协议》</a><a v-if="effectivePrivacyUrl" :href="effectivePrivacyUrl" target="_blank" rel="noopener">《隐私政策》</a>
@@ -577,11 +577,11 @@
                                     <span v-else>{{ termsText }}</span>
                                 </label>
                             </div>
-                            <button type="submit" class="nux-login-submit" :disabled="loading || registering || loginBusy || (showTerms && !agreed)">
+                            <button type="submit" class="nux-login-submit" :disabled="loading || registering || loginBusy">
                                 <span v-if="loading || registering || loginBusy" class="nx-spinner"></span>
                                 {{ mode === 'login' ? ((loading || loginBusy) ? '登 录 …' : '登 录') : (registering ? '注 册 …' : '注 册') }}
                             </button>
-                            <div v-if="showTerms && !agreed" class="nux-terms-hint">请先勾选同意用户协议和隐私政策</div>
+                            <div v-if="showTerms && !agreed" class="nux-terms-hint">请先勾选同意用户协议和隐私政策，再登录或注册</div>
                         </form>
                         </template>
                         <div v-if="thirdPartyLogin && thirdPartyLogin.length" class="nux-login-divider"><span>其他登录方式</span></div>

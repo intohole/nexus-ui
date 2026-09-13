@@ -198,9 +198,20 @@
 .nux-login-submit:disabled { opacity: 0.5; cursor: not-allowed; }
 .nux-terms-hint {
   margin-top: var(--nx-space-2);
-  font-size: var(--nx-text-xs);
+  font-size: var(--nx-text-sm);
   color: var(--nx-danger, #ef4444);
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nx-space-1);
+  font-weight: 500;
+}
+.nux-terms-warn {
+  border-radius: var(--nx-radius-sm);
+  padding: var(--nx-space-2) var(--nx-space-2);
+  outline: 1px dashed color-mix(in srgb, var(--nx-danger, #ef4444) 55%, transparent);
+  background: color-mix(in srgb, var(--nx-danger, #ef4444) 6%, transparent);
 }
 .nux-login-footer {
   margin-top: var(--nx-space-4);
