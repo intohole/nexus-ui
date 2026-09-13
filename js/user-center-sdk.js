@@ -52,6 +52,50 @@ function persistedIn() {
     return null;
 }
 
+const SSO_COOKIE = 'uc_sso_token';
+const SSO_ROOT = 'songguokr.com';
+
+function ssoCookieDomain() {
+    try {
+        const host = window.location.hostname || '';
+        if (host === 'localhost' || host === '127.0.0.1') return null;
+        return host === SSO_ROOT || host.endsWith('.' + SSO_ROOT) ? '.' + SSO_ROOT : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+function readCookieBridge() {
+    const domain = ssoCookieDomain();
+    if (!domain) return null;
+    try {
+        const m = document.cookie.match(new RegExp('(?:^|;\\s*)' + SSO_COOKIE + '=([^;]+)'));
+        if (!m) return null;
+        const data = JSON.parse(decodeURIComponent(m[1]));
+        return data && data.a ? data : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+function writeCookieBridge(tokens, rememberMe) {
+    const domain = ssoCookieDomain();
+    if (!domain || !tokens || !tokens.a) return;
+    const payload = encodeURIComponent(JSON.stringify({ a: tokens.a, r: tokens.r, e: tokens.e }));
+    const maxAge = rememberMe !== false ? ';Max-Age=' + (30 * 24 * 3600) : '';
+    try {
+        document.cookie = SSO_COOKIE + '=' + payload + ';Domain=' + domain + ';Path=/;SameSite=Lax' + maxAge;
+    } catch (e) {}
+}
+
+function clearCookieBridge() {
+    const domain = ssoCookieDomain();
+    if (!domain) return;
+    try {
+        document.cookie = SSO_COOKIE + '=;Domain=' + domain + ';Path=/;Max-Age=0';
+    } catch (e) {}
+}
+
 class UserCenterSDK {
     constructor(config) {
         this.baseUrl = (config.baseUrl || '').replace(/^https?:\/\//, '//').replace(/\/+$/, '');
@@ -99,6 +143,15 @@ class UserCenterSDK {
             if (!this._accessToken) {
                 this._migrateLegacyTokens();
             }
+            if (!this._accessToken) {
+                const bridge = readCookieBridge();
+                if (bridge && bridge.a) {
+                    this._accessToken = bridge.a;
+                    this._refreshToken = bridge.r || null;
+                    this._tokenExpiresAt = bridge.e ? parseInt(bridge.e) : null;
+                    this._persistTokens(true);
+                }
+            }
         } catch (e) {}
     }
 
@@ -119,6 +172,11 @@ class UserCenterSDK {
                 setStored(EXPIRES_KEY, String(this._tokenExpiresAt), keep);
             } else {
                 removeStored(EXPIRES_KEY);
+            }
+            if (this._accessToken) {
+                writeCookieBridge({ a: this._accessToken, r: this._refreshToken, e: this._tokenExpiresAt }, keep);
+            } else {
+                clearCookieBridge();
             }
         } catch (e) {}
     }
