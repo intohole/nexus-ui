@@ -313,6 +313,14 @@ class UserCenterSDK {
     async getUserinfo() { return this._request('GET', '/api/auth/userinfo'); }
     async updateCurrentUser(updateData) { return this._request('PUT', '/api/users/me', updateData); }
 
+    async getFavorites(itemType = 'app') { return this._request('GET', `/api/users/me/favorites?item_type=${itemType}`); }
+    async addFavorite(itemKey, itemType = 'app') {
+        return this._request('POST', '/api/users/me/favorites', { item_type: itemType, item_key: itemKey });
+    }
+    async removeFavorite(itemKey, itemType = 'app') {
+        return this._request('DELETE', `/api/users/me/favorites/${encodeURIComponent(itemKey)}?item_type=${itemType}`);
+    }
+
     async changePassword({ oldPassword, newPassword, revokeOthers = true }) {
         return this._request('POST', '/api/auth/change-password', {
             old_password: oldPassword,

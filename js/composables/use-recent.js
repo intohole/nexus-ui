@@ -19,7 +19,35 @@
         try { localStorage.setItem(key, JSON.stringify(arr)); } catch (e) {}
     }
 
+    var cloudProvider = null;
+
+    function pushCloud(name, faved) {
+        if (!cloudProvider || !cloudProvider.setFav) return;
+        Promise.resolve(cloudProvider.setFav(name, faved)).catch(function () {});
+    }
+
     var NexusUseRecent = {
+        bindCloud: function (provider) {
+            cloudProvider = provider || null;
+            if (!cloudProvider || !cloudProvider.getFavs) return;
+            Promise.resolve(cloudProvider.getFavs()).then(function (list) {
+                if (!Array.isArray(list)) return;
+                writeArr(FAV_KEY, list.slice(0, MAX));
+                try { window.dispatchEvent(new CustomEvent('nxs:favs-synced')); } catch (e) {}
+            }).catch(function () {});
+        },
+        bindSdkFavorites: function (sdk, itemType) {
+            if (!sdk) return;
+            var type = itemType || 'app';
+            this.bindCloud({
+                getFavs: function () {
+                    return sdk.getFavorites(type).then(function (r) { return (r && r.data) || []; });
+                },
+                setFav: function (name, on) {
+                    return on ? sdk.addFavorite(name, type) : sdk.removeFavorite(name, type);
+                }
+            });
+        },
         recordVisit: function (name) {
             if (!name) return;
             var list = readArr(RECENT_KEY).filter(function (r) { return r.name !== name; });
@@ -43,14 +71,18 @@
             if (!name) return false;
             var list = readArr(FAV_KEY);
             var idx = list.indexOf(name);
+            var faved;
             if (idx >= 0) {
                 list.splice(idx, 1);
                 writeArr(FAV_KEY, list);
-                return false;
+                faved = false;
+            } else {
+                list.unshift(name);
+                writeArr(FAV_KEY, list.slice(0, MAX));
+                faved = true;
             }
-            list.unshift(name);
-            writeArr(FAV_KEY, list.slice(0, MAX));
-            return true;
+            pushCloud(name, faved);
+            return faved;
         },
         clear: function () {
             try { localStorage.removeItem(RECENT_KEY); } catch (e) {}
