@@ -11,7 +11,7 @@ import os
 import re
 import sys
 
-NX_RE = re.compile(r"(nexus-ui/v[0-9.]+/)")
+NX_RE = re.compile(r"(nexus-ui/v[0-9.]+/?)")
 
 
 def _load_spec(root: str) -> str:
@@ -31,7 +31,8 @@ def _load_ignore(root: str) -> tuple:
 
 def _fix_content(text: str, target: str) -> str:
     def _repl(m: "re.Match[str]") -> str:
-        return f"nexus-ui/v{target}/"
+        suffix = "/" if m.group(0).endswith("/") else ""
+        return f"nexus-ui/v{target}{suffix}"
     return NX_RE.sub(_repl, text)
 
 
