@@ -37,6 +37,7 @@
             this.onError = config.onError || null;
             this.timeout = config.timeout || 30000;
             this.responseAdapter = config.responseAdapter || null;
+            this.serviceHeaders = config.serviceHeaders || null;
             this.storage = config.dualStorage && window.NexusUtils && typeof window.NexusUtils.createDualStorage === 'function'
                 ? window.NexusUtils.createDualStorage(this.tokenKey)
                 : (config.storage || localStorage);
@@ -89,6 +90,7 @@
             const token = this._getToken();
             return {
                 'Content-Type': 'application/json',
+                ...(this.serviceHeaders || {}),
                 ...(token && { 'Authorization': `Bearer ${token}` }),
                 ...extra
             };
