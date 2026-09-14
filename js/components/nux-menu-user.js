@@ -9,13 +9,16 @@
         '.nux-menu-user .nux-uc-floating{position:static;top:auto;right:auto;width:38px;height:38px;border:none;box-shadow:none;background:transparent}',
         '.nux-menu-user .nux-uc-floating:hover{transform:none;box-shadow:none}',
         '.nux-menu-user .nux-uc-floating .nux-avatar{width:32px;height:32px;font-size:13px}',
+        '.nux-menu-user--labeled .nux-uc-trigger{width:auto;height:38px}',
         '.nux-menu-user-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;width:38px;height:38px;padding:0;border:none;border-radius:var(--nx-radius-full,9999px);background:transparent;color:var(--nx-text-secondary,#64748b);cursor:pointer;transition:background .2s,color .2s;-webkit-tap-highlight-color:transparent}',
         '.nux-menu-user-btn:hover{background:var(--nx-bg-hover,#f1f5f9);color:var(--app-accent,var(--nx-primary))}',
         '.nux-menu-user-btn:focus-visible{outline:2px solid var(--app-accent,var(--nx-primary));outline-offset:2px}',
         '.nux-menu-user-btn svg{width:19px;height:19px}',
+        '.nux-menu-user--labeled .nux-menu-user-btn{width:auto;height:38px;padding:0 12px 0 8px}',
+        '.nux-menu-user-label{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
         '.nux-menu-user-skel{width:32px;height:32px;border-radius:50%;background:linear-gradient(90deg,var(--nx-bg-muted,#f1f5f9) 25%,var(--nx-bg-hover,#e2e8f0) 50%,var(--nx-bg-muted,#f1f5f9) 75%);background-size:200% 100%;animation:nux-menu-user-shimmer 1.2s infinite}',
         '@keyframes nux-menu-user-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}',
-        '@media(max-width:768px){.nux-menu-user .nux-uc-trigger,.nux-menu-user-btn{width:40px;height:40px}}'
+        '@media(max-width:768px){.nux-menu-user .nux-uc-trigger,.nux-menu-user-btn{width:40px;height:40px}.nux-menu-user--labeled .nux-uc-trigger,.nux-menu-user--labeled .nux-menu-user-btn{width:auto;height:40px}}'
     ].join('');
 
     function injectCss() {
@@ -117,7 +120,8 @@
         name: 'NuxMenuUser',
         props: {
             appName: { type: String, default: '' },
-            loginUrl: { type: String, default: '' }
+            loginUrl: { type: String, default: '' },
+            label: { type: [Boolean, String], default: false }
         },
         emits: ['logout'],
         setup: function (props, ctx) {
@@ -180,12 +184,14 @@
             fetchConfig().then(sync);
 
             var icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>';
-            return { authed: authed, ready: ready, sdk: sdk, icon: icon, goLogin: goLogin, onLogout: onLogout, appName: props.appName };
+            var labelText = props.label === true ? '用户中心' : (props.label || '');
+            var loginLabel = props.label === true ? '登录' : '';
+            return { authed: authed, ready: ready, sdk: sdk, icon: icon, goLogin: goLogin, onLogout: onLogout, appName: props.appName, labelText: labelText, loginLabel: loginLabel };
         },
-        template: '<span class="nux-menu-user">' +
-            '<nux-user-center v-if="authed && ready" :sdk="sdk" :app-name="appName" @logout="onLogout"></nux-user-center>' +
+        template: '<span class="nux-menu-user" :class="{ \'nux-menu-user--labeled\': !!labelText || !!loginLabel }">' +
+            '<nux-user-center v-if="authed && ready" :sdk="sdk" :app-name="appName" :label="labelText" @logout="onLogout"></nux-user-center>' +
             '<span v-else-if="authed" class="nux-menu-user-skel" aria-hidden="true"></span>' +
-            '<button v-else type="button" class="nux-menu-user-btn" title="登录" aria-label="登录" @click="goLogin"><span v-html="icon"></span></button>' +
+            '<button v-else type="button" class="nux-menu-user-btn" :title="loginLabel || \'登录\'" :aria-label="loginLabel || \'登录\'" @click="goLogin"><span v-html="icon"></span><span v-if="loginLabel" class="nux-menu-user-label">{{ loginLabel }}</span></button>' +
             '</span>'
     };
 

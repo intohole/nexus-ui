@@ -4,6 +4,7 @@
         props: {
             sdk: { type: Object, required: true },
             appName: { type: String, default: '' },
+            label: { type: String, default: '' },
             floating: { type: Boolean, default: false }
         },
         emits: ['logout'],
@@ -270,8 +271,9 @@
         },
         template: `
             <div class="nux-user-center">
-                <button type="button" class="nux-uc-trigger" :class="{ 'nux-uc-floating': floating, 'nux-uc-active': drawerOpen, 'nux-uc-loading': loading && !user }" :title="avatarName() || '用户中心'" :aria-label="avatarName() || '用户中心'" @click="toggleOpen">
+                <button type="button" class="nux-uc-trigger" :class="{ 'nux-uc-floating': floating, 'nux-uc-active': drawerOpen, 'nux-uc-loading': loading && !user, 'nux-uc-labeled': !!label }" :title="avatarName() || '用户中心'" :aria-label="avatarName() || '用户中心'" @click="toggleOpen">
                     <nux-avatar :name="avatarName()" :initial="avatarInitial()" size="sm"></nux-avatar>
+                    <span v-if="label" class="nux-uc-label">{{ label }}</span>
                 </button>
                 <nux-drawer v-model="drawerOpen" side="right" width="380px">
                     <div class="nux-uc-body">

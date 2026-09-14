@@ -554,6 +554,26 @@
   transition: opacity var(--nx-transition-fast);
 }
 .nux-uc-trigger:hover { opacity: 0.85; }
+.nux-uc-trigger.nux-uc-labeled {
+  width: auto;
+  max-width: 100%;
+  height: 38px;
+  gap: 8px;
+  padding: 0 12px 0 4px;
+  color: var(--nx-text-secondary, #64748b);
+}
+.nux-uc-trigger.nux-uc-labeled:hover {
+  opacity: 1;
+  background: var(--nx-bg-hover, #f1f5f9);
+  color: var(--app-accent, var(--nx-primary));
+}
+.nux-uc-trigger.nux-uc-labeled .nux-uc-label {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .nux-uc-floating {
   position: fixed;
   top: 16px;
