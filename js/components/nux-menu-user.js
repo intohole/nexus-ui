@@ -185,7 +185,7 @@
 
             var icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>';
             var labelText = props.label === true ? '用户中心' : (props.label || '');
-            var loginLabel = props.label === true ? '登录' : '';
+            var loginLabel = props.label ? '登录' : '';
             return { authed: authed, ready: ready, sdk: sdk, icon: icon, goLogin: goLogin, onLogout: onLogout, appName: props.appName, labelText: labelText, loginLabel: loginLabel };
         },
         template: '<span class="nux-menu-user" :class="{ \'nux-menu-user--labeled\': !!labelText || !!loginLabel }">' +
