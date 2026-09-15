@@ -60,6 +60,7 @@
       "nux-breadcrumb.js": "面包屑组件",
       "nux-error-state.js": "错误状态组件",
       "nux-layout-sidebar.js": "侧边栏布局组件",
+      "nux-side-panel.js": "统一侧栏面板组件（品牌/主操作/分类tab/搜索/日期分组列表/个人化区/用户区，桌面sticky或fill、移动抽屉自动适配）",
       "nux-layout-topnav.js": "顶部导航布局组件",
       "nux-form-group.js": "表单分组组件",
       "nux-button.js": "基础按钮组件（variant/size/loading/block）",

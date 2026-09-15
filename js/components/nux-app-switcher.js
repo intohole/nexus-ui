@@ -209,8 +209,28 @@
             });
             loadScenes().then(function(list) { self.sceneOrder = list; });
             document.addEventListener('keydown', function(e) { if (e.key === 'Escape') self.open = false; });
+            this.syncSideOffset();
+            window.addEventListener('resize', function() { self.syncSideOffset(); });
+            if (!document.querySelector('.nxsp')) {
+                var mo = new MutationObserver(function() {
+                    if (document.querySelector('.nxsp')) { self.syncSideOffset(); mo.disconnect(); }
+                });
+                mo.observe(document.documentElement, { childList: true, subtree: true });
+            }
         },
         methods: {
+            syncSideOffset() {
+                var self = this;
+                var apply = function() {
+                    var panel = document.querySelector('.nxsp:not(.is-compact)');
+                    var trigger = self.$el && self.$el.querySelector('.nxs-trigger');
+                    if (!trigger) return;
+                    var w = panel ? Math.round(panel.getBoundingClientRect().width) : 0;
+                    trigger.style.left = w > 0 ? Math.min(w + 18, Math.max(0, window.innerWidth - 220)) + 'px' : '';
+                };
+                if (window.requestAnimationFrame) window.requestAnimationFrame(apply);
+                apply();
+            },
             toggle() { this.open = !this.open; },
             openIt() { this.open = true; },
             closeIt() { this.open = false; },
