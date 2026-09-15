@@ -40,9 +40,17 @@
             '.nxw-chip:hover{border-color:#4b66d9;background:#f5f7ff}',
             '.nxw-choice-msg{font-size:12px;color:#5b6472;margin-bottom:8px}',
             '.nxw-opts{display:flex;flex-wrap:wrap;gap:6px}',
-            '.nxw-choice-btn{border:1px solid #e2e6ea;background:#fff;color:#26303f;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;transition:all .15s}',
+            '.nxw-opt{display:flex;flex-direction:column;gap:2px}',
+            '.nxw-choice-btn{border:1px solid #e2e6ea;background:#fff;color:#26303f;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;transition:all .15s;text-align:left}',
             '.nxw-choice-btn:hover{border-color:#4b66d9;color:#4b66d9}',
+            '.nxw-choice-btn:disabled{opacity:.5;cursor:default;pointer-events:none}',
             '.nxw-choice-btn.is-selected{border-color:#4b66d9;background:#eef1ff;color:#3b55c4;font-weight:600}',
+            '.nxw-choice-desc{font-size:11px;color:#8a93a2;padding:0 12px 4px}',
+            '.nxw-other{margin-top:8px;display:flex;gap:6px;align-items:center}',
+            '.nxw-other-input{border:1px solid #e2e6ea;border-radius:8px;padding:5px 10px;font-size:12px;color:#26303f;background:#fff;flex:1;min-width:0}',
+            '.nxw-other-input:disabled{opacity:.5}',
+            '.nxw-choice-expired{margin-top:8px;font-size:11px;color:#c0392b;background:#fdf0ef;border-radius:8px;padding:5px 10px}',
+            '.nxw-choice-done{margin-top:8px;font-size:11px;color:#4b66d9;background:#eef1ff;border-radius:8px;padding:5px 10px}',
             '.nxw-reco{font-size:10px;line-height:1;color:#3b55c4;background:#e3e9ff;border-radius:999px;padding:1px 5px;margin-left:4px}',
             '.nxw-confirm{margin-top:8px;display:flex;gap:8px;align-items:center}',
             '.nxw-primary{background:#4b66d9;color:#fff;border:none;border-radius:8px;padding:6px 16px;font-size:12px;font-weight:600;cursor:pointer}',
@@ -158,14 +166,16 @@
         props: { data: { type: Object, default: null } },
         emits: ['submit'],
         setup(props, ctx) {
-            const state = reactive({ selected: [] });
+            const state = reactive({ selected: [], other: '', done: false });
             const isMultiple = computed(() => !!props.data && props.data.multiple);
+            const isDisabled = computed(() => !!props.data && (!!props.data.disabled || state.done));
             const canSubmit = computed(() => {
                 if (!props.data || !props.data.options || !props.data.options.length) return false;
                 if (!isMultiple.value) return state.selected.length === 1;
                 return state.selected.length > 0;
             });
             function toggle(opt) {
+                if (isDisabled.value) return;
                 const val = opt.value !== undefined ? opt.value : opt.label;
                 const idx = state.selected.indexOf(val);
                 if (isMultiple.value) {
@@ -173,29 +183,49 @@
                     if (idx >= 0) state.selected.splice(idx, 1);
                     else if (!max || state.selected.length < max) state.selected.push(val);
                 } else {
+                    state.done = true;
                     ctx.emit('submit', val);
                 }
             }
             function confirm() {
-                if (!canSubmit.value) return;
+                if (!canSubmit.value || isDisabled.value) return;
+                state.done = true;
                 ctx.emit('submit', isMultiple.value ? state.selected.slice() : state.selected[0]);
             }
-            return { state, isMultiple, canSubmit, toggle, confirm };
+            function submitOther() {
+                const text = state.other.trim();
+                if (!text || isDisabled.value) return;
+                state.done = true;
+                ctx.emit('submit', text);
+            }
+            return { state, isMultiple, isDisabled, canSubmit, toggle, confirm, submitOther };
         },
         template: `
             <div v-if="data" class="nxw-body">
                 <div v-if="data.message" class="nxw-choice-msg">{{ data.message }}</div>
                 <div class="nxw-opts">
-                    <button v-for="(opt, i) in data.options" :key="i" type="button"
-                        class="nxw-choice-btn" :class="{ 'is-selected': state.selected.indexOf(opt.value !== undefined ? opt.value : opt.label) >= 0 }"
-                        @click="toggle(opt)">
-                        {{ opt.label }}
-                        <span v-if="opt.recommended" class="nxw-reco">推荐</span>
-                    </button>
+                    <div v-for="(opt, i) in data.options" :key="i" class="nxw-opt">
+                        <button type="button"
+                            class="nxw-choice-btn" :class="{ 'is-selected': state.selected.indexOf(opt.value !== undefined ? opt.value : opt.label) >= 0 }"
+                            :disabled="isDisabled" @click="toggle(opt)">
+                            {{ opt.label }}
+                            <span v-if="opt.recommended" class="nxw-reco">推荐</span>
+                        </button>
+                        <div v-if="opt.description" class="nxw-choice-desc">{{ opt.description }}</div>
+                    </div>
+                </div>
+                <div v-if="!isMultiple" class="nxw-other">
+                    <input v-model="state.other" class="nxw-other-input"
+                        :placeholder="data.other_placeholder || '输入其他答案…'" :disabled="isDisabled"
+                        @keydown.enter.prevent="submitOther" />
+                    <button v-if="state.other.trim()" type="button" class="nxw-primary"
+                        :disabled="isDisabled" @click="submitOther">提交</button>
                 </div>
                 <div v-if="isMultiple" class="nxw-confirm">
-                    <button type="button" class="nxw-primary" :disabled="!canSubmit" @click="confirm">确认</button>
+                    <button type="button" class="nxw-primary" :disabled="!canSubmit || isDisabled" @click="confirm">确认</button>
                 </div>
+                <div v-if="data.disabled" class="nxw-choice-expired">该问题已超时失效，请重新提问</div>
+                <div v-else-if="state.done" class="nxw-choice-done">已提交，等管家继续回答…</div>
             </div>
         `
     };

@@ -90,6 +90,9 @@
                 if (target) {
                     if (payload.data) target.data = payload.data;
                     if (payload.title) target.title = payload.title;
+                    if (payload.disabled !== undefined) {
+                        target.data = Object.assign({}, target.data || {}, { disabled: !!payload.disabled });
+                    }
                 }
             } else {
                 handled = false;
