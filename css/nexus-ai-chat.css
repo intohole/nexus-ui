@@ -32,9 +32,17 @@
 }
 
 .nx-ai-chat-welcome-icon {
-    font-size: 3rem;
-    margin-bottom: var(--nx-space-3, 0.75rem);
+    font-size: 2.25rem;
     line-height: 1;
+    width: 72px;
+    height: 72px;
+    margin: 0 auto var(--nx-space-3, 0.75rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--nx-accent-soft, rgba(79, 70, 229, 0.08));
+    border-radius: 1.5rem;
+    border: 1px solid var(--nx-accent-soft, rgba(79, 70, 229, 0.16));
 }
 
 .nx-ai-chat-welcome-title {
@@ -77,6 +85,15 @@
     background: var(--nx-accent-soft, rgba(79, 70, 229, 0.08));
     border-color: var(--nx-accent, rgb(79, 70, 229));
     color: var(--nx-accent, rgb(79, 70, 229));
+}
+
+.nx-ai-chat-quick-btn:focus-visible,
+.nx-ai-chat-btn:focus-visible,
+.nx-ai-chat-action-btn:focus-visible,
+.nx-ai-chat-retry-btn:focus-visible,
+.nx-ai-chat-reasoning-toggle:focus-visible {
+    outline: 2px solid var(--nx-accent, rgb(79, 70, 229));
+    outline-offset: 2px;
 }
 
 .nx-ai-chat-quick-btn:disabled {
@@ -177,8 +194,8 @@
     margin-bottom: 0;
 }
 
-.nx-ai-chat-content pre {
-    margin: var(--nx-space-3, 0.75rem) 0;
+.nx-ai-chat-user .nx-ai-chat-bubble .nx-ai-chat-content {
+    color: rgb(255, 255, 255);
 }
 
 .nx-ai-chat-user .nx-ai-chat-bubble .nx-ai-chat-content a {
@@ -269,8 +286,15 @@
     transition: opacity 0.15s;
 }
 
-.nx-ai-chat-msg:hover .nx-ai-chat-actions {
+.nx-ai-chat-msg:hover .nx-ai-chat-actions,
+.nx-ai-chat-msg:focus-within .nx-ai-chat-actions {
     opacity: 1;
+}
+
+@media (hover: none) {
+    .nx-ai-chat-actions {
+        opacity: 1;
+    }
 }
 
 .nx-ai-chat-action-btn {
@@ -524,6 +548,15 @@
     .nx-ai-chat-action-btn {
         min-height: 36px;
         min-width: 36px;
+    }
+
+    .nx-ai-chat-retry-btn {
+        min-height: 36px;
+        padding: 0.25rem 0.875rem;
+    }
+
+    .nx-ai-chat-quick-btn {
+        padding: 0.625rem 1rem;
     }
 }
 

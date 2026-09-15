@@ -53,6 +53,8 @@
             let controller = null;
             let rafId = null;
             let unmountKb = null;
+            let stopped = false;
+            let stopFn = null;
 
             function emitMessages() {
                 ctx.emit('update:messages', list.slice());
@@ -147,6 +149,7 @@
                     onError: (err) => callbacks.onError(err),
                     onEvent: (ev, data) => { if (callbacks.onEvent) callbacks.onEvent(ev, data); }
                 });
+                controller = ctrl;
                 callbacks.registerStop(() => ctrl.stop());
                 ctrl.start();
             }
@@ -185,8 +188,9 @@
                 ctx.emit('stream-start');
                 startElapsed();
 
-                let stopped = false;
-                let stopFn = null;
+                stopped = false;
+                stopFn = null;
+                controller = null;
 
                 const callbacks = {
                     onChunk: (chunk, full) => {
@@ -289,10 +293,9 @@
 
             function stop() {
                 if (!isStreaming.value) return;
-                if (controller) try { controller.stop(); } catch (e) {}
-                if (window.NexusApi) {
-                    try { NexusApi.abortAll && NexusApi.abortAll(); } catch (e) {}
-                }
+                stopped = true;
+                if (stopFn) { try { stopFn(); } catch (e) {} }
+                else if (controller) { try { controller.stop(); } catch (e) {} }
                 isStreaming.value = false;
                 stopElapsed();
                 ctx.emit('stop');
@@ -382,7 +385,8 @@
 
             onBeforeUnmount(() => {
                 if (unmountKb) unmountKb();
-                if (controller) try { controller.stop(); } catch (e) {}
+                if (stopFn) { try { stopFn(); } catch (e) {} }
+                else if (controller) { try { controller.stop(); } catch (e) {} }
                 if (rafId) cancelAnimationFrame(rafId);
                 stopElapsed();
             });

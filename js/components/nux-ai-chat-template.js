@@ -48,7 +48,7 @@
                                     </div>
                                 </template>
                                 <template v-else>
-                                    <div class="nx-ai-chat-content" v-html="renderMarkdown(m.content)"></div>
+                                    <div class="nx-ai-chat-content nx-md" v-html="renderMarkdown(m.content)"></div>
                                     <span v-if="m.streaming" class="nx-ai-chat-cursor"></span>
                                 </template>
                                 <div v-if="feat.richReferences && m.references && m.references.length" class="nx-ai-chat-references">
