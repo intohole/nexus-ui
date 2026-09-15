@@ -109,6 +109,41 @@
             .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
+    function wrapBareLatex(text) {
+        const BARE_OPS = 'times|cdot|pm|mp|le|leq|ge|geq|ne|neq|approx|equiv|infty|partial|nabla|alpha|beta|gamma|delta|epsilon|theta|lambda|mu|pi|sigma|phi|omega|sum|prod|int|sqrt|vec|left|right|begin|end|qquad|quad';
+        const BARE_LATEX_RE = new RegExp('\\\\[a-zA-Z]+\\s*(?:\\[[^\\]]*\\]\\s*)?(?:\\{[^{}]*\\})+|\\\\(' + BARE_OPS + ')(?![a-zA-Z])', 'g');
+        const parts = [];
+        let last = 0;
+        let i = 0;
+        const len = text.length;
+        while (i < len) {
+            const ch = text[i];
+            if (ch === '\\' && i + 1 < len && text[i + 1] === '$') { i += 2; continue; }
+            if (ch === '$') {
+                let close;
+                if (text[i + 1] === '$') {
+                    close = text.indexOf('$$', i + 2);
+                    if (close === -1) break;
+                } else {
+                    close = text.indexOf('$', i + 1);
+                    if (close === -1) break;
+                }
+                const end = close + (text[i + 1] === '$' ? 2 : 1);
+                parts.push(text.slice(last, i));
+                parts.push(text.slice(i, end));
+                i = end;
+                last = i;
+                continue;
+            }
+            i++;
+        }
+        parts.push(text.slice(last));
+        return parts.map(function (part, idx) {
+            if (idx % 2 === 1) return part;
+            return part.replace(BARE_LATEX_RE, function (m) { return '$' + m + '$'; });
+        }).join('');
+    }
+
     function protectMath(text) {
         const mathBlocks = [];
         const codeBlocks = [];
@@ -116,7 +151,8 @@
             codeBlocks.push(m);
             return '\u0003NXMDCODE' + (codeBlocks.length - 1) + '\u0004';
         });
-        const noMath = noCode.replace(/\$\$\s*([\s\S]+?)\s*\$\$|\$([^\s$][^$\n]{0,98}[^\s$])\$/g, function (m) {
+        const wrapped = wrapBareLatex(noCode);
+        const noMath = wrapped.replace(/\$\$\s*([\s\S]+?)\s*\$\$|\$([^\s$][^$\n]{0,98}[^\s$])\$/g, function (m) {
             mathBlocks.push(m);
             return '\u0001NXMDMATH' + (mathBlocks.length - 1) + '\u0002';
         });

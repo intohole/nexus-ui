@@ -378,8 +378,29 @@
         },
 
         showToast(message, type = 'info', options = {}) {
-            if (!window.ElementPlus || !ElementPlus.ElMessage) return;
-            ElementPlus.ElMessage({ message, type, duration: options.duration || 3000, ...options });
+            if (window.ElementPlus && window.ElementPlus.ElMessage) {
+                ElementPlus.ElMessage({ message, type, duration: options.duration || 3000, ...options });
+                return;
+            }
+            this.showNativeToast(message, type, options);
+        },
+
+        showNativeToast(message, type = 'info', options = {}) {
+            let host = document.getElementById('nux-toast-host');
+            if (!host) {
+                host = document.createElement('div');
+                host.id = 'nux-toast-host';
+                host.className = 'nux-toast-container';
+                document.body.appendChild(host);
+            }
+            const item = document.createElement('div');
+            item.className = 'nux-toast-item nux-toast-' + ({ success: 'success', error: 'error', info: 'info', warning: 'warning' }[type] || 'info');
+            const msg = document.createElement('span');
+            msg.className = 'nux-toast-msg';
+            msg.textContent = message;
+            item.appendChild(msg);
+            host.appendChild(item);
+            setTimeout(function() { host.removeChild(item); }, (options && options.duration) || 3000);
         },
 
         confirm(message, title = '操作确认', options = {}) {
@@ -397,20 +418,74 @@
             const write = (s, k, v) => { try { s.setItem(k, v); } catch (e) {} };
             const clear = (s, k) => { try { s.removeItem(k); } catch (e) {} };
             const preferSession = () => read(window.sessionStorage, tokenKey) !== null;
+            const SSO_COOKIE = 'uc_sso_token';
+            const BRIDGE_KEYS = ['uc_access_token', 'uc_refresh_token', 'uc_token_expires_at'];
+            const ssoDomain = () => {
+                try {
+                    const host = window.location.hostname || '';
+                    if (host === 'localhost' || host === '127.0.0.1') return null;
+                    return (host === 'songguokr.com' || host.endsWith('.songguokr.com')) ? '.songguokr.com' : null;
+                } catch (e) { return null; }
+            };
+            const readStorage = (key) => {
+                const v = read(window.sessionStorage, key);
+                if (v !== null) return v;
+                return read(window.localStorage, key);
+            };
+            const readBridge = () => {
+                const domain = ssoDomain();
+                if (!domain) return null;
+                try {
+                    const m = document.cookie.match(new RegExp('(?:^|;\\s*)' + SSO_COOKIE + '=([^;]+)'));
+                    if (!m) return null;
+                    const data = JSON.parse(decodeURIComponent(m[1]));
+                    return data && data.a ? data : null;
+                } catch (e) { return null; }
+            };
+            const bridgeValue = (key) => {
+                const data = readBridge();
+                if (!data) return null;
+                if (key === 'uc_access_token') return data.a;
+                if (key === 'uc_refresh_token') return data.r;
+                if (key === 'uc_token_expires_at') return data.e !== undefined && data.e !== null ? String(data.e) : null;
+                return null;
+            };
+            const writeBridge = () => {
+                const domain = ssoDomain();
+                if (!domain) return;
+                const access = readStorage('uc_access_token');
+                if (!access) return;
+                const refresh = readStorage('uc_refresh_token');
+                const expires = readStorage('uc_token_expires_at');
+                const payload = encodeURIComponent(JSON.stringify({ a: access, r: refresh, e: expires ? parseInt(expires) : null }));
+                const maxAge = preferSession() ? '' : ';Max-Age=' + (30 * 24 * 3600);
+                try {
+                    document.cookie = SSO_COOKIE + '=' + payload + ';Domain=' + domain + ';Path=/;SameSite=Lax' + maxAge;
+                } catch (e) {}
+            };
+            const clearBridge = () => {
+                const domain = ssoDomain();
+                if (!domain) return;
+                try {
+                    document.cookie = SSO_COOKIE + '=;Domain=' + domain + ';Path=/;Max-Age=0';
+                } catch (e) {}
+            };
             return {
                 getItem(key) {
-                    const v = read(window.sessionStorage, key);
+                    const v = readStorage(key);
                     if (v !== null) return v;
-                    return read(window.localStorage, key);
+                    return BRIDGE_KEYS.indexOf(key) !== -1 ? bridgeValue(key) : null;
                 },
                 setItem(key, value) {
                     const useSession = preferSession();
                     write(useSession ? window.sessionStorage : window.localStorage, key, value);
                     clear(useSession ? window.localStorage : window.sessionStorage, key);
+                    if (BRIDGE_KEYS.indexOf(key) !== -1) writeBridge();
                 },
                 removeItem(key) {
                     clear(window.sessionStorage, key);
                     clear(window.localStorage, key);
+                    if (BRIDGE_KEYS.indexOf(key) !== -1) clearBridge();
                 }
             };
         }
@@ -793,6 +868,7 @@
             this.onError = config.onError || null;
             this.timeout = config.timeout || 30000;
             this.responseAdapter = config.responseAdapter || null;
+            this.serviceHeaders = config.serviceHeaders || null;
             this.storage = config.dualStorage && window.NexusUtils && typeof window.NexusUtils.createDualStorage === 'function'
                 ? window.NexusUtils.createDualStorage(this.tokenKey)
                 : (config.storage || localStorage);
@@ -845,6 +921,7 @@
             const token = this._getToken();
             return {
                 'Content-Type': 'application/json',
+                ...(this.serviceHeaders || {}),
                 ...(token && { 'Authorization': `Bearer ${token}` }),
                 ...extra
             };
@@ -1293,6 +1370,41 @@
             .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
+    function wrapBareLatex(text) {
+        const BARE_OPS = 'times|cdot|pm|mp|le|leq|ge|geq|ne|neq|approx|equiv|infty|partial|nabla|alpha|beta|gamma|delta|epsilon|theta|lambda|mu|pi|sigma|phi|omega|sum|prod|int|sqrt|vec|left|right|begin|end|qquad|quad';
+        const BARE_LATEX_RE = new RegExp('\\\\[a-zA-Z]+\\s*(?:\\[[^\\]]*\\]\\s*)?(?:\\{[^{}]*\\})+|\\\\(' + BARE_OPS + ')(?![a-zA-Z])', 'g');
+        const parts = [];
+        let last = 0;
+        let i = 0;
+        const len = text.length;
+        while (i < len) {
+            const ch = text[i];
+            if (ch === '\\' && i + 1 < len && text[i + 1] === '$') { i += 2; continue; }
+            if (ch === '$') {
+                let close;
+                if (text[i + 1] === '$') {
+                    close = text.indexOf('$$', i + 2);
+                    if (close === -1) break;
+                } else {
+                    close = text.indexOf('$', i + 1);
+                    if (close === -1) break;
+                }
+                const end = close + (text[i + 1] === '$' ? 2 : 1);
+                parts.push(text.slice(last, i));
+                parts.push(text.slice(i, end));
+                i = end;
+                last = i;
+                continue;
+            }
+            i++;
+        }
+        parts.push(text.slice(last));
+        return parts.map(function (part, idx) {
+            if (idx % 2 === 1) return part;
+            return part.replace(BARE_LATEX_RE, function (m) { return '$' + m + '$'; });
+        }).join('');
+    }
+
     function protectMath(text) {
         const mathBlocks = [];
         const codeBlocks = [];
@@ -1300,7 +1412,8 @@
             codeBlocks.push(m);
             return '\u0003NXMDCODE' + (codeBlocks.length - 1) + '\u0004';
         });
-        const noMath = noCode.replace(/\$\$\s*([\s\S]+?)\s*\$\$|\$([^\s$][^$\n]{0,98}[^\s$])\$/g, function (m) {
+        const wrapped = wrapBareLatex(noCode);
+        const noMath = wrapped.replace(/\$\$\s*([\s\S]+?)\s*\$\$|\$([^\s$][^$\n]{0,98}[^\s$])\$/g, function (m) {
             mathBlocks.push(m);
             return '\u0001NXMDMATH' + (mathBlocks.length - 1) + '\u0002';
         });
@@ -2309,6 +2422,7 @@ class UserCenterSDK {
         this._accessToken = null;
         this._refreshToken = null;
         this._tokenExpiresAt = null;
+        this._refreshPromise = null;
         this._onTokenUpdate = config.onTokenUpdate || null;
         this._onAuthError = config.onAuthError || null;
         this._loadPersistedTokens();
@@ -2521,18 +2635,26 @@ class UserCenterSDK {
 
     async refreshAccessToken() {
         if (!this._refreshToken) return false;
-        try {
-            const result = await this._request('POST', '/api/auth/refresh', {
-                refresh_token: this._refreshToken
-            }, false, true);
-            if (result.success && result.data) {
-                this._setTokens(result.data, persistedIn() !== 'session');
-                return true;
+        if (this._refreshPromise) return this._refreshPromise;
+        this._refreshPromise = (async () => {
+            try {
+                const result = await this._request('POST', '/api/auth/refresh', {
+                    refresh_token: this._refreshToken
+                }, false, true);
+                if (result.success && result.data) {
+                    this._setTokens(result.data, persistedIn() !== 'session');
+                    return true;
+                }
+            } catch (e) {
+                this.clearTokens();
             }
-        } catch (e) {
-            this.clearTokens();
+            return false;
+        })();
+        try {
+            return await this._refreshPromise;
+        } finally {
+            this._refreshPromise = null;
         }
-        return false;
     }
 
     async logout() {

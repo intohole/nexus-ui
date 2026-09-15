@@ -29,6 +29,8 @@
                     <a class="nux-footer-link" href="/nexus-ui/agreement.html" target="_blank" rel="noopener">用户协议</a>
                     <span class="nux-footer-sep">·</span>
                     <a class="nux-footer-link" href="/nexus-ui/privacy.html" target="_blank" rel="noopener">隐私政策</a>
+                    <span class="nux-footer-sep">·</span>
+                    <a class="nux-footer-link" href="/nexus-ui/about.html" target="_blank" rel="noopener">关于我们</a>
                     <span v-if="email" class="nux-footer-sep">·</span>
                     <a v-if="email" class="nux-footer-link" :href="'mailto:' + email">{{ email }}</a>
                 </div>

@@ -104,6 +104,7 @@ class UserCenterSDK {
         this._accessToken = null;
         this._refreshToken = null;
         this._tokenExpiresAt = null;
+        this._refreshPromise = null;
         this._onTokenUpdate = config.onTokenUpdate || null;
         this._onAuthError = config.onAuthError || null;
         this._loadPersistedTokens();
@@ -316,18 +317,26 @@ class UserCenterSDK {
 
     async refreshAccessToken() {
         if (!this._refreshToken) return false;
-        try {
-            const result = await this._request('POST', '/api/auth/refresh', {
-                refresh_token: this._refreshToken
-            }, false, true);
-            if (result.success && result.data) {
-                this._setTokens(result.data, persistedIn() !== 'session');
-                return true;
+        if (this._refreshPromise) return this._refreshPromise;
+        this._refreshPromise = (async () => {
+            try {
+                const result = await this._request('POST', '/api/auth/refresh', {
+                    refresh_token: this._refreshToken
+                }, false, true);
+                if (result.success && result.data) {
+                    this._setTokens(result.data, persistedIn() !== 'session');
+                    return true;
+                }
+            } catch (e) {
+                this.clearTokens();
             }
-        } catch (e) {
-            this.clearTokens();
+            return false;
+        })();
+        try {
+            return await this._refreshPromise;
+        } finally {
+            this._refreshPromise = null;
         }
-        return false;
     }
 
     async logout() {

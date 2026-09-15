@@ -417,20 +417,74 @@
             const write = (s, k, v) => { try { s.setItem(k, v); } catch (e) {} };
             const clear = (s, k) => { try { s.removeItem(k); } catch (e) {} };
             const preferSession = () => read(window.sessionStorage, tokenKey) !== null;
+            const SSO_COOKIE = 'uc_sso_token';
+            const BRIDGE_KEYS = ['uc_access_token', 'uc_refresh_token', 'uc_token_expires_at'];
+            const ssoDomain = () => {
+                try {
+                    const host = window.location.hostname || '';
+                    if (host === 'localhost' || host === '127.0.0.1') return null;
+                    return (host === 'songguokr.com' || host.endsWith('.songguokr.com')) ? '.songguokr.com' : null;
+                } catch (e) { return null; }
+            };
+            const readStorage = (key) => {
+                const v = read(window.sessionStorage, key);
+                if (v !== null) return v;
+                return read(window.localStorage, key);
+            };
+            const readBridge = () => {
+                const domain = ssoDomain();
+                if (!domain) return null;
+                try {
+                    const m = document.cookie.match(new RegExp('(?:^|;\\s*)' + SSO_COOKIE + '=([^;]+)'));
+                    if (!m) return null;
+                    const data = JSON.parse(decodeURIComponent(m[1]));
+                    return data && data.a ? data : null;
+                } catch (e) { return null; }
+            };
+            const bridgeValue = (key) => {
+                const data = readBridge();
+                if (!data) return null;
+                if (key === 'uc_access_token') return data.a;
+                if (key === 'uc_refresh_token') return data.r;
+                if (key === 'uc_token_expires_at') return data.e !== undefined && data.e !== null ? String(data.e) : null;
+                return null;
+            };
+            const writeBridge = () => {
+                const domain = ssoDomain();
+                if (!domain) return;
+                const access = readStorage('uc_access_token');
+                if (!access) return;
+                const refresh = readStorage('uc_refresh_token');
+                const expires = readStorage('uc_token_expires_at');
+                const payload = encodeURIComponent(JSON.stringify({ a: access, r: refresh, e: expires ? parseInt(expires) : null }));
+                const maxAge = preferSession() ? '' : ';Max-Age=' + (30 * 24 * 3600);
+                try {
+                    document.cookie = SSO_COOKIE + '=' + payload + ';Domain=' + domain + ';Path=/;SameSite=Lax' + maxAge;
+                } catch (e) {}
+            };
+            const clearBridge = () => {
+                const domain = ssoDomain();
+                if (!domain) return;
+                try {
+                    document.cookie = SSO_COOKIE + '=;Domain=' + domain + ';Path=/;Max-Age=0';
+                } catch (e) {}
+            };
             return {
                 getItem(key) {
-                    const v = read(window.sessionStorage, key);
+                    const v = readStorage(key);
                     if (v !== null) return v;
-                    return read(window.localStorage, key);
+                    return BRIDGE_KEYS.indexOf(key) !== -1 ? bridgeValue(key) : null;
                 },
                 setItem(key, value) {
                     const useSession = preferSession();
                     write(useSession ? window.sessionStorage : window.localStorage, key, value);
                     clear(useSession ? window.localStorage : window.sessionStorage, key);
+                    if (BRIDGE_KEYS.indexOf(key) !== -1) writeBridge();
                 },
                 removeItem(key) {
                     clear(window.sessionStorage, key);
                     clear(window.localStorage, key);
+                    if (BRIDGE_KEYS.indexOf(key) !== -1) clearBridge();
                 }
             };
         }
