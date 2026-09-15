@@ -377,8 +377,29 @@
         },
 
         showToast(message, type = 'info', options = {}) {
-            if (!window.ElementPlus || !ElementPlus.ElMessage) return;
-            ElementPlus.ElMessage({ message, type, duration: options.duration || 3000, ...options });
+            if (window.ElementPlus && window.ElementPlus.ElMessage) {
+                ElementPlus.ElMessage({ message, type, duration: options.duration || 3000, ...options });
+                return;
+            }
+            this.showNativeToast(message, type, options);
+        },
+
+        showNativeToast(message, type = 'info', options = {}) {
+            let host = document.getElementById('nux-toast-host');
+            if (!host) {
+                host = document.createElement('div');
+                host.id = 'nux-toast-host';
+                host.className = 'nux-toast-container';
+                document.body.appendChild(host);
+            }
+            const item = document.createElement('div');
+            item.className = 'nux-toast-item nux-toast-' + ({ success: 'success', error: 'error', info: 'info', warning: 'warning' }[type] || 'info');
+            const msg = document.createElement('span');
+            msg.className = 'nux-toast-msg';
+            msg.textContent = message;
+            item.appendChild(msg);
+            host.appendChild(item);
+            setTimeout(function() { host.removeChild(item); }, (options && options.duration) || 3000);
         },
 
         confirm(message, title = '操作确认', options = {}) {
