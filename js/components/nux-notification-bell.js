@@ -1,180 +1,133 @@
 (function() {
-    const { ref, computed, onMounted, onUnmounted } = Vue;
-
-    const TYPE_ICONS = {
-        message: 'fa-regular fa-comment',
-        comment: 'fa-regular fa-comment',
-        order: 'fa-solid fa-cart-shopping',
-        trade: 'fa-solid fa-cart-shopping',
-        system: 'fa-solid fa-circle-info',
-        alert: 'fa-solid fa-triangle-exclamation',
-        follow: 'fa-solid fa-user-plus',
-        like: 'fa-solid fa-heart',
-        task: 'fa-solid fa-list-check',
-        approval: 'fa-solid fa-file-signature'
-    };
-
+    const TOKEN_KEY = 'uc_access_token';
     const NuxNotificationBell = {
-        name: 'NuxNotificationBell',
+        name: 'nux-notification-bell',
         props: {
-            notifyBaseUrl: { type: String, default: '/api/notify' },
-            viewAllUrl: { type: String, default: '/notifications' },
-            pollInterval: { type: Number, default: 60000 }
+            baseUrl: { type: String, default: '/notifycenter' },
+            pollInterval: { type: Number, default: 60000 },
+            maxVisible: { type: Number, default: 10 },
+            title: { type: String, default: '消息通知' }
         },
-        emits: ['view-all', 'notification-click'],
-        setup(props, { emit }) {
-            const { isMobile } = useMobile();
-            const open = ref(false);
-            const bellRef = ref(null);
-            const panelRef = ref(null);
-            let pollTimer = null;
-
-            const notif = useNotification({ baseUrl: props.notifyBaseUrl });
-            notif.onNotification((n) => {
-                notif.unreadCount.value++;
-                if (open.value) {
-                    notif.notifications.value.unshift(n);
-                    if (notif.notifications.value.length > 10) notif.notifications.value.pop();
-                }
-            });
-
-            const displayCount = computed(() => {
-                return notif.unreadCount.value > 99 ? '99+' : notif.unreadCount.value;
-            });
-
-            const typeIcon = (type) => TYPE_ICONS[type] || 'fa-regular fa-bell';
-            const contentSummary = (content) => {
-                if (!content) return '';
-                return NexusUtils.truncateText(content, 50);
-            };
-            const formatTime = (ts) => NexusUtils.formatRelativeTime(ts);
-            const itemLabel = (item) => item.title + (item.content ? ' - ' + contentSummary(item.content) : '') + ' ' + formatTime(item.created_at);
-
-            const loadList = async () => {
-                await notif.getList({ page: 1, page_size: 10 });
-                const unread = notif.notifications.value.filter((n) => !n.is_read);
-                unread.forEach((n) => notif.markRead(n.id));
-            };
-
-            const focusFirstItem = () => {
-                if (!panelRef.value) return;
-                setTimeout(() => {
-                    const firstFocusable = panelRef.value.querySelector('.nux-notif-item, .nux-notif-readall, .nux-notif-viewall');
-                    if (firstFocusable) firstFocusable.focus();
-                }, 50);
-            };
-
-            const togglePanel = async () => {
-                const wasOpen = open.value;
-                open.value = !wasOpen;
-                if (open.value) {
-                    await loadList();
-                    focusFirstItem();
-                } else if (bellRef.value) {
-                    const btn = bellRef.value.querySelector('.nux-notif-btn');
-                    if (btn) btn.focus();
-                }
-            };
-
-            const handleClick = (item) => {
-                if (!item.is_read) notif.markRead(item.id);
-                emit('notification-click', item);
-                open.value = false;
-                if (item.link) window.location.href = item.link;
-            };
-
-            const handleMarkAllRead = async () => {
-                try {
-                    await notif.markAllRead();
-                    if (window.showToast) window.showToast('已全部标记为已读', 'success');
-                } catch (e) {
-                    if (window.showToast) window.showToast('操作失败，请重试', 'error');
-                }
-            };
-
-            const handleViewAll = () => {
-                open.value = false;
-                emit('view-all');
-                if (props.viewAllUrl) {
-                    setTimeout(() => { window.location.href = props.viewAllUrl; }, 0);
-                }
-            };
-
-            const handleClickOutside = (e) => {
-                if (bellRef.value && !bellRef.value.contains(e.target)) open.value = false;
-            };
-
-            const handleKeydown = (e) => {
-                if (e.key === 'Escape' && open.value) open.value = false;
-            };
-
-            onMounted(() => {
-                notif.getUnreadCount();
-                pollTimer = setInterval(() => notif.getUnreadCount(), props.pollInterval);
-                notif.connectSSE();
-                document.addEventListener('click', handleClickOutside);
-                document.addEventListener('keydown', handleKeydown);
-            });
-
-            onUnmounted(() => {
-                if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
-                notif.disconnectSSE();
-                document.removeEventListener('click', handleClickOutside);
-                document.removeEventListener('keydown', handleKeydown);
-            });
-
+        data: function() {
             return {
-                open, bellRef, panelRef, isMobile, displayCount,
-                notifications: notif.notifications,
-                unreadCount: notif.unreadCount,
-                loading: notif.loading,
-                togglePanel, handleClick, handleMarkAllRead, handleViewAll,
-                typeIcon, contentSummary, formatTime, itemLabel
+                open: false,
+                unread: 0,
+                items: [],
+                loading: false,
+                error: '',
+                timer: null
             };
+        },
+        computed: {
+            token: function() {
+                try {
+                    return NexusUtils.createDualStorage('uc_access_token').getItem('uc_access_token') || '';
+                } catch (e) { return ''; }
+            },
+            authed: function() { return !!this.token; }
+        },
+        mounted: function() {
+            if (!this.authed) return;
+            this.refresh();
+            this.timer = setInterval(this.refresh, this.pollInterval);
+            document.addEventListener('click', this.onDocClick);
+        },
+        beforeUnmount: function() {
+            if (this.timer) clearInterval(this.timer);
+            document.removeEventListener('click', this.onDocClick);
+        },
+        methods: {
+            fetchJson: function(url, options) {
+                var self = this;
+                var opts = options || {};
+                var headers = Object.assign({ 'Authorization': 'Bearer ' + self.token }, opts.headers || {});
+                return fetch(self.baseUrl + url, Object.assign({}, opts, { headers: headers })).then(function(r) {
+                    if (!r.ok) throw new Error('请求失败');
+                    return r.json();
+                });
+            },
+            refresh: function() {
+                var self = this;
+                if (!self.authed) return;
+                self.fetchJson('/api/notify/unread-count').then(function(d) {
+                    self.unread = (d && typeof d.count === 'number') ? d.count : 0;
+                }).catch(function() {});
+                if (self.open && !self.items.length) self.loadList();
+            },
+            onOpen: function() {
+                var self = this;
+                self.open = !self.open;
+                if (self.open) {
+                    self.loadList();
+                    if (self.unread > 0) self.refresh();
+                }
+            },
+            loadList: function() {
+                var self = this;
+                if (!self.authed) return;
+                self.loading = true;
+                self.error = '';
+                self.fetchJson('/api/notify/notifications?page=1&page_size=' + self.maxVisible).then(function(d) {
+                    self.items = (d && Array.isArray(d.items)) ? d.items : [];
+                }).catch(function() {
+                    self.error = '通知加载失败';
+                }).finally(function() {
+                    self.loading = false;
+                });
+            },
+            markRead: function(item) {
+                var self = this;
+                if (item.is_read) { self.goto(item); return; }
+                self.fetchJson('/api/notify/' + item.id + '/read', { method: 'PUT' }).catch(function() {});
+                item.is_read = true;
+                self.unread = Math.max(0, self.unread - 1);
+                self.goto(item);
+            },
+            markAllRead: function() {
+                var self = this;
+                self.fetchJson('/api/notify/read-all', { method: 'PUT' }).catch(function() {});
+                self.items.forEach(function(i) { i.is_read = true; });
+                self.unread = 0;
+            },
+            goto: function(item) {
+                if (item.link) window.location.href = item.link;
+                this.open = false;
+            },
+            onDocClick: function(e) {
+                if (this.$el && !this.$el.contains(e.target)) this.open = false;
+            },
+            formatTime: function(iso) {
+                if (!iso) return '';
+                try {
+                    var d = new Date(iso);
+                    var pad = function(n) { return n < 10 ? '0' + n : String(n); };
+                    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+                } catch (e) { return String(iso); }
+            }
         },
         template: `
-            <div class="nux-notif-bell" ref="bellRef">
-                <button class="nux-notif-btn" @click="togglePanel"
-                        :aria-expanded="open" aria-haspopup="true" aria-label="通知">
-                    <i class="fa-regular fa-bell" aria-hidden="true"></i>
-                    <span v-if="unreadCount > 0" class="nux-notif-badge" role="status" aria-live="polite">{{ displayCount }}</span>
+            <div class="nux-notify" :class="{open: open}">
+                <button type="button" class="nux-notify-bell" :aria-label="unread > 0 ? (title + '，' + unread + ' 条未读') : title" @click.stop="onOpen">
+                    <i class="fa fa-bell"></i>
+                    <span v-if="unread > 0" class="nux-notify-dot">{{ unread > 99 ? '99+' : unread }}</span>
                 </button>
-                <transition name="nux-notif-panel">
-                    <div v-if="open" ref="panelRef"
-                         :class="['nux-notif-panel', { 'nux-notif-fullscreen': isMobile }]"
-                         role="dialog" aria-label="通知列表" :aria-busy="loading">
-                        <div class="nux-notif-header">
-                            <span class="nux-notif-title">通知</span>
-                            <button v-if="unreadCount > 0" class="nux-notif-readall" @click="handleMarkAllRead" aria-label="全部标记为已读">全部已读</button>
-                        </div>
-                        <div class="nux-notif-list" role="list">
-                            <div v-if="loading" class="nux-notif-loading"><span class="nx-spinner" aria-hidden="true"></span></div>
-                            <div v-else-if="notifications.length === 0" class="nux-notif-empty">
-                                <i class="fa-regular fa-bell-slash nux-notif-empty-icon" aria-hidden="true"></i>
-                                <span>暂无通知</span>
-                            </div>
-                            <div v-else v-for="item in notifications" :key="item.id"
-                                 :class="['nux-notif-item', { 'is-unread': !item.is_read }]"
-                                 role="listitem" tabindex="0"
-                                 :aria-label="itemLabel(item)"
-                                 @click="handleClick(item)" @keydown.enter="handleClick(item)">
-                                <span class="nux-notif-icon"><i :class="typeIcon(item.type)" aria-hidden="true"></i></span>
-                                <div class="nux-notif-body">
-                                    <div class="nux-notif-item-title">{{ item.title }}</div>
-                                    <div class="nux-notif-item-content">{{ contentSummary(item.content) }}</div>
-                                    <div class="nux-notif-item-time">{{ formatTime(item.created_at) }}</div>
-                                </div>
-                                <span v-if="!item.is_read" class="nux-notif-dot" aria-hidden="true"></span>
-                            </div>
-                        </div>
-                        <div class="nux-notif-footer">
-                            <button class="nux-notif-viewall" @click="handleViewAll" aria-label="查看全部通知">查看全部</button>
-                        </div>
+                <div v-if="open" class="nux-notify-panel" @click.self.stop>
+                    <div class="nux-notify-head">
+                        <span class="nux-notify-title">{{ title }}</span>
+                        <button type="button" class="nux-notify-allread" v-if="unread > 0" @click.stop="markAllRead">全部已读</button>
                     </div>
-                </transition>
+                    <div v-if="loading" class="nux-notify-empty">加载中…</div>
+                    <div v-else-if="error" class="nux-notify-empty">{{ error }}</div>
+                    <div v-else-if="!items.length" class="nux-notify-empty">暂无通知</div>
+                    <ul v-else class="nux-notify-list">
+                        <li v-for="item in items" :key="item.id" :class="['nux-notify-item', { 'nux-notify-item-unread': !item.is_read }]" @click="markRead(item)">
+                            <div class="nux-notify-item-title">{{ item.title }}</div>
+                            <div class="nux-notify-item-time">{{ formatTime(item.created_at) }}</div>
+                        </li>
+                    </ul>
+                </div>
             </div>
         `
     };
-
     window.NuxNotificationBell = NuxNotificationBell;
 })();
