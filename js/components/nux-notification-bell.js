@@ -42,7 +42,11 @@
                 var opts = options || {};
                 var headers = Object.assign({ 'Authorization': 'Bearer ' + self.token }, opts.headers || {});
                 return fetch(self.baseUrl + url, Object.assign({}, opts, { headers: headers })).then(function(r) {
-                    if (!r.ok) throw new Error('请求失败');
+                    if (!r.ok) {
+                        var err = new Error('请求失败');
+                        err.status = r.status;
+                        throw err;
+                    }
                     return r.json();
                 });
             },
@@ -69,8 +73,9 @@
                 self.error = '';
                 self.fetchJson('/api/notify/notifications?page=1&page_size=' + self.maxVisible).then(function(d) {
                     self.items = (d && Array.isArray(d.items)) ? d.items : [];
-                }).catch(function() {
+                }).catch(function(e) {
                     self.error = '通知加载失败';
+                    if (e && e.status === 404) self.unread = 0;
                 }).finally(function() {
                     self.loading = false;
                 });
@@ -117,7 +122,10 @@
                         <button type="button" class="nux-notify-allread" v-if="unread > 0" @click.stop="markAllRead">全部已读</button>
                     </div>
                     <div v-if="loading" class="nux-notify-empty">加载中…</div>
-                    <div v-else-if="error" class="nux-notify-empty">{{ error }}</div>
+                    <div v-else-if="error" class="nux-notify-empty">
+                        {{ error }}
+                        <button type="button" class="nux-notify-reload" @click.stop="loadList">重新加载</button>
+                    </div>
                     <div v-else-if="!items.length" class="nux-notify-empty">暂无通知</div>
                     <ul v-else class="nux-notify-list">
                         <li v-for="item in items" :key="item.id" :class="['nux-notify-item', { 'nux-notify-item-unread': !item.is_read }]" @click="markRead(item)">
