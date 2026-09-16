@@ -248,7 +248,7 @@
                             <div v-for="g in groups" :key="g.name" class="nxsp-group">
                                 <div v-if="g.name" class="nxsp-group-label">{{ g.name }}</div>
                                 <button v-for="item in g.items" :key="keyOf(item)" type="button"
-                                        class="nxsp-item" :class="{ active: isActive(item) }" @click="pick(item)">
+                                        class="nxsp-item" :class="{ active: isActive(item) }" :title="metaOf(item)" @click="pick(item)">
                                     <span v-if="item.grad" class="nxsp-item-ico is-grad" :style="{ background: item.grad }">{{ item.icon }}</span>
                                     <span v-else-if="item.icon" class="nxsp-item-ico">{{ item.icon }}</span>
                                     <span class="nxsp-item-main">

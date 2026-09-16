@@ -53,7 +53,7 @@
             const localError = Vue.ref('');
             const showPassword = Vue.ref(false);
             const showConfirmPassword = Vue.ref(false);
-            const rememberMe = Vue.ref(true);
+            const rememberMe = Vue.ref(false);
             const agreed = Vue.ref(false);
             const age = Vue.ref(10);
             const guardianAgreed = Vue.ref(false);
