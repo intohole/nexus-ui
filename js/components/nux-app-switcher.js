@@ -96,8 +96,7 @@
     function keepApp(a) {
         if (!a || !a.url || !a.name || a.is_dev) return false;
         if (_cfg.end === 'biz') {
-            if (a.is_public === true) return false;
-            return !!(a.app_group || '').indexOf('商业端') !== -1;
+            return (a.app_group || '').indexOf('商业端') !== -1;
         }
         return a.is_public === true;
     }
