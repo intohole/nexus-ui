@@ -264,6 +264,10 @@
                 let data; const ct = res.headers.get('content-type') || '';
                 if (ct.includes('application/json')) data = await res.json();
                 else { const t = await res.text(); try { data = JSON.parse(t); } catch { data = { detail: t }; } }
+                if (res.status === 401) {
+                    this._clearAuth();
+                    if (this.onUnauthorized) this.onUnauthorized();
+                }
                 if (!res.ok) throw new ApiError(this._extractError(data), res.status, data, this._extractErrorCode(data));
                 return data;
             }).catch((err) => {
@@ -358,19 +362,40 @@
             keysToDelete.forEach(id => this.abortControllers.delete(id));
         }
 
-        async download(url, params = {}) {
+        async download(url, params = {}, options = {}) {
+            if (params && typeof params === 'object' && !(params instanceof URLSearchParams)
+                && ('method' in params || 'body' in params || 'headers' in params || 'params' in params || 'timeout' in params)) {
+                options = params;
+                params = options.params || {};
+            }
+            const method = options.method || 'GET';
             const qs = new URLSearchParams(params).toString();
             const fullUrl = qs ? `${url}?${qs}` : url;
             const token = this._getToken();
+            const headers = { ...(token && { 'Authorization': `Bearer ${token}` }), ...(options.headers || {}) };
+            if (options.body !== undefined && options.body !== null) headers['Content-Type'] = 'application/json';
+            const controller = new AbortController();
+            const timeoutId = options.timeout ? setTimeout(() => controller.abort(), options.timeout) : null;
             let response;
             try {
-                response = await fetch(`${this.baseUrl}${fullUrl}`, { headers: { ...(token && { 'Authorization': `Bearer ${token}` }) } });
+                response = await fetch(`${this.baseUrl}${fullUrl}`, {
+                    method,
+                    headers,
+                    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+                    signal: options.timeout ? controller.signal : undefined
+                });
             } catch (err) {
                 throw _isNetworkErr(err) ? new ApiError('网络连接失败，请检查网络后重试', null, null) : new ApiError(err.message || '下载失败', null, null);
+            } finally {
+                if (timeoutId) clearTimeout(timeoutId);
             }
             if (!response.ok) {
                 let errData;
                 try { errData = await response.json(); } catch { errData = {}; }
+                if (response.status === 401) {
+                    this._clearAuth();
+                    if (this.onUnauthorized) this.onUnauthorized();
+                }
                 const errorMsg = this._extractError(errData) || `下载失败 (${response.status})`;
                 if (this.onError) this.onError(response.status, errorMsg);
                 throw new ApiError(errorMsg, response.status, errData, this._extractErrorCode(errData));
