@@ -72,13 +72,15 @@
     function readConfig() {
         var g = window.nuxAppSwitcherConfig || {};
         var s = document.currentScript;
+        var end = g.end || '';
         return {
+            end: end,
             registryUrl: g.registryUrl || (s && s.getAttribute('data-registry-url')) || '/api/portal/apps',
             registryData: g.registryData || null,
             brandName: g.brandName || '松果氪',
-            brandTagline: g.brandTagline || '把想做的事，交给 AI',
+            brandTagline: g.brandTagline || (end === 'biz' ? '让商业决策，有据可依' : '把想做的事，交给 AI'),
             portalUrl: g.portalUrl || '/',
-            portalAction: g.portalAction || '回到松果氪 · 全部应用'
+            portalAction: g.portalAction || (end === 'biz' ? '回到商业工具库' : '回到松果氪 · 全部应用')
         };
     }
 
@@ -92,7 +94,20 @@
     }
 
     function keepApp(a) {
-        return !!(a && a.url && a.name && a.is_public === true && !a.is_dev);
+        if (!a || !a.url || !a.name || a.is_dev) return false;
+        if (_cfg.end === 'biz') {
+            if (a.is_public === true) return false;
+            return !!(a.app_group || '').indexOf('商业端') !== -1;
+        }
+        return a.is_public === true;
+    }
+
+    function effectiveRegistryUrl() {
+        var u = _cfg.registryUrl;
+        if (_cfg.end && u.indexOf('end=') === -1) {
+            u += (u.indexOf('?') >= 0 ? '&' : '?') + 'end=' + encodeURIComponent(_cfg.end);
+        }
+        return u;
     }
 
     function loadApps() {
@@ -100,9 +115,9 @@
             _apps = _cfg.registryData.filter(keepApp);
             return Promise.resolve();
         }
-        var url = /^https?:\/\//i.test(_cfg.registryUrl)
-            ? _cfg.registryUrl
-            : location.origin + ( _cfg.registryUrl.charAt(0) === '/' ? '' : '/' ) + _cfg.registryUrl;
+        var url = /^https?:\/\//i.test(effectiveRegistryUrl())
+            ? effectiveRegistryUrl()
+            : location.origin + ( effectiveRegistryUrl().charAt(0) === '/' ? '' : '/' ) + effectiveRegistryUrl();
         return fetch(url, { headers: { 'Accept': 'application/json' } })
             .then(function(r) { if (!r.ok) throw new Error('bad'); return r.json(); })
             .then(function(d) { _apps = ((d && d.apps) || []).filter(keepApp); })
@@ -110,6 +125,7 @@
     }
 
     function groupOf(a) {
+        if (_cfg.end === 'biz') return '商业工具库';
         var s = (a.scene_name || '').trim();
         if (s) return s;
         var g = (a.app_group || '').split(',')[0].trim();
