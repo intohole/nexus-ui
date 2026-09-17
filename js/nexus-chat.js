@@ -127,7 +127,9 @@
         }
 
         _handleData(data) {
-            const event = this._currentEvent || this.eventKey;
+            const event = (data && typeof data.type === 'string' && data.type)
+                ? data.type
+                : (this._currentEvent || this.eventKey);
             if (this.onEvent) this.onEvent(event, data);
             if (event === 'error') {
                 this.onError(data.message || data.error || 'AI处理出错');
@@ -139,9 +141,9 @@
                     this.receivedChunks += content;
                     this.onChunk(content, this.receivedChunks);
                 }
-                if (data[this.doneKey] === true || data.done === true || data.finished === true) {
-                    this.controller && this.controller.abort();
-                }
+            }
+            if (data[this.doneKey] === true || data.done === true || data.finished === true) {
+                this.controller && this.controller.abort();
             }
         }
 
