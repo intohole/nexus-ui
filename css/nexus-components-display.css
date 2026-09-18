@@ -616,3 +616,58 @@
 }
 .nux-onboarding-btn-primary { background: var(--nx-color-primary, #4f46e5); color: #fff; }
 .nux-onboarding-btn-ghost { background: transparent; color: var(--nx-text-muted); }
+
+/* ===== 就绪度引导条 ===== */
+.nux-ob-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  margin-bottom: 14px;
+  color: #fff;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--app-accent, #155e75) 82%, #0f172a), var(--app-accent, #155e75));
+}
+.nux-ob-strip .nux-ob-main { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.nux-ob-strip .nux-ob-ico {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.nux-ob-strip .nux-ob-title { font-size: 15px; font-weight: 700; }
+.nux-ob-strip .nux-ob-desc { font-size: 12px; color: rgba(255, 255, 255, 0.78); margin-top: 2px; line-height: 1.5; }
+.nux-ob-strip .nux-ob-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.nux-ob-strip .nux-ob-btn {
+  border: none;
+  background: #fff;
+  color: var(--app-accent-deep, var(--app-accent, #155e75));
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.nux-ob-strip .nux-ob-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18); }
+.nux-ob-strip .nux-ob-dismiss {
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+.nux-ob-strip .nux-ob-dismiss:hover { color: #fff; }
+@media (max-width: 520px) {
+  .nux-ob-strip { flex-direction: column; align-items: stretch; gap: 10px; }
+  .nux-ob-strip .nux-ob-actions { justify-content: stretch; }
+  .nux-ob-strip .nux-ob-btn { flex: 1; text-align: center; }
+}
