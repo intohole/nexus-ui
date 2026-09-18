@@ -138,16 +138,32 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
+}
+
+.nux-layout-nav-group + .nux-layout-nav-group {
     margin-top: var(--nx-space-2);
+    padding-top: var(--nx-space-3);
+    border-top: 1px solid var(--nx-border);
 }
 
 .nux-layout-nav-group-title {
-    padding: var(--nx-space-2) var(--nx-space-3);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    color: var(--nx-text-tertiary);
-    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-1) var(--nx-space-3) var(--nx-space-2);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: color-mix(in srgb, var(--app-accent, var(--nx-primary)) 55%, var(--nx-text-secondary));
+}
+
+.nux-layout-nav-group-title::before {
+    content: "";
+    width: 3px;
+    height: 12px;
+    border-radius: 2px;
+    flex-shrink: 0;
+    background: color-mix(in srgb, var(--app-accent, var(--nx-primary)) 50%, transparent);
 }
 
 .nux-layout-nav-item {
@@ -173,6 +189,22 @@
     color: var(--app-accent, var(--nx-primary));
     background: color-mix(in srgb, var(--app-accent, var(--nx-primary)) 10%, transparent);
     font-weight: 500;
+}
+
+.nux-layout-nav-item.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 16px;
+    border-radius: 2px;
+    background: var(--app-accent, var(--nx-primary));
+}
+
+.nux-layout-nav-item.active .nux-layout-nav-icon {
+    color: var(--app-accent, var(--nx-primary));
 }
 
 .nux-layout-nav-icon {
@@ -275,6 +307,10 @@
     justify-content: center;
     padding-left: var(--nx-space-2);
     padding-right: var(--nx-space-2);
+}
+
+.nux-layout-aside.collapsed .nux-layout-nav-group-title {
+    display: none;
 }
 
 .nux-layout-aside.collapsed .nux-layout-nav-label {
