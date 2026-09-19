@@ -16,16 +16,24 @@
             bottomNavLimit: { type: Number, default: 4 },
             bottomNavItems: { type: Array, default: () => [] },
             headerless: { type: Boolean, default: false },
+            namespace: { type: String, default: '' },
             menuOpen: { type: Boolean, default: undefined }
         },
         emits: ['navigate', 'toggle-collapsed', 'update:menuOpen'],
         setup(props, { emit }) {
             const { isMobile, mobileMenuOpen: _menuOpen, toggleMenu: _toggleMenu, closeMenu: _closeMenu } = useMobile();
-            const collapsed = Vue.ref(false);
+            const collapseKey = () => appNamespace + ':collapsed';
+            const loadCollapsed = () => { try { return localStorage.getItem(collapseKey()) === '1'; } catch (e) { return false; } };
+            const collapsed = Vue.ref((props.collapsible && !isMobile.value) && loadCollapsed());
             const toggleCollapsed = () => {
                 collapsed.value = !collapsed.value;
+                try { localStorage.setItem(collapseKey(), collapsed.value ? '1' : '0'); } catch (e) {}
                 emit('toggle-collapsed', collapsed.value);
             };
+            const appNamespace = props.namespace || props.appName || 'gem';
+            Vue.watch(isMobile, (mobile) => {
+                if (mobile && collapsed.value) collapsed.value = false;
+            });
             const effectiveWidth = Vue.computed(() => collapsed.value ? props.collapsedWidth : props.sidebarWidth);
             const asideWidth = Vue.computed(() => isMobile.value ? props.sidebarWidth : effectiveWidth.value);
             const hasGroups = Vue.computed(() => props.menuGroups && props.menuGroups.length > 0);

@@ -58,13 +58,14 @@
     flex-direction: column;
     background: var(--nx-bg-surface);
     border-right: 1px solid var(--nx-border);
-    overflow-y: auto;
     z-index: 90;
     transition: transform 0.3s ease;
 }
 
 .nux-layout-sidebar .nux-layout-nav {
     flex: 1;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 .nux-layout-sidebar .nux-layout-main {
