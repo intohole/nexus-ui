@@ -488,6 +488,25 @@
                     if (BRIDGE_KEYS.indexOf(key) !== -1) clearBridge();
                 }
             };
+        },
+
+        clearAuthState() {
+            try {
+                const ds = this.createDualStorage('uc_access_token');
+                ['uc_access_token', 'uc_refresh_token', 'uc_token_expires_at'].forEach((k) => ds.removeItem(k));
+            } catch (e) {}
+            try { window.dispatchEvent(new CustomEvent('uc:authchange', { detail: { authenticated: false } })); } catch (e) {}
+        },
+
+        handleUnauthorized(opts = {}) {
+            this.clearAuthState();
+            const msg = opts.message || '登录已过期，请重新登录';
+            this.showToast(msg, 'error');
+            const redirect = opts.redirect || window.location.pathname + window.location.search;
+            setTimeout(() => {
+                const target = '/login.html?redirect=' + encodeURIComponent('/' + String(redirect).replace(/^\/+/, ''));
+                window.location.href = target;
+            }, opts.delay || 1200);
         }
     };
 
