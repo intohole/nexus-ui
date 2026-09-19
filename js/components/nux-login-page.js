@@ -577,12 +577,12 @@
                                     </span>
                                     <span v-else>{{ termsText }}</span>
                                 </label>
+                                <div v-if="showTerms && !agreed" class="nux-terms-hint">请先勾选同意用户协议和隐私政策，再{{ mode === 'login' ? '登录' : '注册' }}</div>
                             </div>
                             <button type="submit" class="nux-login-submit" :disabled="loading || registering || loginBusy">
                                 <span v-if="loading || registering || loginBusy" class="nx-spinner"></span>
                                 {{ mode === 'login' ? ((loading || loginBusy) ? '登 录 …' : '登 录') : (registering ? '注 册 …' : '注 册') }}
                             </button>
-                            <div v-if="showTerms && !agreed" class="nux-terms-hint">请先勾选同意用户协议和隐私政策，再登录或注册</div>
                         </form>
                         </template>
                         <div v-if="thirdPartyLogin && thirdPartyLogin.length" class="nux-login-divider"><span>其他登录方式</span></div>
