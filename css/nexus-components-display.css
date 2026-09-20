@@ -284,7 +284,7 @@
 .nux-portal-footer-logo img{ width: 100%; height: 100%; }
 .nux-portal-footer-name{ font-size: 14px; font-weight: 600; color: var(--nx-text-heading, #0f172a); }
 .nux-portal-footer-copy{ font-size: 13px; color: var(--nx-text-muted, #64748b); }
-.nux-portal-footer-link{ color: var(--nx-text-muted, #64748b); text-decoration: none; font-weight: 500; font-size: 13px; transition: color .3s; }
+.nux-portal-footer-link{ color: var(--nx-text-muted, #64748b); text-decoration: none; font-weight: 500; font-size: 13px; transition: color .3s; display: inline-flex; align-items: center; padding: 13px 4px; margin: -13px -4px; min-height: 44px; }
 .nux-portal-footer-link:hover{ color: var(--nx-text-accent, #4f46e5); }
 @media (max-width: 768px){
   .nux-portal-footer-inner{ flex-direction: column; text-align: center; }
@@ -356,6 +356,7 @@
 .nux-app-card-badge-fav{ background: rgba(217,119,6,0.12); border-color: rgba(217,119,6,0.28); color: #d97706; }
 .nux-app-card-badge-featured{ background: rgba(217,119,6,0.12); border-color: rgba(217,119,6,0.28); color: #d97706; }
 .nux-app-card-fav{
+  position: relative;
   width: 30px;
   height: 30px;
   min-width: 30px;
@@ -373,6 +374,12 @@
   font-family: inherit;
   flex-shrink: 0;
 }
+.nux-app-card-fav::before{
+  content: '';
+  position: absolute;
+  inset: -8px;
+  -webkit-tap-highlight-color: transparent;
+}
 .nux-app-card:hover .nux-app-card-fav{ color: var(--nx-text-body, #334155); border-color: rgba(15,23,42,0.3); }
 .nux-app-card-fav:hover{ transform: scale(1.1); background: rgba(255,255,255,0.95); }
 .nux-app-card-fav.on{
@@ -381,6 +388,7 @@
   border-color: rgba(217,119,6,0.35);
 }
 .nux-app-card-edit{
+  position: relative;
   width: 30px;
   height: 30px;
   min-width: 30px;
@@ -397,6 +405,12 @@
   justify-content: center;
   transition: all .3s;
   flex-shrink: 0;
+}
+.nux-app-card-edit::before{
+  content: '';
+  position: absolute;
+  inset: -8px;
+  -webkit-tap-highlight-color: transparent;
 }
 .nux-app-card-edit:hover{ background: rgba(79,70,229,0.16); border-color: rgba(79,70,229,0.4); transform: scale(1.06); }
 .nux-app-card-top{ display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -426,6 +440,9 @@
   color: var(--nx-text-heading, #0f172a);
   margin-bottom: 4px;
   transition: color .3s;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .nux-app-card-desc{
   font-size: 12.5px;
