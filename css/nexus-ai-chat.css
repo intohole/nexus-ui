@@ -465,6 +465,11 @@
     cursor: not-allowed;
 }
 
+.nx-ai-chat-send.is-empty {
+    background: var(--nx-bg-tertiary, rgb(203, 213, 225));
+    cursor: not-allowed;
+}
+
 .nx-ai-chat-stop {
     background: var(--nx-danger, rgb(220, 38, 38));
     color: rgb(255, 255, 255);

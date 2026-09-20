@@ -155,6 +155,10 @@
             }
 
             async function send(content) {
+                if (content === undefined && inputEl.value) {
+                    const domVal = String(inputEl.value.value || '');
+                    if (domVal !== input.value) input.value = domVal;
+                }
                 const text = (content !== undefined ? content : input.value).trim();
                 if (!text || isStreaming.value || props.disabled) return;
 
