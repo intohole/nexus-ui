@@ -470,7 +470,7 @@
                                 </div>
                                 <div v-else class="nux-form-group">
                                     <label class="nux-form-label">用户名</label>
-                                    <input v-model="form.username" type="text" class="nux-input" placeholder="请输入用户名" autocomplete="username" required>
+                                    <input v-model="form.username" type="text" class="nux-input" placeholder="用户名 / 邮箱 / 手机号" autocomplete="username" required>
                                 </div>
                             </template>
                             <template v-else-if="isSmsMode">
