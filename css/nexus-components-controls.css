@@ -323,7 +323,7 @@
 .nux-loading--lg .nux-loading-spinner { width: 28px; height: 28px; border-width: 3px; }
 .nux-loading-text { font-size: var(--nx-text-sm); }
 
-@media (max-width: 820px) {
+@media (max-width: 768px) {
   .nux-btn { padding: 8px var(--nx-space-4); min-height: 40px; }
   .nux-field { margin-bottom: var(--nx-space-3); }
   .nux-segmented { width: 100%; }

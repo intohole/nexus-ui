@@ -26,7 +26,7 @@
                     }"
                 >
                     <span class="nux-step-dot">
-                        <svg v-if="i < current" viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 6.5 12 13 4.5"/></svg>
+                        <svg v-if="i < current" viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="var(--nx-text-on-accent,#fff)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 6.5 12 13 4.5"/></svg>
                         <span v-else>{{ i + 1 }}</span>
                     </span>
                     <span class="nux-step-title">{{ item.title }}</span>

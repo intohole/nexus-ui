@@ -196,6 +196,30 @@
   .nx-nav-link { min-height: 44px; display: flex; align-items: center; }
   .nx-sidebar-item { min-height: 44px; }
   .nx-input, .nx-select, .nux-input { min-height: 44px; font-size: 16px; }
+  .nux-btn, .nux-acc-head, .nux-bottom-nav-item, .nux-layout-nav-item, .nux-layout-collapse-btn,
+  .nux-tab-item, .nux-segmented-item, .nux-chip, .nux-cal-nav, .nux-cal-today-btn, .nux-cal-cell,
+  .nux-cal-heat-cell, .nux-checkin-cell, .nux-checkin-preset, .nux-checkin-mini, .nux-checkin-ghost,
+  .nux-notif-item, .nux-notif-panel-item, .nux-notif-panel-page-btn, .nux-notif-btn, .nux-notify-bell,
+  .nux-notify-item, .nux-onboarding-btn, .nux-uc-tab, .nux-uc-trigger, .nux-uc-action, .nux-uc-close,
+  .nux-uc-logout, .nux-login-tab, .nux-login-subtab, .nux-third-btn, .nux-link, .nux-undo-btn,
+  .nux-field-clear, .nux-password-toggle, .nux-sms-btn, .nux-captcha-img, .nux-check, .nux-checkbox,
+  .nux-select-native, .nux-app-card-cover, .nux-backtop, .nux-menu-user-btn, .nux-menu-about-btn,
+  .nux-selection-clear, .nux-fb-btn, .nc-chip, .nc-btn, .nxw-chip, .nxw-choice-btn {
+    min-height: 44px;
+  }
+  .nux-chip-remove, .nux-notif-panel-item-delete, .nux-onboarding-close, .nux-cal-nav, .nux-field-clear,
+  .nux-password-toggle, .nux-notif-btn, .nux-notify-bell, .nux-uc-trigger, .nux-uc-close, .nux-uc-logout,
+  .nux-menu-user-btn, .nux-menu-about-btn, .nux-app-card-fav, .nux-app-card-edit {
+    position: relative;
+  }
+  .nux-chip-remove::after, .nux-notif-panel-item-delete::after, .nux-onboarding-close::after,
+  .nux-cal-nav::after, .nux-field-clear::after, .nux-password-toggle::after, .nux-notif-btn::after,
+  .nux-notify-bell::after, .nux-uc-trigger::after, .nux-uc-close::after, .nux-uc-logout::after,
+  .nux-menu-user-btn::after, .nux-menu-about-btn::after, .nux-app-card-fav::after, .nux-app-card-edit::after {
+    content: "";
+    position: absolute;
+    inset: -10px;
+  }
 }
 
 .nx-about-btn {
