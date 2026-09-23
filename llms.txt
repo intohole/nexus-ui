@@ -228,7 +228,7 @@ Events: accepted/declined
 
 引入方式统一为 `<script src="https://songguokr.com/nexus-ui/v{version}/js/components/nux-xxx.js"></script>` 后 `NexusComponents.register(app)` 一键注册（禁止逐个 `app.component`）。基准样式=桌面端，≤820px 自动收敛，触屏自动 44px 命中区与 16px 输入字号。
 
-### 全部组件索引（77 个，`NexusComponents.list()` 可查）
+### 全部组件索引（83 个，`NexusComponents.list()` 可查）
 
 | 分类 | 组件 |
 |------|------|
@@ -237,6 +237,7 @@ Events: accepted/declined
 | 反馈 | nux-toast / nux-undo-toast / nux-unlock / nux-modal / nux-drawer / nux-confirm / nux-notification-bell / nux-notification-panel / nux-loading / nux-skeleton / nux-empty / nux-empty-state / nux-error-state |
 | 数据展示 | nux-data-table / nux-crud-page / nux-pagination / nux-stat-card / nux-badge / nux-avatar / nux-progress / nux-plan-progress / nux-steps / nux-breadcrumb / nux-calendar / nux-checkin / nux-radar-chart / nux-export-button / nux-history-list / nux-result-view / nux-selection-bar |
 | 表单控件 | nux-form-group / nux-button / nux-input / nux-textarea / nux-select / nux-switch / nux-checkbox / nux-search-box / nux-segmented / nux-chip-group / nux-accordion / nux-tab-group |
+| 交互增强 | nux-file-upload / nux-infinite-scroll / nux-slider / nux-date-picker / nux-qrcode / nux-sortable |
 | AI 能力 | nux-ai-chat / nux-conversation-list / nux-ai-badge / nux-ai-indicator / nux-ai-widgets / nux-clarify-card / nux-automation / nux-onboarding / nux-onboarding-strip / nux-app-card / nux-app-switcher / nux-poster |
 
 | 组件 | 核心用法 |
@@ -257,7 +258,12 @@ Events: accepted/declined
 | nux-grid | `<nux-grid :cols="4">子元素</nux-grid>`（桌面4列，移动端自动单列）或 `<nux-grid min="220px">`（auto-fill自适应） |
 | nux-section | `<nux-section title="标题" description="描述"><template #actions>操作</template>内容</nux-section>`（flat属性去卡片） |
 | nux-backtop | `<nux-backtop :threshold="300"></nux-backtop>` |
-| nux-calendar | `<nux-calendar mode="month" v-model="sel" :levels="{'2026-09-02': 3}" :counts="{'2026-09-02': 5}" @date-select="fn" @month-change="fn"></nux-calendar>`（三模式：month自然月活跃度/sequence挑战序列 `:start-date :total-days :records`/heatmap周列热力 `:cells="[{date,level,value,unit}]"`；level 0-4 色阶随 --app-accent 流动；loading 骨架内置） |
+| nux-file-upload | `<nux-file-upload v-model="files" multiple accept="image/*,.pdf" :max-size-mb="10" :max-count="5" label="附件" hint="支持 jpg/png/pdf" @error="onErr" @remove="onRemove"></nux-file-upload>`（点击或拖拽；图片自动缩略图；超限走 error 事件） |
+| nux-infinite-scroll | `<nux-infinite-scroll :loading="loading" :finished="finished" :offset="200" :error-text="errText" @load="loadMore">列表内容</nux-infinite-scroll>`（IntersectionObserver 哨兵触发，自动识别最近滚动容器） |
+| nux-slider | `<nux-slider v-model="score" :min="0" :max="100" :step="5" label="评分" unit="分" @change="fn"></nux-slider>`（原生 range，移动端原生体验+键盘可用） |
+| nux-date-picker | `<nux-date-picker v-model="day" type="date|datetime-local|month|time" :min="'2026-01-01'" :max="'2026-12-31'" label="日期" clearable></nux-date-picker>`（原生选择器，移动端调起系统面板） |
+| nux-qrcode | `<nux-qrcode value="https://songguokr.com/x" :size="180" level="M" label="扫码打开" alt="分享二维码" @ready="fn" @error="fn"></nux-qrcode>`（qrcodejs 未加载时自动按 deps.json 版本从 CDN 拉取，失败降级文案） |
+| nux-sortable | `<nux-sortable v-model="list" item-key="id" @change="save"><template #default="{ item, index }"><div>{{ item.name }}</div></template></nux-sortable>`（Pointer Events 统一鼠标/触摸拖拽，键盘方向键/Home/End 可排序） |
 
 ### Composables
 
