@@ -2451,6 +2451,8 @@
         'NuxAiChatTemplate': 'AI 对话组件模板字符串',
         'NuxFloatAbout': '悬浮关于入口（自动挂载，无需注册）',
         'NuxFloatUserCenter': '悬浮用户中心（init/configure/destroy，非 Vue 组件）',
+        'NuxLoginHelpers': '登录页工具集（验证码/SMS 状态机、协议勾选、忘记密码动态加载）',
+        'NuxLoginPageTemplate': '登录页模板字符串',
         'NuxRadarDraw': '雷达图 Canvas 绘制引擎（静态方法）',
         'PosterRender': '海报渲染引擎（px/elementStyle/buildInner/capture/download）'
     };
