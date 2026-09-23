@@ -12,7 +12,7 @@
 .nsl-track{position:relative;display:flex;align-items:center;height:24px}
 .nsl-rail{position:absolute;left:0;right:0;top:50%;height:6px;transform:translateY(-50%);border-radius:var(--nx-radius-full,9999px);background:var(--nx-bg-muted,#f1f5f9)}
 .nsl-fill{position:absolute;left:0;top:50%;height:6px;transform:translateY(-50%);border-radius:var(--nx-radius-full,9999px);background:var(--app-accent,#6366f1);transition:width var(--nx-transition-fast,.15s ease)}
-.nsl-input{position:relative;width:100%;height:24px;margin:0;background:transparent;cursor:pointer;-webkit-appearance:none;appearance:none}
+.nsl-input{position:relative;width:100%;height:24px;margin:0;background:transparent;font-family:inherit;cursor:pointer;-webkit-appearance:none;appearance:none}
 .nsl-input:focus{outline:none}
 .nsl-input:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 4px rgba(var(--app-accent-rgb,99,102,241),.25)}
 .nsl-input:focus-visible::-moz-range-thumb{box-shadow:0 0 0 4px rgba(var(--app-accent-rgb,99,102,241),.25)}

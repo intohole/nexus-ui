@@ -13,7 +13,7 @@
         '.nxs-trigger-label{font-size:14px;font-weight:600;letter-spacing:.5px;white-space:nowrap}',
         '.nxs-trigger-dot{width:6px;height:6px;border-radius:50%;background:var(--app-accent,#6366f1);box-shadow:0 0 8px var(--app-accent,#6366f1)}',
         '.nxs-overlay{position:fixed;inset:0;z-index:2147483000;background:var(--nx-overlay-bg,rgba(0,0,0,.5));backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;animation:nxsFade .2s ease}',
-        '.nxs-panel{position:relative;width:min(920px,calc(100vw - 28px));max-height:min(84dvh,84vh);display:flex;flex-direction:column;border-radius:var(--nx-radius-xl,22px);overflow:hidden;background:var(--nx-glass-bg,rgba(255,255,255,.86));backdrop-filter:blur(22px);border:1px solid var(--nx-glass-border,rgba(0,0,0,.06));box-shadow:var(--nx-shadow-lg,0 8px 24px rgba(0,0,0,.12));animation:nxsPop .22s cubic-bezier(.34,1.3,.5,1)}',
+        '.nxs-panel{position:relative;width:min(920px,calc(100vw - 28px));max-height:min(84dvh,84vh);display:flex;flex-direction:column;border-radius:var(--nx-radius-xl,22px);overflow:hidden;background:var(--nx-glass-bg,rgba(255,255,255,.86));backdrop-filter:blur(var(--nx-glass-blur,16px));border:1px solid var(--nx-glass-border,rgba(0,0,0,.06));box-shadow:var(--nx-shadow-lg,0 8px 24px rgba(0,0,0,.12));animation:nxsPop .22s cubic-bezier(.34,1.3,.5,1)}',
         '.nxs-panel:before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(620px 220px at 18% -8%,rgba(var(--app-accent-rgb,99,102,241),.12),transparent 62%)}',
         '.nxs-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 12px}',
         '.nxs-brand{display:flex;align-items:center;gap:11px;cursor:pointer}',
@@ -37,14 +37,15 @@
         '.nxs-skel{height:64px;border-radius:var(--nx-radius-lg,14px);background:var(--nx-bg-muted,#f1f5f9);animation:nxsSh 1.2s infinite}',
         '@keyframes nxsSh{0%,100%{opacity:.5}50%{opacity:1}}',
         '.nxs-group{margin-top:16px}',
-        '.nxs-group-title{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:var(--nx-text-secondary,#64748b);letter-spacing:1px;margin-bottom:10px}',
+        '.nxs-group-title{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:var(--nx-text-secondary,#64748b);letter-spacing:.3px;margin-bottom:10px}',
         '.nxs-group-title i{width:5px;height:5px;border-radius:50%;background:var(--app-accent,#6366f1)}',
         '.nxs-group-count{margin-left:auto;font-weight:500;color:var(--nx-text-muted,#94a3b8);font-size:12px}',
         '.nxs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px}',
         '.nxs-tile{display:flex;align-items:center;gap:11px;min-width:0;padding:12px;border-radius:var(--nx-radius-lg,14px);background:var(--nx-bg-surface,#fff);border:1px solid var(--nx-border,rgba(0,0,0,.08));text-decoration:none;transition:background .2s,border-color .2s,transform .2s}',
         '.nxs-tile:hover{background:var(--nx-bg-hover,#f1f5f9);border-color:var(--app-accent,#6366f1);transform:translateY(-2px)}',
         '.nxs-tile.cur{border-color:var(--app-accent,#6366f1);background:rgba(var(--app-accent-rgb,99,102,241),.08)}',
-        '.nxs-tile-icon{width:40px;height:40px;flex:none;border-radius:var(--nx-radius-md,11px);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:var(--nx-text-on-accent,#fff);border:1px solid var(--nx-border,rgba(0,0,0,.08))}',
+        '.nxs-tile-icon{width:40px;height:40px;flex:none;border-radius:var(--nx-radius-md,11px);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:var(--nx-text-secondary,#64748b);background:var(--nx-bg-muted,#f1f5f9);border:1px solid var(--nx-border,rgba(0,0,0,.08))}',
+        '.nxs-tile.cur .nxs-tile-icon{color:var(--app-accent,#6366f1);background:rgba(var(--app-accent-rgb,99,102,241),.1);border-color:var(--nx-border-accent,rgba(99,102,241,.3))}',
         '.nxs-tile-icon img{width:100%;height:100%;object-fit:contain}',
         '.nxs-tile-m{min-width:0;display:flex;flex-direction:column;gap:2px}',
         '.nxs-tile-name{font-size:14px;font-weight:600;color:var(--nx-text-heading,#0f172a);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
@@ -64,8 +65,6 @@
         '@keyframes nxsUp{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}',
         '}'
     ].join('');
-
-    var PALETTE = ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#ec4899', '#3b82f6', '#8b5cf6', '#14b8a6'];
 
     var _cfg = readConfig();
     var _apps = [];
@@ -171,12 +170,6 @@
         return !!p && location.pathname.indexOf(p) === 0;
     }
 
-    function colorFor(name) {
-        var h = 0;
-        for (var i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
-        return PALETTE[h % PALETTE.length];
-    }
-
     var magic = '<svg class="nxs-trigger-glyph" viewBox="0 0 20 20" fill="none"><rect class="g-acc" x="2.2" y="2.2" width="6.4" height="6.4" rx="1.8"/><rect x="11.4" y="2.2" width="6.4" height="6.4" rx="1.8"/><rect x="2.2" y="11.4" width="6.4" height="6.4" rx="1.8"/><rect x="11.4" y="11.4" width="6.4" height="6.4" rx="1.8" opacity=".85"/></svg>';
     var searchSvg = '<svg class="nxs-search-svg" viewBox="0 0 18 18" fill="none"><circle cx="8" cy="8" r="5.4" stroke="currentColor" stroke-width="1.7"/><path d="M12.2 12.2L16 16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
 
@@ -258,7 +251,6 @@
                 this.open = false;
                 window.location.href = a.url;
             },
-            col: colorFor,
             isCurrent: isCurrent
         },
         template: ['<div class="nux-app-switcher nxs-root">',
@@ -280,7 +272,7 @@
             '<div class="nxs-group-title"><i></i>{{g.name}}<span class="nxs-group-count">{{g.apps.length}}</span></div>',
             '<div class="nxs-grid"><a v-for="a in g.apps" :key="a.name" :href="a.url"',
             ':class="[\'nxs-tile\',{cur:isCurrent(a)}]" :title="a.description" @click.prevent="openApp(a)">',
-            '<span class="nxs-tile-icon" :style="\'background:linear-gradient(135deg,\'+col(a.name)+\'cc,\'+col(a.name)+\'66)\'">',
+            '<span class="nxs-tile-icon">',
             '<img v-if="a.icon_url && !a._icerr" :src="a.icon_url" :alt="a.display_name" @error="a._icerr=true">',
             '<span v-else>{{(a.display_name||a.name).charAt(0)}}</span></span>',
             '<span class="nxs-tile-m"><span class="nxs-tile-name">{{a.display_name}}<span v-if="isCurrent(a)" class="nxs-tile-cur">当前</span></span>',

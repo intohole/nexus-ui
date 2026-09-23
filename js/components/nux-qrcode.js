@@ -106,7 +106,7 @@
     <div ref="hostRef" class="nq-code" aria-hidden="true" v-show="!failed"
         :style="{ width: size + 'px', height: size + 'px', maxWidth: '100%' }"></div>
     <div v-if="failed" class="nq-fallback"
-        :style="{ width: size + 'px', height: size + 'px', maxWidth: '100%' }">二维码加载失败</div>
+        :style="{ width: size + 'px', height: size + 'px', maxWidth: '100%' }">二维码加载失败，请检查网络后重试</div>
     <div v-if="label" class="nq-label">{{ label }}</div>
 </div>
 `
