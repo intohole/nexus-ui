@@ -167,7 +167,11 @@
 
     function isCurrent(a) {
         var p = a.path_prefix || '';
-        return !!p && location.pathname.indexOf(p) === 0;
+        if (p && location.pathname.indexOf(p) === 0) return true;
+        var u = a.url || '';
+        var m = u.match(/^https?:\/\/[^/]+(\/[^?#]*)?/);
+        var base = m ? (m[1] || '/') : '';
+        return !!base && base !== '/' && location.pathname.indexOf(base) === 0;
     }
 
     var magic = '<svg class="nxs-trigger-glyph" viewBox="0 0 20 20" fill="none"><rect class="g-acc" x="2.2" y="2.2" width="6.4" height="6.4" rx="1.8"/><rect x="11.4" y="2.2" width="6.4" height="6.4" rx="1.8"/><rect x="2.2" y="11.4" width="6.4" height="6.4" rx="1.8"/><rect x="11.4" y="11.4" width="6.4" height="6.4" rx="1.8" opacity=".85"/></svg>';
