@@ -16,6 +16,7 @@
             const showNewPwd = Vue.ref(false);
             const showConfirmPwd = Vue.ref(false);
             const error = Vue.ref('');
+            const sentMsg = Vue.ref('');
             const sending = Vue.ref(false);
             const submitting = Vue.ref(false);
             const countdown = Vue.ref(0);
@@ -36,6 +37,7 @@
 
             function sendCode() {
                 error.value = '';
+                sentMsg.value = '';
                 if (type.value === 'phone' && !/^1[3-9]\d{9}$/.test(target.value)) {
                     error.value = '请输入正确的手机号';
                     return;
@@ -49,6 +51,9 @@
                 props.sdk.forgotPassword(payload).then(function(res) {
                     if (res && res.success) {
                         startCountdown();
+                        sentMsg.value = type.value === 'phone'
+                            ? '验证码已发送至手机，请查收。如未收到，请确认手机号已绑定且与注册信息一致。'
+                            : '验证码已发送至邮箱，请查收。如未收到，请确认邮箱已绑定且与注册信息一致。';
                     } else {
                         error.value = (res && res.message) || '验证码发送失败';
                     }
@@ -96,7 +101,7 @@
             return {
                 view, type, target, code, newPassword, confirmPassword, error,
                 sending, submitting, countdown, sendCode, submit, switchType,
-                showNewPwd, showConfirmPwd, confirmMismatch,
+                showNewPwd, showConfirmPwd, confirmMismatch, sentMsg,
                 back: function() { emit('back'); },
                 done: function() { emit('done'); }
             };
@@ -109,6 +114,7 @@
                         <h3 class="nux-forgot-title">找回密码</h3>
                     </div>
                     <div v-if="error" class="nux-login-error">{{ error }}</div>
+                    <div v-if="sentMsg && !error" style="margin:0 0 12px;padding:8px 10px;border-radius:8px;font-size:13px;line-height:1.5;color:#15803d;background:#ecfdf5;">{{ sentMsg }}</div>
                     <div class="nux-forgot-hint">仅支持已绑定邮箱或手机号的账号找回密码。未绑定：能登录请在「我的数据中心-账号与安全」绑定后重试；无法登录请联系 songguokr@126.com 协助处理。</div>
                     <div class="nux-login-subtabs nux-forgot-tabs">
                         <button :class="['nux-login-subtab', { active: type === 'email' }]" type="button" @click="switchType('email')">邮箱找回</button>
