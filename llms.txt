@@ -2,66 +2,43 @@
 
 统一前端基础设施工程，为所有项目提供设计系统、移动端适配、通用组件和工具函数。
 
-CDN地址（国内加速）：`https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/`
+CDN地址（全工作区统一，版本见 `nexus-ui/deps.json`）：`https://songguokr.com/nexus-ui/v{version}/`
 
 ## 引入方式
 
 ### CSS（在HTML head中）
 
 ```html
-<!-- 全量引入（推荐） -->
-<link rel="stylesheet" href="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/css/nexus-all.css">
+<!-- 全量引入（唯一入口，含 tokens/themes/mobile/全部组件样式） -->
+<link rel="stylesheet" href="https://songguokr.com/nexus-ui/v{version}/css/nexus-all.css">
 ```
 
 ### JS（在Vue 3之后引入）
 
 ```html
-<!-- 基础工具（必须最先引入） -->
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/nexus-utils.js"></script>
+<!-- 核心库聚合包（必须最先引入，含 NexusApi/NexusUtils/NexusMarkdown/NexusChat/NexusStore/NexusComponents 等） -->
+<script src="https://songguokr.com/nexus-ui/v{version}/js/nexus-all.js"></script>
 
-<!-- 按需引入 -->
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/nexus-api.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/nexus-crud.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/nexus-validators.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/nexus-store.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/user-center-sdk.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/nexus-mobile.js"></script>
+<!-- 按需引入组件（只引实际用到的 nux-*.js，注册交给 NexusComponents.register） -->
+<script src="https://songguokr.com/nexus-ui/v{version}/js/components/nux-toast.js"></script>
+<script src="https://songguokr.com/nexus-ui/v{version}/js/components/nux-modal.js"></script>
+<script src="https://songguokr.com/nexus-ui/v{version}/js/components/nux-login-page.js"></script>
 
-<!-- Vue组件 -->
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/components/nux-toast.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/components/nux-modal.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/components/nux-drawer.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/components/nux-empty.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/components/nux-stat-card.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/components/nux-confirm.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/components/nux-tab-group.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/components/nux-pagination.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/components/nux-breadcrumb.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/components/nux-error-state.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/components/nux-data-table.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/components/nux-radar-chart-util.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/components/nux-radar-chart.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/components/nux-login-page.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/components/nux-skeleton.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/components/nux-avatar.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/components/nux-badge.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/components/nux-layout-sidebar.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/components/nux-layout-topnav.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/components/nux-form-group.js"></script>
-
-<!-- Composables -->
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/composables/use-mobile.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/composables/use-loading.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/composables/use-pagination.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/composables/use-search.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/composables/use-sort.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/composables/use-theme.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/composables/use-sse.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/composables/use-auth.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/composables/use-collection.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/composables/use-crud.js"></script>
-<script src="https://cdn.jsdmirror.com/gh/intohole/nexus-ui@v2.7.1/js/composables/use-form-submit.js"></script>
+<!-- 按需引入 composables -->
+<script src="https://songguokr.com/nexus-ui/v{version}/js/composables/use-mobile.js"></script>
+<script src="https://songguokr.com/nexus-ui/v{version}/js/composables/use-crud.js"></script>
 ```
+
+### 组件注册（统一入口，禁止逐个 app.component）
+
+```javascript
+const app = Vue.createApp({ /* ... */ });
+NexusComponents.register(app);   // 一次性注册所有已加载的 nux-* 组件，未加载的自动跳过
+app.mount('#app');
+```
+
+`NexusComponents.register(app)` 返回已注册的标签数组；未加载的组件会以 warn 提示并跳过，不会报错。
+`NexusComponents.list()` 返回全部可注册标签；`NexusComponents.components` 是 `标签 → window 全局名` 映射；`NexusComponents.helpers` 列出非组件导出（NuxAiChatHelpers / NuxAiChatTemplate / NuxFloatUserCenter / NuxRadarDraw / PosterRender）。
 
 ## 主题配置
 
@@ -134,21 +111,13 @@ store.logout();
 ### Vue组件
 
 ```javascript
-app.component('nux-toast', NuxToast);
-app.component('nux-modal', NuxModal);
-app.component('nux-drawer', NuxDrawer);
-app.component('nux-empty', NuxEmpty);
-app.component('nux-stat-card', NuxStatCard);
-app.component('nux-confirm', NuxConfirm);
-app.component('nux-tab-group', NuxTabGroup);
-app.component('nux-pagination', NuxPagination);
-app.component('nux-breadcrumb', NuxBreadcrumb);
-app.component('nux-error-state', NuxErrorState);
-app.component('nux-radar-chart', NuxRadarChart);
+// 统一注册（推荐）：一次注册全部已加载组件，替代逐个 app.component
+NexusComponents.register(app);
 
-// 命令式调用
+// 命令式调用（无需注册）
 showToast('操作成功', 'success');
 nuxConfirm('确定删除吗？').then(ok => { ... });
+showUnlock({ icon: '🏆', title: '新成就', desc: '连续打卡 7 天' });
 ```
 
 ### nux-radar-chart 雷达图组件
@@ -257,7 +226,18 @@ Events: accepted/declined
 
 ### 基础组件（v2.10.53+，样式已并入 nexus-all.css，多端适配内置无需业务写媒体查询）
 
-引入方式统一为 `<script src="https://songguokr.com/nexus-ui/v2.10.53/js/components/nux-xxx.js"></script>` 后 `app.component('nux-xxx', window.NuxXxx)`。基准样式=桌面端，≤820px 自动收敛，触屏自动 44px 命中区与 16px 输入字号。
+引入方式统一为 `<script src="https://songguokr.com/nexus-ui/v{version}/js/components/nux-xxx.js"></script>` 后 `NexusComponents.register(app)` 一键注册（禁止逐个 `app.component`）。基准样式=桌面端，≤820px 自动收敛，触屏自动 44px 命中区与 16px 输入字号。
+
+### 全部组件索引（77 个，`NexusComponents.list()` 可查）
+
+| 分类 | 组件 |
+|------|------|
+| 布局骨架 | nux-layout-sidebar / nux-layout-topnav / nux-bottom-nav / nux-side-panel / nux-section / nux-grid / nux-backtop |
+| 站点级 | nux-footer / nux-portal-footer / nux-about-page / nux-menu-about / nux-float-about / nux-login-page / nux-register-page / nux-forgot-password / nux-agreement-modal / nux-menu-user / nux-user-center / nux-float-user-center / nux-settings-drawer |
+| 反馈 | nux-toast / nux-undo-toast / nux-unlock / nux-modal / nux-drawer / nux-confirm / nux-notification-bell / nux-notification-panel / nux-loading / nux-skeleton / nux-empty / nux-empty-state / nux-error-state |
+| 数据展示 | nux-data-table / nux-crud-page / nux-pagination / nux-stat-card / nux-badge / nux-avatar / nux-progress / nux-plan-progress / nux-steps / nux-breadcrumb / nux-calendar / nux-checkin / nux-radar-chart / nux-export-button / nux-history-list / nux-result-view / nux-selection-bar |
+| 表单控件 | nux-form-group / nux-button / nux-input / nux-textarea / nux-select / nux-switch / nux-checkbox / nux-search-box / nux-segmented / nux-chip-group / nux-accordion / nux-tab-group |
+| AI 能力 | nux-ai-chat / nux-conversation-list / nux-ai-badge / nux-ai-indicator / nux-ai-widgets / nux-clarify-card / nux-automation / nux-onboarding / nux-onboarding-strip / nux-app-card / nux-app-switcher / nux-poster |
 
 | 组件 | 核心用法 |
 |------|---------|
