@@ -146,7 +146,7 @@
 | 黄/橙 #D97706~#F59E0B | 记忆/学习 | beeMemory, geniusStudent, WisePath |
 | 红 #DC2626~#E11D48 | 创意/反馈/营销 | verseCraft, userFeedback, adSmart |
 | 紫 #4F46E5~#8B5CF6 | AI 工具/仪表盘 | prompt, dashboard, nexus-ui |
-| 灰 #334155~#6B7280 | 后台/文档 | admin, fastRPC, docs |
+| 灰 #334155~#6B7280 | 后台/文档 | admin, docs |
 
 ### 应用主题色使用边界
 

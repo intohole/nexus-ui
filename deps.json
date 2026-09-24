@@ -116,7 +116,6 @@
     }
   },
   "ignore_paths": [
-    "fastRPC/readme.html",
     "promptManager/readme.html",
     "nexus-ui/readme.html"
   ]
