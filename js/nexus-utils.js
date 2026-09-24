@@ -488,11 +488,19 @@
             try { window.dispatchEvent(new CustomEvent('uc:authchange', { detail: { authenticated: false } })); } catch (e) {}
         },
 
+        consumeReturnUrl() {
+            try {
+                const v = window.sessionStorage.getItem('nux_return_url');
+                if (v) window.sessionStorage.removeItem('nux_return_url');
+                return v;
+            } catch (e) { return null; }
+        },
+
         handleUnauthorized(opts = {}) {
             utils.clearAuthState();
             const msg = opts.message || '登录已过期，请重新登录';
             utils.showToast(msg, 'error');
-            const redirect = opts.redirect || window.location.pathname + window.location.search;
+            const redirect = opts.redirect || utils.consumeReturnUrl() || window.location.pathname + window.location.search;
             setTimeout(() => {
                 const target = '/login.html?redirect=' + encodeURIComponent('/' + String(redirect).replace(/^\/+/, ''));
                 window.location.href = target;

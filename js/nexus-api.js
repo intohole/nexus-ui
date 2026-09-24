@@ -86,6 +86,31 @@
             } catch (e) {}
         }
 
+        _handleSessionExpired() {
+            this._clearAuth();
+            this._rememberReturnUrl();
+            this._notifySessionExpired();
+            if (this.onUnauthorized) this.onUnauthorized();
+        }
+
+        _rememberReturnUrl() {
+            try {
+                var path = window.location.pathname || '';
+                if (/\/(login|register)(\.html)?$/.test(path)) return;
+                var target = path + (window.location.search || '') + (window.location.hash || '');
+                window.sessionStorage.setItem('nux_return_url', target);
+            } catch (e) {}
+        }
+
+        _notifySessionExpired() {
+            var now = Date.now();
+            if (this._sessionExpiredNotifiedAt && now - this._sessionExpiredNotifiedAt < 5000) return;
+            this._sessionExpiredNotifiedAt = now;
+            if (window.NexusUtils && typeof NexusUtils.showToast === 'function') {
+                NexusUtils.showToast('登录已过期，请重新登录', 'error', { duration: 4000 });
+            }
+        }
+
         _buildHeaders(extra) {
             const token = this._getToken();
             return {
@@ -186,15 +211,13 @@
                                         return retryResult.data;
                                     } catch (refreshErr) {
                                         if (refreshErr && refreshErr.status) throw refreshErr;
-                                        this._clearAuth();
-                                        if (this.onUnauthorized) this.onUnauthorized();
+                                        this._handleSessionExpired();
                                         throw new ApiError('登录已过期，请重新登录', 401, null);
                                     }
                                 }
                                 if (response.status === 401) {
                                     if (!skipUnauthorized) {
-                                        this._clearAuth();
-                                        if (this.onUnauthorized) this.onUnauthorized();
+                                        this._handleSessionExpired();
                                     }
                                     const msg401 = skipUnauthorized ? (errorMsg || '认证失败') : (skipAuthRefresh ? (errorMsg || '认证失败') : '登录已过期，请重新登录');
                                     throw new ApiError(msg401, 401, data, errorCode);
@@ -265,8 +288,7 @@
                 if (ct.includes('application/json')) data = await res.json();
                 else { const t = await res.text(); try { data = JSON.parse(t); } catch { data = { detail: t }; } }
                 if (res.status === 401) {
-                    this._clearAuth();
-                    if (this.onUnauthorized) this.onUnauthorized();
+                    this._handleSessionExpired();
                 }
                 if (!res.ok) throw new ApiError(this._extractError(data), res.status, data, this._extractErrorCode(data));
                 return data;
@@ -295,8 +317,7 @@
                     const errorMsg = this._extractError(errData);
                     const errorCode = this._extractErrorCode(errData);
                     if (response.status === 401) {
-                        this._clearAuth();
-                        if (this.onUnauthorized) this.onUnauthorized();
+                        this._handleSessionExpired();
                         if (onError) onError('登录已过期，请重新登录');
                         return;
                     }
@@ -393,8 +414,7 @@
                 let errData;
                 try { errData = await response.json(); } catch { errData = {}; }
                 if (response.status === 401) {
-                    this._clearAuth();
-                    if (this.onUnauthorized) this.onUnauthorized();
+                    this._handleSessionExpired();
                 }
                 const errorMsg = this._extractError(errData) || `下载失败 (${response.status})`;
                 if (this.onError) this.onError(response.status, errorMsg);
