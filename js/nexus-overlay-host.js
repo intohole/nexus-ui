@@ -132,13 +132,54 @@
     function settleConfirm(value) {
         if (!confirmNode) return;
         const node = confirmNode;
-        const resolve = node.resolve;
+        if (value === true && typeof node.onConfirm === 'function' && !node.busy) {
+            node.busy = true;
+            node.confirmBtn.disabled = true;
+            const origText = node.confirmText;
+            node.confirmBtn.textContent = '…';
+            Promise.resolve().then(function () { return node.onConfirm(); })
+                .then(function () { finishConfirm(true); })
+                .catch(function (e) {
+                    if (window.showToast) window.showToast((e && e.message) || '操作失败', 'error');
+                    node.busy = false;
+                    node.confirmBtn.disabled = false;
+                    node.confirmBtn.textContent = origText;
+                    if (node.countdown > 0) startCountdown(node);
+                });
+            return;
+        }
+        finishConfirm(value);
+    }
+
+    function finishConfirm(value) {
+        if (!confirmNode) return;
+        const node = confirmNode;
+        if (node.countdownTimer) clearInterval(node.countdownTimer);
         confirmNode = null;
+        const resolve = node.resolve;
         node.resolve = null;
         leave(node.overlay);
         if (resolve) resolve(value);
         const next = confirmQueue.shift();
         if (next) showConfirm(next);
+    }
+
+    function startCountdown(node) {
+        if (node.countdownTimer) clearInterval(node.countdownTimer);
+        let remain = node.countdown;
+        node.confirmBtn.disabled = true;
+        node.confirmBtn.textContent = node.confirmText + '（' + remain + 's）';
+        node.countdownTimer = setInterval(function () {
+            remain -= 1;
+            if (remain <= 0) {
+                clearInterval(node.countdownTimer);
+                node.countdownTimer = null;
+                node.confirmBtn.disabled = false;
+                node.confirmBtn.textContent = node.confirmText;
+            } else {
+                node.confirmBtn.textContent = node.confirmText + '（' + remain + 's）';
+            }
+        }, 1000);
     }
 
     function showConfirm(item) {
@@ -147,12 +188,20 @@
         node.title.style.display = item.title ? '' : 'none';
         node.message.textContent = item.message;
         node.confirmBtn.textContent = item.confirmText;
+        node.confirmBtn.className = 'nx-btn ' + (item.confirmType === 'danger' ? 'nx-btn-danger' : 'nx-btn-primary');
         node.cancelBtn.textContent = item.cancelText;
+        node.cancelBtn.style.display = item.showCancel ? '' : 'none';
         node.resolve = item.resolve;
+        node.onConfirm = item.onConfirm;
+        node.confirmText = item.confirmText;
+        node.countdown = item.countdown;
+        node.countdownTimer = null;
+        node.busy = false;
         document.body.appendChild(node.overlay);
         confirmNode = node;
         enter(node.overlay);
-        node.confirmBtn.focus();
+        if (node.countdown > 0) startCountdown(node);
+        else node.confirmBtn.focus();
     }
 
     function confirm(message, title, options) {
@@ -163,6 +212,10 @@
                 title: title || '确认操作',
                 confirmText: opts.confirmText || '确定',
                 cancelText: opts.cancelText || '取消',
+                confirmType: opts.confirmType || 'primary',
+                showCancel: opts.showCancel !== false,
+                onConfirm: opts.onConfirm || null,
+                countdown: opts.countdown || 0,
                 resolve: resolve
             };
             if (confirmNode) confirmQueue.push(item);
