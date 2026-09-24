@@ -337,10 +337,8 @@
 
             function copyMessage(msg) {
                 if (!msg || !msg.content) return;
-                if (navigator.clipboard) {
-                    navigator.clipboard.writeText(msg.content).then(() => {
-                        if (window.NexusUtils && NexusUtils.toast) NexusUtils.toast.success('已复制');
-                    }).catch(() => {});
+                if (window.NexusUtils && NexusUtils.copyText) {
+                    NexusUtils.copyText(msg.content, { success: '已复制' });
                 }
             }
 
