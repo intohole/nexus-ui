@@ -20,9 +20,11 @@ CDN地址（全工作区统一，版本见 `nexus-ui/deps.json`）：`https://so
 <script src="https://songguokr.com/nexus-ui/v{version}/js/nexus-all.js"></script>
 
 <!-- 按需引入组件（只引实际用到的 nux-*.js，注册交给 NexusComponents.register） -->
-<script src="https://songguokr.com/nexus-ui/v{version}/js/components/nux-toast.js"></script>
+<script src="https://songguokr.com/nexus-ui/v{version}/js/components/nux-drawer.js"></script>
 <script src="https://songguokr.com/nexus-ui/v{version}/js/components/nux-modal.js"></script>
 <script src="https://songguokr.com/nexus-ui/v{version}/js/components/nux-login-page.js"></script>
+
+<!-- toast/confirm/unlock 不需要引脚本：nexus-all.js 已提供全局函数 window.showToast / window.nuxConfirm / window.showUnlock -->
 
 <!-- 按需引入 composables -->
 <script src="https://songguokr.com/nexus-ui/v{version}/js/composables/use-mobile.js"></script>
@@ -228,18 +230,20 @@ Events: accepted/declined
 
 引入方式统一为 `<script src="https://songguokr.com/nexus-ui/v{version}/js/components/nux-xxx.js"></script>` 后 `NexusComponents.register(app)` 一键注册（禁止逐个 `app.component`）。基准样式=桌面端，≤820px 自动收敛，触屏自动 44px 命中区与 16px 输入字号。
 
-### 全部组件索引（84 个，`NexusComponents.list()` 可查）
+### 全部组件索引（80 个，以 `NexusComponents.list()` 为准）
 
 | 分类 | 组件 |
 |------|------|
 | 布局骨架 | nux-layout-sidebar / nux-layout-topnav / nux-bottom-nav / nux-side-panel / nux-section / nux-grid / nux-backtop / nux-workbench |
-| 站点级 | nux-footer / nux-portal-footer / nux-about-page / nux-menu-about / nux-float-about / nux-login-page / nux-register-page / nux-forgot-password / nux-agreement-modal / nux-menu-user / nux-user-center / nux-float-user-center / nux-settings-drawer |
-| 反馈 | nux-toast / nux-undo-toast / nux-unlock / nux-modal / nux-drawer / nux-confirm / nux-notification-bell / nux-notification-panel / nux-loading / nux-skeleton / nux-empty / nux-empty-state / nux-error-state / nux-ai-task-progress |
+| 站点级 | nux-footer / nux-portal-footer / nux-about-page / nux-menu-about / nux-login-page / nux-register-page / nux-forgot-password / nux-agreement-modal / nux-menu-user / nux-user-center / nux-settings-drawer |
+| 反馈 | nux-undo-toast / nux-modal / nux-drawer / nux-notification-bell / nux-notification-panel / nux-loading / nux-skeleton / nux-empty-state / nux-error-state / nux-ai-task-progress |
 | 数据展示 | nux-data-table / nux-crud-page / nux-pagination / nux-stat-card / nux-badge / nux-avatar / nux-progress / nux-plan-progress / nux-steps / nux-breadcrumb / nux-calendar / nux-checkin / nux-radar-chart / nux-export-button / nux-history-list / nux-result-view / nux-selection-bar |
 | 表单控件 | nux-form-group / nux-button / nux-input / nux-textarea / nux-select / nux-switch / nux-checkbox / nux-search-box / nux-segmented / nux-chip-group / nux-accordion / nux-tab-group |
 | 交互增强 | nux-file-upload / nux-infinite-scroll / nux-slider / nux-date-picker / nux-qrcode / nux-sortable / nux-share-panel |
 | 图标与媒体 | nux-icon / nux-image-viewer |
 | AI 能力 | nux-ai-chat / nux-conversation-list / nux-ai-badge / nux-ai-indicator / nux-ai-widgets / nux-clarify-card / nux-automation / nux-onboarding / nux-onboarding-strip / nux-app-card / nux-app-switcher / nux-poster / nux-ai-notice |
+
+非组件能力（由 nexus-all.js 直接提供全局函数，**无需引脚本、无需注册**）：`window.showToast(msg, type, duration)` / `window.nuxConfirm(options)` / `window.showUnlock(options)`。悬浮入口 `NuxFloatUserCenter`（init/configure/destroy）与 `NuxFloatAbout`（自动挂载）见上文 helpers 清单。
 
 | 组件 | 核心用法 |
 |------|---------|

@@ -67,9 +67,9 @@ await api.createCrud('/notes'); // 返回 create/list/get/update/delete
 
 const store = new NexusStore({ notes: [] }, { persistKeys: ['token', 'user'] });
 
-// 组件注册
-app.component('nux-toast', NuxToast);
-app.component('nux-data-table', NuxDataTable);
+// 组件注册（统一入口，禁止逐个 app.component）
+NexusComponents.register(app);
+// 非组件能力：nexus-all.js 已提供 window.showToast / window.nuxConfirm / window.showUnlock
 ```
 
 ### 版本一致性校验

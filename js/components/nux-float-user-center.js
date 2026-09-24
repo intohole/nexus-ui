@@ -6,7 +6,7 @@
         { name: 'NuxAvatar', file: 'nux-avatar.js' },
         { name: 'NuxDrawer', file: 'nux-drawer.js' },
         { name: 'NuxUserCenter', file: 'nux-user-center.js' },
-        { name: 'NuxToast', file: 'nux-toast.js' }
+        { name: 'showToast', file: '../nexus-overlay-host.js' }
     ];
     const POLL_INTERVAL = 1500;
 

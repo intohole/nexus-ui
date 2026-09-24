@@ -23,18 +23,18 @@
         ],
         busy: false,
         quickCode: [
-          '<link rel="stylesheet" href="https://songguokr.com/nexus-ui/v2.10.74/css/nexus-all.css">',
-          '<script src="https://songguokr.com/nexus-ui/v2.10.74/vendor/vue.global.prod.js"><\/script>',
-          '<script src="https://songguokr.com/nexus-ui/v2.10.74/js/nexus-all.js"><\/script>',
-          '<script src="https://songguokr.com/nexus-ui/v2.10.74/js/components/nux-button.js"><\/script>'
+          '<link rel="stylesheet" href="https://songguokr.com/nexus-ui/v2.10.129/css/nexus-all.css">',
+          '<script src="https://songguokr.com/nexus-ui/v2.10.129/vendor/vue.global.prod.js"><\/script>',
+          '<script src="https://songguokr.com/nexus-ui/v2.10.129/js/nexus-all.js"><\/script>',
+          '<script src="https://songguokr.com/nexus-ui/v2.10.129/js/components/nux-button.js"><\/script>'
         ],
         compCats: [
           { name: '基础控件', count: 10, items: ['nux-button', 'nux-input', 'nux-textarea', 'nux-select', 'nux-switch', 'nux-checkbox', 'nux-search-box', 'nux-segmented', 'nux-chip-group', 'nux-form-group'] },
-          { name: '反馈状态', count: 9, items: ['nux-toast', 'nux-modal', 'nux-drawer', 'nux-confirm', 'nux-empty', 'nux-error-state', 'nux-skeleton', 'nux-loading', 'nux-undo-toast'] },
+          { name: '反馈状态', count: 9, items: ['showToast', 'nux-modal', 'nux-drawer', 'nuxConfirm', 'nux-empty-state', 'nux-error-state', 'nux-skeleton', 'nux-loading', 'nux-undo-toast'] },
           { name: '数据展示', count: 12, items: ['nux-app-card', 'nux-stat-card', 'nux-badge', 'nux-avatar', 'nux-data-table', 'nux-pagination', 'nux-calendar', 'nux-breadcrumb', 'nux-progress', 'nux-steps', 'nux-radar-chart', 'nux-checkin'] },
           { name: '导航布局', count: 9, items: ['nux-tab-group', 'nux-accordion', 'nux-grid', 'nux-section', 'nux-backtop', 'nux-layout-sidebar', 'nux-layout-topnav', 'nux-bottom-nav', 'nux-app-switcher'] },
           { name: 'AI 对话', count: 5, items: ['nux-ai-chat', 'nux-conversation-list', 'nux-history-list', 'nux-clarify-card', 'NexusMarkdown 渲染引擎'] },
-          { name: '业务套件', count: 11, items: ['nux-login-page', 'nux-register-page', 'nux-forgot-password', 'nux-user-center', 'nux-about-page', 'nux-agreement-modal', 'nux-float-user-center', 'nux-float-about', 'nux-notification-bell', 'nux-notification-panel', 'nux-selection-bar'] },
+          { name: '业务套件', count: 11, items: ['nux-login-page', 'nux-register-page', 'nux-forgot-password', 'nux-user-center', 'nux-about-page', 'nux-agreement-modal', '悬浮用户中心', '悬浮关于入口', 'nux-notification-bell', 'nux-notification-panel', 'nux-selection-bar'] },
           { name: '基础能力 JS', count: 13, items: ['nexus-api 重试/超时/401', 'nexus-api-error 中文翻译', 'nexus-markdown 安全渲染', 'nexus-chat 流式工具集', 'nexus-store 持久化状态', 'nexus-crud CRUD 工厂', 'nexus-validators 校验器', '13 个 use-* Composables'] }
         ],
         apps: ['思悟笔记', 'VerseCraft', 'ResumeAI', '宠康管家', '码趣星', '天才学伴', '知路', 'BeeMemory', 'GoldenStock', 'FinancialKG', 'Prompt工坊', '妙笔']

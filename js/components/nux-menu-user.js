@@ -30,7 +30,10 @@
     }
 
     var DEPS = [
-        'nux-avatar.js', 'nux-drawer.js', 'nux-user-center.js', 'nux-toast.js'
+        { file: 'nux-avatar.js', sentinel: 'NuxAvatar' },
+        { file: 'nux-drawer.js', sentinel: 'NuxDrawer' },
+        { file: 'nux-user-center.js', sentinel: 'NuxUserCenter' },
+        { file: '../nexus-overlay-host.js', sentinel: 'showToast' }
     ];
 
     var _base = (function () {
@@ -53,11 +56,9 @@
     function ensureDeps() {
         if (!_base) return Promise.resolve();
         var chain = Promise.resolve();
-        DEPS.forEach(function (file) {
-            var key = file.replace('.js', '');
-            var name = { 'nux-avatar': 'NuxAvatar', 'nux-drawer': 'NuxDrawer', 'nux-user-center': 'NuxUserCenter', 'nux-toast': 'NuxToast' }[key];
-            if (window[name]) return;
-            chain = chain.then(function () { return loadScript(_base + '/' + file); }).catch(function () {});
+        DEPS.forEach(function (dep) {
+            if (window[dep.sentinel]) return;
+            chain = chain.then(function () { return loadScript(_base + '/' + dep.file); }).catch(function () {});
         });
         return chain;
     }
@@ -146,7 +147,7 @@
             }
 
             function registerComponents() {
-                [['nux-avatar', 'NuxAvatar'], ['nux-drawer', 'NuxDrawer'], ['nux-user-center', 'NuxUserCenter'], ['nux-toast', 'NuxToast']].forEach(function (pair) {
+                [['nux-avatar', 'NuxAvatar'], ['nux-drawer', 'NuxDrawer'], ['nux-user-center', 'NuxUserCenter']].forEach(function (pair) {
                     if (window[pair[1]]) appInstance.component(pair[0], window[pair[1]]);
                 });
             }
