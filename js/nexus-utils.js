@@ -17,7 +17,7 @@
         },
 
         formatDate(dateString, options = {}) {
-            const date = this.parseDate(dateString);
+            const date = utils.parseDate(dateString);
             if (!date) return '';
             try {
                 return date.toLocaleString('zh-CN', {
@@ -30,7 +30,7 @@
         },
 
         formatDateShort(dateString) {
-            return this.formatDate(dateString, { hour: undefined, minute: undefined });
+            return utils.formatDate(dateString, { hour: undefined, minute: undefined });
         },
 
         formatCurrency(amount) {
@@ -58,7 +58,7 @@
         },
 
         getGreeting() {
-            const hour = this.getLocalHour();
+            const hour = utils.getLocalHour();
             if (hour < 6) return '夜深了';
             if (hour < 9) return '早上好';
             if (hour < 12) return '上午好';
@@ -100,7 +100,7 @@
                 }
                 if (y && m && d) return `${y}-${m}-${d}`;
             } catch (e) { /* fallthrough */ }
-            return this.formatDateShort(now).replace(/\//g, '-');
+            return utils.formatDateShort(now).replace(/\//g, '-');
         },
 
         cnDateLabel() {
@@ -262,7 +262,7 @@
         },
 
         formatRelativeTime(dateString) {
-            const date = this.parseDate(dateString);
+            const date = utils.parseDate(dateString);
             if (!date) return '';
             const now = Date.now();
             const diff = now - date.getTime();
@@ -274,11 +274,11 @@
             if (minutes < 60) return `${minutes}分钟前`;
             if (hours < 24) return `${hours}小时前`;
             if (days < 30) return `${days}天前`;
-            return this.formatDateShort(dateString);
+            return utils.formatDateShort(dateString);
         },
 
         formatDateTime(dateString, options = {}) {
-            const date = this.parseDate(dateString);
+            const date = utils.parseDate(dateString);
             if (!date) return '';
             try {
                 return date.toLocaleString('zh-CN', {
@@ -305,7 +305,7 @@
         },
 
         chartText(darkColor = '#a0a0a0', lightColor = '#333') {
-            return this.isDarkTheme() ? darkColor : lightColor;
+            return utils.isDarkTheme() ? darkColor : lightColor;
         },
 
         formatChatTime(timeStr) {
@@ -325,7 +325,7 @@
         },
 
         formatTime(dateString) {
-            return this.formatRelativeTime(dateString);
+            return utils.formatRelativeTime(dateString);
         },
 
         getPathPrefix() {
@@ -347,9 +347,9 @@
 
         copyToClipboard(text) {
             if (navigator.clipboard && navigator.clipboard.writeText) {
-                return navigator.clipboard.writeText(text).then(() => true).catch(() => this._copyFallback(text));
+                return navigator.clipboard.writeText(text).then(() => true).catch(() => utils._copyFallback(text));
             }
-            return Promise.resolve(this._copyFallback(text));
+            return Promise.resolve(utils._copyFallback(text));
         },
 
         _copyFallback(text) {
@@ -366,11 +366,11 @@
         },
 
         copyText(text, opts = {}) {
-            return this.copyToClipboard(text).then((ok) => {
+            return utils.copyToClipboard(text).then((ok) => {
                 if (ok) {
-                    if (opts.success) this.showToast(opts.success, opts.type || 'success');
+                    if (opts.success) utils.showToast(opts.success, opts.type || 'success');
                 } else if (opts.fail) {
-                    this.showToast(opts.fail, 'error');
+                    utils.showToast(opts.fail, 'error');
                 }
                 return ok;
             });
@@ -392,7 +392,7 @@
         },
 
         motionDuration(ms) {
-            return this.prefersReducedMotion() ? 0 : ms;
+            return utils.prefersReducedMotion() ? 0 : ms;
         },
 
         createDualStorage(tokenKey = 'uc_access_token') {
@@ -474,16 +474,16 @@
 
         clearAuthState() {
             try {
-                const ds = this.createDualStorage('uc_access_token');
+                const ds = utils.createDualStorage('uc_access_token');
                 ['uc_access_token', 'uc_refresh_token', 'uc_token_expires_at'].forEach((k) => ds.removeItem(k));
             } catch (e) {}
             try { window.dispatchEvent(new CustomEvent('uc:authchange', { detail: { authenticated: false } })); } catch (e) {}
         },
 
         handleUnauthorized(opts = {}) {
-            this.clearAuthState();
+            utils.clearAuthState();
             const msg = opts.message || '登录已过期，请重新登录';
-            this.showToast(msg, 'error');
+            utils.showToast(msg, 'error');
             const redirect = opts.redirect || window.location.pathname + window.location.search;
             setTimeout(() => {
                 const target = '/login.html?redirect=' + encodeURIComponent('/' + String(redirect).replace(/^\/+/, ''));
