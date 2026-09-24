@@ -34,8 +34,6 @@ MAX_LINE_LEN = 3000
 KNOWN_EXCEPTIONS = {
     "gezhi/static/js/api.js#sse-reader":
         "gezhi 后端 SSE 用 event: 行协议，与 NexusStream 的 data.type 协议不一致，待后端 schema 对齐后收归",
-    "suki/static/js/suki-utils.js#local-format-util":
-        "formatBytes 已收录进 NexusUtils 源码但尚未随版本发布到 CDN，待 nexus-ui 下一版本上线后改委托",
 }
 
 RULES = [
