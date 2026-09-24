@@ -67,9 +67,6 @@
 /* miniDeploy — 部署平台 — 天蓝（DevOps/云的开放感） */
 .app-mini-deploy { --app-accent: #0284c7; --app-accent-rgb: 2, 132, 199; --app-accent-hover: #0ea5e9; --app-name: "MiniDeploy"; }
 
-/* fastRPC — RPC服务 — 石板蓝（基础设施的可靠感） */
-.app-fast-rpc { --app-accent: #475569; --app-accent-rgb: 71, 85, 105; --app-accent-hover: #64748b; --app-name: "FastRPC"; }
-
 /* spider — 智能爬虫 — 深绿（爬虫/自动化的持续感） */
 .app-spider { --app-accent: #047857; --app-accent-rgb: 4, 120, 87; --app-accent-hover: #059669; --app-name: "Spider"; }
 
