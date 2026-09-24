@@ -182,6 +182,7 @@
             const hostRef = ref(null);
             const failed = ref(false);
             let instance = null;
+            let observer = null;
             const height = computed(() => (props.data && props.data.height) || 220);
 
             function buildOption() {
@@ -238,16 +239,23 @@
                 if (!hostRef.value) return;
                 loadEcharts().then((ec) => {
                     if (!hostRef.value) return;
-                    if (!instance) instance = ec.init(hostRef.value);
+                    if (!instance) {
+                        instance = ec.init(hostRef.value);
+                        if (window.ResizeObserver) {
+                            observer = new ResizeObserver(() => { if (instance) instance.resize(); });
+                            observer.observe(hostRef.value);
+                        }
+                    }
                     instance.setOption(buildOption(), true);
                     instance.resize();
                     failed.value = false;
                 }).catch(() => { failed.value = true; });
             }
 
-            onMounted(render);
+            onMounted(() => { requestAnimationFrame(render); });
             watch(() => props.data, render, { deep: true });
             onBeforeUnmount(() => {
+                if (observer) { observer.disconnect(); observer = null; }
                 if (instance) { instance.dispose(); instance = null; }
             });
             return { hostRef, failed, height };
