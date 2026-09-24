@@ -56,7 +56,7 @@ def sync_html(path: str, base_dir: str, fix: bool):
         if url.startswith(SKIP_URL_PREFIX) or "h=" not in url:
             return match.group(0)
         target = resolve(base_dir, url)
-        if not target:
+        if not target or os.path.abspath(target) == os.path.abspath(path):
             return match.group(0)
         actual = file_hash(target)
         declared = HASH_IN_QUERY_RE.search(url)
