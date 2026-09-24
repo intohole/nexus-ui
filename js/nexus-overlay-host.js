@@ -101,8 +101,8 @@
         overlay.innerHTML = '<div class="nx-modal" style="max-width:400px" role="alertdialog" aria-modal="true">' +
             '<div class="nx-modal-title"></div><p class="nux-confirm-msg"></p>' +
             '<div class="nux-modal-footer">' +
-            '<button class="nx-btn nx-btn-ghost" type="button" data-role="cancel"></button>' +
-            '<button class="nx-btn nx-btn-primary" type="button" data-role="confirm"></button>' +
+            '<button class="nux-btn nux-btn--ghost" type="button" data-role="cancel"></button>' +
+            '<button class="nux-btn nux-btn--primary" type="button" data-role="confirm"></button>' +
             '</div></div>';
 
         const dialog = overlay.firstElementChild;
@@ -188,7 +188,7 @@
         node.title.style.display = item.title ? '' : 'none';
         node.message.textContent = item.message;
         node.confirmBtn.textContent = item.confirmText;
-        node.confirmBtn.className = 'nx-btn ' + (item.confirmType === 'danger' ? 'nx-btn-danger' : 'nx-btn-primary');
+        node.confirmBtn.className = 'nux-btn ' + (item.confirmType === 'danger' ? 'nux-btn--danger' : 'nux-btn--primary');
         node.cancelBtn.textContent = item.cancelText;
         node.cancelBtn.style.display = item.showCancel ? '' : 'none';
         node.resolve = item.resolve;

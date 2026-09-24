@@ -53,7 +53,7 @@
                         </tr>
                         <tr v-else-if="!data.length">
                             <td :colspan="columns.length + (selectable ? 1 : 0)">
-                                <div class="nx-empty"><div class="nx-empty-icon">{{ emptyIcon }}</div><p class="nx-empty-text">{{ emptyText }}</p></div>
+                                <div class="nx-empty-state"><i aria-hidden="true">{{ emptyIcon }}</i><p>{{ emptyText }}</p></div>
                             </td>
                         </tr>
                         <tr v-else v-for="row in data" :key="row[rowKey]"

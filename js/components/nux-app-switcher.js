@@ -82,7 +82,8 @@
             brandName: g.brandName || '松果氪',
             brandTagline: g.brandTagline || (end === 'biz' ? '让商业决策，有据可依' : '把想做的事，交给 AI'),
             portalUrl: g.portalUrl || '/',
-            portalAction: g.portalAction || (end === 'biz' ? '回到商业工具库' : '回到松果氪 · 全部应用')
+            portalAction: g.portalAction || (end === 'biz' ? '回到商业工具库' : '回到松果氪 · 全部应用'),
+            searchPlaceholder: g.searchPlaceholder || (end === 'biz' ? '搜索商业工具' : '搜索应用与工具')
         };
     }
 
@@ -142,6 +143,62 @@
             .catch(function() { return []; });
     }
 
+    var CACHE_KEY = 'nxs-registry-cache-v1';
+    var CACHE_TTL = 10 * 60 * 1000;
+
+    function cacheId() {
+        return CACHE_KEY + (_cfg.end ? ':' + _cfg.end : '');
+    }
+
+    function readCache() {
+        if (_cfg.registryData) return null;
+        try {
+            var raw = sessionStorage.getItem(cacheId());
+            if (!raw) return null;
+            var obj = JSON.parse(raw);
+            if (!obj || !obj.at || Date.now() - obj.at > CACHE_TTL || !Array.isArray(obj.apps)) return null;
+            return obj;
+        } catch (e) { return null; }
+    }
+
+    function writeCache() {
+        if (_cfg.registryData || _err) return;
+        try {
+            sessionStorage.setItem(cacheId(), JSON.stringify({ at: Date.now(), apps: _apps, scenes: _scenes }));
+        } catch (e) {}
+    }
+
+    function loadAll(force) {
+        if (_loaded && !force) return Promise.resolve();
+        if (!force) {
+            var cached = readCache();
+            if (cached) {
+                _apps = cached.apps;
+                _scenes = cached.scenes || [];
+                _loaded = true;
+                return Promise.resolve();
+            }
+        }
+        return Promise.all([loadApps(), loadScenes()]).then(function(r) {
+            _scenes = r[1] || [];
+            _loaded = true;
+            writeCache();
+        });
+    }
+
+    function watchSidePanel() {
+        if (document.querySelector('.nxsp')) return;
+        var tries = 0;
+        (function tick() {
+            if (document.querySelector('.nxsp')) {
+                if (_rootRef) _rootRef.syncSideOffset();
+                return;
+            }
+            if (++tries >= 10) return;
+            _sideTimer = setTimeout(tick, 300);
+        })();
+    }
+
     function recentNames() {
         if (window.NexusUseRecent) return window.NexusUseRecent.recents(8);
         var raw = '';
@@ -179,7 +236,7 @@
 
     var Root = {
         name: 'NuxAppSwitcher',
-        data: function() { return { open: false, q: '', apps: [], sceneOrder: [], loading: true, err: _err }; },
+        data: function() { return { open: false, q: '', apps: [], sceneOrder: [], loading: false, err: _err, loaded: false }; },
         computed: {
             cfg() { return _cfg; },
             brandFirst() { return (_cfg.brandName || '松').charAt(0); },
@@ -219,19 +276,17 @@
         mounted() {
             var self = this;
             _rootRef = this;
-            loadApps().then(function() {
-                self.apps = _apps; self.loading = false; self.err = _err;
-            });
-            loadScenes().then(function(list) { self.sceneOrder = list; });
-            document.addEventListener('keydown', function(e) { if (e.key === 'Escape') self.open = false; });
+            _keyHandler = function(e) { if (e.key === 'Escape') self.open = false; };
+            _resizeHandler = function() { self.syncSideOffset(); };
+            document.addEventListener('keydown', _keyHandler);
+            window.addEventListener('resize', _resizeHandler);
             this.syncSideOffset();
-            window.addEventListener('resize', function() { self.syncSideOffset(); });
-            if (!document.querySelector('.nxsp')) {
-                var mo = new MutationObserver(function() {
-                    if (document.querySelector('.nxsp')) { self.syncSideOffset(); mo.disconnect(); }
-                });
-                mo.observe(document.documentElement, { childList: true, subtree: true });
-            }
+            watchSidePanel();
+        },
+        beforeUnmount() {
+            document.removeEventListener('keydown', _keyHandler);
+            window.removeEventListener('resize', _resizeHandler);
+            if (_sideTimer) clearTimeout(_sideTimer);
         },
         methods: {
             syncSideOffset() {
@@ -246,8 +301,22 @@
                 if (window.requestAnimationFrame) window.requestAnimationFrame(apply);
                 apply();
             },
-            toggle() { this.open = !this.open; },
-            openIt() { this.open = true; },
+            openPanel() {
+                var self = this;
+                this.open = true;
+                this.syncSideOffset();
+                if (this.loaded) return;
+                this.loading = !readCache();
+                loadAll().then(function() {
+                    self.apps = _apps;
+                    self.sceneOrder = _scenes;
+                    self.err = _err;
+                    self.loading = false;
+                    self.loaded = true;
+                });
+            },
+            toggle() { if (this.open) this.closeIt(); else this.openPanel(); },
+            openIt() { this.openPanel(); },
             closeIt() { this.open = false; },
             goPortal() { this.open = false; window.location.href = _cfg.portalUrl; },
             openApp(a) {
@@ -266,7 +335,7 @@
             '<div class="nxs-brand" @click="goPortal"><span class="nxs-brand-logo">{{brandFirst}}</span>',
             '<span class="nxs-brand-t"><span class="nxs-brand-name">{{cfg.brandName}}</span><span class="nxs-brand-sub">{{cfg.brandTagline}}</span></span></div>',
             '<button class="nxs-close" @click="closeIt">×</button></div>',
-            '<div class="nxs-search">' + searchSvg + '<input v-model="q" :placeholder="\'搜索工具：简历 / 股票 / 宠物 / 海报\'\"/></div>',
+            '<div class="nxs-search">' + searchSvg + '<input v-model="q" :placeholder="cfg.searchPlaceholder"/></div>',
             '<a class="nxs-portal" href="#" @click.prevent="goPortal"><span>{{cfg.portalAction}}</span><span class="nxs-portal-arr">→</span></a>',
             '<div class="nxs-body">',
             '<div class="nxs-skels" v-if="loading"><div class="nxs-skel" v-for="i in 6" :key="i"></div></div>',
@@ -299,13 +368,27 @@
     }
 
     var _rootRef = null;
+    var _keyHandler = null;
+    var _resizeHandler = null;
+    var _sideTimer = null;
+    var _scenes = [];
+    var _loaded = false;
 
     window.NuxAppSwitcher = {
         init: mount,
         open: function() { mount(); if (_rootRef) _rootRef.openIt(); },
         close: function() { if (_rootRef) _rootRef.closeIt(); },
         configure: function(c) { if (c) _cfg = Object.assign({}, _cfg, c); return _cfg; },
-        refresh: function() { return loadApps(); }
+        refresh: function() {
+            return loadAll(true).then(function() {
+                if (_rootRef) {
+                    _rootRef.apps = _apps;
+                    _rootRef.sceneOrder = _scenes;
+                    _rootRef.err = _err;
+                    _rootRef.loaded = true;
+                }
+            });
+        }
     };
 
     if (document.readyState === 'loading') {

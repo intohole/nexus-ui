@@ -137,7 +137,11 @@
                     callbacks.onError(new Error('NexusApi 未加载'));
                     return;
                 }
-                const ctrl = new (window.NexusChat ? NexusChat.ChatController : null)({
+                if (!window.NexusChat || !NexusChat.ChatController) {
+                    callbacks.onError(new Error('NexusChat 未加载'));
+                    return;
+                }
+                const ctrl = new NexusChat.ChatController({
                     api: api,
                     url: cfg.streamUrl,
                     body: Object.assign({}, cfg.body || {}, { content: content }),

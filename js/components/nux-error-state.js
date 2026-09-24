@@ -10,12 +10,14 @@
         },
         emits: ['retry'],
         template: `
-            <div class="nx-empty nux-error-state" role="alert" aria-live="assertive">
-                <div class="nx-empty-icon">{{ icon }}</div>
-                <p class="nx-empty-text" style="font-size: var(--nx-text-base); font-weight: 500; color: var(--nx-text-heading);">{{ title }}</p>
-                <p v-if="message" class="nx-empty-text">{{ message }}</p>
-                <button v-if="retryText" class="nx-btn nx-btn-primary nx-btn-sm" style="margin-top: var(--nx-space-4);" @click="$emit('retry')">{{ retryText }}</button>
-                <p v-if="code" class="nux-error-code">{{ code }}</p>
+            <div class="nx-empty-state nux-error-state" role="alert" aria-live="assertive">
+                <i v-if="icon" aria-hidden="true">{{ icon }}</i>
+                <h3>{{ title }}</h3>
+                <p v-if="message">{{ message }}</p>
+                <div v-if="retryText" class="nx-empty-actions">
+                    <button class="nux-btn nux-btn--primary" @click="$emit('retry')">{{ retryText }}</button>
+                </div>
+                <div v-if="code" class="nux-error-code">{{ code }}</div>
             </div>
         `
     };

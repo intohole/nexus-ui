@@ -74,8 +74,8 @@
                             <slot></slot>
                             <div v-if="showFooter" class="nux-modal-footer">
                                 <slot name="footer">
-                                    <button class="nx-btn nx-btn-ghost" type="button" @click="cancel">取消</button>
-                                    <button class="nx-btn nx-btn-primary" type="button" @click="confirm">确定</button>
+                                    <button class="nux-btn nux-btn--ghost" type="button" @click="cancel">取消</button>
+                                    <button class="nux-btn nux-btn--primary" type="button" @click="confirm">确定</button>
                                 </slot>
                             </div>
                         </div>

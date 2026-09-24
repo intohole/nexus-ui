@@ -10,7 +10,7 @@
         '.nux-menu-about-btn:focus-visible{outline:2px solid var(--app-accent,var(--nx-primary));outline-offset:2px}',
         '.nux-menu-about-btn svg{width:19px;height:19px}',
         '.nux-menu-about-label{font-size:13px;font-weight:500;white-space:nowrap}',
-        '@media(max-width:768px){.nux-menu-about-btn{width:40px;height:40px}}'
+        '@media(max-width:768px){.nux-menu-about-btn{width:44px;height:44px}}'
     ].join('');
 
     function injectCss() {

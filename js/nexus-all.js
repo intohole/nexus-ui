@@ -612,8 +612,8 @@
         overlay.innerHTML = '<div class="nx-modal" style="max-width:400px" role="alertdialog" aria-modal="true">' +
             '<div class="nx-modal-title"></div><p class="nux-confirm-msg"></p>' +
             '<div class="nux-modal-footer">' +
-            '<button class="nx-btn nx-btn-ghost" type="button" data-role="cancel"></button>' +
-            '<button class="nx-btn nx-btn-primary" type="button" data-role="confirm"></button>' +
+            '<button class="nux-btn nux-btn--ghost" type="button" data-role="cancel"></button>' +
+            '<button class="nux-btn nux-btn--primary" type="button" data-role="confirm"></button>' +
             '</div></div>';
 
         const dialog = overlay.firstElementChild;
@@ -699,7 +699,7 @@
         node.title.style.display = item.title ? '' : 'none';
         node.message.textContent = item.message;
         node.confirmBtn.textContent = item.confirmText;
-        node.confirmBtn.className = 'nx-btn ' + (item.confirmType === 'danger' ? 'nx-btn-danger' : 'nx-btn-primary');
+        node.confirmBtn.className = 'nux-btn ' + (item.confirmType === 'danger' ? 'nux-btn--danger' : 'nux-btn--primary');
         node.cancelBtn.textContent = item.cancelText;
         node.cancelBtn.style.display = item.showCancel ? '' : 'none';
         node.resolve = item.resolve;
@@ -3772,12 +3772,14 @@ window.UserCenterAPI = { loaded: true };
         },
         emits: ['retry'],
         template: `
-            <div class="nx-empty nux-error-state" role="alert" aria-live="assertive">
-                <div class="nx-empty-icon">{{ icon }}</div>
-                <p class="nx-empty-text" style="font-size: var(--nx-text-base); font-weight: 500; color: var(--nx-text-heading);">{{ title }}</p>
-                <p v-if="message" class="nx-empty-text">{{ message }}</p>
-                <button v-if="retryText" class="nx-btn nx-btn-primary nx-btn-sm" style="margin-top: var(--nx-space-4);" @click="$emit('retry')">{{ retryText }}</button>
-                <p v-if="code" class="nux-error-code">{{ code }}</p>
+            <div class="nx-empty-state nux-error-state" role="alert" aria-live="assertive">
+                <i v-if="icon" aria-hidden="true">{{ icon }}</i>
+                <h3>{{ title }}</h3>
+                <p v-if="message">{{ message }}</p>
+                <div v-if="retryText" class="nx-empty-actions">
+                    <button class="nux-btn nux-btn--primary" @click="$emit('retry')">{{ retryText }}</button>
+                </div>
+                <div v-if="code" class="nux-error-code">{{ code }}</div>
             </div>
         `
     };

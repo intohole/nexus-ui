@@ -43,53 +43,6 @@ a:hover { color: var(--app-accent-hover); }
   border-color: var(--nx-border-hover);
 }
 
-.nx-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--nx-space-2);
-  padding: var(--nx-space-2) var(--nx-space-5);
-  font-size: var(--nx-text-sm);
-  font-weight: 500;
-  line-height: 1.5;
-  border-radius: var(--nx-radius-md);
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: all var(--nx-transition-base);
-  white-space: nowrap;
-  user-select: none;
-}
-.nx-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.nx-btn-sm { padding: var(--nx-space-1) var(--nx-space-3); font-size: var(--nx-text-xs); }
-
-.nx-btn-primary {
-  background: var(--app-accent);
-  color: var(--nx-text-on-accent, #fff);
-  border-color: var(--app-accent);
-}
-.nx-btn-primary:hover:not(:disabled) {
-  background: var(--app-accent-hover);
-  box-shadow: var(--nx-shadow-glow);
-}
-
-.nx-btn-ghost {
-  background: transparent;
-  color: var(--nx-text-body);
-  border-color: var(--nx-border);
-}
-.nx-btn-ghost:hover:not(:disabled) {
-  background: var(--nx-bg-hover);
-  border-color: var(--nx-border-hover);
-  color: var(--nx-text-heading);
-}
-
-.nx-btn-danger {
-  background: var(--nx-danger);
-  color: var(--nx-text-on-accent, #fff);
-  border-color: var(--nx-danger);
-}
-.nx-btn-danger:hover:not(:disabled) { opacity: 0.9; }
-
 .nx-nav {
   position: sticky;
   top: 0;

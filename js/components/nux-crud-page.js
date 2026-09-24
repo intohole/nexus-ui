@@ -118,7 +118,7 @@
             <div class="nux-crud-page">
                 <div class="nux-crud-toolbar">
                     <nux-search-box v-model="search" :placeholder="searchPlaceholder" @search="onSearch" />
-                    <button v-if="canCreate" type="button" class="nx-btn nx-btn-primary nx-btn-sm" @click="openCreate">新增</button>
+                    <button v-if="canCreate" type="button" class="nux-btn nux-btn--primary nux-btn--sm" @click="openCreate">新增</button>
                 </div>
                 <nux-data-table :columns="columns" :items="items" :loading="loading" @row-click="onRowClick" />
                 <div class="nux-crud-footer">

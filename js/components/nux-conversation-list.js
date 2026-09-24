@@ -114,6 +114,14 @@
 
             async function remove(conv) {
                 if (!api || !conv) return;
+                if (window.nuxConfirm) {
+                    const name = conv.title || props.newTitle;
+                    const ok = await window.nuxConfirm(`「${name}」删除后无法恢复，确定删除吗？`, '删除对话', {
+                        confirmText: '删除',
+                        confirmType: 'danger'
+                    });
+                    if (!ok) return;
+                }
                 try {
                     await api.delete(`${props.conversationUrl}/${conv.id}`);
                     list.value = list.value.filter((c) => c.id !== conv.id);
@@ -191,16 +199,17 @@
                     <div v-for="i in 5" :key="i" class="nx-conv-list-skeleton-item shimmer"></div>
                 </div>
 
-                <div v-else-if="!list.length" class="nx-conv-list-empty">
+                <div v-else-if="!list.length" class="nx-conv-list-empty" role="status">
                     <span>{{ searching || keyword ? '未找到相关会话' : '暂无会话，点击上方「新对话」开始' }}</span>
                 </div>
 
                 <ul v-else class="nx-conv-list-items">
                     <li v-for="c in list" :key="c.id" class="nx-conv-list-item"
                         :class="{ 'is-active': c.id === activeId, 'is-archived': c.status === 'archived' }"
-                        @click="select(c)">
+                        :aria-current="c.id === activeId ? 'true' : false" tabindex="0"
+                        @click="select(c)" @keydown.enter.prevent="select(c)" @keydown.space.prevent="select(c)">
                         <div class="nx-conv-list-item-main">
-                            <span class="nx-conv-list-item-title">{{ c.title || '新对话' }}</span>
+                            <span class="nx-conv-list-item-title">{{ c.title || newTitle }}</span>
                             <span v-if="c.status === 'archived'" class="nx-conv-list-item-badge">已归档</span>
                         </div>
                         <div class="nx-conv-list-item-sub">

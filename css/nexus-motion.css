@@ -4,9 +4,7 @@
    遵循"增强而非覆盖"：只补充缺失动效，不改动既有设计令牌。
    ========================================================= */
 
-/* ---- 一、统一按压微交互（补 .nx-btn 缺失的按压缩放） ---- */
-.nx-btn:active:not(:disabled) { transform: scale(0.97); }
-
+/* ---- 一、统一按压微交互 ---- */
 /* 通用可点元素按压反馈（克制，仅轻微） */
 .nx-nav-link:active,
 .nx-sidebar-item:active,
@@ -68,7 +66,7 @@
 }
 
 /* ---- 四、统一焦点可见性（所有应用一致） ---- */
-:where(.nx-btn, .nx-nav-link, .nx-sidebar-item, .nux-btn, .nux-tab, .nux-chip,
+:where(.nx-nav-link, .nx-sidebar-item, .nux-btn, .nux-tab, .nux-chip,
        .nux-acc-head, .nux-segmented-item, .nx-list-item):focus-visible {
   outline: 2px solid rgba(var(--app-accent-rgb), 0.6);
   outline-offset: 2px;

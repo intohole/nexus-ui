@@ -35,6 +35,7 @@
             minPasswordLength: { type: Number, default: 8 },
             loading: { type: Boolean, default: false },
             smsLoading: { type: Boolean, default: false },
+            smsSentAt: { type: [Number, String], default: 0 },
             error: { type: String, default: '' },
             useCustomRegister: { type: Boolean, default: true },
             defaultMode: { type: String, default: 'login' },
@@ -53,7 +54,7 @@
             const showPassword = Vue.ref(false);
             const showConfirmPassword = Vue.ref(false);
             const rememberMe = Vue.ref(false);
-            const agreed = Vue.ref(true);
+            const agreed = Vue.ref(false);
             const age = Vue.ref(10);
             const guardianAgreed = Vue.ref(false);
 
@@ -238,15 +239,17 @@
                 emit('send-sms', { phone: form.phone, mode: mode.value === 'login' ? 'login' : 'register' });
             }
 
-            Vue.watch(function() { return props.smsLoading; }, function(v) {
-                if (v) {
-                    smsCountdown.value = 60;
-                    if (smsTimer) clearInterval(smsTimer);
-                    smsTimer = setInterval(function() {
-                        smsCountdown.value -= 1;
-                        if (smsCountdown.value <= 0) clearInterval(smsTimer);
-                    }, 1000);
-                }
+            function startSmsCountdown() {
+                if (smsTimer) clearInterval(smsTimer);
+                smsCountdown.value = 60;
+                smsTimer = setInterval(function() {
+                    smsCountdown.value -= 1;
+                    if (smsCountdown.value <= 0) clearInterval(smsTimer);
+                }, 1000);
+            }
+
+            Vue.watch(function() { return props.smsSentAt; }, function(v, old) {
+                if (v && v !== old) startSmsCountdown();
             });
 
             Vue.watch(combinedError, function(v) {
@@ -349,7 +352,6 @@
                 form.password = '';
                 form.email = '';
                 form.phone = '';
-                form.smsCode = '';
                 smsCode.value = '';
             }
 

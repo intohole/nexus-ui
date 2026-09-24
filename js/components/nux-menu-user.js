@@ -18,7 +18,7 @@
         '.nux-menu-user-label{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
         '.nux-menu-user-skel{width:32px;height:32px;border-radius:50%;background:linear-gradient(90deg,var(--nx-bg-muted,#f1f5f9) 25%,var(--nx-bg-hover,#e2e8f0) 50%,var(--nx-bg-muted,#f1f5f9) 75%);background-size:200% 100%;animation:nux-menu-user-shimmer 1.2s infinite}',
         '@keyframes nux-menu-user-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}',
-        '@media(max-width:768px){.nux-menu-user .nux-uc-trigger,.nux-menu-user-btn{width:40px;height:40px}.nux-menu-user--labeled .nux-uc-trigger,.nux-menu-user--labeled .nux-menu-user-btn{width:auto;height:40px}}'
+        '@media(max-width:768px){.nux-menu-user .nux-uc-trigger,.nux-menu-user-btn{width:44px;height:44px}.nux-menu-user--labeled .nux-uc-trigger,.nux-menu-user--labeled .nux-menu-user-btn{width:auto;height:44px}}'
     ].join('');
 
     function injectCss() {
@@ -131,7 +131,15 @@
             var ready = Vue.ref(false);
             var sdk = Vue.ref(null);
             var loginUrl = props.loginUrl || (window.ucConfig && window.ucConfig.login_url) || '';
-            var timer = null;
+
+            function onStorage(e) {
+                if (!e || !e.key || !/token|uc_/i.test(e.key)) return;
+                sync();
+            }
+
+            function onVisible() {
+                if (!document.hidden) sync();
+            }
 
             function isAuthed(sdkObj) {
                 if (!sdkObj) return false;
@@ -175,11 +183,13 @@
             Vue.onMounted(function () {
                 sync();
                 window.addEventListener('uc:authchange', sync);
-                timer = setInterval(sync, 8000);
+                window.addEventListener('storage', onStorage);
+                document.addEventListener('visibilitychange', onVisible);
             });
             Vue.onUnmounted(function () {
-                if (timer) clearInterval(timer);
                 window.removeEventListener('uc:authchange', sync);
+                window.removeEventListener('storage', onStorage);
+                document.removeEventListener('visibilitychange', onVisible);
             });
 
             fetchConfig().then(sync);
