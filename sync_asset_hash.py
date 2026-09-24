@@ -19,6 +19,8 @@ HTML_REF_RE = re.compile(r'(?P<attr>src|href)="(?P<url>[^"]+)"')
 CSS_IMPORT_RE = re.compile(r'@import\s+(?:url\(\s*)?["\'](?P<url>[^"\']+)["\']')
 HASH_IN_QUERY_RE = re.compile(r'(?P<prefix>[?&])h=(?P<hash>[0-9a-zA-Z]+)')
 HASH_VALUE_RE = re.compile(r'h=[0-9a-zA-Z]+')
+VERSION_PARAM_RE = re.compile(r'[?&][a-z_]+=')
+HTML_TARGET_RE = re.compile(r'\.html?$', re.I)
 SKIP_DIRS = (".git", "node_modules", "vendor", "__pycache__", "dist", ".venv", "venv", "logs", "data")
 SKIP_URL_PREFIX = ("http://", "https://", "//", "data:", "#", "mailto:")
 
@@ -39,6 +41,11 @@ def file_hash(path: str) -> str:
 
 def resolve(base_dir: str, url: str) -> str:
     clean = url.split("?")[0].split("#")[0]
+    if not clean:
+        return ""
+    direct = os.path.normpath(os.path.join(base_dir, clean))
+    if os.path.isfile(direct):
+        return direct
     parts = [p for p in clean.split("/") if p not in ("", ".", "..")]
     for i in range(len(parts)):
         target = os.path.normpath(os.path.join(base_dir, *parts[i:]))
@@ -47,14 +54,24 @@ def resolve(base_dir: str, url: str) -> str:
     return ""
 
 
-def sync_html(path: str, base_dir: str, fix: bool):
+def sync_html(path: str, base_dir: str, fix: bool, add: bool = False):
     content = open(path, encoding="utf-8").read()
     stale = []
 
     def repl(match: "re.Match[str]") -> str:
         url = match.group("url")
-        if url.startswith(SKIP_URL_PREFIX) or "h=" not in url:
+        if url.startswith(SKIP_URL_PREFIX) or HTML_TARGET_RE.search(url.split("?")[0]):
             return match.group(0)
+        if "h=" not in url:
+            if not add or VERSION_PARAM_RE.search(url):
+                return match.group(0)
+            target = resolve(base_dir, url)
+            if not target or os.path.abspath(target) == os.path.abspath(path):
+                return match.group(0)
+            sep = "&" if "?" in url else "?"
+            new_url = "%s%sh=%s" % (url, sep, file_hash(target))
+            stale.append("%s: h=- -> h=%s" % (url.split("?")[0], file_hash(target)))
+            return match.group(0).replace(url, new_url)
         target = resolve(base_dir, url)
         if not target or os.path.abspath(target) == os.path.abspath(path):
             return match.group(0)
@@ -101,7 +118,7 @@ def sync_css(path: str, base_dir: str, fix: bool):
     return stale
 
 
-def scan_once(target: str, root: str, ignore: tuple, fix: bool):
+def scan_once(target: str, root: str, ignore: tuple, fix: bool, add: bool = False):
     scanned, changed, issues = 0, 0, 0
     for dirpath, dirnames, filenames in os.walk(target):
         dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
@@ -112,7 +129,7 @@ def scan_once(target: str, root: str, ignore: tuple, fix: bool):
             if path.lower().startswith(ignore):
                 continue
             scanned += 1
-            stale = sync_html(path, dirpath, fix) if fn.endswith(".html") else sync_css(path, dirpath, fix)
+            stale = sync_html(path, dirpath, fix, add) if fn.endswith(".html") else sync_css(path, dirpath, fix)
             if not stale:
                 continue
             changed += 1
@@ -126,7 +143,8 @@ def scan_once(target: str, root: str, ignore: tuple, fix: bool):
 def main() -> int:
     args = [a for a in sys.argv[1:]]
     fix = "--fix" in args
-    args = [a for a in args if a not in ("--fix", "--check")]
+    add = "--add" in args
+    args = [a for a in args if a not in ("--fix", "--check", "--add")]
     default_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     target = os.path.abspath(args[0]) if args else default_root
     root = default_root
@@ -135,10 +153,10 @@ def main() -> int:
     scanned, changed, issues, rounds = 0, 0, 0, 0
     while True:
         rounds += 1
-        scanned, changed, issues = scan_once(target, root, ignore, fix)
+        scanned, changed, issues = scan_once(target, root, ignore, fix, add)
         if not fix or not issues or rounds >= 3:
             break
-    print("\n扫描完成: 文件 %d 个, 指纹异常文件 %d 个, 异常引用 %d 处" % (scanned, changed, issues))
+    print("\n扫描完成: 文件 %d 个, 指纹异常文件 %d 个, 异常引用 %d 处%s" % (scanned, changed, issues, " (含 --add 注入)" if add else ""))
     if not fix and issues:
         print("执行 python3 nexus-ui/sync_asset_hash.py --fix 修复")
     return 1 if (issues and not fix) else 0

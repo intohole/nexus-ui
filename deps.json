@@ -116,10 +116,6 @@
     }
   },
   "ignore_paths": [
-    "nexus-ui/readme.html",
-    "nexus-ui/index.html",
-    "nexus-ui/playground.html",
-    "nexus-ui/about.html",
     "fastRPC/readme.html",
     "promptManager/readme.html"
   ]
