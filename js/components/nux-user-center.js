@@ -136,8 +136,8 @@
             }
 
             function revokeAll() {
-                if (typeof window.NuxConfirm === 'function') {
-                    window.NuxConfirm('确定下线所有其他设备吗？').then(function(ok) {
+                if (typeof window.nuxConfirm === 'function') {
+                    window.nuxConfirm('确定下线所有其他设备吗？').then(function(ok) {
                         if (ok) doRevokeAll();
                     });
                 } else {

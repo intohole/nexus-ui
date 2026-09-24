@@ -195,9 +195,8 @@
                 });
                 return { loggedIn: loggedIn, sdk: sdk };
             },
-            template: '<nux-toast></nux-toast><nux-user-center v-if="loggedIn" :sdk="sdk" floating></nux-user-center>'
+            template: '<nux-user-center v-if="loggedIn" :sdk="sdk" floating></nux-user-center>'
         });
-        if (window.NuxToast) app.component('nux-toast', window.NuxToast);
         if (window.NuxAvatar) app.component('nux-avatar', window.NuxAvatar);
         if (window.NuxDrawer) app.component('nux-drawer', window.NuxDrawer);
         if (window.NuxUserCenter) app.component('nux-user-center', window.NuxUserCenter);

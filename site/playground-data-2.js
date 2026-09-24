@@ -17,9 +17,7 @@
   <nux-button size="sm" variant="ghost" @click="show('网络连接异常', 'error')">错误</nux-button>
   <nux-button size="sm" variant="ghost" @click="show('这是一条提示', 'info')">提示</nux-button>
 </div>`,
-        code: `window.showToast('保存成功', 'success');
-
-<nux-toast></nux-toast>`,
+        code: `window.showToast('保存成功', 'success');`,
         methods: { show(msg, type) { window.showToast(msg, type); } }
       },
       {
@@ -95,13 +93,13 @@ if (ok) showToast('已删除', 'success');`,
   <nux-skeleton :loading="loading" :rows="3" :avatar="true">
     <div class="demo-cell" style="text-align: left">真实内容：加载完成后渲染插槽。</div>
   </nux-skeleton>
-  <nux-empty icon="🗂️" title="还没有记录" description="创建第一条记录，开始你的积累"></nux-empty>
+  <nux-empty-state icon="🗂️" title="还没有记录" description="创建第一条记录，开始你的积累"></nux-empty-state>
 </div>`,
         code: `<nux-skeleton :loading="loading" :rows="3" :avatar="true">
   <real-content></real-content>
 </nux-skeleton>
-<nux-empty icon="🗂️" title="还没有记录"
-  description="创建第一条记录，开始你的积累"></nux-empty>`,
+<nux-empty-state icon="🗂️" title="还没有记录"
+  description="创建第一条记录，开始你的积累"></nux-empty-state>`,
         data() { return { loading: true }; },
         mounted() { setTimeout(() => { this.loading = false; }, 2600); }
       }

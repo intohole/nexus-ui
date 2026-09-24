@@ -377,39 +377,22 @@
         },
 
         showToast(message, type = 'info', options = {}) {
-            if (window.ElementPlus && window.ElementPlus.ElMessage) {
-                ElementPlus.ElMessage({ message, type, duration: options.duration || 3000, ...options });
-                return;
-            }
-            this.showNativeToast(message, type, options);
-        },
-
-        showNativeToast(message, type = 'info', options = {}) {
-            let host = document.getElementById('nux-toast-host');
-            if (!host) {
-                host = document.createElement('div');
-                host.id = 'nux-toast-host';
-                host.className = 'nux-toast-container';
-                document.body.appendChild(host);
-            }
-            const item = document.createElement('div');
-            item.className = 'nux-toast-item nux-toast-' + ({ success: 'success', error: 'error', info: 'info', warning: 'warning' }[type] || 'info');
-            const msg = document.createElement('span');
-            msg.className = 'nux-toast-msg';
-            msg.textContent = message;
-            item.appendChild(msg);
-            host.appendChild(item);
-            setTimeout(function() { host.removeChild(item); }, (options && options.duration) || 3000);
+            if (typeof window.showToast === 'function') window.showToast(message, type, options.duration || 3000);
         },
 
         confirm(message, title = '操作确认', options = {}) {
-            if (!window.ElementPlus || !ElementPlus.ElMessageBox) return Promise.resolve(false);
-            return ElementPlus.ElMessageBox.confirm(message, title, {
-                confirmButtonText: '确定',
-                cancelButtonText: '取消',
-                type: 'warning',
-                ...options
-            }).then(() => true).catch(() => false);
+            if (typeof window.nuxConfirm !== 'function') return Promise.resolve(false);
+            return window.nuxConfirm(message, title, options);
+        },
+
+        prefersReducedMotion() {
+            try {
+                return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+            } catch (e) { return false; }
+        },
+
+        motionDuration(ms) {
+            return this.prefersReducedMotion() ? 0 : ms;
         },
 
         createDualStorage(tokenKey = 'uc_access_token') {

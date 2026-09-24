@@ -81,9 +81,12 @@
 }
 
 :root {
-  --nx-transition-fast: 150ms ease;
-  --nx-transition-base: 200ms ease;
-  --nx-transition-slow: 300ms ease;
+  --nx-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --nx-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --nx-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --nx-transition-fast: 150ms var(--nx-ease-out);
+  --nx-transition-base: 200ms var(--nx-ease-out);
+  --nx-transition-slow: 300ms var(--nx-ease-in-out);
 }
 
 [data-theme="dark"] {

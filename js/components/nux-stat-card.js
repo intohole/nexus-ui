@@ -27,8 +27,8 @@
         methods: {
             animate(to, duration) {
                 const target = Number(String(to).trim());
-                if (!this.isNumeric || Number.isNaN(target) ||
-                    window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                const reduced = window.NexusUtils && NexusUtils.prefersReducedMotion();
+                if (!this.isNumeric || Number.isNaN(target) || reduced) {
                     this.display = this.value;
                     return;
                 }

@@ -8,6 +8,8 @@
         'nux-ai-badge': 'NuxAiBadge',
         'nux-ai-chat': 'NuxAiChat',
         'nux-ai-indicator': 'NuxAiIndicator',
+        'nux-ai-notice': 'NuxAiNotice',
+        'nux-ai-task-progress': 'NuxAiTaskProgress',
         'nux-ai-widgets': 'NuxAiWidgets',
         'nux-app-card': 'NuxAppCard',
         'nux-app-switcher': 'NuxAppSwitcher',
@@ -23,13 +25,11 @@
         'nux-checkin': 'NuxCheckin',
         'nux-chip-group': 'NuxChipGroup',
         'nux-clarify-card': 'NuxClarifyCard',
-        'nux-confirm': 'NuxConfirm',
         'nux-conversation-list': 'NuxConversationList',
         'nux-crud-page': 'NuxCrudPage',
         'nux-data-table': 'NuxDataTable',
         'nux-date-picker': 'NuxDatePicker',
         'nux-drawer': 'NuxDrawer',
-        'nux-empty': 'NuxEmpty',
         'nux-empty-state': 'NuxEmptyState',
         'nux-error-state': 'NuxErrorState',
         'nux-export-button': 'NuxExportButton',
@@ -39,6 +39,8 @@
         'nux-form-group': 'NuxFormGroup',
         'nux-grid': 'NuxGrid',
         'nux-history-list': 'NuxHistoryList',
+        'nux-icon': 'NuxIcon',
+        'nux-image-viewer': 'NuxImageViewer',
         'nux-infinite-scroll': 'NuxInfiniteScroll',
         'nux-input': 'NuxInput',
         'nux-layout-sidebar': 'NuxLayoutSidebar',
@@ -67,6 +69,7 @@
         'nux-select': 'NuxSelect',
         'nux-selection-bar': 'NuxSelectionBar',
         'nux-settings-drawer': 'NuxSettingsDrawer',
+        'nux-share-panel': 'NuxSharePanel',
         'nux-side-panel': 'NuxSidePanel',
         'nux-skeleton': 'NuxSkeleton',
         'nux-slider': 'NuxSlider',
@@ -76,10 +79,9 @@
         'nux-switch': 'NuxSwitch',
         'nux-tab-group': 'NuxTabGroup',
         'nux-textarea': 'NuxTextarea',
-        'nux-toast': 'NuxToast',
         'nux-undo-toast': 'NuxUndoToast',
-        'nux-unlock': 'NuxUnlock',
-        'nux-user-center': 'NuxUserCenter'
+        'nux-user-center': 'NuxUserCenter',
+        'nux-workbench': 'NuxWorkbench'
     };
 
     var HELPERS = {

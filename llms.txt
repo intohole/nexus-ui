@@ -228,17 +228,18 @@ Events: accepted/declined
 
 引入方式统一为 `<script src="https://songguokr.com/nexus-ui/v{version}/js/components/nux-xxx.js"></script>` 后 `NexusComponents.register(app)` 一键注册（禁止逐个 `app.component`）。基准样式=桌面端，≤820px 自动收敛，触屏自动 44px 命中区与 16px 输入字号。
 
-### 全部组件索引（83 个，`NexusComponents.list()` 可查）
+### 全部组件索引（84 个，`NexusComponents.list()` 可查）
 
 | 分类 | 组件 |
 |------|------|
-| 布局骨架 | nux-layout-sidebar / nux-layout-topnav / nux-bottom-nav / nux-side-panel / nux-section / nux-grid / nux-backtop |
+| 布局骨架 | nux-layout-sidebar / nux-layout-topnav / nux-bottom-nav / nux-side-panel / nux-section / nux-grid / nux-backtop / nux-workbench |
 | 站点级 | nux-footer / nux-portal-footer / nux-about-page / nux-menu-about / nux-float-about / nux-login-page / nux-register-page / nux-forgot-password / nux-agreement-modal / nux-menu-user / nux-user-center / nux-float-user-center / nux-settings-drawer |
-| 反馈 | nux-toast / nux-undo-toast / nux-unlock / nux-modal / nux-drawer / nux-confirm / nux-notification-bell / nux-notification-panel / nux-loading / nux-skeleton / nux-empty / nux-empty-state / nux-error-state |
+| 反馈 | nux-toast / nux-undo-toast / nux-unlock / nux-modal / nux-drawer / nux-confirm / nux-notification-bell / nux-notification-panel / nux-loading / nux-skeleton / nux-empty / nux-empty-state / nux-error-state / nux-ai-task-progress |
 | 数据展示 | nux-data-table / nux-crud-page / nux-pagination / nux-stat-card / nux-badge / nux-avatar / nux-progress / nux-plan-progress / nux-steps / nux-breadcrumb / nux-calendar / nux-checkin / nux-radar-chart / nux-export-button / nux-history-list / nux-result-view / nux-selection-bar |
 | 表单控件 | nux-form-group / nux-button / nux-input / nux-textarea / nux-select / nux-switch / nux-checkbox / nux-search-box / nux-segmented / nux-chip-group / nux-accordion / nux-tab-group |
-| 交互增强 | nux-file-upload / nux-infinite-scroll / nux-slider / nux-date-picker / nux-qrcode / nux-sortable |
-| AI 能力 | nux-ai-chat / nux-conversation-list / nux-ai-badge / nux-ai-indicator / nux-ai-widgets / nux-clarify-card / nux-automation / nux-onboarding / nux-onboarding-strip / nux-app-card / nux-app-switcher / nux-poster |
+| 交互增强 | nux-file-upload / nux-infinite-scroll / nux-slider / nux-date-picker / nux-qrcode / nux-sortable / nux-share-panel |
+| 图标与媒体 | nux-icon / nux-image-viewer |
+| AI 能力 | nux-ai-chat / nux-conversation-list / nux-ai-badge / nux-ai-indicator / nux-ai-widgets / nux-clarify-card / nux-automation / nux-onboarding / nux-onboarding-strip / nux-app-card / nux-app-switcher / nux-poster / nux-ai-notice |
 
 | 组件 | 核心用法 |
 |------|---------|
@@ -265,6 +266,110 @@ Events: accepted/declined
 | nux-qrcode | `<nux-qrcode value="https://songguokr.com/x" :size="180" level="M" label="扫码打开" alt="分享二维码" @ready="fn" @error="fn"></nux-qrcode>`（qrcodejs 未加载时自动按 deps.json 版本从 CDN 拉取，失败降级文案） |
 | nux-sortable | `<nux-sortable v-model="list" item-key="id" @change="save"><template #default="{ item, index }"><div>{{ item.name }}</div></template></nux-sortable>`（Pointer Events 统一鼠标/触摸拖拽，键盘方向键/Home/End 可排序） |
 | nux-login-page | 登录/注册一体化组件。**加载顺序**：`nux-login-page-helpers.js` → `nux-login-page-template.js` → `nux-login-page.js`（与 nux-ai-chat 系同模式），再 `NexusComponents.register(app)`。Props 见文末 nux-login-page 段落；支持账号/手机号/验证码登录、注册、忘记密码动态加载（nux-forgot-password.js）、图形验证码、协议勾选、主题色注入 |
+
+### 本次新增组件（nux-icon / nux-ai-task-progress / nux-ai-notice / nux-image-viewer / nux-share-panel / nux-workbench）
+
+引入方式与基础组件一致：按需 `<script src="https://songguokr.com/nexus-ui/v{version}/js/components/nux-xxx.js"></script>` 后 `NexusComponents.register(app)` 一键注册。
+
+#### nux-icon 统一线性图标
+
+替代各应用以 emoji 当图标的做法，统一线性视觉。24px 网格描边图标，内置 46 个 name：deck / doc / sheet / chart / poster / mindmap / report / sparkle / magic / wand / share / download / upload / edit / trash / more / close / back / chevron-left / chevron-right / chevron-down / check / warning / info / search / image / refresh / copy / link / qrcode / fullscreen / play / pause / user / plus / minus / filter / grid / list / clock / folder / star / arrow-right / external / eye / empty-box。未知 name 自动回退 `empty-box`，不报错。
+
+```html
+<nux-icon name="deck" :size="20"></nux-icon>
+<nux-icon name="download" :size="18" :stroke-width="1.6" color="var(--nx-primary)" label="下载"></nux-icon>
+```
+
+Props: name(String，必填)/size(Number|String=18)/strokeWidth(Number|String=1.7)/color(String，缺省继承 currentColor)/label(String，传入时输出 role="img" + aria-label，否则 aria-hidden)
+
+#### nux-ai-task-progress AI 长任务过程态
+
+统一「生成中」的过程态：阶段步骤条（已完成对勾 / 进行中脉冲点 / 待开始灰点）+ 细进度条 + 当前阶段说明 + 可选取消。
+
+```html
+<nux-ai-task-progress title="正在生成报告" :stages="[{key:'outline',label:'梳理大纲'},{key:'data',label:'汇总数据'},{key:'render',label:'成文渲染'}]"
+  current="data" message="正在汇总近 30 天数据" :cancellable="true" @cancel="stopTask"></nux-ai-task-progress>
+```
+
+Props: title(String='正在生成')/stages(Array，元素为 String 或 {key,label})/current(String|Number，阶段 key 或下标)/percent(Number 0-100，不传则按阶段位置推算)/message(String)/cancellable(Boolean=false)/compact(Boolean=false)
+
+Events: cancel（点击「取消生成」）。容器 `role="status"` + `aria-live="polite"`，脉冲动画遵循 prefers-reduced-motion。
+
+#### nux-ai-notice AI 生成内容显式标识条
+
+《人工智能生成合成内容标识办法》要求的显式标识，只标注在 AI 生成内容本身或对话交互界面，禁止全站定性表述。
+
+```html
+<nux-ai-notice></nux-ai-notice>
+<nux-ai-notice text="AI 生成" note="由 AI 生成，关键数据请以权威来源核实" size="sm" tone="slate">
+  <a href="/guide">如何核实</a>
+</nux-ai-notice>
+```
+
+Props: text(String='由 AI 生成')/note(String='内容由 AI 生成，关键数据请以权威来源核实')/size(String='md'，sm|md|lg)/tone(String='accent'，accent|slate)
+
+Slots: default（右侧操作区）。已加载 nux-ai-badge 时自动复用其徽标，否则内联渲染等价徽标。
+
+#### nux-image-viewer 图片灯箱预览
+
+放大看图、左右切换、1x/2x 缩放、下载。遮罩挂载 body，Esc 或点击空白关闭，键盘绑定随 visible 自动解绑。
+
+```html
+<nux-image-viewer v-model:visible="showViewer" v-model:index="viewIndex" :images="works"
+  :downloadable="true" @download="onDownload"></nux-image-viewer>
+```
+
+Props: images(Array，元素为 {src,title,thumb} 或字符串)/index(Number=0)/visible(Boolean=false)/downloadable(Boolean=true)
+
+Events: update:index / update:visible / close / download(payload `{index, image}`)
+
+下载行为：先 emit `download` 供业务埋点，随后用 `<a download>` 触发浏览器下载。
+
+#### nux-share-panel 分享面板
+
+作品公开分享统一入口：未开启时只给「开启分享」动作，开启后展示链接、复制、二维码与可选下载。
+
+```html
+<nux-share-panel v-model:visible="showShare" :url="shareUrl" :enabled="shareEnabled" :busy="enabling"
+  enable-text="开启分享" download-text="下载作品" @enable="enableShare" @download="downloadWork"></nux-share-panel>
+```
+
+Props: visible(Boolean=false)/url(String)/title(String='分享')/showQrcode(Boolean=true)/enableText(String='开启分享')/enabled(Boolean=false)/busy(Boolean=false)/downloadText(String='')
+
+Events: update:visible / enable / copied / download / close
+
+二维码复用 nux-qrcode（脚本未加载时自动隐藏二维码区块）；复制走 `NexusUtils.copyToClipboard`，成功后 `NexusUtils.showToast('链接已复制')`。
+
+#### nux-workbench 工作台骨架模板
+
+工具条 + 左栏 + 主区 + 右栏 + 底栏的工作台页面模板，仅用 slot 组合，不约束业务样式。
+
+```html
+<nux-workbench columns="left-main-right" height="calc(100vh - 56px)" style="--nux-wb-left:300px;--nux-wb-right:280px">
+  <template #toolbar><nux-button size="sm">新建</nux-button></template>
+  <template #left>会话列表</template>
+  <template #main>主工作区</template>
+  <template #right>属性面板</template>
+  <template #footer>状态栏</template>
+</nux-workbench>
+```
+
+Props: columns(String='left-main-right'，left-main|main-right|left-main-right|single)/height(String，传入则容器定高，不传自适应)
+
+Slots: toolbar / left / main / right / footer（默认插槽等价 main）
+
+响应式：≤1180px 收敛为纵向堆叠且主区在前，≤820px 单列、工具条横向滚动不换行；栏宽与内边距可用 CSS 变量 `--nux-wb-left` / `--nux-wb-right` / `--nux-wb-pad` 覆盖。
+
+#### nux-skeleton preset 扩展
+
+nux-skeleton 保持原有 props 行为不变，新增 `preset`（`list`|`cards`|`gallery`|`report`，默认空=原有行为）一键渲染常见骨架形状。
+
+```html
+<nux-skeleton preset="report" :rows="5"></nux-skeleton>
+<nux-skeleton preset="gallery" :cards="8"></nux-skeleton>
+```
+
+Props: preset(String='')/rows(Number=3)/cards(Number=4)（沿用既有 loading/avatar/variant/ariaLabel）
 
 ### Composables
 

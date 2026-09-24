@@ -53,14 +53,8 @@
         },
 
         notify(message, type) {
-            if (window.ElementPlus && ElementPlus.ElMessage) {
-                try { ElementPlus.ElMessage({ message, type: type || 'error', duration: 3000 }); return; } catch (e) {}
-            }
-            if (window.NexusUtils && typeof NexusUtils.showToast === 'function') {
-                NexusUtils.showToast(message, type || 'error', { duration: 3000 });
-                return;
-            }
-            if (message) window.alert ? window.alert(message) : void 0;
+            if (!message) return;
+            if (typeof window.showToast === 'function') window.showToast(message, type || 'error', 3000);
         },
 
         bindGlobal() {

@@ -378,39 +378,22 @@
         },
 
         showToast(message, type = 'info', options = {}) {
-            if (window.ElementPlus && window.ElementPlus.ElMessage) {
-                ElementPlus.ElMessage({ message, type, duration: options.duration || 3000, ...options });
-                return;
-            }
-            this.showNativeToast(message, type, options);
-        },
-
-        showNativeToast(message, type = 'info', options = {}) {
-            let host = document.getElementById('nux-toast-host');
-            if (!host) {
-                host = document.createElement('div');
-                host.id = 'nux-toast-host';
-                host.className = 'nux-toast-container';
-                document.body.appendChild(host);
-            }
-            const item = document.createElement('div');
-            item.className = 'nux-toast-item nux-toast-' + ({ success: 'success', error: 'error', info: 'info', warning: 'warning' }[type] || 'info');
-            const msg = document.createElement('span');
-            msg.className = 'nux-toast-msg';
-            msg.textContent = message;
-            item.appendChild(msg);
-            host.appendChild(item);
-            setTimeout(function() { host.removeChild(item); }, (options && options.duration) || 3000);
+            if (typeof window.showToast === 'function') window.showToast(message, type, options.duration || 3000);
         },
 
         confirm(message, title = '操作确认', options = {}) {
-            if (!window.ElementPlus || !ElementPlus.ElMessageBox) return Promise.resolve(false);
-            return ElementPlus.ElMessageBox.confirm(message, title, {
-                confirmButtonText: '确定',
-                cancelButtonText: '取消',
-                type: 'warning',
-                ...options
-            }).then(() => true).catch(() => false);
+            if (typeof window.nuxConfirm !== 'function') return Promise.resolve(false);
+            return window.nuxConfirm(message, title, options);
+        },
+
+        prefersReducedMotion() {
+            try {
+                return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+            } catch (e) { return false; }
+        },
+
+        motionDuration(ms) {
+            return this.prefersReducedMotion() ? 0 : ms;
         },
 
         createDualStorage(tokenKey = 'uc_access_token') {
@@ -515,6 +498,184 @@
     window.addEventListener('resize', utils._resizeHandler);
 
     window.NexusUtils = utils;
+})();
+
+/* ===== nexus-overlay-host.js ===== */
+(function () {
+    'use strict';
+
+    const TOAST_ICONS = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' };
+    const TOAST_MS = 3000;
+    const UNLOCK_MS = 4000;
+    const LEAVE_MS = 220;
+
+    function pickDuration(value, fallback) {
+        if (typeof value === 'number' && value > 0) return value;
+        if (value && typeof value.duration === 'number' && value.duration > 0) return value.duration;
+        return fallback;
+    }
+
+    function ensureHost(id, className) {
+        let host = document.getElementById(id);
+        if (!host) {
+            host = document.createElement('div');
+            host.id = id;
+            host.className = className;
+            document.body.appendChild(host);
+        }
+        return host;
+    }
+
+    function enter(el) {
+        requestAnimationFrame(function () { el.classList.add('is-in'); });
+    }
+
+    function leave(el) {
+        if (!el || el.dataset.nxLeaving) return;
+        el.dataset.nxLeaving = '1';
+        el.classList.remove('is-in');
+        setTimeout(function () {
+            if (el.parentNode) el.parentNode.removeChild(el);
+        }, LEAVE_MS);
+    }
+
+    function showToast(message, type, durationValue) {
+        if (!message) return;
+        const kind = TOAST_ICONS[type] ? type : 'info';
+        const host = ensureHost('nux-toast-host', 'nux-toast-container');
+        const item = document.createElement('div');
+        item.className = 'nux-toast-item nux-toast-' + kind;
+        item.setAttribute('role', 'status');
+        item.setAttribute('aria-live', 'polite');
+
+        const icon = document.createElement('span');
+        icon.className = 'nux-toast-icon';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = TOAST_ICONS[kind];
+
+        const msg = document.createElement('span');
+        msg.className = 'nux-toast-msg';
+        msg.textContent = message;
+
+        item.appendChild(icon);
+        item.appendChild(msg);
+        host.appendChild(item);
+        enter(item);
+
+        const timer = setTimeout(function () { leave(item); }, pickDuration(durationValue, TOAST_MS));
+        item.addEventListener('click', function () {
+            clearTimeout(timer);
+            leave(item);
+        });
+    }
+
+    function showUnlock(options) {
+        const opts = options || {};
+        const host = ensureHost('nux-unlock-host', 'nux-unlock-container');
+        const card = document.createElement('div');
+        card.className = 'nux-unlock-card';
+        card.innerHTML = '<span class="nux-unlock-burst" aria-hidden="true"></span>' +
+            '<span class="nux-unlock-icon" aria-hidden="true"></span>' +
+            '<div class="nux-unlock-body"><p class="nux-unlock-label">成就解锁</p>' +
+            '<p class="nux-unlock-title"></p><p class="nux-unlock-desc"></p></div>';
+
+        card.querySelector('.nux-unlock-icon').textContent = opts.icon || '🏆';
+        card.querySelector('.nux-unlock-title').textContent = opts.title || '新成就';
+        const desc = card.querySelector('.nux-unlock-desc');
+        if (opts.desc) desc.textContent = opts.desc;
+        else desc.remove();
+
+        host.appendChild(card);
+        enter(card);
+
+        const timer = setTimeout(function () { leave(card); }, pickDuration(opts.duration, UNLOCK_MS));
+        card.addEventListener('click', function () {
+            clearTimeout(timer);
+            leave(card);
+        });
+    }
+
+    const confirmQueue = [];
+    let confirmNode = null;
+
+    function buildConfirm() {
+        const overlay = document.createElement('div');
+        overlay.className = 'nx-modal-overlay nux-confirm-overlay';
+        overlay.innerHTML = '<div class="nx-modal" style="max-width:400px" role="alertdialog" aria-modal="true">' +
+            '<div class="nx-modal-title"></div><p class="nux-confirm-msg"></p>' +
+            '<div class="nux-modal-footer">' +
+            '<button class="nx-btn nx-btn-ghost" type="button" data-role="cancel"></button>' +
+            '<button class="nx-btn nx-btn-primary" type="button" data-role="confirm"></button>' +
+            '</div></div>';
+
+        const dialog = overlay.firstElementChild;
+        const cancelBtn = dialog.querySelector('[data-role="cancel"]');
+        const confirmBtn = dialog.querySelector('[data-role="confirm"]');
+
+        overlay.addEventListener('click', function (evt) {
+            if (evt.target === overlay) settleConfirm(false);
+        });
+        cancelBtn.addEventListener('click', function () { settleConfirm(false); });
+        confirmBtn.addEventListener('click', function () { settleConfirm(true); });
+
+        return {
+            overlay: overlay,
+            title: dialog.querySelector('.nx-modal-title'),
+            message: dialog.querySelector('.nux-confirm-msg'),
+            confirmBtn: confirmBtn,
+            cancelBtn: cancelBtn,
+            resolve: null
+        };
+    }
+
+    document.addEventListener('keydown', function (evt) {
+        if (evt.key === 'Escape' && confirmNode) settleConfirm(false);
+    });
+
+    function settleConfirm(value) {
+        if (!confirmNode) return;
+        const node = confirmNode;
+        const resolve = node.resolve;
+        confirmNode = null;
+        node.resolve = null;
+        leave(node.overlay);
+        if (resolve) resolve(value);
+        const next = confirmQueue.shift();
+        if (next) showConfirm(next);
+    }
+
+    function showConfirm(item) {
+        const node = buildConfirm();
+        node.title.textContent = item.title;
+        node.title.style.display = item.title ? '' : 'none';
+        node.message.textContent = item.message;
+        node.confirmBtn.textContent = item.confirmText;
+        node.cancelBtn.textContent = item.cancelText;
+        node.resolve = item.resolve;
+        document.body.appendChild(node.overlay);
+        confirmNode = node;
+        enter(node.overlay);
+        node.confirmBtn.focus();
+    }
+
+    function confirm(message, title, options) {
+        const opts = options || {};
+        return new Promise(function (resolve) {
+            const item = {
+                message: message,
+                title: title || '确认操作',
+                confirmText: opts.confirmText || '确定',
+                cancelText: opts.cancelText || '取消',
+                resolve: resolve
+            };
+            if (confirmNode) confirmQueue.push(item);
+            else showConfirm(item);
+        });
+    }
+
+    window.showToast = showToast;
+    window.showUnlock = showUnlock;
+    window.nuxConfirm = confirm;
 })();
 
 /* ===== nexus-validators.js ===== */
@@ -2287,8 +2448,15 @@
 
 /* ===== nexus-mobile.js ===== */
 (function() {
+    var SIDEBAR_SEL = '.sidebar, .nx-sidebar';
+    var MOBILE_BREAKPOINT = 768;
+
+    function isMobile() {
+        return window.innerWidth <= MOBILE_BREAKPOINT;
+    }
+
     function init() {
-        var sidebar = document.querySelector('.sidebar, .nx-sidebar');
+        var sidebar = document.querySelector(SIDEBAR_SEL);
         if (!sidebar) return;
 
         if (document.querySelector('.nx-hamburger')) return;
@@ -2306,6 +2474,7 @@
         hamburger.style.display = 'none';
         hamburger.innerHTML = '<span class="nx-hamburger-inner"><span class="nx-hamburger-line"></span><span class="nx-hamburger-line"></span><span class="nx-hamburger-line"></span></span>';
         hamburger.setAttribute('aria-label', '菜单');
+        hamburger.setAttribute('aria-expanded', 'false');
 
         var topbar = document.querySelector('.topbar, .nx-nav');
         if (topbar) {
@@ -2314,12 +2483,22 @@
             sidebar.parentNode.insertBefore(hamburger, sidebar);
         }
 
+        function isOpen() {
+            return sidebar.classList.contains('sidebar-open') || sidebar.classList.contains('open');
+        }
+
+        function setOpen(open) {
+            sidebar.classList.toggle('sidebar-open', open);
+            sidebar.classList.toggle('open', open);
+            overlay.classList.toggle('active', open);
+            hamburger.classList.toggle('open', open);
+            hamburger.setAttribute('aria-expanded', String(open));
+            overlay.style.display = open ? 'block' : 'none';
+            sidebar.style.transform = '';
+        }
+
         function toggleSidebar() {
-            sidebar.classList.toggle('sidebar-open');
-            sidebar.classList.toggle('open');
-            overlay.classList.toggle('active');
-            hamburger.classList.toggle('open');
-            overlay.style.display = overlay.classList.contains('active') ? 'block' : 'none';
+            setOpen(!isOpen());
         }
 
         hamburger.addEventListener('click', function(e) {
@@ -2328,30 +2507,66 @@
         });
 
         overlay.addEventListener('click', function() {
-            toggleSidebar();
+            setOpen(false);
         });
 
         var navItems = sidebar.querySelectorAll('.nav-item, .nx-sidebar-item');
         navItems.forEach(function(item) {
             item.addEventListener('click', function() {
-                if (window.innerWidth <= 768 && sidebar.classList.contains('sidebar-open')) {
-                    toggleSidebar();
-                }
+                if (isMobile() && isOpen()) setOpen(false);
             });
         });
 
+        initSwipe(sidebar, setOpen, isMobile, isOpen);
+
         function checkMobile() {
-            var isMobile = window.innerWidth <= 768;
-            hamburger.style.display = isMobile ? 'inline-flex' : 'none';
-            if (!isMobile) {
-                sidebar.classList.remove('sidebar-open', 'open');
-                overlay.classList.remove('active');
-                overlay.style.display = 'none';
-            }
+            var mobile = isMobile();
+            hamburger.style.display = mobile ? 'inline-flex' : 'none';
+            if (!mobile) setOpen(false);
         }
 
         checkMobile();
         window.addEventListener('resize', checkMobile);
+    }
+
+    function initSwipe(sidebar, setOpen, isMobileFn, isOpenFn) {
+        var touch = null;
+
+        function onStart(e) {
+            if (!isMobileFn() || !isOpenFn() || e.touches.length !== 1) return;
+            if (e.touches[0].clientX > 24) return;
+            touch = { startX: e.touches[0].clientX, startY: e.touches[0].clientY };
+            sidebar.style.transition = 'none';
+        }
+
+        function onMove(e) {
+            if (!touch) return;
+            var dx = e.touches[0].clientX - touch.startX;
+            var dy = e.touches[0].clientY - touch.startY;
+            if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+            if (Math.abs(dy) > Math.abs(dx)) { touch = null; return; }
+            if (dx > 0) { touch = null; return; }
+            e.preventDefault();
+            sidebar.style.transform = 'translateX(' + dx + 'px)';
+            sidebar.style.transition = 'none';
+        }
+
+        function onEnd(e) {
+            if (!touch) return;
+            var dx = e.changedTouches[0].clientX - touch.startX;
+            sidebar.style.transition = '';
+            if (dx < -40) {
+                setOpen(false);
+            } else {
+                sidebar.style.transform = '';
+            }
+            touch = null;
+        }
+
+        sidebar.addEventListener('touchstart', onStart, { passive: true });
+        sidebar.addEventListener('touchmove', onMove, { passive: false });
+        sidebar.addEventListener('touchend', onEnd, { passive: true });
+        sidebar.addEventListener('touchcancel', function() { touch = null; sidebar.style.transition = ''; sidebar.style.transform = ''; }, { passive: true });
     }
 
     if (document.readyState === 'loading') {
@@ -2372,6 +2587,8 @@
         'nux-ai-badge': 'NuxAiBadge',
         'nux-ai-chat': 'NuxAiChat',
         'nux-ai-indicator': 'NuxAiIndicator',
+        'nux-ai-notice': 'NuxAiNotice',
+        'nux-ai-task-progress': 'NuxAiTaskProgress',
         'nux-ai-widgets': 'NuxAiWidgets',
         'nux-app-card': 'NuxAppCard',
         'nux-app-switcher': 'NuxAppSwitcher',
@@ -2387,13 +2604,11 @@
         'nux-checkin': 'NuxCheckin',
         'nux-chip-group': 'NuxChipGroup',
         'nux-clarify-card': 'NuxClarifyCard',
-        'nux-confirm': 'NuxConfirm',
         'nux-conversation-list': 'NuxConversationList',
         'nux-crud-page': 'NuxCrudPage',
         'nux-data-table': 'NuxDataTable',
         'nux-date-picker': 'NuxDatePicker',
         'nux-drawer': 'NuxDrawer',
-        'nux-empty': 'NuxEmpty',
         'nux-empty-state': 'NuxEmptyState',
         'nux-error-state': 'NuxErrorState',
         'nux-export-button': 'NuxExportButton',
@@ -2403,6 +2618,8 @@
         'nux-form-group': 'NuxFormGroup',
         'nux-grid': 'NuxGrid',
         'nux-history-list': 'NuxHistoryList',
+        'nux-icon': 'NuxIcon',
+        'nux-image-viewer': 'NuxImageViewer',
         'nux-infinite-scroll': 'NuxInfiniteScroll',
         'nux-input': 'NuxInput',
         'nux-layout-sidebar': 'NuxLayoutSidebar',
@@ -2431,6 +2648,7 @@
         'nux-select': 'NuxSelect',
         'nux-selection-bar': 'NuxSelectionBar',
         'nux-settings-drawer': 'NuxSettingsDrawer',
+        'nux-share-panel': 'NuxSharePanel',
         'nux-side-panel': 'NuxSidePanel',
         'nux-skeleton': 'NuxSkeleton',
         'nux-slider': 'NuxSlider',
@@ -2440,10 +2658,9 @@
         'nux-switch': 'NuxSwitch',
         'nux-tab-group': 'NuxTabGroup',
         'nux-textarea': 'NuxTextarea',
-        'nux-toast': 'NuxToast',
         'nux-undo-toast': 'NuxUndoToast',
-        'nux-unlock': 'NuxUnlock',
-        'nux-user-center': 'NuxUserCenter'
+        'nux-user-center': 'NuxUserCenter',
+        'nux-workbench': 'NuxWorkbench'
     };
 
     var HELPERS = {
@@ -3377,12 +3594,36 @@ window.UserCenterAPI = { loaded: true };
             avatar: { type: Boolean, default: false },
             variant: { type: String, default: 'list' },
             cards: { type: Number, default: 4 },
-            ariaLabel: { type: String, default: '' }
+            ariaLabel: { type: String, default: '' },
+            preset: { type: String, default: '' }
+        },
+        computed: {
+            mode() {
+                if (this.preset === 'cards') return 'cards';
+                if (this.preset === 'gallery') return 'gallery';
+                if (this.preset === 'report') return 'report';
+                if (!this.preset && this.variant === 'grid') return 'cards';
+                return 'text';
+            },
+            showAvatar() {
+                return this.avatar || this.preset === 'list';
+            },
+            rowCount() {
+                const n = Math.round(Number(this.rows));
+                return isNaN(n) || n < 1 ? 1 : n;
+            },
+            cardCount() {
+                const n = Math.round(Number(this.cards));
+                return isNaN(n) || n < 1 ? 1 : n;
+            },
+            shapeClass() {
+                return 'is-' + (this.preset || this.variant);
+            }
         },
         template: `
-            <div v-if="loading" class="nux-skeleton" :class="'is-'+variant" role="status" aria-busy="true" :aria-label="ariaLabel || '加载中'">
-                <div v-if="variant==='grid'" class="nux-skeleton-grid" aria-hidden="true">
-                    <div v-for="i in cards" :key="i" class="nux-skeleton-card">
+            <div v-if="loading" class="nux-skeleton" :class="shapeClass" role="status" aria-busy="true" :aria-label="ariaLabel || '加载中'">
+                <div v-if="mode==='cards'" class="nux-skeleton-grid" aria-hidden="true">
+                    <div v-for="i in cardCount" :key="i" class="nux-skeleton-card">
                         <div class="nux-skeleton-card-cover"></div>
                         <div class="nux-skeleton-card-body">
                             <div class="nux-skeleton-card-line" style="width:100%"></div>
@@ -3390,10 +3631,27 @@ window.UserCenterAPI = { loaded: true };
                         </div>
                     </div>
                 </div>
+                <div v-else-if="mode==='gallery'" class="nux-skeleton-grid nux-skeleton-grid-gallery" aria-hidden="true">
+                    <div v-for="i in cardCount" :key="i" class="nux-skeleton-card">
+                        <div class="nux-skeleton-card-cover nux-skeleton-cover-tall"></div>
+                        <div class="nux-skeleton-card-body">
+                            <div class="nux-skeleton-card-line" style="width:56%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div v-else-if="mode==='report'" class="nux-skeleton-report" aria-hidden="true">
+                    <div class="nux-skeleton-report-title"></div>
+                    <div class="nux-skeleton-report-sub"></div>
+                    <div class="nux-skeleton-content">
+                        <div v-for="i in rowCount" :key="i" class="nux-skeleton-row" :style="{ width: i === rowCount ? '58%' : '100%' }"></div>
+                    </div>
+                    <div class="nux-skeleton-report-block"></div>
+                    <div class="nux-skeleton-row" style="width:78%"></div>
+                </div>
                 <template v-else>
-                    <div v-if="avatar" class="nux-skeleton-avatar" aria-hidden="true"></div>
+                    <div v-if="showAvatar" class="nux-skeleton-avatar" aria-hidden="true"></div>
                     <div class="nux-skeleton-content" aria-hidden="true">
-                        <div v-for="i in rows" :key="i" class="nux-skeleton-row" :style="{ width: i === rows ? '60%' : '100%' }"></div>
+                        <div v-for="i in rowCount" :key="i" class="nux-skeleton-row" :style="{ width: i === rowCount ? '60%' : '100%' }"></div>
                     </div>
                 </template>
             </div>
@@ -3401,27 +3659,6 @@ window.UserCenterAPI = { loaded: true };
         `
     };
     window.NuxSkeleton = NuxSkeleton;
-})();
-
-/* ===== components/nux-empty.js ===== */
-(function() {
-    const NuxEmpty = {
-        name: 'NuxEmpty',
-        props: {
-            icon: { type: String, default: '📭' },
-            title: { type: String, default: '暂无数据' },
-            description: { type: String, default: '' }
-        },
-        template: `
-            <div class="nx-empty" role="status" aria-live="polite">
-                <div class="nx-empty-icon" aria-hidden="true">{{ icon }}</div>
-                <p class="nx-empty-text" style="font-size: var(--nx-text-base); font-weight: 500; color: var(--nx-text-heading); margin-bottom: var(--nx-space-2);">{{ title }}</p>
-                <p v-if="description" class="nx-empty-text">{{ description }}</p>
-            </div>
-        `
-    };
-
-    window.NuxEmpty = NuxEmpty;
 })();
 
 /* ===== components/nux-empty-state.js ===== */
@@ -3710,14 +3947,8 @@ window.UserCenterAPI = { loaded: true };
         },
 
         notify(message, type) {
-            if (window.ElementPlus && ElementPlus.ElMessage) {
-                try { ElementPlus.ElMessage({ message, type: type || 'error', duration: 3000 }); return; } catch (e) {}
-            }
-            if (window.NexusUtils && typeof NexusUtils.showToast === 'function') {
-                NexusUtils.showToast(message, type || 'error', { duration: 3000 });
-                return;
-            }
-            if (message) window.alert ? window.alert(message) : void 0;
+            if (!message) return;
+            if (typeof window.showToast === 'function') window.showToast(message, type || 'error', 3000);
         },
 
         bindGlobal() {

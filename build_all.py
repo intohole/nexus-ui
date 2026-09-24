@@ -13,6 +13,7 @@ OUT = os.path.join(JS_DIR, "nexus-all.js")
 
 FILES: list[str] = [
     "nexus-utils.js",
+    "nexus-overlay-host.js",
     "nexus-validators.js",
     "nexus-api-error.js",
     "nexus-api.js",
@@ -30,7 +31,6 @@ FILES: list[str] = [
     "core/nexus-error-text.js",
     "components/nux-ai-badge.js",
     "components/nux-skeleton.js",
-    "components/nux-empty.js",
     "components/nux-empty-state.js",
     "components/nux-error-state.js",
     "components/nux-ai-indicator.js",
