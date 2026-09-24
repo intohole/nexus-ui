@@ -38,8 +38,13 @@ def file_hash(path: str) -> str:
 
 
 def resolve(base_dir: str, url: str) -> str:
-    target = os.path.normpath(os.path.join(base_dir, url.split("?")[0].split("#")[0]))
-    return target if os.path.isfile(target) else ""
+    clean = url.split("?")[0].split("#")[0]
+    parts = [p for p in clean.split("/") if p not in ("", ".", "..")]
+    for i in range(len(parts)):
+        target = os.path.normpath(os.path.join(base_dir, *parts[i:]))
+        if os.path.isfile(target):
+            return target
+    return ""
 
 
 def sync_html(path: str, base_dir: str, fix: bool):
