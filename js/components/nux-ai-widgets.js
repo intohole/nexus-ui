@@ -31,6 +31,16 @@
             '.nxw-step-dot{width:10px;height:10px;border-radius:50%;background:var(--nx-border-hover,rgba(0,0,0,.15));margin-top:3px;border:2px solid var(--nx-bg-surface,#fff);box-shadow:0 0 0 1px var(--nx-border-hover,rgba(0,0,0,.15))}',
             '.nxw-step.is-done .nxw-step-dot{background:var(--app-accent,#6366f1);box-shadow:0 0 0 1px var(--app-accent,#6366f1)}',
             '.nxw-step.is-active .nxw-step-dot{background:var(--nx-bg-surface,#fff);border-color:var(--app-accent,#6366f1);box-shadow:0 0 0 1px var(--app-accent,#6366f1)}',
+            '.nxw-step.is-failed .nxw-step-dot{background:var(--nx-danger,#ef4444);box-shadow:0 0 0 1px var(--nx-danger,#ef4444)}',
+            '.nxw-step.is-failed .nxw-step-title{color:var(--nx-danger,#ef4444)}',
+            '.nxw-task-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}',
+            '.nxw-task-status{font-size:11px;font-weight:600;padding:1px 8px;border-radius:var(--nx-radius-full,999px);background:rgba(var(--app-accent-rgb,99,102,241),.1);color:var(--app-accent,#6366f1)}',
+            '.nxw-task-status.is-done{background:rgba(var(--nx-success-rgb,16,185,129),.12);color:var(--nx-success,#10b981)}',
+            '.nxw-task-status.is-failed{background:rgba(var(--nx-danger-rgb,239,68,68),.1);color:var(--nx-danger,#ef4444)}',
+            '.nxw-task-pct{margin-left:auto;font-size:11px;color:var(--nx-text-muted,#94a3b8);font-variant-numeric:tabular-nums}',
+            '.nxw-task-bar{height:4px;border-radius:var(--nx-radius-full,999px);background:var(--nx-bg-muted,#f1f5f9);overflow:hidden;margin-bottom:10px}',
+            '.nxw-task-bar span{display:block;height:100%;border-radius:inherit;background:var(--app-accent,#6366f1);transition:width .3s ease}',
+            '.nxw-task-bar.is-failed span{background:var(--nx-danger,#ef4444)}',
             '.nxw-step-line{width:2px;flex:1;background:var(--nx-border,rgba(0,0,0,.08));margin-top:2px}',
             '.nxw-step-body{flex:1;min-width:0}',
             '.nxw-step-title{font-size:13px;font-weight:600;color:var(--nx-text-heading,#0f172a)}',
@@ -67,6 +77,16 @@
     ensureStyle();
 
     const { reactive, computed } = Vue;
+
+    const registry = window.NuxAiWidgetsRegistry || (window.NuxAiWidgetsRegistry = {});
+    registry.types = registry.types || {};
+    registry.icons = registry.icons || {};
+    registry.register = function (type, def, icon) {
+        if (!type || !def) return;
+        registry.types[type] = def;
+        if (icon) registry.icons[type] = icon;
+    };
+    const register = registry.register;
 
     const WidgetTable = {
         name: 'WidgetTable',
@@ -133,8 +153,28 @@
     const WidgetSteps = {
         name: 'WidgetSteps',
         props: { data: { type: Object, default: null } },
+        setup(props) {
+            const hasPercent = computed(() => !!props.data && typeof props.data.percent === 'number');
+            const pct = computed(() => {
+                if (!hasPercent.value) return 0;
+                return Math.min(Math.max(Math.round(props.data.percent), 0), 100);
+            });
+            const status = computed(() => (props.data && props.data.status) || '');
+            const statusText = computed(() => {
+                const map = { running: '执行中', done: '已完成', failed: '执行失败', pending: '待开始' };
+                return map[status.value] || '执行中';
+            });
+            return { hasPercent, pct, status, statusText };
+        },
         template: `
             <div v-if="data" class="nxw-body nxw-steps">
+                <div v-if="hasPercent || status" class="nxw-task-head">
+                    <span class="nxw-task-status" :class="status ? 'is-' + status : ''">{{ statusText }}</span>
+                    <span v-if="hasPercent" class="nxw-task-pct">{{ pct }}%</span>
+                </div>
+                <div v-if="hasPercent" class="nxw-task-bar" :class="{ 'is-failed': status === 'failed' }">
+                    <span :style="{ width: pct + '%' }"></span>
+                </div>
                 <div v-for="(s, i) in data.steps" :key="i" class="nxw-step" :class="'is-' + (s.status || (i === 0 ? 'active' : 'pending'))">
                     <div class="nxw-step-rail">
                         <span class="nxw-step-dot"></span>
@@ -252,24 +292,20 @@
         `
     };
 
-    const TYPE_ICONS = {
-        table: '📊', cards: '🗂', steps: '🪜', related: '💡', choice: '❓', feedback: '⭐'
-    };
+    register('table', WidgetTable, '📊');
+    register('cards', WidgetCards, '🗂');
+    register('steps', WidgetSteps, '🪜');
+    register('related', WidgetRelated, '💡');
+    register('choice', WidgetChoice, '❓');
+    register('feedback', WidgetFeedback, '⭐');
 
     const NuxAiWidgets = {
         name: 'NuxAiWidgets',
         props: { widgets: { type: Array, default: () => [] } },
         emits: ['action'],
-        components: {
-            WidgetTable, WidgetCards, WidgetSteps, WidgetRelated, WidgetChoice, WidgetFeedback
-        },
         setup(props, ctx) {
-            const comMap = {
-                table: 'WidgetTable', cards: 'WidgetCards', steps: 'WidgetSteps',
-                related: 'WidgetRelated', choice: 'WidgetChoice', feedback: 'WidgetFeedback'
-            };
-            function comOf(type) { return comMap[type] || ''; }
-            function iconOf(type) { return TYPE_ICONS[type] || '🧩'; }
+            function comOf(type) { return registry.types[type] || null; }
+            function iconOf(type) { return registry.icons[type] || '🧩'; }
             function dispatch(w, action, payload) {
                 ctx.emit('action', { id: w.id, type: w.type, action: action, payload: payload });
             }
@@ -285,6 +321,8 @@
                     <component :is="comOf(w.type)" v-if="comOf(w.type)" :data="w.data"
                         @pick="(item) => dispatch(w, 'send', item)"
                         @submit="(val) => dispatch(w, 'submit', val)"
+                        @confirm="(val) => dispatch(w, 'confirm', val)"
+                        @cancel="() => dispatch(w, 'cancel', null)"
                         @rate="(val) => dispatch(w, 'feedback', val)"
                         @open="(item) => dispatch(w, 'open', item)">
                     </component>

@@ -270,6 +270,7 @@ Events: accepted/declined
 | nux-qrcode | `<nux-qrcode value="https://songguokr.com/x" :size="180" level="M" label="扫码打开" alt="分享二维码" @ready="fn" @error="fn"></nux-qrcode>`（qrcodejs 未加载时自动按 deps.json 版本从 CDN 拉取，失败降级文案） |
 | nux-sortable | `<nux-sortable v-model="list" item-key="id" @change="save"><template #default="{ item, index }"><div>{{ item.name }}</div></template></nux-sortable>`（Pointer Events 统一鼠标/触摸拖拽，键盘方向键/Home/End 可排序） |
 | nux-login-page | 登录/注册一体化组件。**加载顺序**：`nux-login-page-helpers.js` → `nux-login-page-template.js` → `nux-login-page.js`（与 nux-ai-chat 系同模式），再 `NexusComponents.register(app)`。Props 见文末 nux-login-page 段落；支持账号/手机号/验证码登录、注册、忘记密码动态加载（nux-forgot-password.js）、图形验证码、协议勾选、主题色注入 |
+| nux-ai-widgets | AI 对话消息内组件渲染器（后端 SSE `widget` / `widget_update` 事件驱动，nux-ai-chat 自动路由到 `msg.widgets` 并渲染）。**加载顺序**：`nux-ai-chat-helpers.js` → `nux-ai-chat-template.js` → `nux-ai-widgets.js` →（可选增强）`nux-ai-widgets-rich.js` → `nux-ai-chat.js`。基础类型：table / cards / steps / related / choice / feedback；`nux-ai-widgets-rich.js` 追加：form（表单收集）/ chart（图表，echarts 按需 CDN 加载）/ confirm（危险操作二次确认）。steps 支持 `percent` + `status`（running/done/failed）呈现任务进度，可经 `widget_update` 流式更新。交互统一经 `@widget-action` 透传 `{id,type,action,payload}`，action ∈ send/submit/confirm/cancel/feedback/open |
 
 ### 本次新增组件（nux-icon / nux-ai-task-progress / nux-ai-notice / nux-image-viewer / nux-share-panel / nux-workbench）
 

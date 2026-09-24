@@ -2727,6 +2727,7 @@
     var HELPERS = {
         'NuxAiChatHelpers': 'AI 对话工具集（features/input/roles、键盘高度、富事件路由）',
         'NuxAiChatTemplate': 'AI 对话组件模板字符串',
+        'NuxAiWidgetsRegistry': 'AI 消息内组件渲染器注册表（register(type, def, icon)，供 nux-ai-widgets-rich 等扩展）',
         'NuxFloatAbout': '悬浮关于入口（自动挂载，无需注册）',
         'NuxFloatUserCenter': '悬浮用户中心（init/configure/destroy，非 Vue 组件）',
         'NuxLoginHelpers': '登录页工具集（验证码/SMS 状态机、协议勾选、忘记密码动态加载）',
