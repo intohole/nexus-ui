@@ -51,6 +51,14 @@
             return String(Number(n.toFixed(2)));
         },
 
+        formatBytes(bytes) {
+            if (!bytes) return '0 B';
+            const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+            let i = Math.floor(Math.log(bytes) / Math.log(1024));
+            if (i >= units.length) i = units.length - 1;
+            return (bytes / Math.pow(1024, i)).toFixed(i === 0 ? 0 : 1) + ' ' + units[i];
+        },
+
         truncateText(text, maxLength = 100) {
             if (!text) return '';
             if (text.length <= maxLength) return text;
