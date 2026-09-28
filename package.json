@@ -1,6 +1,6 @@
 {
   "name": "nexus-ui",
-  "version": "2.12.0",
+  "version": "2.13.0",
   "description": "Nexus Design System — 统一前端基础设施，Vue 3 CDN 全局模式",
   "main": "css/nexus-all.css",
   "files": [
@@ -26,7 +26,7 @@
     "js/": "nexus-all.js 为 build_all.py 确定性聚合产物（核心库 + 组件注册表 nexus-components.js），nux-* 组件与 composables 保持独立引用",
     "js/nexus-components.js": "NexusComponents.register(app) 统一注册入口：一次注册全部已加载的 nux-* 组件，替代各应用手写 app.component 注册块",
     "js/components/": "68 个 nux-* 组件，完整清单与用法见 llms.txt（唯一事实源）",
-    "js/composables/": "use-mobile / use-loading / use-pagination / use-search / use-sort / use-theme / use-sse / use-auth / use-collection / use-crud / use-form-submit / use-notification / use-chart / use-recent / use-progress"
+    "js/composables/": "use-mobile / use-theme / use-recent"
   },
   "usage": {
     "css": "<link rel='stylesheet' href='https://songguokr.com/nexus-ui/v{version}/css/nexus-all.css'>",

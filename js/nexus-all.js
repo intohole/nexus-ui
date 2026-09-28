@@ -572,6 +572,27 @@
     utils._resizeHandler = utils.debounce(utils.setViewportHeight, 100);
     window.addEventListener('resize', utils._resizeHandler);
 
+    utils.errorDetailText = function (v) {
+        if (v === null || v === undefined) return '';
+        if (typeof v === 'string') return v.trim();
+        if (Array.isArray(v)) {
+            return v.map(function (item) {
+                if (item === null || item === undefined) return '';
+                if (typeof item === 'string') return item;
+                if (typeof item === 'object') {
+                    return String(item.msg || item.message || item.detail || '').replace(/^Value error,\s*/, '');
+                }
+                return String(item);
+            }).filter(Boolean).join('；');
+        }
+        if (typeof v === 'object') {
+            var inner = v.message || v.detail || v.msg || v.error;
+            if (inner === undefined || inner === v) return '';
+            return utils.errorDetailText(inner);
+        }
+        return String(v);
+    };
+
     window.NexusUtils = utils;
 })();
 
@@ -1154,10 +1175,11 @@
     }
 
     function _errMsg(v) {
+        if (window.NexusUtils && NexusUtils.errorDetailText) return NexusUtils.errorDetailText(v);
         if (v === null || v === undefined) return '';
         if (typeof v === 'string') return v;
-        if (Array.isArray(v)) return v.join(', ');
-        if (typeof v === 'object') return JSON.stringify(v);
+        if (Array.isArray(v)) return v.join('；');
+        if (typeof v === 'object') return v.message || v.detail || v.msg || v.error || '';
         return String(v);
     }
 
@@ -1798,12 +1820,45 @@
         });
     }
 
+    const MATH_LATIN_BASES = [0x1D400, 0x1D434, 0x1D468, 0x1D49C, 0x1D4D0, 0x1D504, 0x1D538, 0x1D56C, 0x1D5A0, 0x1D5D4, 0x1D608, 0x1D63C, 0x1D670];
+    const MATH_DIGIT_BASES = [0x1D7CE, 0x1D7D8, 0x1D7E2, 0x1D7EC, 0x1D7F6];
+    const LETTERLIKE_MAP = {
+        '\u210E': 'h', '\u210F': 'h', '\u2110': 'I', '\u2112': 'L', '\u2113': 'l',
+        '\u2118': 'P', '\u211B': 'R', '\u211C': 'R', '\u211D': 'R', '\u2124': 'Z',
+        '\u2126': 'O', '\u2128': 'Z', '\u212C': 'B', '\u212D': 'C', '\u212F': 'e',
+        '\u2130': 'E', '\u2131': 'F', '\u2132': 'F', '\u2133': 'M', '\u2134': 'o'
+    };
+    const MATH_ALNUM_RE = /[\u{1D400}-\u{1D7FF}\u210E\u210F\u2110\u2112\u2113\u2118\u211B-\u211D\u2124\u2126\u2128\u212C\u212D\u212F-\u2134]/gu;
+
+    function mathCharToAscii(ch) {
+        const cp = ch.codePointAt(0);
+        if (cp >= 0x1D400 && cp <= 0x1D7FF) {
+            for (const base of MATH_LATIN_BASES) {
+                if (cp >= base && cp < base + 52) {
+                    const off = cp - base;
+                    return String.fromCharCode(off < 26 ? 65 + off : 97 + off - 26);
+                }
+            }
+            for (const base of MATH_DIGIT_BASES) {
+                if (cp >= base && cp < base + 10) return String.fromCharCode(48 + cp - base);
+            }
+            return ch;
+        }
+        return LETTERLIKE_MAP[ch] || ch;
+    }
+
+    function normalizeMathUnicode(text) {
+        if (text === null || text === undefined) return '';
+        return String(text).replace(MATH_ALNUM_RE, mathCharToAscii);
+    }
+
     function render(text, options) {
         if (!text) return '';
         const opts = options || {};
+        const normalized = normalizeMathUnicode(text);
         if (window.marked && window.DOMPurify) {
             try {
-                const protected_ = protectMath(text);
+                const protected_ = protectMath(normalized);
                 const raw = marked.parse(protected_.text);
                 const sanitized = DOMPurify.sanitize(raw, {
                     ADD_ATTR: ['target', 'rel'],
@@ -1814,7 +1869,7 @@
                 console.warn('[NexusMarkdown] render fail:', e);
             }
         }
-        return escapeHtml(text).replace(/\n/g, '<br>');
+        return escapeHtml(normalized).replace(/\n/g, '<br>');
     }
 
     async function renderAsync(text, options) {
@@ -2806,6 +2861,7 @@
         'NuxAiChatHelpers': 'AI 对话工具集（features/input/roles、键盘高度、富事件路由）',
         'NuxAiChatTemplate': 'AI 对话组件模板字符串',
         'NuxAiWidgetsRegistry': 'AI 消息内组件渲染器注册表（register(type, def, icon)，供 nux-ai-widgets-rich 等扩展）',
+        'nux-ai-widgets-rich.js': 'AI 消息内增强组件（form/chart/confirm），仅向 NuxAiWidgetsRegistry 注册类型并注入样式，无独立全局导出',
         'NuxLoginHelpers': '登录页工具集（验证码/SMS 状态机、协议勾选、忘记密码动态加载）',
         'NuxLoginPageTemplate': '登录页模板字符串',
         'NuxRadarDraw': '雷达图 Canvas 绘制引擎（静态方法）',
@@ -3113,7 +3169,10 @@ class UserCenterSDK {
                 if (response.status === 401 && this._onAuthError) {
                     this._onAuthError(error);
                 }
-                throw new Error(error.detail || `HTTP ${response.status}`);
+                const detailText = (window.NexusUtils && NexusUtils.errorDetailText)
+                    ? (NexusUtils.errorDetailText(error.detail) || NexusUtils.errorDetailText(error.message))
+                    : '';
+                throw new Error(detailText || `HTTP ${response.status}`);
             }
             return response.json();
         } catch (e) {
@@ -3632,8 +3691,12 @@ window.UserCenterAPI = { loaded: true };
 
     function extractServerMessage(e) {
         if (!e) return '';
+        const normalize = (window.NexusUtils && NexusUtils.errorDetailText) || null;
         const d = (e.response && e.response.data) || e.data;
-        if (d && typeof d === 'object') return d.detail || d.message || d.error || '';
+        if (d && typeof d === 'object') {
+            if (normalize) return normalize(d);
+            return d.detail || d.message || d.error || '';
+        }
         return e.message || '';
     }
 

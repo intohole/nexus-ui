@@ -436,7 +436,13 @@
         },
 
         showToast(message, type = 'info', options = {}) {
-            if (typeof window.showToast === 'function') window.showToast(message, type, options.duration || 3000);
+            if (typeof window.showToast !== 'function') return;
+            const opts = options || {};
+            if (opts.center) {
+                window.showToast(message, type, { duration: opts.duration || 3000, center: true });
+            } else {
+                window.showToast(message, type, opts.duration || 3000);
+            }
         },
 
         confirm(message, title = '操作确认', options = {}) {
@@ -570,6 +576,27 @@
     utils.setViewportHeight();
     utils._resizeHandler = utils.debounce(utils.setViewportHeight, 100);
     window.addEventListener('resize', utils._resizeHandler);
+
+    utils.errorDetailText = function (v) {
+        if (v === null || v === undefined) return '';
+        if (typeof v === 'string') return v.trim();
+        if (Array.isArray(v)) {
+            return v.map(function (item) {
+                if (item === null || item === undefined) return '';
+                if (typeof item === 'string') return item;
+                if (typeof item === 'object') {
+                    return String(item.msg || item.message || item.detail || '').replace(/^Value error,\s*/, '');
+                }
+                return String(item);
+            }).filter(Boolean).join('；');
+        }
+        if (typeof v === 'object') {
+            var inner = v.message || v.detail || v.msg || v.error;
+            if (inner === undefined || inner === v) return '';
+            return utils.errorDetailText(inner);
+        }
+        return String(v);
+    };
 
     window.NexusUtils = utils;
 })();

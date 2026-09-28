@@ -55,6 +55,21 @@ function persistedIn() {
 const SSO_COOKIE = 'uc_sso_token';
 const SSO_ROOT = 'songguokr.com';
 
+// SDK 自有错误（error.detail）未覆盖状态码时的文案兜底：优先走 nexus-api-error.js 的
+// mapHttpError 统一映射，缺失或未命中时保持原样（`HTTP xxx`），不改变既有行为。
+function friendlyHttpText(status) {
+    const fallback = `HTTP ${status}`;
+    try {
+        if (typeof window.mapHttpError === 'function') {
+            const Ctor = typeof window.NexusApiError === 'function' ? window.NexusApiError : null;
+            const err = Ctor ? new Ctor(fallback, status) : { name: 'NexusApiError', status: status, message: fallback };
+            const text = window.mapHttpError(err);
+            if (text && text !== fallback) return text;
+        }
+    } catch (e) { /* ignore */ }
+    return fallback;
+}
+
 function ssoCookieDomain() {
     try {
         const host = window.location.hostname || '';
@@ -263,7 +278,10 @@ class UserCenterSDK {
                 if (response.status === 401 && this._onAuthError) {
                     this._onAuthError(error);
                 }
-                throw new Error(error.detail || `HTTP ${response.status}`);
+                const detailText = (window.NexusUtils && NexusUtils.errorDetailText)
+                    ? (NexusUtils.errorDetailText(error.detail) || NexusUtils.errorDetailText(error.message))
+                    : '';
+                throw new Error(detailText || friendlyHttpText(response.status));
             }
             return response.json();
         } catch (e) {

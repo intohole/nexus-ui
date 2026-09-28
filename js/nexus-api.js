@@ -15,10 +15,11 @@
     }
 
     function _errMsg(v) {
+        if (window.NexusUtils && NexusUtils.errorDetailText) return NexusUtils.errorDetailText(v);
         if (v === null || v === undefined) return '';
         if (typeof v === 'string') return v;
-        if (Array.isArray(v)) return v.join(', ');
-        if (typeof v === 'object') return JSON.stringify(v);
+        if (Array.isArray(v)) return v.join('；');
+        if (typeof v === 'object') return v.message || v.detail || v.msg || v.error || '';
         return String(v);
     }
 

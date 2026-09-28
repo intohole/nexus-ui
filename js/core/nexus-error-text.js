@@ -30,8 +30,12 @@
 
     function extractServerMessage(e) {
         if (!e) return '';
+        const normalize = (window.NexusUtils && NexusUtils.errorDetailText) || null;
         const d = (e.response && e.response.data) || e.data;
-        if (d && typeof d === 'object') return d.detail || d.message || d.error || '';
+        if (d && typeof d === 'object') {
+            if (normalize) return normalize(d);
+            return d.detail || d.message || d.error || '';
+        }
         return e.message || '';
     }
 

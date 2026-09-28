@@ -274,6 +274,17 @@
                     localError.value = '请填写邮箱';
                     return;
                 }
+                if (form.username && form.username.length < 3) {
+                    localError.value = '用户名至少3个字符';
+                    return;
+                }
+                if (form.email && window.NexusValidators && NexusValidators.email) {
+                    var emailErr = NexusValidators.email()(form.email);
+                    if (emailErr) {
+                        localError.value = emailErr;
+                        return;
+                    }
+                }
                 if (isSmsMode.value || regSms.value) {
                     if (!/^1[3-9]\d{9}$/.test(form.phone)) {
                         localError.value = '请输入正确的手机号';

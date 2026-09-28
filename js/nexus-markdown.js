@@ -3,33 +3,47 @@
 
     const VERSION = '1.3.0';
 
-    const FALLBACK_LIBS = {
-        marked: 'https://songguokr.com/nexus-ui/v2.10.77/vendor/marked.umd.js',
-        dompurify: 'https://songguokr.com/nexus-ui/v2.10.77/vendor/purify.min.js',
-        highlight: 'https://songguokr.com/nexus-ui/v2.10.77/vendor/highlight.min.js',
-        highlightCss: 'https://songguokr.com/nexus-ui/v2.10.77/vendor/styles/atom-one-dark.min.css',
-        katex: 'https://songguokr.com/nexus-ui/v2.10.77/vendor/katex/katex.min.js',
-        katexCss: 'https://songguokr.com/nexus-ui/v2.10.77/vendor/katex/katex.min.css'
+    // vendor 相对路径（无版本字面量）。绝对地址在运行时按「加载 nexus-all.js / nexus-markdown.js 的
+    // script 标签 src」推导同版本 vendor 目录，避免服务器清旧版本目录后固定版本回退 404。
+    const VENDOR_PATHS = {
+        marked: 'marked.umd.js',
+        dompurify: 'purify.min.js',
+        highlight: 'highlight.min.js',
+        highlightCss: 'styles/atom-one-dark.min.css',
+        katex: 'katex/katex.min.js',
+        katexCss: 'katex/katex.min.css'
     };
 
-    const LIB_BASE = (function () {
+    function resolveLibBase() {
+        // 1) document.currentScript 在同步执行时可用（绝对 URL，相对路径引用也能正确解析）
+        try {
+            const cur = (document.currentScript && document.currentScript.src) || '';
+            const m = cur.match(/^(.*)\/js\/nexus-(?:all|markdown)\.js(?:[?#].*)?$/);
+            if (m) return m[1] + '/vendor/';
+        } catch (e) { /* ignore */ }
+        // 2) 兜底扫描页面 script 标签
         const scripts = document.scripts || [];
         for (let i = 0; i < scripts.length; i++) {
-            const src = scripts[i].getAttribute('src') || '';
+            const src = scripts[i].src || scripts[i].getAttribute('src') || '';
             const m = src.match(/^(.*)\/js\/nexus-(?:all|markdown)\.js(?:[?#].*)?$/);
             if (m) return m[1] + '/vendor/';
         }
         return '';
-    })();
+    }
 
-    const LIBS = LIB_BASE ? {
-        marked: LIB_BASE + 'marked.umd.js',
-        dompurify: LIB_BASE + 'purify.min.js',
-        highlight: LIB_BASE + 'highlight.min.js',
-        highlightCss: LIB_BASE + 'styles/atom-one-dark.min.css',
-        katex: LIB_BASE + 'katex/katex.min.js',
-        katexCss: LIB_BASE + 'katex/katex.min.css'
-    } : FALLBACK_LIBS;
+    let _libBase = null;
+    function libBase() {
+        if (_libBase === null) _libBase = resolveLibBase();
+        return _libBase;
+    }
+
+    function libs() {
+        const base = libBase();
+        if (!base) return null;
+        const out = {};
+        Object.keys(VENDOR_PATHS).forEach(function (k) { out[k] = base + VENDOR_PATHS[k]; });
+        return out;
+    }
 
     const DEFAULT_ALLOWED_TAGS = [
         'p', 'br', 'strong', 'em', 'code', 'pre', 'span',
@@ -85,6 +99,12 @@
         if (libsLoaded) return true;
         if (libsLoading) return libsLoading;
         libsLoading = (async () => {
+            const LIBS = libs();
+            if (!LIBS) {
+                console.warn('[NexusMarkdown] 无法从 nexus-all.js / nexus-markdown.js 的加载路径推导 vendor 目录，跳过 Markdown 库注入');
+                libsLoaded = true;
+                return false;
+            }
             await Promise.all([
                 hasGlobal('marked') ? Promise.resolve() : loadScript(LIBS.marked),
                 hasGlobal('DOMPurify') ? Promise.resolve() : loadScript(LIBS.dompurify),
@@ -184,12 +204,45 @@
         });
     }
 
+    const MATH_LATIN_BASES = [0x1D400, 0x1D434, 0x1D468, 0x1D49C, 0x1D4D0, 0x1D504, 0x1D538, 0x1D56C, 0x1D5A0, 0x1D5D4, 0x1D608, 0x1D63C, 0x1D670];
+    const MATH_DIGIT_BASES = [0x1D7CE, 0x1D7D8, 0x1D7E2, 0x1D7EC, 0x1D7F6];
+    const LETTERLIKE_MAP = {
+        '\u210E': 'h', '\u210F': 'h', '\u2110': 'I', '\u2112': 'L', '\u2113': 'l',
+        '\u2118': 'P', '\u211B': 'R', '\u211C': 'R', '\u211D': 'R', '\u2124': 'Z',
+        '\u2126': 'O', '\u2128': 'Z', '\u212C': 'B', '\u212D': 'C', '\u212F': 'e',
+        '\u2130': 'E', '\u2131': 'F', '\u2132': 'F', '\u2133': 'M', '\u2134': 'o'
+    };
+    const MATH_ALNUM_RE = /[\u{1D400}-\u{1D7FF}\u210E\u210F\u2110\u2112\u2113\u2118\u211B-\u211D\u2124\u2126\u2128\u212C\u212D\u212F-\u2134]/gu;
+
+    function mathCharToAscii(ch) {
+        const cp = ch.codePointAt(0);
+        if (cp >= 0x1D400 && cp <= 0x1D7FF) {
+            for (const base of MATH_LATIN_BASES) {
+                if (cp >= base && cp < base + 52) {
+                    const off = cp - base;
+                    return String.fromCharCode(off < 26 ? 65 + off : 97 + off - 26);
+                }
+            }
+            for (const base of MATH_DIGIT_BASES) {
+                if (cp >= base && cp < base + 10) return String.fromCharCode(48 + cp - base);
+            }
+            return ch;
+        }
+        return LETTERLIKE_MAP[ch] || ch;
+    }
+
+    function normalizeMathUnicode(text) {
+        if (text === null || text === undefined) return '';
+        return String(text).replace(MATH_ALNUM_RE, mathCharToAscii);
+    }
+
     function render(text, options) {
         if (!text) return '';
         const opts = options || {};
+        const normalized = normalizeMathUnicode(text);
         if (window.marked && window.DOMPurify) {
             try {
-                const protected_ = protectMath(text);
+                const protected_ = protectMath(normalized);
                 const raw = marked.parse(protected_.text);
                 const sanitized = DOMPurify.sanitize(raw, {
                     ADD_ATTR: ['target', 'rel'],
@@ -200,7 +253,7 @@
                 console.warn('[NexusMarkdown] render fail:', e);
             }
         }
-        return escapeHtml(text).replace(/\n/g, '<br>');
+        return escapeHtml(normalized).replace(/\n/g, '<br>');
     }
 
     async function renderAsync(text, options) {
