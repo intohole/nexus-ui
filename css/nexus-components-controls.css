@@ -321,17 +321,13 @@
 .nux-loading--sm .nux-loading-spinner { width: 14px; height: 14px; }
 .nux-loading--md .nux-loading-spinner { width: 20px; height: 20px; }
 .nux-loading--lg .nux-loading-spinner { width: 28px; height: 28px; border-width: 3px; }
-.nux-loading-text { font-size: var(--nx-text-sm); }
-
-@media (max-width: 768px) {
+.nux-loading-text { font-size: var(--nx-text-sm); }@media (max-width: 768px){
   .nux-btn { padding: 8px var(--nx-space-4); min-height: 40px; }
   .nux-field { margin-bottom: var(--nx-space-3); }
   .nux-segmented { width: 100%; }
   .nux-segmented-item { flex: 1; padding: 7px var(--nx-space-3); }
   .nux-segmented--scroll .nux-segmented-item { flex: none; }
-}
-
-@media (hover: none) and (pointer: coarse) {
+}@media (hover: none) and (pointer: coarse){
   .nux-btn { min-height: 44px; }
   .nux-btn--sm { min-height: 36px; }
   .nux-input, .nux-search-input { font-size: 16px; }

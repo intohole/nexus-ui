@@ -34,8 +34,6 @@ FILES: list[str] = [
     "components/nux-empty-state.js",
     "components/nux-error-state.js",
     "components/nux-ai-indicator.js",
-    "components/nux-export-button.js",
-    "components/nux-plan-progress.js",
     "core/nexus-app.js",
 ]
 

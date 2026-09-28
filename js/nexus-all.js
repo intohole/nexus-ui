@@ -257,6 +257,40 @@
             return (0.299 * r + 0.587 * g + 0.114 * b) / 255 < 0.5;
         },
 
+        compressImage(file, opts = {}) {
+            const maxDim = opts.maxDim || 1600;
+            const quality = opts.quality || 0.85;
+            const output = opts.output || 'file';
+            return new Promise((resolve) => {
+                if (!file || !/^image\//.test(file.type || '')) { resolve(file); return; }
+                const url = URL.createObjectURL(file);
+                const img = new Image();
+                img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+                img.onload = () => {
+                    URL.revokeObjectURL(url);
+                    const longest = Math.max(img.width || 1, img.height || 1);
+                    const mime = opts.mime || (file.type === 'image/png' ? 'image/png' : 'image/jpeg');
+                    if (longest <= maxDim && mime === file.type && output === 'file') { resolve(file); return; }
+                    const scale = Math.min(1, maxDim / longest);
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.max(1, Math.round((img.width || 1) * scale));
+                    canvas.height = Math.max(1, Math.round((img.height || 1) * scale));
+                    const ctx = canvas.getContext('2d');
+                    if (mime === 'image/jpeg') { ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    if (output === 'dataurl') { resolve(canvas.toDataURL(mime, quality)); return; }
+                    canvas.toBlob((blob) => {
+                        if (!blob) { resolve(file); return; }
+                        if (output === 'blob') { resolve(blob); return; }
+                        const base = (file.name || 'image').replace(/\.[^.\/]+$/, '');
+                        const ext = mime === 'image/png' ? '.png' : '.jpg';
+                        resolve(new File([blob], base + ext, { type: mime }));
+                    }, mime, quality);
+                };
+                img.src = url;
+            });
+        },
+
         matchGrade(value, rules, mode = 'eq') {
             if (value === undefined || value === null) return null;
             const v = String(value).toLowerCase();
@@ -2672,7 +2706,6 @@
     var COMPONENTS = {
         'nux-about-page': 'NuxAboutPage',
         'nux-accordion': 'NuxAccordion',
-        'nux-agreement-modal': 'NuxAgreementModal',
         'nux-ai-badge': 'NuxAiBadge',
         'nux-ai-chat': 'NuxAiChat',
         'nux-ai-indicator': 'NuxAiIndicator',
@@ -2695,21 +2728,16 @@
         'nux-chip-group': 'NuxChipGroup',
         'nux-clarify-card': 'NuxClarifyCard',
         'nux-conversation-list': 'NuxConversationList',
-        'nux-crud-page': 'NuxCrudPage',
-        'nux-data-table': 'NuxDataTable',
         'nux-date-picker': 'NuxDatePicker',
         'nux-drawer': 'NuxDrawer',
         'nux-empty-state': 'NuxEmptyState',
         'nux-error-state': 'NuxErrorState',
-        'nux-export-button': 'NuxExportButton',
         'nux-file-upload': 'NuxFileUpload',
         'nux-footer': 'NuxFooter',
         'nux-forgot-password': 'NuxForgotPassword',
         'nux-form-group': 'NuxFormGroup',
         'nux-grid': 'NuxGrid',
-        'nux-history-list': 'NuxHistoryList',
         'nux-icon': 'NuxIcon',
-        'nux-image-viewer': 'NuxImageViewer',
         'nux-infinite-scroll': 'NuxInfiniteScroll',
         'nux-input': 'NuxInput',
         'nux-layout-sidebar': 'NuxLayoutSidebar',
@@ -2723,14 +2751,11 @@
         'nux-notification-panel': 'NuxNotificationPanel',
         'nux-onboarding': 'NuxOnboarding',
         'nux-onboarding-strip': 'NuxOnboardingStrip',
-        'nux-pagination': 'NuxPagination',
-        'nux-plan-progress': 'NuxPlanProgress',
         'nux-portal-footer': 'NuxPortalFooter',
         'nux-poster': 'NuxPoster',
         'nux-progress': 'NuxProgress',
         'nux-qrcode': 'NuxQrcode',
         'nux-radar-chart': 'NuxRadarChart',
-        'nux-register-page': 'NuxRegisterPage',
         'nux-result-view': 'NuxResultView',
         'nux-search-box': 'NuxSearchBox',
         'nux-section': 'NuxSection',
@@ -2738,7 +2763,6 @@
         'nux-select': 'NuxSelect',
         'nux-selection-bar': 'NuxSelectionBar',
         'nux-settings-drawer': 'NuxSettingsDrawer',
-        'nux-share-panel': 'NuxSharePanel',
         'nux-side-panel': 'NuxSidePanel',
         'nux-skeleton': 'NuxSkeleton',
         'nux-slider': 'NuxSlider',
@@ -2749,16 +2773,13 @@
         'nux-tab-group': 'NuxTabGroup',
         'nux-textarea': 'NuxTextarea',
         'nux-undo-toast': 'NuxUndoToast',
-        'nux-user-center': 'NuxUserCenter',
-        'nux-workbench': 'NuxWorkbench'
+        'nux-user-center': 'NuxUserCenter'
     };
 
     var HELPERS = {
         'NuxAiChatHelpers': 'AI 对话工具集（features/input/roles、键盘高度、富事件路由）',
         'NuxAiChatTemplate': 'AI 对话组件模板字符串',
         'NuxAiWidgetsRegistry': 'AI 消息内组件渲染器注册表（register(type, def, icon)，供 nux-ai-widgets-rich 等扩展）',
-        'NuxFloatAbout': '悬浮关于入口（自动挂载，无需注册）',
-        'NuxFloatUserCenter': '悬浮用户中心（init/configure/destroy，非 Vue 组件）',
         'NuxLoginHelpers': '登录页工具集（验证码/SMS 状态机、协议勾选、忘记密码动态加载）',
         'NuxLoginPageTemplate': '登录页模板字符串',
         'NuxRadarDraw': '雷达图 Canvas 绘制引擎（静态方法）',
@@ -3856,134 +3877,6 @@ window.UserCenterAPI = { loaded: true };
     window.NuxAiIndicator = NuxAiIndicator;
 })();
 
-/* ===== components/nux-export-button.js ===== */
-(function() {
-    if (window.NuxExportButton) return;
-    if (!window.Vue) return;
-
-    const NuxExportButton = {
-        name: 'NuxExportButton',
-        props: {
-            label: { type: String, default: '导出' },
-            loadingLabel: { type: String, default: '导出中…' },
-            variant: { type: String, default: 'primary' },
-            successMsg: { type: String, default: '导出成功' },
-            handler: { type: Function, default: null }
-        },
-        data() {
-            return { busy: false };
-        },
-        methods: {
-            notify(message, type) {
-                if (window.NexusApp && typeof window.NexusApp.notify === 'function') {
-                    window.NexusApp.notify(message, type || 'success');
-                } else if (window.NexusUtils && typeof window.NexusUtils.showToast === 'function') {
-                    window.NexusUtils.showToast(message, type || 'success');
-                } else if (window.ElementPlus && ElementPlus.ElMessage) {
-                    try { ElementPlus.ElMessage({ message, type: type || 'success' }); } catch (e) {}
-                }
-            },
-            triggerDownload(url, filename) {
-                if (!url) return;
-                if (filename) {
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = filename;
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                } else {
-                    window.open(url, '_blank');
-                }
-            },
-            async run() {
-                if (this.busy) return;
-                this.busy = true;
-                try {
-                    if (typeof this.handler === 'function') {
-                        const result = await this.handler();
-                        const r = result || {};
-                        if (r.downloadUrl) this.triggerDownload(r.downloadUrl, r.filename);
-                        if (r.toast !== false) this.notify(r.message || this.successMsg, r.type || 'success');
-                        return result;
-                    }
-                    this.notify(this.successMsg, 'success');
-                } catch (e) {
-                    const msg = (e && (e.message || e.detail)) || '导出失败，请重试';
-                    this.notify(msg, 'error');
-                } finally {
-                    this.busy = false;
-                }
-            }
-        },
-        template: `
-            <button type="button" class="nux-export-button" :disabled="busy" @click="run">
-                <i v-if="busy" class="nux-export-spinner" aria-hidden="true"></i>
-                <span>{{ busy ? loadingLabel : label }}</span>
-            </button>
-        `
-    };
-
-    if (window.Vue && Vue.component) {
-        try { Vue.component('nux-export-button', NuxExportButton); } catch (e) {}
-    }
-
-    window.NuxExportButton = NuxExportButton;
-})();
-
-/* ===== components/nux-plan-progress.js ===== */
-(function() {
-    if (window.NuxPlanProgress) return;
-    if (!window.Vue) return;
-
-    const NuxPlanProgress = {
-        name: 'NuxPlanProgress',
-        props: {
-            stats: { type: Object, default: null },
-            title: { type: String, default: '' },
-            subtitle: { type: String, default: '' },
-            showPercent: { type: Boolean, default: true }
-        },
-        computed: {
-            s() {
-                return this.stats || window.NexusUseProgress.computeStats({});
-            },
-            percentText() {
-                return Math.round(this.s.percent) + '%';
-            }
-        },
-        template: `
-            <div class="nux-plan-progress" role="region" aria-label="进度总览">
-                <div class="nux-plan-progress-head" v-if="title || subtitle">
-                    <div class="nux-plan-progress-titles">
-                        <span v-if="title" class="nux-plan-progress-title">{{ title }}</span>
-                        <span v-if="subtitle" class="nux-plan-progress-subtitle">{{ subtitle }}</span>
-                    </div>
-                    <span v-if="s.currentDayLabel" class="nux-plan-progress-day">{{ s.currentDayLabel }}</span>
-                </div>
-                <div class="nux-plan-progress-bar" role="progressbar" :aria-valuenow="Math.round(s.percent)" aria-valuemin="0" aria-valuemax="100">
-                    <div class="nux-plan-progress-bar-val" :style="{ width: s.percent + '%' }"></div>
-                </div>
-                <div class="nux-plan-progress-foot">
-                    <span v-if="showPercent" class="nux-plan-progress-pct">{{ percentText }}</span>
-                    <ul v-if="s.statLines && s.statLines.length" class="nux-plan-progress-stats">
-                        <li v-for="line in s.statLines" :key="line.k" class="nux-plan-progress-stat">
-                            <span class="nux-plan-progress-stat-k">{{ line.k }}</span>
-                            <span class="nux-plan-progress-stat-v">{{ line.v }}</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        `
-    };
-
-    if (window.Vue && Vue.component) {
-        try { Vue.component('nux-plan-progress', NuxPlanProgress); } catch (e) {}
-    }
-
-    window.NuxPlanProgress = NuxPlanProgress;
-})();
-
 /* ===== core/nexus-app.js ===== */
 /* ===== core/nexus-app.js ===== */
 (function () {
@@ -4080,9 +3973,7 @@ window.UserCenterAPI = { loaded: true };
                 'nux-error-state': window.NuxErrorState,
                 'nux-skeleton': window.NuxSkeleton,
                 'nux-empty-state': window.NuxEmptyState,
-                'nux-ai-indicator': window.NuxAiIndicator,
-                'nux-export-button': window.NuxExportButton,
-                'nux-plan-progress': window.NuxPlanProgress
+                'nux-ai-indicator': window.NuxAiIndicator
             };
             Object.keys(map).forEach(function (name) {
                 const comp = map[name];

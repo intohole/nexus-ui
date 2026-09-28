@@ -11,6 +11,8 @@ CSS 引用: @import 的本地样式 -> 缺失则补 h=，陈旧则重算
 """
 import hashlib
 import json
+
+from build_common import load_ignore
 import os
 import re
 import sys
@@ -25,13 +27,6 @@ SKIP_DIRS = (".git", "node_modules", "vendor", "__pycache__", "dist", ".venv", "
 SKIP_URL_PREFIX = ("http://", "https://", "//", "data:", "#", "mailto:")
 
 
-def load_ignore(root: str) -> tuple:
-    try:
-        with open(os.path.join(root, "nexus-ui", "deps.json"), encoding="utf-8") as f:
-            data = json.load(f)
-        return tuple(os.path.normpath(os.path.join(root, p)).lower() for p in data.get("ignore_paths", []))
-    except Exception:
-        return ()
 
 
 def file_hash(path: str) -> str:

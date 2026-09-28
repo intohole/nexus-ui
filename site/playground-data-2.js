@@ -141,50 +141,6 @@ if (ok) showToast('已删除', 'success');`,
         code: `<nux-badge :count="8"><nux-button>消息</nux-button></nux-badge>
 <nux-badge dot type="danger"><nux-button>实时</nux-button></nux-badge>
 <nux-avatar name="林" size="md"></nux-avatar>`
-      },
-      {
-        id: 'table',
-        tag: 'nux-data-table',
-        title: '数据表格',
-        desc: 'columns 配置、行选择、行点击事件',
-        tpl: `
-<nux-data-table :columns="cols" :data="rows" :selectable="true"
-                :selected-keys="sel" @select="k => sel = k"
-                @row-click="r => showToast('查看 ' + r.name, 'info')"></nux-data-table>`,
-        code: `<nux-data-table :columns="cols" :data="rows"
-  :selectable="true" :selected-keys="sel"
-  @select="k => sel = k" @row-click="onRowClick"></nux-data-table>`,
-        data() {
-          return {
-            sel: [],
-            cols: [
-              { key: 'name', label: '应用' },
-              { key: 'owner', label: '负责人' },
-              { key: 'status', label: '状态' }
-            ],
-            rows: [
-              { id: 1, name: '思悟笔记', owner: '林一', status: '运行中' },
-              { id: 2, name: '码趣星', owner: '陈二', status: '运行中' },
-              { id: 3, name: '知路', owner: '张三', status: '部署中' }
-            ]
-          };
-        }
-      },
-      {
-        id: 'pagination',
-        tag: 'nux-pagination',
-        title: '分页',
-        desc: '上一页 / 下一页 / 页码信息',
-        tpl: `
-<div class="demo-col">
-  <nux-pagination :page="page" :total-pages="12" :has-prev="page > 1" :has-next="page < 12"
-                  @prev="page--" @next="page++" @goto="p => page = p"></nux-pagination>
-  <p class="demo-note">第 {{ page }} 页，共 12 页</p>
-</div>`,
-        code: `<nux-pagination :page="page" :total-pages="12"
-  :has-prev="page > 1" :has-next="page < 12"
-  @prev="page--" @next="page++"></nux-pagination>`,
-        data() { return { page: 3 }; }
       }
     ]
   });
@@ -409,6 +365,47 @@ async handler(text, cb) {
           onSuccess(payload) { window.showToast('识别完成：' + String(payload).slice(0, 20) + '…', 'success'); },
           onError(err) { if (err && err.name !== 'AbortError') window.showToast(err.message || '识别失败', 'error'); },
           onCancel() { window.showToast('已取消识别', 'info'); }
+        }
+      }
+    ]
+  });
+
+  window.PG_CATS.push({
+    id: 'utils',
+    name: '工具函数',
+    demos: [
+      {
+        id: 'compress-image',
+        tag: 'nux-file-upload',
+        title: '图片压缩 compressImage',
+        desc: 'NexusUtils.compressImage：上传前本地压缩，支持 file/blob/dataurl 三种输出',
+        tpl: `
+<div>
+  <nux-file-upload accept="image/*" :multiple="false" :auto-upload="false" hint="选择图片后立即压缩" @change="onPick"></nux-file-upload>
+  <p v-if="result" style="margin: 12px 0 0; color: var(--nx-text-secondary); font-size: 13px">
+    原始 {{ result.before }} → 压缩后 {{ result.after }}（{{ result.ratio }}）
+  </p>
+</div>`,
+        code: `const out = await NexusUtils.compressImage(file, {
+  maxDim: 1600,
+  quality: 0.85,
+  output: 'file'
+});
+// output: 'file' | 'blob' | 'dataurl'`,
+        data() { return { result: null }; },
+        methods: {
+          async onPick(files) {
+            const file = files && files[0];
+            if (!file) return;
+            const out = await window.NexusUtils.compressImage(file, { maxDim: 1280, quality: 0.82 });
+            const fmt = (b) => b > 1048576 ? (b / 1048576).toFixed(2) + ' MB' : Math.round(b / 1024) + ' KB';
+            this.result = {
+              before: fmt(file.size),
+              after: fmt(out.size),
+              ratio: Math.max(1, Math.round(file.size / Math.max(out.size, 1))) + ' 倍'
+            };
+            window.showToast('压缩完成', 'success');
+          }
         }
       }
     ]

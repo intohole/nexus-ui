@@ -37,6 +37,14 @@
         return this._api;
     };
 
+    NotificationManager.prototype.getNotifications = function () {
+        return this._notifications;
+    };
+
+    NotificationManager.prototype.getUnread = function () {
+        return this._unreadCount;
+    };
+
     NotificationManager.prototype.getUnreadCount = function () {
         var self = this;
         return self._getApi().get(self._baseUrl + '/unread-count').then(function (resp) {

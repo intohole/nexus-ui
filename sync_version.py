@@ -20,13 +20,7 @@ def _load_spec(root: str) -> str:
     return str(data["deps"]["nexus-ui"]["version"])
 
 
-def _load_ignore(root: str) -> tuple:
-    try:
-        with open(os.path.join(root, "nexus-ui", "deps.json"), encoding="utf-8") as f:
-            data = json.load(f)
-        return tuple(os.path.normpath(os.path.join(root, p)).lower() for p in data.get("ignore_paths", []))
-    except Exception:
-        return ()
+from build_common import load_ignore as _load_ignore
 
 
 def _fix_content(text: str, target: str) -> str:

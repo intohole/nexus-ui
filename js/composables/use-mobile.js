@@ -6,11 +6,11 @@
     const { ref, onMounted, onUnmounted } = Vue;
 
     const useMobile = (breakpoint = 768) => {
-        const isMobile = ref(window.innerWidth < breakpoint);
+        const isMobile = ref(window.innerWidth <= breakpoint);
         const mobileMenuOpen = ref(false);
 
         const checkMobile = () => {
-            isMobile.value = window.innerWidth < breakpoint;
+            isMobile.value = window.innerWidth <= breakpoint;
             if (!isMobile.value) mobileMenuOpen.value = false;
         };
 

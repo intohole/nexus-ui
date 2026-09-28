@@ -296,9 +296,7 @@
 
 /* ========== Utility Classes ========== */
 .nx-hide-mobile { }
-.nx-show-mobile { display: none !important; }
-
-@media (max-width: 768px) {
+.nx-show-mobile { display: none !important; }@media (max-width: 768px){
     .nx-hide-mobile { display: none !important; }
     .nx-show-mobile { display: flex !important; }
 }
@@ -379,9 +377,7 @@
 .nux-layout-bottom-nav-item.active {
     color: var(--app-accent, var(--nx-primary));
     font-weight: 500;
-}
-
-@media (max-width: 768px) {
+}@media (max-width: 768px){
     .nx-bottom-nav-mode .nux-layout-aside {
         display: none;
     }
@@ -478,9 +474,7 @@
     background: var(--nx-danger, #ef4444);
     border-radius: 999px;
     pointer-events: none;
-}
-
-@media (max-width: 768px) {
+}@media (max-width: 768px){
     .nux-bottom-nav { display: flex; }
 }
 
@@ -492,78 +486,8 @@
     padding: var(--nux-wb-pad, var(--nx-space-4));
     min-width: 0;
     box-sizing: border-box;
-}
-
-.nux-wb-toolbar {
-    display: flex;
-    align-items: center;
-    gap: var(--nx-space-3);
-    flex-wrap: wrap;
-    min-width: 0;
-}
-
-.nux-wb-body {
-    flex: 1;
-    min-width: 0;
-    min-height: 0;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--nx-space-4);
-}
-
-.nux-wb--left-main .nux-wb-body {
-    grid-template-columns: var(--nux-wb-left, 260px) minmax(0, 1fr);
-}
-
-.nux-wb--main-right .nux-wb-body {
-    grid-template-columns: minmax(0, 1fr) var(--nux-wb-right, 300px);
-}
-
-.nux-wb--left-main-right .nux-wb-body {
-    grid-template-columns: var(--nux-wb-left, 260px) minmax(0, 1fr) var(--nux-wb-right, 300px);
-}
-
-.nux-wb-left,
-.nux-wb-main,
-.nux-wb-right {
-    min-width: 0;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--nx-space-3);
-}
-
-.nux-wb-footer {
-    display: flex;
-    align-items: center;
-    gap: var(--nx-space-3);
-    flex-wrap: wrap;
-}
-
-@media (max-width: 1180px) {
-    .nux-wb--left-main .nux-wb-body,
-    .nux-wb--main-right .nux-wb-body,
-    .nux-wb--left-main-right .nux-wb-body {
-        grid-template-columns: minmax(0, 1fr);
-    }
-    .nux-wb-main { order: 1; }
-    .nux-wb-left { order: 2; }
-    .nux-wb-right { order: 3; }
-}
-
-@media (max-width: 820px) {
+}@media (max-width: 1180px){}@media (max-width: 820px){
     .nux-wb {
         gap: var(--nx-space-3);
         padding: var(--nux-wb-pad, var(--nx-space-3));
-    }
-    .nux-wb-body { gap: var(--nx-space-3); }
-    .nux-wb-toolbar {
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-        padding-bottom: 2px;
-    }
-    .nux-wb-toolbar::-webkit-scrollbar { display: none; }
-    .nux-wb-toolbar > * { flex: 0 0 auto; }
-}
+    }}

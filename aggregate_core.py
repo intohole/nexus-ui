@@ -7,6 +7,8 @@
 仅折叠 nexus-all.js 已包含的核心库；nux-* 组件与 composables 保持独立引用。
 """
 import json
+
+from build_common import load_ignore
 import os
 import re
 import sys
@@ -23,13 +25,6 @@ TAG = re.compile(
 )
 
 
-def load_ignore(root: str) -> tuple:
-    try:
-        with open(os.path.join(root, "nexus-ui", "deps.json"), encoding="utf-8") as f:
-            data = json.load(f)
-        return tuple(os.path.normpath(os.path.join(root, p)).lower() for p in data.get("ignore_paths", []))
-    except Exception:
-        return ()
 
 
 def process(path: str) -> int:

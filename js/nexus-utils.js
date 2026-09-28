@@ -256,6 +256,40 @@
             return (0.299 * r + 0.587 * g + 0.114 * b) / 255 < 0.5;
         },
 
+        compressImage(file, opts = {}) {
+            const maxDim = opts.maxDim || 1600;
+            const quality = opts.quality || 0.85;
+            const output = opts.output || 'file';
+            return new Promise((resolve) => {
+                if (!file || !/^image\//.test(file.type || '')) { resolve(file); return; }
+                const url = URL.createObjectURL(file);
+                const img = new Image();
+                img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+                img.onload = () => {
+                    URL.revokeObjectURL(url);
+                    const longest = Math.max(img.width || 1, img.height || 1);
+                    const mime = opts.mime || (file.type === 'image/png' ? 'image/png' : 'image/jpeg');
+                    if (longest <= maxDim && mime === file.type && output === 'file') { resolve(file); return; }
+                    const scale = Math.min(1, maxDim / longest);
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.max(1, Math.round((img.width || 1) * scale));
+                    canvas.height = Math.max(1, Math.round((img.height || 1) * scale));
+                    const ctx = canvas.getContext('2d');
+                    if (mime === 'image/jpeg') { ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    if (output === 'dataurl') { resolve(canvas.toDataURL(mime, quality)); return; }
+                    canvas.toBlob((blob) => {
+                        if (!blob) { resolve(file); return; }
+                        if (output === 'blob') { resolve(blob); return; }
+                        const base = (file.name || 'image').replace(/\.[^.\/]+$/, '');
+                        const ext = mime === 'image/png' ? '.png' : '.jpg';
+                        resolve(new File([blob], base + ext, { type: mime }));
+                    }, mime, quality);
+                };
+                img.src = url;
+            });
+        },
+
         matchGrade(value, rules, mode = 'eq') {
             if (value === undefined || value === null) return null;
             const v = String(value).toLowerCase();

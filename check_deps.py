@@ -105,7 +105,9 @@ def main() -> int:
     data = load_deps(root)
     deps = data["deps"]
     pkg2dep, nx_version = build_index(deps)
-    ignore = tuple(os.path.normpath(os.path.join(root, p)).lower() for p in data.get("ignore_paths", []))
+    from build_common import load_ignore
+
+    ignore = load_ignore(root)
     skip_dirs = (".git", "node_modules", "vendor", "__pycache__", "dist", ".venv", "venv")
 
     total, bad = 0, 0
