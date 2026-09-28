@@ -46,7 +46,7 @@ a:hover { color: var(--app-accent-hover); }
 .nx-nav {
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: var(--nx-z-header);
   display: flex;
   align-items: center;
   gap: var(--nx-space-6);

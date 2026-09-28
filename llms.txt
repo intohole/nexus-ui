@@ -28,7 +28,8 @@ CDN地址（全工作区统一，版本见 `nexus-ui/deps.json`）：`https://so
 
 <!-- 按需引入 composables -->
 <script src="https://songguokr.com/nexus-ui/v{version}/js/composables/use-mobile.js"></script>
-<script src="https://songguokr.com/nexus-ui/v{version}/js/composables/use-crud.js"></script>
+<script src="https://songguokr.com/nexus-ui/v{version}/js/composables/use-theme.js"></script>
+<script src="https://songguokr.com/nexus-ui/v{version}/js/composables/use-recent.js"></script>
 ```
 
 ### 组件注册（统一入口，禁止逐个 app.component）
@@ -40,7 +41,7 @@ app.mount('#app');
 ```
 
 `NexusComponents.register(app)` 返回已注册的标签数组；未加载的组件会以 warn 提示并跳过，不会报错。
-`NexusComponents.list()` 返回全部可注册标签；`NexusComponents.components` 是 `标签 → window 全局名` 映射；`NexusComponents.helpers` 列出非组件导出（NuxAiChatHelpers / NuxAiChatTemplate / NuxLoginHelpers / NuxLoginPageTemplate / NuxAiWidgetsRegistry / NuxRadarDraw / PosterRender）。
+`NexusComponents.list()` 返回全部可注册标签；`NexusComponents.components` 是 `标签 → window 全局名` 映射；`NexusComponents.helpers` 列出非组件导出（NuxAiChatHelpers / NuxAiChatTemplate / NuxAiWidgetsRegistry / nux-ai-widgets-rich.js 扩展 / NuxLoginHelpers / NuxLoginPageTemplate / NuxRadarDraw / PosterRender）。
 
 ## 主题配置
 
@@ -341,18 +342,15 @@ Props: preset(String='')/rows(Number=3)/cards(Number=4)（沿用既有 loading/a
 
 ### Composables
 
+库内实际提供的 composable 只有以下三个（其余历史文档提到的 useLoading/usePagination/useSearch/useSort/useSSE/useAuth/useCollection/useCrud/useFormSubmit 均不存在，勿引用）：
+
 ```javascript
+// js/composables/use-mobile.js
 const { isMobile, mobileMenuOpen, toggleMenu, closeMenu } = useMobile();
-const { loading, error, withLoading } = useLoading();
-const { pagination, totalPages, hasNext, hasPrev, nextPage, prevPage, setTotal } = usePagination();
-const { keyword, isSearchMode, doSearch, clearSearch } = useSearch();
-const { sortField, sortOrder, toggleSort, sortList } = useSort();
+// js/composables/use-theme.js
 const { isDark, toggleTheme } = useTheme();
-const { status, data, connect, disconnect } = useSSE();
-const { isAuthenticated, isAdmin, hasRole, requireAuth } = useAuth(store);
-const { items, total, setItems, addItem, updateItem, deleteItem } = useCollection();
-const { items, total, loading, error, pagination, totalPages, fetchList, create, update, remove, goToPage, doSearch, toggleSort, setFilter, refresh } = useCrud(config);
-const { submitting, error, success, submitDisabled, submit, reset, wrap } = useFormSubmit(options);
+// js/composables/use-recent.js（供 nux-app-switcher 记录最近使用/收藏）
+NexusUseRecent.recordVisit(name); NexusUseRecent.recents(8);
 ```
 
 ## 通用CRUD工厂 createNexusCrud
@@ -397,69 +395,6 @@ api.createCrud('/notes');
 ```
 
 `api.crud(resource, options)` 返回增强版CRUD客户端（依赖 createNexusCrud，若未引入则降级为 createCrud）；`api.uploadFile(url, file, options)` 直接接受 File/Blob 对象，自动包装为 FormData；`api.download(url, params)` 返回 Blob，由调用方决定如何保存。
-
-## useCrud 组合式函数
-
-封装完整CRUD流程的状态管理：list/detail/创建/更新/删除/分页/搜索/排序/筛选。需先引入 `nexus-crud.js` 和 `use-crud.js`。
-
-```javascript
-const { items, total, loading, error, pagination, totalPages, hasNext, hasPrev,
-        search, sortField, sortOrder, filters, isEmpty,
-        fetchList, fetchDetail, create, update, remove, batchRemove,
-        goToPage, nextPage, prevPage, setPageSize,
-        doSearch, clearSearch, toggleSort, setSort,
-        setFilter, setFilters, clearFilters,
-        refresh, reset } = useCrud({
-    api: nexusApi,
-    basePath: '/notes',
-    idField: 'id',
-    defaultPageSize: 20,
-    defaultSortField: 'created_at',
-    defaultSortOrder: 'desc',
-    autoLoad: true,
-    refreshAfterMutation: true,
-    onError: (e, type) => console.error(type, e),
-    onCreated: (item) => showToast('创建成功', 'success'),
-    onUpdated: (item, id) => showToast('更新成功', 'success'),
-    onRemoved: (id) => showToast('已删除', 'success')
-});
-
-await fetchList();
-await create({ title: 'Hello' });
-await update(123, { title: 'Updated' });
-await remove(123);
-await goToPage(2);
-await doSearch('keyword');
-await toggleSort('created_at');
-await setFilter('status', 'active');
-```
-
-## useFormSubmit 组合式函数
-
-封装表单提交流程：自动管理 submitting/error/success 状态，自动调用 Toast。需先引入 `use-form-submit.js`。
-
-```javascript
-const { submitting, error, errorMessage, success, successMessage, lastResult,
-        submitDisabled, hasError, hasSuccess,
-        submit, run, wrap, reset, clearError, clearSuccess } = useFormSubmit({
-    successMessage: '保存成功',
-    errorMessage: '',
-    showToastOnSuccess: true,
-    showToastOnError: true
-});
-
-async function handleSave() {
-    await submit(() => api.post('/notes', form), {
-        successMessage: '创建成功',
-        onSuccess: (result) => { router.push(`/notes/${result.id}`); },
-        onError: (e) => { console.error(e); }
-    });
-}
-
-const wrappedSubmit = wrap(() => api.post('/notes', form), { successMessage: '创建成功' });
-```
-
-错误信息自动通过 `mapHttpError`（来自 `nexus-api-error.js`）翻译为中文。Toast 优先调用 `window.showToast`，缺失时降级到 console。
 
 ## NexusValidators 通用表单验证器
 

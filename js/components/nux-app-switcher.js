@@ -4,7 +4,7 @@
 
     var CSS = [
         '.nux-app-switcher,.nxs-root{all:initial;font-family:var(--nx-font-sans,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif);color:var(--nx-text-body,#334155)}',
-        '.nxs-trigger{position:fixed;left:var(--nxs-left,18px);bottom:18px;z-index:2147483001;display:flex;align-items:center;gap:9px;height:46px;padding:0 18px;border-radius:var(--nx-radius-full,999px);background:var(--nx-bg-surface,#fff);backdrop-filter:blur(14px);border:1px solid var(--nx-border-accent,rgba(99,102,241,.3));box-shadow:var(--nx-shadow-md,0 4px 12px rgba(0,0,0,.1));color:var(--nx-text-heading,#0f172a);cursor:pointer;transition:transform .25s cubic-bezier(.4,0,.2,1),border-color .25s,box-shadow .25s;-webkit-tap-highlight-color:transparent}',
+        '.nxs-trigger{position:fixed;left:var(--nxs-left,18px);bottom:18px;z-index:var(--nx-z-max-plus,2147483001);display:flex;align-items:center;gap:9px;height:46px;padding:0 18px;border-radius:var(--nx-radius-full,999px);background:var(--nx-bg-surface,#fff);backdrop-filter:blur(14px);border:1px solid var(--nx-border-accent,rgba(99,102,241,.3));box-shadow:var(--nx-shadow-md,0 4px 12px rgba(0,0,0,.1));color:var(--nx-text-heading,#0f172a);cursor:pointer;transition:transform .25s cubic-bezier(.4,0,.2,1),border-color .25s,box-shadow .25s;-webkit-tap-highlight-color:transparent}',
         '.nxs-trigger:hover{transform:translateY(-2px);border-color:var(--app-accent,#6366f1);box-shadow:var(--nx-shadow-lg,0 8px 24px rgba(0,0,0,.12)),var(--nx-shadow-glow,0 0 20px rgba(99,102,241,.15))}',
         '.nxs-trigger:active{transform:translateY(0)}',
         '.nxs-trigger-glyph{width:20px;height:20px;flex:none;color:var(--nx-text-muted,#94a3b8)}',
@@ -12,7 +12,7 @@
         '.nxs-trigger-glyph .g-acc{fill:var(--app-accent,#6366f1)}',
         '.nxs-trigger-label{font-size:14px;font-weight:600;letter-spacing:.5px;white-space:nowrap}',
         '.nxs-trigger-dot{width:6px;height:6px;border-radius:50%;background:var(--app-accent,#6366f1);box-shadow:0 0 8px var(--app-accent,#6366f1)}',
-        '.nxs-overlay{position:fixed;inset:0;z-index:2147483000;background:var(--nx-overlay-bg,rgba(0,0,0,.5));backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;animation:nxsFade .2s ease}',
+        '.nxs-overlay{position:fixed;inset:0;z-index:var(--nx-z-max,2147483000);background:var(--nx-overlay-bg,rgba(0,0,0,.5));backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;animation:nxsFade .2s ease}',
         '.nxs-panel{position:relative;width:min(920px,calc(100vw - 28px));max-height:min(84dvh,84vh);display:flex;flex-direction:column;border-radius:var(--nx-radius-xl,22px);overflow:hidden;background:var(--nx-glass-bg,rgba(255,255,255,.86));backdrop-filter:blur(var(--nx-glass-blur,16px));border:1px solid var(--nx-glass-border,rgba(0,0,0,.06));box-shadow:var(--nx-shadow-lg,0 8px 24px rgba(0,0,0,.12));animation:nxsPop .22s cubic-bezier(.34,1.3,.5,1)}',
         '.nxs-panel:before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(620px 220px at 18% -8%,rgba(var(--app-accent-rgb,99,102,241),.12),transparent 62%)}',
         '.nxs-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 12px}',
@@ -55,7 +55,7 @@
         '@keyframes nxsFade{from{opacity:0}to{opacity:1}}',
         '@keyframes nxsPop{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}',
         '@media(max-width:768px){body:has(.nux-layout-bottom-nav) .nxs-trigger,body:has(.nx-mobile-tabbar) .nxs-trigger{bottom:calc(74px + env(safe-area-inset-bottom))}}',
-        '@media(max-width:640px){',
+        '@media(max-width:768px){',
         '.nxs-overlay{align-items:flex-end}',
         '.nxs-panel{width:100%;max-height:92dvh;border-radius:var(--nx-radius-xl,22px) var(--nx-radius-xl,22px) 0 0;padding-bottom:env(safe-area-inset-bottom);animation:nxsUp .25s cubic-bezier(.34,1.2,.5,1)}',
         '.nxs-trigger{left:var(--nxs-left,14px);bottom:calc(14px + env(safe-area-inset-bottom))}',

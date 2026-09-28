@@ -176,7 +176,7 @@
   position: fixed;
   right: 24px;
   bottom: calc(24px + var(--nx-safe-bottom));
-  z-index: 90;
+  z-index: var(--nx-z-nav);
   width: 44px;
   height: 44px;
   display: flex;
@@ -504,7 +504,7 @@
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  z-index: 999;
+  z-index: var(--nx-z-drawer);
   width: 320px;
   max-width: calc(100vw - 24px);
   background: var(--nx-bg-surface, #fff);
@@ -540,20 +540,21 @@
 .nux-notify-item-unread .nux-notify-item-title { font-weight: 600; }
 .nux-notify-item-title { font-size: 13px; color: var(--nx-text-strong); line-height: 1.5; }
 .nux-notify-item-time { margin-top: 3px; font-size: 11px; color: var(--nx-text-muted); }
-.nux-notify-empty { padding: 24px 14px; text-align: center; font-size: 12px; color: var(--nx-text-muted); }@media (max-width: 640px){
+.nux-notify-empty { padding: 24px 14px; text-align: center; font-size: 12px; color: var(--nx-text-muted); }@media (max-width: 768px){
   .nux-notify-panel { position: fixed; top: 56px; right: 12px; left: 12px; width: auto; }
 }
 
 .nux-onboarding-mask {
   position: fixed;
   inset: 0;
-  z-index: 1200;
+  z-index: var(--nx-z-topmost);
   display: flex;
   align-items: center;
   justify-content: center;
   background: rgba(15, 23, 42, 0.45);
   backdrop-filter: blur(2px);
-  padding: 16px;
+  padding: 16px calc(16px + var(--nx-safe-right, 0px)) calc(16px + var(--nx-safe-bottom, 0px)) calc(16px + var(--nx-safe-left, 0px));
+  padding-top: calc(16px + var(--nx-safe-top, 0px));
 }
 .nux-onboarding-card {
   position: relative;

@@ -202,6 +202,11 @@
 
 .nx-conv-list-item:hover .nx-conv-list-item-actions { opacity: 1; }
 
+/* 触屏无 hover：操作按钮常显（窄屏已有同名规则，这里覆盖桌面宽度的触屏设备） */
+@media (hover: none) and (pointer: coarse) {
+    .nx-conv-list-item-actions { opacity: 1; }
+}
+
 .nx-conv-list-item-btn {
     background: transparent;
     border: none;

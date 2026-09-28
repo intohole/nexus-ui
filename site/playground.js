@@ -44,6 +44,17 @@
     ['nux-badge', 'NuxBadge'],
     ['nux-avatar', 'NuxAvatar'],
     ['nux-calendar', 'NuxCalendar'],
+    ['nux-layout-sidebar', 'NuxLayoutSidebar'],
+    ['nux-bottom-nav', 'NuxBottomNav'],
+    ['nux-login-page', 'NuxLoginPage'],
+    ['nux-menu-user', 'NuxMenuUser'],
+    ['nux-menu-about', 'NuxMenuAbout'],
+    ['nux-footer', 'NuxFooter'],
+    ['nux-portal-footer', 'NuxPortalFooter'],
+    ['nux-notification-bell', 'NuxNotificationBell'],
+    ['nux-app-card', 'NuxAppCard'],
+    ['nux-pagination', 'NuxPagination'],
+    ['nux-ai-widgets', 'NuxAiWidgets'],
     ['nux-ai-chat', 'NuxAiChat']
   ].forEach(([tag, name]) => {
     if (window[name]) app.component(tag, window[name]);

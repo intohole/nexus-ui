@@ -437,7 +437,13 @@
         },
 
         showToast(message, type = 'info', options = {}) {
-            if (typeof window.showToast === 'function') window.showToast(message, type, options.duration || 3000);
+            if (typeof window.showToast !== 'function') return;
+            const opts = options || {};
+            if (opts.center) {
+                window.showToast(message, type, { duration: opts.duration || 3000, center: true });
+            } else {
+                window.showToast(message, type, opts.duration || 3000);
+            }
         },
 
         confirm(message, title = '操作确认', options = {}) {
@@ -638,7 +644,12 @@
     function showToast(message, type, durationValue) {
         if (!message) return;
         const kind = TOAST_ICONS[type] ? type : 'info';
-        const host = ensureHost('nux-toast-host', 'nux-toast-container');
+        // 第三个参数兼容两种形态：数字=时长（旧行为），对象={duration, center}
+        const opts = (durationValue && typeof durationValue === 'object') ? durationValue : {};
+        const centered = opts.center === true;
+        const host = centered
+            ? ensureHost('nux-toast-host-center', 'nux-toast-container nux-toast-container--center')
+            : ensureHost('nux-toast-host', 'nux-toast-container');
         const item = document.createElement('div');
         item.className = 'nux-toast-item nux-toast-' + kind;
         item.setAttribute('role', 'status');
@@ -1639,33 +1650,47 @@
 
     const VERSION = '1.3.0';
 
-    const FALLBACK_LIBS = {
-        marked: 'https://songguokr.com/nexus-ui/v2.10.77/vendor/marked.umd.js',
-        dompurify: 'https://songguokr.com/nexus-ui/v2.10.77/vendor/purify.min.js',
-        highlight: 'https://songguokr.com/nexus-ui/v2.10.77/vendor/highlight.min.js',
-        highlightCss: 'https://songguokr.com/nexus-ui/v2.10.77/vendor/styles/atom-one-dark.min.css',
-        katex: 'https://songguokr.com/nexus-ui/v2.10.77/vendor/katex/katex.min.js',
-        katexCss: 'https://songguokr.com/nexus-ui/v2.10.77/vendor/katex/katex.min.css'
+    // vendor 相对路径（无版本字面量）。绝对地址在运行时按「加载 nexus-all.js / nexus-markdown.js 的
+    // script 标签 src」推导同版本 vendor 目录，避免服务器清旧版本目录后固定版本回退 404。
+    const VENDOR_PATHS = {
+        marked: 'marked.umd.js',
+        dompurify: 'purify.min.js',
+        highlight: 'highlight.min.js',
+        highlightCss: 'styles/atom-one-dark.min.css',
+        katex: 'katex/katex.min.js',
+        katexCss: 'katex/katex.min.css'
     };
 
-    const LIB_BASE = (function () {
+    function resolveLibBase() {
+        // 1) document.currentScript 在同步执行时可用（绝对 URL，相对路径引用也能正确解析）
+        try {
+            const cur = (document.currentScript && document.currentScript.src) || '';
+            const m = cur.match(/^(.*)\/js\/nexus-(?:all|markdown)\.js(?:[?#].*)?$/);
+            if (m) return m[1] + '/vendor/';
+        } catch (e) { /* ignore */ }
+        // 2) 兜底扫描页面 script 标签
         const scripts = document.scripts || [];
         for (let i = 0; i < scripts.length; i++) {
-            const src = scripts[i].getAttribute('src') || '';
+            const src = scripts[i].src || scripts[i].getAttribute('src') || '';
             const m = src.match(/^(.*)\/js\/nexus-(?:all|markdown)\.js(?:[?#].*)?$/);
             if (m) return m[1] + '/vendor/';
         }
         return '';
-    })();
+    }
 
-    const LIBS = LIB_BASE ? {
-        marked: LIB_BASE + 'marked.umd.js',
-        dompurify: LIB_BASE + 'purify.min.js',
-        highlight: LIB_BASE + 'highlight.min.js',
-        highlightCss: LIB_BASE + 'styles/atom-one-dark.min.css',
-        katex: LIB_BASE + 'katex/katex.min.js',
-        katexCss: LIB_BASE + 'katex/katex.min.css'
-    } : FALLBACK_LIBS;
+    let _libBase = null;
+    function libBase() {
+        if (_libBase === null) _libBase = resolveLibBase();
+        return _libBase;
+    }
+
+    function libs() {
+        const base = libBase();
+        if (!base) return null;
+        const out = {};
+        Object.keys(VENDOR_PATHS).forEach(function (k) { out[k] = base + VENDOR_PATHS[k]; });
+        return out;
+    }
 
     const DEFAULT_ALLOWED_TAGS = [
         'p', 'br', 'strong', 'em', 'code', 'pre', 'span',
@@ -1721,6 +1746,12 @@
         if (libsLoaded) return true;
         if (libsLoading) return libsLoading;
         libsLoading = (async () => {
+            const LIBS = libs();
+            if (!LIBS) {
+                console.warn('[NexusMarkdown] 无法从 nexus-all.js / nexus-markdown.js 的加载路径推导 vendor 目录，跳过 Markdown 库注入');
+                libsLoaded = true;
+                return false;
+            }
             await Promise.all([
                 hasGlobal('marked') ? Promise.resolve() : loadScript(LIBS.marked),
                 hasGlobal('DOMPurify') ? Promise.resolve() : loadScript(LIBS.dompurify),
@@ -2961,6 +2992,21 @@ function persistedIn() {
 const SSO_COOKIE = 'uc_sso_token';
 const SSO_ROOT = 'songguokr.com';
 
+// SDK 自有错误（error.detail）未覆盖状态码时的文案兜底：优先走 nexus-api-error.js 的
+// mapHttpError 统一映射，缺失或未命中时保持原样（`HTTP xxx`），不改变既有行为。
+function friendlyHttpText(status) {
+    const fallback = `HTTP ${status}`;
+    try {
+        if (typeof window.mapHttpError === 'function') {
+            const Ctor = typeof window.NexusApiError === 'function' ? window.NexusApiError : null;
+            const err = Ctor ? new Ctor(fallback, status) : { name: 'NexusApiError', status: status, message: fallback };
+            const text = window.mapHttpError(err);
+            if (text && text !== fallback) return text;
+        }
+    } catch (e) { /* ignore */ }
+    return fallback;
+}
+
 function ssoCookieDomain() {
     try {
         const host = window.location.hostname || '';
@@ -3172,7 +3218,7 @@ class UserCenterSDK {
                 const detailText = (window.NexusUtils && NexusUtils.errorDetailText)
                     ? (NexusUtils.errorDetailText(error.detail) || NexusUtils.errorDetailText(error.message))
                     : '';
-                throw new Error(detailText || `HTTP ${response.status}`);
+                throw new Error(detailText || friendlyHttpText(response.status));
             }
             return response.json();
         } catch (e) {

@@ -18,7 +18,7 @@
     padding: 0 var(--nx-space-4);
     background: var(--nx-bg-surface);
     border-bottom: 1px solid var(--nx-border);
-    z-index: 100;
+    z-index: var(--nx-z-header);
     backdrop-filter: blur(12px);
 }
 
@@ -58,7 +58,7 @@
     flex-direction: column;
     background: var(--nx-bg-surface);
     border-right: 1px solid var(--nx-border);
-    z-index: 90;
+    z-index: var(--nx-z-nav);
     transition: transform 0.3s ease;
 }
 
@@ -115,7 +115,7 @@
     max-width: 85vw;
     background: var(--nx-bg-surface);
     border-right: 1px solid var(--nx-border);
-    z-index: 90;
+    z-index: var(--nx-z-nav);
     padding: var(--nx-space-4);
     overflow-y: auto;
     transform: translateX(-100%);
@@ -124,7 +124,7 @@
 
 .nux-layout-topnav-drawer.open {
     transform: translateX(0);
-    z-index: 999;
+    z-index: var(--nx-z-drawer);
 }
 
 /* ========== Nav Items ========== */
@@ -273,7 +273,7 @@
 
     .nux-layout-sidebar .nux-layout-aside.mobile-open {
         transform: translateX(0);
-        z-index: 999;
+        z-index: var(--nx-z-drawer);
     }
 
     .nux-layout-sidebar .nux-layout-main {
@@ -347,7 +347,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    z-index: 100;
+    z-index: var(--nx-z-header);
     display: flex;
     background: var(--nx-bg-surface);
     border-top: 1px solid var(--nx-border);
@@ -385,7 +385,7 @@
     .nx-bottom-nav-mode .nux-layout-aside.mobile-open {
         display: flex;
         transform: translateX(0);
-        z-index: 999;
+        z-index: var(--nx-z-drawer);
     }
 
     .nx-bottom-nav-mode .nux-layout-main {
@@ -400,7 +400,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    z-index: 100;
+    z-index: var(--nx-z-header);
     align-items: stretch;
     justify-content: space-around;
     background: var(--nx-glass-bg, var(--nx-bg-surface));

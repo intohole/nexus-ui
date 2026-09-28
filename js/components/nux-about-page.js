@@ -29,7 +29,7 @@
 .nux-about-footer p{font-size:13px;color:var(--nx-text-muted);margin:4px 0}
 .nux-about-contact{display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:8px 18px;border-radius:20px;background:var(--app-accent);color:#fff;font-size:14px;text-decoration:none;transition:all .2s}
 .nux-about-contact:hover{background:var(--app-accent-hover)}
-@media(max-width:640px){
+@media(max-width:768px){
 .nux-about-hero{padding:40px 20px 28px}
 .nux-about-hero h1{font-size:26px}
 .nux-about-slogan{font-size:16px}

@@ -143,6 +143,10 @@
 }
 .nxsp-item:hover .nxsp-del { opacity: 1; }
 .nxsp-del:hover { background: color-mix(in srgb, var(--nxsp-risk) 12%, transparent); color: var(--nxsp-risk); }
+/* 触屏无 hover：删除按钮常显，避免不可达（照 feedback.css 通知删除按钮的已验证模式） */
+@media (hover: none) and (pointer: coarse) {
+    .nxsp-del { opacity: 1; }
+}
 
 .nxsp-empty {
     display: flex; flex-direction: column; align-items: center; gap: 6px;
@@ -212,7 +216,7 @@
 .nxsp-foot-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
 
 .nxsp-mask {
-    position: fixed; inset: 0; z-index: 110;
+    position: fixed; inset: 0; z-index: var(--nx-z-side-mask);
     background: rgba(15, 23, 42, .42);
     opacity: 0; pointer-events: none; transition: opacity .26s ease;
 }
@@ -221,7 +225,7 @@
 .nxsp.is-compact { width: 0; }
 .nxsp.is-compact[data-layout="sticky"], .nxsp.is-compact[data-layout="fill"] { position: static; height: auto; }
 .nxsp.is-compact .nxsp-aside {
-    position: fixed; top: 0; left: 0; z-index: 120;
+    position: fixed; top: 0; left: 0; z-index: var(--nx-z-side-panel);
     width: min(var(--nxsp-dw, 288px), 86vw);
     height: var(--nxsp-h, 100dvh); min-height: 0;
     border-right: 1px solid var(--nxsp-border);

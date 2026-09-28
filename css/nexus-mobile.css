@@ -66,7 +66,7 @@
   position: fixed;
   top: calc(12px + var(--nx-safe-top));
   left: 12px;
-  z-index: 310;
+  z-index: var(--nx-z-hamburger);
   background: var(--nx-bg-surface, #fff);
   border: 1px solid var(--nx-border, #e2e8f0);
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
@@ -104,7 +104,7 @@
 .nx-drawer-overlay {
   position: fixed;
   inset: 0;
-  z-index: 998;
+  z-index: var(--nx-z-overlay);
   background: var(--nx-overlay-bg, rgba(0, 0, 0, 0.5));
   opacity: 0;
   visibility: hidden;
@@ -118,7 +118,7 @@
   top: 0;
   left: 0;
   bottom: 0;
-  z-index: 999;
+  z-index: var(--nx-z-drawer);
   width: 280px;
   max-width: 85vw;
   background: var(--nx-bg-surface);
@@ -146,7 +146,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 90;
+  z-index: var(--nx-z-nav);
   height: 56px;
   padding-bottom: var(--nx-safe-bottom);
   background: var(--nx-glass-bg);
@@ -175,10 +175,7 @@
 }
 .nx-bottom-nav-item:active { color: var(--app-accent); }
 .nx-bottom-nav-item.active { color: var(--app-accent); }
-.nx-bottom-nav-icon { font-size: 20px; line-height: 1; }@media (max-width: 768px){
-  .nx-modal { max-width: none; width: 100%; height: auto; max-height: 90dvh; margin: auto 0 0 0; border-radius: var(--nx-radius-xl) var(--nx-radius-xl) 0 0; }
-  .nx-modal-overlay { align-items: flex-end; }
-}
+.nx-bottom-nav-icon { font-size: 20px; line-height: 1; }
 
 .nx-table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }@media (max-width: 768px){
   .nx-table-scroll { margin: 0 calc(-1 * var(--nx-space-4)); padding: 0 var(--nx-space-4); }
@@ -228,7 +225,7 @@
   font-size: 16px;
   text-decoration: none;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  z-index: 99;
+  z-index: var(--nx-z-fab);
   opacity: 0.7;
   transition: opacity 0.2s, transform 0.2s;
   -webkit-tap-highlight-color: transparent;
@@ -268,9 +265,9 @@
   .el-dialog { width: 98% !important; margin-top: 2vh !important; }
   .el-message-box { width: 92% !important; }
 }@media (max-width: 768px){
-  .sidebar { position: fixed !important; top: 0; left: 0; bottom: 0; z-index: 999; width: 260px !important; max-width: 85vw; transform: translateX(-100%); transition: transform 0.3s ease; }
+  .sidebar { position: fixed !important; top: 0; left: 0; bottom: 0; z-index: var(--nx-z-drawer); width: 260px !important; max-width: 85vw; transform: translateX(-100%); transition: transform 0.3s ease; }
   .sidebar.sidebar-open, .sidebar.open { transform: translateX(0); }
-  .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 998; display: none; }
+  .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: var(--nx-z-overlay); display: none; }
   .sidebar-overlay.active { display: block; }
   .main { width: 100% !important; }
   .content { padding: 12px !important; }
@@ -289,28 +286,15 @@
   .nav-item { padding: 10px 14px !important; font-size: 13px !important; min-height: 44px; }
   .tab-bar { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; }
   .tab { white-space: nowrap; padding: 8px 12px; }
-  .genre-grid { grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)) !important; }
-  .genre-explorer-grid { grid-template-columns: 1fr !important; }
-  .reader-panel { width: 100% !important; }
-  .chart-bar-group { height: 80px !important; }
-  .world-template-grid { grid-template-columns: 1fr !important; }
-  .framework-selector { gap: 6px; }
-  .framework-option { padding: 6px 10px; font-size: 11px; }
   .mobile-menu-btn { display: inline-flex !important; }
-  .login-modal-box { width: 90% !important; padding: 24px !important; }
   .app { flex-direction: column !important; }
   .hide-mobile { display: none !important; }
 }@media (max-width: 480px){
   .content { padding: 8px !important; }
   .card { padding: 8px !important; }
   .stat-value { font-size: 18px !important; }
-  .genre-grid { grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)) !important; }
-  .genre-chip { font-size: 11px; padding: 4px; }
-  .framework-option { padding: 4px 8px; font-size: 10px; }
   .btn { padding: 6px 10px; font-size: 12px; }
-  .chart-bar-group { height: 60px !important; }
   .topbar-title { font-size: 12px !important; }
-  .login-modal-box { padding: 16px !important; }
   .sidebar { width: 85vw !important; }
 }@media (min-width: 769px){
   .mobile-menu-btn { display: none !important; }

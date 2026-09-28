@@ -89,6 +89,27 @@
   --nx-transition-slow: 300ms var(--nx-ease-in-out);
 }
 
+:root {
+  --nx-z-nav: 90;
+  --nx-z-fab: 99;
+  --nx-z-header: 100;
+  --nx-z-side-mask: 110;
+  --nx-z-side-panel: 120;
+  --nx-z-modal: 200;
+  --nx-z-popover: 250;
+  --nx-z-toast: 300;
+  --nx-z-hamburger: 310;
+  --nx-z-settings: 400;
+  --nx-z-settings-panel: 401;
+  --nx-z-overlay: 998;
+  --nx-z-drawer: 999;
+  --nx-z-toast-host: 1100;
+  --nx-z-unlock: 1150;
+  --nx-z-topmost: 1200;
+  --nx-z-max: 2147483000;
+  --nx-z-max-plus: 2147483001;
+}
+
 [data-theme="dark"] {
   --nx-bg-base: #1e293b;
   --nx-bg-surface: #243044;

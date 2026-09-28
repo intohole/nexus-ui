@@ -39,7 +39,12 @@
     function showToast(message, type, durationValue) {
         if (!message) return;
         const kind = TOAST_ICONS[type] ? type : 'info';
-        const host = ensureHost('nux-toast-host', 'nux-toast-container');
+        // 第三个参数兼容两种形态：数字=时长（旧行为），对象={duration, center}
+        const opts = (durationValue && typeof durationValue === 'object') ? durationValue : {};
+        const centered = opts.center === true;
+        const host = centered
+            ? ensureHost('nux-toast-host-center', 'nux-toast-container nux-toast-container--center')
+            : ensureHost('nux-toast-host', 'nux-toast-container');
         const item = document.createElement('div');
         item.className = 'nux-toast-item nux-toast-' + kind;
         item.setAttribute('role', 'status');
