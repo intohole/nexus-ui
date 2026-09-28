@@ -43,8 +43,6 @@
     ['nux-stat-card', 'NuxStatCard'],
     ['nux-badge', 'NuxBadge'],
     ['nux-avatar', 'NuxAvatar'],
-    ['nux-data-table', 'NuxDataTable'],
-    ['nux-pagination', 'NuxPagination'],
     ['nux-calendar', 'NuxCalendar'],
     ['nux-ai-chat', 'NuxAiChat']
   ].forEach(([tag, name]) => {
