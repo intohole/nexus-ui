@@ -230,7 +230,7 @@ Events: accepted/declined
 
 引入方式统一为 `<script src="https://songguokr.com/nexus-ui/v{version}/js/components/nux-xxx.js"></script>` 后 `NexusComponents.register(app)` 一键注册（禁止逐个 `app.component`）。基准样式=桌面端，≤820px 自动收敛，触屏自动 44px 命中区与 16px 输入字号。
 
-### 全部组件索引（80 个，以 `NexusComponents.list()` 为准）
+### 全部组件索引（81 个，以 `NexusComponents.list()` 为准）
 
 | 分类 | 组件 |
 |------|------|
@@ -241,7 +241,7 @@ Events: accepted/declined
 | 表单控件 | nux-form-group / nux-button / nux-input / nux-textarea / nux-select / nux-switch / nux-checkbox / nux-search-box / nux-segmented / nux-chip-group / nux-accordion / nux-tab-group |
 | 交互增强 | nux-file-upload / nux-infinite-scroll / nux-slider / nux-date-picker / nux-qrcode / nux-sortable / nux-share-panel |
 | 图标与媒体 | nux-icon / nux-image-viewer |
-| AI 能力 | nux-ai-chat / nux-conversation-list / nux-ai-badge / nux-ai-indicator / nux-ai-widgets / nux-clarify-card / nux-automation / nux-onboarding / nux-onboarding-strip / nux-app-card / nux-app-switcher / nux-poster / nux-ai-notice |
+| AI 能力 | nux-ai-chat / nux-conversation-list / nux-ai-badge / nux-ai-indicator / nux-ai-widgets / nux-clarify-card / nux-automation / nux-onboarding / nux-onboarding-strip / nux-app-card / nux-app-switcher / nux-poster / nux-ai-notice / nux-camera-recognize |
 
 非组件能力（由 nexus-all.js 直接提供全局函数，**无需引脚本、无需注册**）：`window.showToast(msg, type, duration)` / `window.nuxConfirm(options)` / `window.showUnlock(options)`。悬浮入口 `NuxFloatUserCenter`（init/configure/destroy）与 `NuxFloatAbout`（自动挂载）见上文 helpers 清单。
 
@@ -271,6 +271,36 @@ Events: accepted/declined
 | nux-sortable | `<nux-sortable v-model="list" item-key="id" @change="save"><template #default="{ item, index }"><div>{{ item.name }}</div></template></nux-sortable>`（Pointer Events 统一鼠标/触摸拖拽，键盘方向键/Home/End 可排序） |
 | nux-login-page | 登录/注册一体化组件。**加载顺序**：`nux-login-page-helpers.js` → `nux-login-page-template.js` → `nux-login-page.js`（与 nux-ai-chat 系同模式），再 `NexusComponents.register(app)`。Props 见文末 nux-login-page 段落；支持账号/手机号/验证码登录、注册、忘记密码动态加载（nux-forgot-password.js）、图形验证码、协议勾选、主题色注入 |
 | nux-ai-widgets | AI 对话消息内组件渲染器（后端 SSE `widget` / `widget_update` 事件驱动，nux-ai-chat 自动路由到 `msg.widgets` 并渲染）。**加载顺序**：`nux-ai-chat-helpers.js` → `nux-ai-chat-template.js` → `nux-ai-widgets.js` →（可选增强）`nux-ai-widgets-rich.js` → `nux-ai-chat.js`。基础类型：table / cards / steps / related / choice / feedback；`nux-ai-widgets-rich.js` 追加：form（表单收集）/ chart（图表，echarts 按需 CDN 加载）/ confirm（危险操作二次确认）。steps 支持 `percent` + `status`（running/done/failed）呈现任务进度，可经 `widget_update` 流式更新。交互统一经 `@widget-action` 透传 `{id,type,action,payload}`，action ∈ send/submit/confirm/cancel/feedback/open |
+| nux-camera-recognize | `<nux-camera-recognize upload-url="/api/vision/recognize" prompt="识别图片内容" :json-mode="false" :auto-recognize="true" :stages="['上传图片','AI 识别中','整理结果']" @capture @success @error @cancel></nux-camera-recognize>`（拍照/相册 → 识别 → 结果展示一条龙；自动降级系统相机；结果默认 Markdown 或 JSON 键值表，`#result` 插槽可覆盖） |
+
+### 本次新增组件（nux-camera-recognize）
+
+引入方式与基础组件一致：按需 `<script src="https://songguokr.com/nexus-ui/v{version}/js/components/nux-camera-recognize.js"></script>` 后 `NexusComponents.register(app)` 一键注册。
+
+#### nux-camera-recognize 拍照识别（图片 → 大模型）
+
+一个组件覆盖完整链路：调起相机取景拍摄（getUserMedia，带取景四角框/快门/前后切换，Esc 关闭）或相册选图 → 预览确认 → 上传识别（阶段过程态、扫描光束、可取消）→ 结果展示（文本走 Markdown，JSON 走键值表；附 AI 生成标识）。相机不可用（非 HTTPS / 无权限 / 桌面无设备）自动降级系统相机 `<input capture>`。拍照经 canvas 压制（默认最长边 1600px、JPEG 0.9），相册大图（>2MB）同样降采样，降低 base64 上传体积。默认对接 nexus-backend `create_vision_router()` 的 `/api/vision/recognize`（multipart: files+prompt[+system/json_mode]，响应 `{code,data:{content|result,model}}` 自动归一）；私有接口传 `handler(file, {prompt,system,jsonMode,signal})` 自定义。
+
+```html
+<nux-camera-recognize upload-url="/api/vision/recognize"
+  prompt="识别图片中的物品并列出名称与数量"
+  :json-mode="false" :auto-recognize="true"
+  title="物品识别" hint="支持拍照或选择图片，识别由 AI 完成，内容仅供参考"
+  @capture="onCapture" @success="(payload, meta) => onSave(payload)"
+  @error="onErr" @cancel="onCancel" @reset="onReset">
+  <template #result="{ result }">
+    <div>自定义结果渲染，result = { kind:'text'|'json', text, data, model }</div>
+  </template>
+</nux-camera-recognize>
+```
+
+Props: uploadUrl(String='')/apiInstance(Object，NexusApi 实例，缺省 new NexusApi())/handler(Function，自定义识别函数，优先于 uploadUrl)/prompt(String='识别这张图片的内容')/system(String)/jsonMode(Boolean=false)/stages(Array=['上传图片','AI 识别中','整理结果'])/allowCamera(Boolean=true)/allowGallery(Boolean=true)/autoRecognize(Boolean=true，拍完自动识别；false 时停留预览等手动点击)/maxSizeMb(Number=10)/maxEdge(Number=1600，长边压制)/title(String)/hint(String)/recognizeText(String='开始识别')/compact(Boolean=false)
+
+Events: capture(blob)/change(blob)/start(blob)/success(payload, meta)/error(err, message)/cancel/reset
+
+Exposed: openCamera()/closeCamera()/pick()/recognize()/cancelRecognize()/reset()
+
+行为：取景态 Esc 或页面隐藏自动关流；请求经 AbortController 可取消（取消后回到预览态）；识别中 `role="status" aria-live="polite"`，结果错误态 `role="alert"`；触屏 44px+ 命中区，动画遵循 prefers-reduced-motion；错误文案区分相机未授权/无设备/超限/网络并给出改用相册的指引。
 
 ### 本次新增组件（nux-icon / nux-ai-task-progress / nux-ai-notice / nux-image-viewer / nux-share-panel / nux-workbench）
 

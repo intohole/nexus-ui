@@ -369,6 +369,47 @@ async handler(text, cb) {
             cb.registerStop(() => clearInterval(timer));
           }
         }
+      },
+      {
+        id: 'camera-recognize',
+        tag: 'nux-camera-recognize',
+        title: '拍照识别',
+        desc: '拍照/相册 → AI 识别 → 结果展示一条龙；这里用本地假识别函数演示，接 nexus-backend /api/vision/recognize 即为真实识别',
+        tpl: `
+<div>
+  <nux-camera-recognize
+    prompt="识别图片中的主体并简要描述"
+    :auto-recognize="true"
+    hint="演示用本地假识别；支持拍照或相册选图"
+    @success="onSuccess" @error="onError" @cancel="onCancel"></nux-camera-recognize>
+</div>`,
+        code: `<!-- 真实场景：对接 nexus-backend 通用识别路由 -->
+<nux-camera-recognize upload-url="/api/vision/recognize"
+  prompt="识别图片中的物品并列出名称与数量"
+  @success="onSave" @error="onErr"></nux-camera-recognize>
+
+<!-- 私有接口：handler 自定义识别函数 -->
+<nux-camera-recognize :handler="recognize"></nux-camera-recognize>`,
+        methods: {
+          recognize(file, { signal }) {
+            return new Promise((resolve, reject) => {
+              const timer = setTimeout(() => {
+                resolve('**识别结果（本地模拟）**\n\n- 主体：一只橘色的猫\n- 场景：室内沙发\n- 置信度：92%\n\n> 把 `upload-url` 指向 `/api/vision/recognize` 即为真实识别。');
+              }, 1600);
+              if (signal) {
+                signal.addEventListener('abort', () => {
+                  clearTimeout(timer);
+                  const err = new Error('已取消');
+                  err.name = 'AbortError';
+                  reject(err);
+                });
+              }
+            });
+          },
+          onSuccess(payload) { window.showToast('识别完成：' + String(payload).slice(0, 20) + '…', 'success'); },
+          onError(err) { if (err && err.name !== 'AbortError') window.showToast(err.message || '识别失败', 'error'); },
+          onCancel() { window.showToast('已取消识别', 'info'); }
+        }
       }
     ]
   });

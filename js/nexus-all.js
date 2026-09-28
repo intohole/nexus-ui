@@ -2688,6 +2688,7 @@
         'nux-bottom-nav': 'NuxBottomNav',
         'nux-breadcrumb': 'NuxBreadcrumb',
         'nux-button': 'NuxButton',
+        'nux-camera-recognize': 'NuxCameraRecognize',
         'nux-calendar': 'NuxCalendar',
         'nux-checkbox': 'NuxCheckbox',
         'nux-checkin': 'NuxCheckin',

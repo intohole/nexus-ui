@@ -10,6 +10,7 @@
 .nfu-drop{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--nx-space-1,4px);min-height:88px;padding:var(--nx-space-4,16px);border:1px dashed var(--nx-border,rgba(0,0,0,.08));border-radius:var(--nx-radius-md,10px);background:var(--nx-bg-surface,#fff);color:var(--nx-text-secondary,#64748b);font-size:var(--nx-text-sm,14px);text-align:center;cursor:pointer;transition:border-color var(--nx-transition-fast,.15s ease),background var(--nx-transition-fast,.15s ease)}
 .nfu-drop:hover{border-color:var(--nx-border-hover,rgba(0,0,0,.15));background:var(--nx-bg-hover,#f1f5f9)}
 .nfu-drop--over{border-color:var(--app-accent,#6366f1);background:rgba(var(--app-accent-rgb,99,102,241),.06);color:var(--app-accent,#6366f1)}
+.nfu-drop:focus-within{outline:2px solid var(--app-accent,#6366f1);outline-offset:2px;border-color:var(--app-accent,#6366f1)}
 .nfu-drop--disabled{cursor:default;opacity:.6}
 .nfu-input{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0)}
 .nfu-hint{font-size:var(--nx-text-xs,12px);color:var(--nx-text-muted,#94a3b8)}

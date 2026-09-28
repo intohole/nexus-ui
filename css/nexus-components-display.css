@@ -701,6 +701,7 @@
   position: fixed;
   inset: 0;
   z-index: 1300;
+  outline: none;
   display: flex;
   flex-direction: column;
   align-items: center;

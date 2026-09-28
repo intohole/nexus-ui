@@ -74,9 +74,27 @@
                 if (event.key === 'ArrowRight') { go(1); return; }
             }
 
+            var dialogEl = Vue.ref(null);
+            var lastFocused = null;
+
+            function focusDialog() {
+                Vue.nextTick(function () {
+                    if (dialogEl.value) dialogEl.value.focus();
+                });
+            }
+
             Vue.watch(function () { return props.visible; }, function (value) {
-                if (value) window.addEventListener('keydown', onKeydown);
-                else window.removeEventListener('keydown', onKeydown);
+                if (value) {
+                    window.addEventListener('keydown', onKeydown);
+                    lastFocused = document.activeElement;
+                    focusDialog();
+                } else {
+                    window.removeEventListener('keydown', onKeydown);
+                    if (lastFocused && typeof lastFocused.focus === 'function') {
+                        try { lastFocused.focus(); } catch (e) {}
+                    }
+                    lastFocused = null;
+                }
             });
             Vue.watch(function () { return props.index; }, function () { zoomed.value = false; });
             Vue.onBeforeUnmount(function () { window.removeEventListener('keydown', onKeydown); });
@@ -88,6 +106,7 @@
                 currentIndex: currentIndex,
                 current: current,
                 zoomed: zoomed,
+                dialogEl: dialogEl,
                 go: go,
                 close: close,
                 toggleZoom: toggleZoom,
@@ -97,7 +116,7 @@
         template: `
             <teleport to="body">
                 <transition name="nux-iv-fade">
-                    <div v-if="visible && current" class="nux-iv" role="dialog" aria-modal="true" aria-label="图片预览" @click.self="close">
+                    <div v-if="visible && current" ref="dialogEl" class="nux-iv" role="dialog" aria-modal="true" aria-label="图片预览" tabindex="-1" @click.self="close">
                         <div class="nux-iv-stage">
                             <img class="nux-iv-img" :class="{ 'is-zoomed': zoomed }" :src="current.src"
                                 :alt="current.title || '图片预览'" @click="toggleZoom">
