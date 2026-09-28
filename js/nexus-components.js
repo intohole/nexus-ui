@@ -49,6 +49,7 @@
         'nux-notification-panel': 'NuxNotificationPanel',
         'nux-onboarding': 'NuxOnboarding',
         'nux-onboarding-strip': 'NuxOnboardingStrip',
+        'nux-pagination': 'NuxPagination',
         'nux-portal-footer': 'NuxPortalFooter',
         'nux-poster': 'NuxPoster',
         'nux-progress': 'NuxProgress',

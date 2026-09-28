@@ -208,6 +208,18 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 | 表单控件 | nux-form-group / nux-button / nux-input / nux-textarea / nux-select / nux-switch / nux-checkbox / nux-search-box / nux-segmented / nux-chip-group / nux-accordion / nux-tab-group |
 | 交互增强 | nux-file-upload / nux-infinite-scroll / nux-slider / nux-date-picker / nux-qrcode / nux-sortable |
 
+### nux-pagination 分页组件
+
+极简分页（上一页/页码信息/下一页），替代各项目手写分页按钮。`hasPrev/hasNext` 可不传，组件内部按 `page` 与 `totalPages` 自动推算。
+
+```html
+<nux-pagination :page="page" :total-pages="totalPages"
+  @prev="page--; fetchList()" @next="page++; fetchList()"></nux-pagination>
+```
+
+Props: page(Number=1)/totalPages(Number=1)/hasPrev(Boolean，缺省按 page>1 推算)/hasNext(Boolean，缺省按 page<totalPages 推算)
+Events: prev/next
+
 | AI 能力 | nux-ai-chat / nux-conversation-list / nux-ai-badge / nux-ai-indicator / nux-ai-widgets / nux-clarify-card / nux-automation / nux-onboarding / nux-onboarding-strip / nux-app-card / nux-app-switcher / nux-poster / nux-ai-notice / nux-camera-recognize |
 
 非组件能力（由 nexus-all.js 直接提供全局函数，**无需引脚本、无需注册**）：`window.showToast(msg, type, duration)` / `window.nuxConfirm(options)` / `window.showUnlock(options)`。
