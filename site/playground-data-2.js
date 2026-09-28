@@ -831,4 +831,24 @@ widgets: [
       }
     ]
   });
+
+  window.PG_CATS.push({
+    id: 'global-controls',
+    name: '全局控件',
+    demos: [
+      {
+        id: 'theme-toggle',
+        tag: 'nux-theme-toggle',
+        title: '主题切换',
+        desc: '明暗两态圆形按钮，持久化 localStorage nx-theme，未选择时跟随系统；移动端 44px 命中区',
+        tpl: `
+<div class="demo-row" style="align-items:center;gap:12px;">
+  <nux-theme-toggle @change="d = $event"></nux-theme-toggle>
+  <span style="font-size:13px;color:var(--nx-text-secondary,#6b7280);">当前：{{ d ? '深色' : '浅色' }}</span>
+</div>
+`,
+        data() { return { d: document.documentElement.getAttribute('data-theme') === 'dark' }; }
+      }
+    ]
+  });
 })();

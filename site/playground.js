@@ -22,44 +22,11 @@
     }
   });
 
-  [
-    ['nux-button', 'NuxButton'],
-    ['nux-input', 'NuxInput'],
-    ['nux-textarea', 'NuxTextarea'],
-    ['nux-select', 'NuxSelect'],
-    ['nux-switch', 'NuxSwitch'],
-    ['nux-checkbox', 'NuxCheckbox'],
-    ['nux-search-box', 'NuxSearchBox'],
-    ['nux-segmented', 'NuxSegmented'],
-    ['nux-chip-group', 'NuxChipGroup'],
-    ['nux-steps', 'NuxSteps'],
-    ['nux-progress', 'NuxProgress'],
-    ['nux-loading', 'NuxLoading'],
-    ['nux-accordion', 'NuxAccordion'],
-    ['nux-tab-group', 'NuxTabGroup'],
-    ['nux-modal', 'NuxModal'],
-    ['nux-drawer', 'NuxDrawer'],
-    ['nux-skeleton', 'NuxSkeleton'],
-    ['nux-stat-card', 'NuxStatCard'],
-    ['nux-badge', 'NuxBadge'],
-    ['nux-avatar', 'NuxAvatar'],
-    ['nux-calendar', 'NuxCalendar'],
-    ['nux-layout-sidebar', 'NuxLayoutSidebar'],
-    ['nux-bottom-nav', 'NuxBottomNav'],
-    ['nux-login-page', 'NuxLoginPage'],
-    ['nux-menu-user', 'NuxMenuUser'],
-    ['nux-menu-about', 'NuxMenuAbout'],
-    ['nux-footer', 'NuxFooter'],
-    ['nux-portal-footer', 'NuxPortalFooter'],
-    ['nux-notification-bell', 'NuxNotificationBell'],
-    ['nux-app-card', 'NuxAppCard'],
-    ['nux-pagination', 'NuxPagination'],
-    ['nux-ai-widgets', 'NuxAiWidgets'],
-    ['nux-ai-chat', 'NuxAiChat']
-  ].forEach(([tag, name]) => {
-    if (window[name]) app.component(tag, window[name]);
-    else console.error('组件缺失:', name);
-  });
+  if (window.NexusComponents) {
+    window.NexusComponents.register(app);
+  } else {
+    console.error('NexusComponents 未加载');
+  }
 
   cats.forEach(cat => {
     cat.demos.forEach(d => {

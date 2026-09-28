@@ -93,6 +93,7 @@
 
             '.ncr-input{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0)}',
             '@media(hover:none) and (pointer:coarse){.ncr-btn{min-height:44px}.ncr-iconbtn{width:44px;height:44px}.ncr-shutter{width:72px;height:72px}}',
+            '@media(max-width:768px){.ncr-camera{aspect-ratio:3/4;max-height:60vh}}',
             '@media(prefers-reduced-motion:reduce){.ncr-flash,.ncr-scan,.ncr-busy-bar i,.ncr-stage--active .ncr-stage-dot{animation:none}.ncr-busy-bar i{width:100%}}'
         ]);
     }

@@ -202,7 +202,7 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 
 用户协议页面唯一事实源：本仓库 `agreement.html`（协议条款/隐私政策文案直接维护在该页）。
 
-### 全部组件索引（71 个，以 `NexusComponents.list()` 为准）
+### 全部组件索引（72 个，以 `NexusComponents.list()` 为准）
 
 | 分类 | 组件 |
 |------|------|
@@ -211,7 +211,7 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 | 反馈 | nux-undo-toast / nux-modal / nux-drawer / nux-notification-bell / nux-notification-panel / nux-loading / nux-skeleton / nux-empty-state / nux-error-state / nux-ai-task-progress |
 | 数据展示 | nux-stat-card / nux-badge / nux-avatar / nux-progress / nux-steps / nux-breadcrumb / nux-calendar / nux-checkin / nux-radar-chart / nux-result-view / nux-selection-bar |
 | 表单控件 | nux-form-group / nux-button / nux-input / nux-textarea / nux-select / nux-switch / nux-checkbox / nux-search-box / nux-segmented / nux-chip-group / nux-accordion / nux-tab-group |
-| 交互增强 | nux-file-upload / nux-infinite-scroll / nux-slider / nux-date-picker / nux-qrcode / nux-sortable |
+| 交互增强 | nux-file-upload / nux-infinite-scroll / nux-slider / nux-date-picker / nux-qrcode / nux-sortable / nux-theme-toggle |
 
 ### nux-pagination 分页组件
 
@@ -225,6 +225,16 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 Props: page(Number=1)/totalPages(Number=1)/hasPrev(Boolean，缺省按 page>1 推算)/hasNext(Boolean，缺省按 page<totalPages 推算)
 Events: prev/next
 
+### nux-theme-toggle 主题切换
+
+圆形图标按钮，明暗两态切换（图标指示将切换到的目标模式），持久化到 localStorage `nx-theme`，未选择时跟随系统 `prefers-color-scheme`。基于 `useTheme` 组合式，**必须先加载 `composables/use-theme.js`**。桌面 40px、移动端 44px 触控目标，尊重 reduced-motion。
+
+```html
+<nux-theme-toggle @change="isDark => onThemeChange(isDark)"></nux-theme-toggle>
+```
+
+Events: change(isDark:Boolean)
+
 | AI 能力 | nux-ai-chat / nux-conversation-list / nux-ai-badge / nux-ai-indicator / nux-ai-widgets / nux-clarify-card / nux-automation / nux-onboarding / nux-onboarding-strip / nux-app-card / nux-app-switcher / nux-poster / nux-ai-notice / nux-camera-recognize |
 
 非组件能力（由 nexus-all.js 直接提供全局函数，**无需引脚本、无需注册**）：`window.showToast(msg, type, duration)` / `window.nuxConfirm(options)` / `window.showUnlock(options)`。
@@ -234,6 +244,7 @@ Events: prev/next
 | nux-button | `<nux-button variant="primary|ghost|danger|text" size="sm|md|lg" :block="true" :loading="loading" @click="fn">文案</nux-button>` |
 | nux-input | `<nux-input v-model="text" label="标题" placeholder required :maxlength="50" clearable hint error @enter="fn"><template #prefix>¥</template></nux-input>` |
 | nux-textarea | `<nux-textarea v-model="text" :rows="4" :auto-resize="true" :maxlength="500" label error hint></nux-textarea>` |
+| nux-theme-toggle | `<nux-theme-toggle @change="fn"></nux-theme-toggle>`（需先加载 composables/use-theme.js，明暗切换持久化 localStorage `nx-theme`） |
 | nux-select | `<nux-select v-model="val" :options="[{label,value}]" label placeholder></nux-select>`（原生select，移动端原生picker） |
 | nux-switch | `<nux-switch v-model="on" label="开启" description="说明文字"></nux-switch>` |
 | nux-checkbox | `<nux-checkbox v-model="on" label="同意"></nux-checkbox>` |
