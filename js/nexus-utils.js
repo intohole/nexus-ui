@@ -319,6 +319,23 @@
             return utils.formatDateShort(dateString);
         },
 
+        pad2(n) {
+            return String(n == null ? 0 : n).padStart(2, '0');
+        },
+
+        formatDateKey(value) {
+            const d = value instanceof Date ? value : utils.parseDate(value);
+            if (!d || isNaN(d.getTime())) return '';
+            return d.getFullYear() + '-' + utils.pad2(d.getMonth() + 1) + '-' + utils.pad2(d.getDate());
+        },
+
+        formatDateTimeHyphen(value, withSeconds = false) {
+            const d = value instanceof Date ? value : utils.parseDate(value);
+            if (!d || isNaN(d.getTime())) return '';
+            const base = utils.formatDateKey(d) + ' ' + utils.pad2(d.getHours()) + ':' + utils.pad2(d.getMinutes());
+            return withSeconds ? base + ':' + utils.pad2(d.getSeconds()) : base;
+        },
+
         formatDateTime(dateString, options = {}) {
             const date = utils.parseDate(dateString);
             if (!date) return '';
@@ -431,6 +448,14 @@
             try {
                 return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
             } catch (e) { return false; }
+        },
+
+        injectStyle(id, css) {
+            if (!id || document.getElementById(id)) return;
+            const style = document.createElement('style');
+            style.id = id;
+            style.textContent = css;
+            (document.head || document.documentElement).appendChild(style);
         },
 
         motionDuration(ms) {

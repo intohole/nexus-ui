@@ -40,7 +40,7 @@
             userName: { type: String, default: '' },
             width: { type: String, default: '264px' },
             drawerWidth: { type: String, default: '288px' },
-            breakpoint: { type: Number, default: 1024 },
+            breakpoint: { type: Number, default: 768 },
             layout: { type: String, default: 'sticky' },
             open: { type: Boolean, default: undefined },
             ariaLabel: { type: String, default: '侧栏导航' }

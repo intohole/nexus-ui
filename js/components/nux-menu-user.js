@@ -22,11 +22,7 @@
     ].join('');
 
     function injectCss() {
-        if (document.getElementById(STYLE_ID)) return;
-        var st = document.createElement('style');
-        st.id = STYLE_ID;
-        st.textContent = CSS;
-        document.head.appendChild(st);
+        window.NexusUtils && NexusUtils.injectStyle(STYLE_ID, CSS);
     }
 
     var DEPS = [

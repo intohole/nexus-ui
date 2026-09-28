@@ -243,11 +243,7 @@
             }
 
             function timeLabel(t) {
-                if (!t) return '';
-                var d = new Date(t);
-                if (isNaN(d.getTime())) return '';
-                var pad = function(n) { return n < 10 ? '0' + n : '' + n; };
-                return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+                return window.NexusUtils ? NexusUtils.formatDateTimeHyphen(t) : '';
             }
 
             Vue.onMounted(function() {

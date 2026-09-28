@@ -27,15 +27,7 @@
 
     NuxNotificationPanel.prototype._time = function (ts) {
         if (!ts) return '';
-        var d = new Date(ts);
-        if (isNaN(d.getTime())) return '';
-        var now = new Date();
-        var diff = Math.floor((now - d) / 1000);
-        if (diff < 60) return '刚刚';
-        if (diff < 3600) return Math.floor(diff / 60) + '分钟前';
-        if (diff < 86400) return Math.floor(diff / 3600) + '小时前';
-        if (diff < 2592000) return Math.floor(diff / 86400) + '天前';
-        return d.toLocaleDateString('zh-CN');
+        return window.NexusUtils ? NexusUtils.formatRelativeTime(ts) : '';
     };
 
     NuxNotificationPanel.prototype._summary = function (content) {

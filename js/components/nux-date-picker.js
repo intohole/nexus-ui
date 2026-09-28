@@ -1,10 +1,7 @@
 (function () {
     const STYLE_ID = 'nux-date-picker-style';
     function ensureStyle() {
-        if (document.getElementById(STYLE_ID)) return;
-        const style = document.createElement('style');
-        style.id = STYLE_ID;
-        style.textContent = `
+        window.NexusUtils && NexusUtils.injectStyle(STYLE_ID, `
 .ndp{display:flex;flex-direction:column;gap:var(--nx-space-1,4px);width:100%}
 .ndp-label{font-size:var(--nx-text-sm,14px);font-weight:500;color:var(--nx-text-heading,#0f172a)}
 .ndp-control{position:relative;display:flex;align-items:center}
@@ -17,8 +14,7 @@
 .ndp-clear:hover{background:var(--nx-bg-hover,#f1f5f9);color:var(--nx-text-heading,#0f172a)}
 .ndp-hint{font-size:var(--nx-text-xs,12px);color:var(--nx-text-muted,#94a3b8)}
 @media(hover:none) and (pointer:coarse){.ndp-input{font-size:16px}}
-`;
-        document.head.appendChild(style);
+`);
     }
     ensureStyle();
 

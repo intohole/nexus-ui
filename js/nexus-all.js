@@ -320,6 +320,23 @@
             return utils.formatDateShort(dateString);
         },
 
+        pad2(n) {
+            return String(n == null ? 0 : n).padStart(2, '0');
+        },
+
+        formatDateKey(value) {
+            const d = value instanceof Date ? value : utils.parseDate(value);
+            if (!d || isNaN(d.getTime())) return '';
+            return d.getFullYear() + '-' + utils.pad2(d.getMonth() + 1) + '-' + utils.pad2(d.getDate());
+        },
+
+        formatDateTimeHyphen(value, withSeconds = false) {
+            const d = value instanceof Date ? value : utils.parseDate(value);
+            if (!d || isNaN(d.getTime())) return '';
+            const base = utils.formatDateKey(d) + ' ' + utils.pad2(d.getHours()) + ':' + utils.pad2(d.getMinutes());
+            return withSeconds ? base + ':' + utils.pad2(d.getSeconds()) : base;
+        },
+
         formatDateTime(dateString, options = {}) {
             const date = utils.parseDate(dateString);
             if (!date) return '';
@@ -432,6 +449,14 @@
             try {
                 return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
             } catch (e) { return false; }
+        },
+
+        injectStyle(id, css) {
+            if (!id || document.getElementById(id)) return;
+            const style = document.createElement('style');
+            style.id = id;
+            style.textContent = css;
+            (document.head || document.documentElement).appendChild(style);
         },
 
         motionDuration(ms) {
@@ -3451,10 +3476,7 @@ window.UserCenterAPI = { loaded: true };
 (function () {
     'use strict';
 
-    if (!document.getElementById('nrv-css')) {
-        const style = document.createElement('style');
-        style.id = 'nrv-css';
-        style.textContent = [
+    window.NexusUtils && NexusUtils.injectStyle('nrv-css', [
             '.nrv { margin-top: 4px; }',
             '.nrv-summary { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }',
             '.nrv-summary-item { font-size: 11px; padding: 2px 8px; background: rgba(var(--app-accent-rgb,99,102,241),.08); color: var(--app-accent,#6366f1); border-radius: var(--nx-radius-sm,6px); }',
@@ -3466,9 +3488,7 @@ window.UserCenterAPI = { loaded: true };
             '.nrv-kv-item { display: flex; gap: 8px; padding: 3px 0; font-size: 11px; border-bottom: 1px dashed var(--nx-border,rgba(0,0,0,.08)); }',
             '.nrv-kv-key { color: var(--nx-text-muted,#94a3b8); flex: 0 0 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
             '.nrv-kv-val { color: var(--nx-text-body,#334155); word-break: break-word; }'
-        ].join('\n');
-        document.head.appendChild(style);
-    }
+        ].join(''));
 
     const NuxResultView = {
         name: 'NuxResultView',

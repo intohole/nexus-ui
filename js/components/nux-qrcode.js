@@ -4,17 +4,13 @@
     const LEVELS = { L: 1, M: 0, Q: 3, H: 2 };
 
     function ensureStyle() {
-        if (document.getElementById(STYLE_ID)) return;
-        const style = document.createElement('style');
-        style.id = STYLE_ID;
-        style.textContent = `
+        window.NexusUtils && NexusUtils.injectStyle(STYLE_ID, `
 .nq{display:inline-flex;flex-direction:column;align-items:center;gap:var(--nx-space-2,8px);max-width:100%}
 .nq-code{display:block;line-height:0;border-radius:var(--nx-radius-sm,6px);overflow:hidden}
 .nq-code img,.nq-code canvas{display:block;max-width:100%;height:auto}
 .nq-fallback{display:flex;align-items:center;justify-content:center;box-sizing:border-box;border:1px dashed var(--nx-border,rgba(0,0,0,.08));border-radius:var(--nx-radius-sm,6px);background:var(--nx-bg-muted,#f1f5f9);color:var(--nx-text-muted,#94a3b8);font-size:var(--nx-text-sm,14px)}
 .nq-label{font-size:var(--nx-text-sm,14px);color:var(--nx-text-secondary,#64748b);text-align:center;word-break:break-all;max-width:100%}
-`;
-        document.head.appendChild(style);
+`);
     }
     ensureStyle();
 

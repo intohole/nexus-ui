@@ -2,7 +2,7 @@
   --paper: #F4F7FB;
   --surface: #FFFFFF;
   --ink: #22314F;
-  --muted: #64748F;
+  --muted: #5A6B85;
   --line: #DFE6F0;
   --accent: var(--app-accent, #3b82f6);
   --accent-soft: rgba(var(--app-accent-rgb, 59, 130, 246), 0.09);

@@ -2,12 +2,7 @@
     var DEFAULT_COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
 
     function hexToRgba(hex, alpha) {
-        var h = hex.replace('#', '');
-        if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
-        var r = parseInt(h.substr(0, 2), 16) || 0;
-        var g = parseInt(h.substr(2, 2), 16) || 0;
-        var b = parseInt(h.substr(4, 2), 16) || 0;
-        return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+        return window.NexusUtils ? NexusUtils.hexToRgba(hex, alpha) : hex;
     }
 
     function normalizeDatasets(datasets, labels, maxValue) {

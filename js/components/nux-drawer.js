@@ -9,6 +9,9 @@
         emits: ['update:modelValue'],
         setup(props, { emit }) {
             const close = () => emit('update:modelValue', false);
+            const onKeydown = (e) => { if (e.key === 'Escape' && props.modelValue) close(); };
+            Vue.onMounted(() => document.addEventListener('keydown', onKeydown));
+            Vue.onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown));
             return { close };
         },
         template: `

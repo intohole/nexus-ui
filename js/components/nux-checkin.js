@@ -106,13 +106,12 @@
     },
     methods: {
       todayStr() {
-        const d = new Date()
-        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
+        return window.NexusUtils ? NexusUtils.formatDateKey(new Date()) : ''
       },
       addDays(ds, n) {
         const d = new Date(ds + 'T00:00:00')
         d.setDate(d.getDate() + n)
-        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
+        return window.NexusUtils ? NexusUtils.formatDateKey(d) : ''
       },
       adjust(d) { this.value = Math.max(0, this.value + d) },
       submit() {

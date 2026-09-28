@@ -88,12 +88,7 @@
     }
 
     function injectCss() {
-        if (!document.getElementById('nux-app-switcher-css')) {
-            var st = document.createElement('style');
-            st.id = 'nux-app-switcher-css';
-            st.textContent = CSS;
-            document.head.appendChild(st);
-        }
+        window.NexusUtils && NexusUtils.injectStyle('nux-app-switcher-css', CSS);
     }
 
     function keepApp(a) {

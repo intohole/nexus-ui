@@ -3,10 +3,7 @@
 
     const STYLE_ID = 'nux-ai-widgets-style';
     function ensureStyle() {
-        if (document.getElementById(STYLE_ID)) return;
-        const style = document.createElement('style');
-        style.id = STYLE_ID;
-        style.textContent = [
+        window.NexusUtils && NexusUtils.injectStyle(STYLE_ID, [
             '.nxw-item{margin-top:10px;background:var(--nx-bg-surface,#fff);border:1px solid var(--nx-border,rgba(0,0,0,.08));border-radius:var(--nx-radius-md,10px);overflow:hidden}',
             '.nxw-head{display:flex;align-items:center;gap:6px;padding:8px 12px;font-size:11px;font-weight:600;color:var(--nx-text-muted,#94a3b8);background:var(--nx-bg-muted,#f1f5f9);border-bottom:1px solid var(--nx-border,rgba(0,0,0,.08))}',
             '.nxw-body{padding:10px 12px}',
@@ -71,8 +68,7 @@
             '.nxw-fb-btn:hover{border-color:var(--app-accent,#6366f1);background:var(--nx-bg-hover,#f1f5f9)}',
             '.nxw-fb-btn.is-active{border-color:var(--app-accent,#6366f1);background:rgba(var(--app-accent-rgb,99,102,241),.08)}',
             '@media(hover:none) and (pointer:coarse){.nxw-chip{min-height:44px}.nxw-choice-btn{min-height:44px}}'
-        ].join('\n');
-        document.head.appendChild(style);
+        ]);
     }
     ensureStyle();
 

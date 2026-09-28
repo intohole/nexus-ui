@@ -1,10 +1,7 @@
 (function () {
     const STYLE_ID = 'nux-infinite-scroll-style';
     function ensureStyle() {
-        if (document.getElementById(STYLE_ID)) return;
-        const style = document.createElement('style');
-        style.id = STYLE_ID;
-        style.textContent = `
+        window.NexusUtils && NexusUtils.injectStyle(STYLE_ID, `
 .nis{display:block}
 .nis-sentinel{height:1px;width:100%}
 .nis-status{display:flex;align-items:center;justify-content:center;gap:var(--nx-space-2,8px);padding:var(--nx-space-4,16px);font-size:var(--nx-text-sm,14px);color:var(--nx-text-muted,#94a3b8)}
@@ -13,8 +10,7 @@
 @keyframes nis-spin{to{transform:rotate(360deg)}}
 @media(hover:none) and (pointer:coarse){.nis-status{padding:var(--nx-space-5,20px) var(--nx-space-4,16px);min-height:44px}}
 @media(prefers-reduced-motion:reduce){.nis-spinner{animation-duration:1.6s}}
-`;
-        document.head.appendChild(style);
+`);
     }
     ensureStyle();
 

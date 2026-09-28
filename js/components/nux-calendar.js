@@ -1,6 +1,5 @@
 (function () {
-  const pad2 = (n) => String(n).padStart(2, '0')
-  const toKey = (d) => d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate())
+  const toKey = (d) => (window.NexusUtils ? NexusUtils.formatDateKey(d) : '')
   const parseKey = (s) => new Date(s + 'T00:00:00')
   const clampLevel = (v) => Math.min(4, Math.max(0, Number(v) || 0))
 
@@ -54,7 +53,7 @@
         const out = []
         for (let i = 0; i < offset; i++) out.push({ key: 'e' + i, isEmpty: true, cls: 'empty', day: '' })
         for (let d = 1; d <= total; d++) {
-          const date = y + '-' + pad2(m) + '-' + pad2(d)
+          const date = toKey(new Date(y, m - 1, d))
           let cls = 'level-' + clampLevel(this.levels[date])
           if (date === today) cls += ' today'
           if (date === this.modelValue) cls += ' selected'
@@ -119,7 +118,7 @@
         if (!el) return
         const weeks = this.heatWeeks.weeks.length || 1
         const step = Math.floor((el.clientWidth - 26) / weeks)
-        const next = Math.max(15, Math.min(26, step))
+        const next = Math.max(12, Math.min(26, step))
         if (next !== this.heatStep) this.heatStep = next
       },
       addDays(ds, n) {

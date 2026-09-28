@@ -1,10 +1,7 @@
 (function () {
     const STYLE_ID = 'nux-file-upload-style';
     function ensureStyle() {
-        if (document.getElementById(STYLE_ID)) return;
-        const style = document.createElement('style');
-        style.id = STYLE_ID;
-        style.textContent = `
+        window.NexusUtils && NexusUtils.injectStyle(STYLE_ID, `
 .nfu{display:flex;flex-direction:column;gap:var(--nx-space-2,8px)}
 .nfu-label{font-size:var(--nx-text-sm,14px);font-weight:500;color:var(--nx-text-heading,#0f172a)}
 .nfu-drop{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--nx-space-1,4px);min-height:88px;padding:var(--nx-space-4,16px);border:1px dashed var(--nx-border,rgba(0,0,0,.08));border-radius:var(--nx-radius-md,10px);background:var(--nx-bg-surface,#fff);color:var(--nx-text-secondary,#64748b);font-size:var(--nx-text-sm,14px);text-align:center;cursor:pointer;transition:border-color var(--nx-transition-fast,.15s ease),background var(--nx-transition-fast,.15s ease)}
@@ -25,8 +22,7 @@
 .nfu-remove:hover{background:rgba(var(--nx-danger-rgb,239,68,68),.1);color:var(--nx-danger,#ef4444)}
 .nfu-remove:disabled{opacity:.5;cursor:default}
 @media(hover:none) and (pointer:coarse){.nfu-drop{min-height:110px}.nfu-remove{width:44px;height:44px}}
-`;
-        document.head.appendChild(style);
+`);
     }
     ensureStyle();
 

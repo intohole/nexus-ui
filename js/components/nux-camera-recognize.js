@@ -18,10 +18,7 @@
 
     var STYLE_ID = 'nux-camera-recognize-style';
     function ensureStyle() {
-        if (document.getElementById(STYLE_ID)) return;
-        var style = document.createElement('style');
-        style.id = STYLE_ID;
-        style.textContent = [
+        window.NexusUtils && NexusUtils.injectStyle(STYLE_ID, [
             '.ncr{display:flex;flex-direction:column;gap:var(--nx-space-3,12px);font-size:var(--nx-text-base,15px)}',
             '.ncr-label{font-size:var(--nx-text-sm,14px);font-weight:600;color:var(--nx-text-heading,#0f172a)}',
             '.ncr-frame{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--nx-space-3,12px);min-height:180px;padding:var(--nx-space-6,24px);border:1px dashed var(--nx-border,rgba(0,0,0,.08));border-radius:var(--nx-radius-lg,16px);background:var(--nx-glass-bg,rgba(255,255,255,.7));text-align:center}',
@@ -97,8 +94,7 @@
             '.ncr-input{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0)}',
             '@media(hover:none) and (pointer:coarse){.ncr-btn{min-height:44px}.ncr-iconbtn{width:44px;height:44px}.ncr-shutter{width:72px;height:72px}}',
             '@media(prefers-reduced-motion:reduce){.ncr-flash,.ncr-scan,.ncr-busy-bar i,.ncr-stage--active .ncr-stage-dot{animation:none}.ncr-busy-bar i{width:100%}}'
-        ].join('\n');
-        document.head.appendChild(style);
+        ]);
     }
     ensureStyle();
 

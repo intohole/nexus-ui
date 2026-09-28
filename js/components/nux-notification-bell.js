@@ -103,11 +103,7 @@
             },
             formatTime: function(iso) {
                 if (!iso) return '';
-                try {
-                    var d = new Date(iso);
-                    var pad = function(n) { return n < 10 ? '0' + n : String(n); };
-                    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
-                } catch (e) { return String(iso); }
+                return window.NexusUtils ? NexusUtils.formatDateTimeHyphen(iso) : String(iso);
             }
         },
         template: `

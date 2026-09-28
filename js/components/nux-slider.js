@@ -1,10 +1,7 @@
 (function () {
     const STYLE_ID = 'nux-slider-style';
     function ensureStyle() {
-        if (document.getElementById(STYLE_ID)) return;
-        const style = document.createElement('style');
-        style.id = STYLE_ID;
-        style.textContent = `
+        window.NexusUtils && NexusUtils.injectStyle(STYLE_ID, `
 .nsl{display:flex;flex-direction:column;gap:var(--nx-space-2,8px);width:100%}
 .nsl-head{display:flex;align-items:center;justify-content:space-between;gap:var(--nx-space-3,12px)}
 .nsl-label{font-size:var(--nx-text-sm,14px);font-weight:500;color:var(--nx-text-heading,#0f172a)}
@@ -25,8 +22,7 @@
 .nsl--disabled .nsl-input::-moz-range-thumb{border-color:var(--nx-border-hover,rgba(0,0,0,.15));cursor:default}
 .nsl--disabled .nsl-value{color:var(--nx-text-muted,#94a3b8)}
 @media(hover:none) and (pointer:coarse){.nsl-track{height:44px}.nsl-input{height:44px}.nsl-input::-webkit-slider-thumb{width:24px;height:24px;margin-top:-9px}.nsl-input::-moz-range-thumb{width:24px;height:24px}}
-`;
-        document.head.appendChild(style);
+`);
     }
     ensureStyle();
 

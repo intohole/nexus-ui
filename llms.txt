@@ -99,6 +99,10 @@ NexusUtils.formatDateTime(dateString);    // 2026/06/30 10:30:00（含秒）
 NexusUtils.formatPercent(value, decimals); // 15.6%
 NexusUtils.formatChatTime(timeStr);        // 今天=10:30，其他=06/30 10:30
 NexusUtils.formatTime(dateString);         // 别名=formatRelativeTime
+NexusUtils.formatDateKey(value);           // Date/字符串 → 'YYYY-MM-DD'（本地日期键，日历/签到场景）
+NexusUtils.formatDateTimeHyphen(value, withSeconds); // 'YYYY-MM-DD HH:mm'（连字符风格展示）
+NexusUtils.pad2(n);                        // 两位补零
+NexusUtils.injectStyle(id, css);           // 幂等注入 <style id>（组件样式注入统一出口）
 NexusUtils.compressImage(file, { maxDim: 1600, quality: 0.85, output: 'file' }); // 图片压缩，output: 'file'|'blob'|'dataurl'，PNG 保透明、JPEG 自动填白底，无需压缩时返回原文件
 ```
 
@@ -193,11 +197,11 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 
 ### 基础组件（v2.10.53+，样式已并入 nexus-all.css，多端适配内置无需业务写媒体查询）
 
-引入方式统一为 `<script src="https://songguokr.com/nexus-ui/v{version}/js/components/nux-xxx.js"></script>` 后 `NexusComponents.register(app)` 一键注册（禁止逐个 `app.component`）。基准样式=桌面端，≤820px 自动收敛，触屏自动 44px 命中区与 16px 输入字号。
+引入方式统一为 `<script src="https://songguokr.com/nexus-ui/v{version}/js/components/nux-xxx.js"></script>` 后 `NexusComponents.register(app)` 一键注册（禁止逐个 `app.component`）。基准样式=桌面端，≤768px 自动收敛，触屏自动 44px 命中区与 16px 输入字号。
 
 用户协议页面唯一事实源：本仓库 `agreement.html`（协议条款/隐私政策文案直接维护在该页）。
 
-### 全部组件索引（68 个，以 `NexusComponents.list()` 为准）
+### 全部组件索引（71 个，以 `NexusComponents.list()` 为准）
 
 | 分类 | 组件 |
 |------|------|

@@ -3,10 +3,7 @@
 
     const STYLE_ID = 'nux-ai-widgets-rich-style';
     function ensureStyle() {
-        if (document.getElementById(STYLE_ID)) return;
-        const style = document.createElement('style');
-        style.id = STYLE_ID;
-        style.textContent = [
+        window.NexusUtils && NexusUtils.injectStyle(STYLE_ID, [
             '.nxw-form{display:flex;flex-direction:column;gap:10px}',
             '.nxw-field{display:flex;flex-direction:column;gap:4px}',
             '.nxw-field-label{font-size:12px;font-weight:600;color:var(--nx-text-heading,#0f172a)}',
@@ -32,8 +29,7 @@
             '.nxw-cf-items{list-style:none;margin:8px 0 0;padding:8px 10px;background:var(--nx-bg-muted,#f1f5f9);border-radius:var(--nx-radius-sm,8px);font-size:12px;color:var(--nx-text-body,#334155);display:flex;flex-direction:column;gap:4px;max-height:170px;overflow:auto}',
             '.nxw-cf-warn{margin-top:8px;font-size:11px;color:var(--nx-danger,#ef4444);background:rgba(var(--nx-danger-rgb,239,68,68),.08);border-radius:var(--nx-radius-sm,8px);padding:5px 10px}',
             '@media(hover:none) and (pointer:coarse){.nxw-field-input{min-height:44px}.nxw-primary{min-height:44px}.nxw-ghost{min-height:44px}.nxw-danger{min-height:44px}}'
-        ].join('\n');
-        document.head.appendChild(style);
+        ]);
     }
     ensureStyle();
 

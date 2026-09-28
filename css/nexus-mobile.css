@@ -127,6 +127,7 @@
   transition: transform var(--nx-transition-slow);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  padding-bottom: var(--nx-safe-bottom);
 }
 .nx-drawer.open { transform: translateX(0); }
 
@@ -175,7 +176,7 @@
 .nx-bottom-nav-item:active { color: var(--app-accent); }
 .nx-bottom-nav-item.active { color: var(--app-accent); }
 .nx-bottom-nav-icon { font-size: 20px; line-height: 1; }@media (max-width: 768px){
-  .nx-modal { max-width: none; width: 100%; height: auto; max-height: 90dvh; margin: auto 0 0 0; border-radius: var(--nx-radius-xl) var(--nx-radius-xl) 0 0; padding: var(--nx-space-5); }
+  .nx-modal { max-width: none; width: 100%; height: auto; max-height: 90dvh; margin: auto 0 0 0; border-radius: var(--nx-radius-xl) var(--nx-radius-xl) 0 0; }
   .nx-modal-overlay { align-items: flex-end; }
 }
 
@@ -187,8 +188,8 @@
   .nx-sidebar-item { min-height: 44px; }
   .nx-input, .nx-select, .nux-input { min-height: 44px; font-size: 16px; }
   .nux-btn, .nux-acc-head, .nux-bottom-nav-item, .nux-layout-nav-item, .nux-layout-collapse-btn,
-  .nux-tab-item, .nux-segmented-item, .nux-chip, .nux-cal-nav, .nux-cal-today-btn, .nux-cal-cell,
-  .nux-cal-heat-cell, .nux-checkin-cell, .nux-checkin-preset, .nux-checkin-mini, .nux-checkin-ghost,
+  .nux-tab-item, .nux-segmented-item, .nux-chip, .nux-cal-nav, .nux-cal-today-btn,
+  .nux-checkin-preset,
   .nux-notif-item, .nux-notif-panel-item, .nux-notif-panel-page-btn, .nux-notif-btn, .nux-notify-bell,
   .nux-notify-item, .nux-onboarding-btn, .nux-uc-tab, .nux-uc-trigger, .nux-uc-action, .nux-uc-close,
   .nux-uc-logout, .nux-login-tab, .nux-login-subtab, .nux-third-btn, .nux-link, .nux-undo-btn,
@@ -355,7 +356,7 @@ select,
 .el-textarea__inner {
   font-size: 16px;
 }@media (max-width: 768px){
-  button,
+  button:not([class]),
   .btn,
   [role="button"],
   a.btn {
@@ -380,7 +381,7 @@ select,
     -webkit-overflow-scrolling: touch;
   }
 }@media (pointer: coarse){
-  button,
+  button:not([class]),
   .btn,
   [role="button"],
   a.btn,

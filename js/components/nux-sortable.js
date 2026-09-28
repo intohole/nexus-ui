@@ -3,10 +3,7 @@
     const DRAG_THRESHOLD = 6;
 
     function ensureStyle() {
-        if (document.getElementById(STYLE_ID)) return;
-        const style = document.createElement('style');
-        style.id = STYLE_ID;
-        style.textContent = `
+        window.NexusUtils && NexusUtils.injectStyle(STYLE_ID, `
 .nsk{position:relative;display:flex;flex-direction:column;gap:var(--nx-space-2,8px)}
 .nsk--h{flex-direction:row}
 .nsk-item{position:relative;display:flex;align-items:center;gap:var(--nx-space-2,8px);border-radius:var(--nx-radius-sm,6px);transition:box-shadow var(--nx-transition-fast,150ms ease),transform var(--nx-transition-fast,150ms ease)}
@@ -17,8 +14,7 @@
 .nsk-handle:disabled{cursor:default;opacity:.4}
 .nsk-icon{width:10px;height:16px;display:block}
 @media(hover:none) and (pointer:coarse){.nsk-handle{width:44px;height:44px}}
-`;
-        document.head.appendChild(style);
+`);
     }
     ensureStyle();
 

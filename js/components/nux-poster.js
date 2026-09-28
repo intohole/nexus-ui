@@ -227,12 +227,7 @@
         '.nux-poster-el{pointer-events:none}',
     ];
     (function injectCss() {
-        var tag = document.getElementById('nux-poster-style');
-        if (tag) return;
-        var style = document.createElement('style');
-        style.id = 'nux-poster-style';
-        style.textContent = CSS.join('');
-        (document.head || document.documentElement).appendChild(style);
+        window.NexusUtils && NexusUtils.injectStyle('nux-poster-style', CSS.join(''));
     })();
 
     var posterComponent = {

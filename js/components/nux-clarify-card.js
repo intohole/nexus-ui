@@ -1,10 +1,7 @@
 (function () {
     const STYLE_ID = 'nux-clarify-card-style';
     function ensureStyle() {
-        if (document.getElementById(STYLE_ID)) return;
-        const style = document.createElement('style');
-        style.id = STYLE_ID;
-        style.textContent = `
+        window.NexusUtils && NexusUtils.injectStyle(STYLE_ID, `
 .nc-clarify{background:var(--nx-bg-surface,#fff);border:1px solid var(--nx-border,rgba(0,0,0,.08));border-radius:var(--nx-radius-md,10px);padding:14px 16px;display:flex;flex-direction:column;gap:14px;max-width:560px}
 .nc-clarify-head{display:flex;align-items:center;gap:8px}
 .nc-clarify-title{font-size:14px;font-weight:600;color:var(--nx-text-heading,#0f172a)}
@@ -26,8 +23,7 @@
 .nc-skip{background:var(--nx-bg-surface,#fff);color:var(--nx-text-muted,#94a3b8);border-color:var(--nx-border,rgba(0,0,0,.08))}
 .nc-skip:hover{color:var(--nx-text-heading,#0f172a);border-color:var(--nx-border-hover,rgba(0,0,0,.15))}
 @media(hover:none) and (pointer:coarse){.nc-chip{min-height:44px}.nc-btn{min-height:44px}}
-`;
-        document.head.appendChild(style);
+`);
     }
     ensureStyle();
 
