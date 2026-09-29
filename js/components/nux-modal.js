@@ -1,5 +1,4 @@
 (function() {
-    const FOCUSABLE = 'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
     const NuxModal = {
         name: 'NuxModal',
         props: {
@@ -15,17 +14,13 @@
             const refs = Vue.ref(null);
             let restoreFocusEl = null;
 
-            function focusables() {
-                return refs.value ? Array.from(refs.value.querySelectorAll(FOCUSABLE)).filter(el => el.offsetParent !== null) : [];
-            }
-
             function onKeydown(e) {
                 if (e.key === 'Escape') {
                     if (props.escClose) close();
                     return;
                 }
                 if (e.key !== 'Tab') return;
-                const list = focusables();
+                const list = NexusUtils.focusables(refs.value);
                 if (!list.length) return;
                 const first = list[0];
                 const last = list[list.length - 1];
@@ -47,7 +42,7 @@
                         }
                         document.addEventListener('keydown', onKeydown);
                         Vue.nextTick(() => {
-                            const list = focusables();
+                            const list = NexusUtils.focusables(refs.value);
                             if (list.length) list[0].focus();
                         });
                     } else {

@@ -624,6 +624,14 @@
         return String(v);
     };
 
+    utils.FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    utils.focusables = function (root) {
+        if (!root) return [];
+        return Array.prototype.slice.call(root.querySelectorAll(utils.FOCUSABLE_SELECTOR)).filter(function (el) {
+            return el.offsetParent !== null;
+        });
+    };
+
     window.NexusUtils = utils;
 })();
 

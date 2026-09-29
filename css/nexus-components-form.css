@@ -395,7 +395,9 @@
 .nux-login-page.nux-login--topbar,
 .nux-login-page.nux-login--minimal {
   flex-direction: column;
-  background: linear-gradient(165deg, #eef2f7 0%, #e3e9f1 55%, #d6dfea 100%);
+  --nux-login-grad-mid: #e3e9f1;
+  --nux-login-grad-end: #d6dfea;
+  background: linear-gradient(165deg, var(--nx-bg-page, #eef2f7) 0%, var(--nux-login-grad-mid) 55%, var(--nux-login-grad-end) 100%);
 }
 .nux-login-page.nux-login--card .nux-login-brand,
 .nux-login-page.nux-login--topbar .nux-login-brand {
@@ -411,7 +413,7 @@
 .nux-login-page.nux-login--card .nux-login-card,
 .nux-login-page.nux-login--topbar .nux-login-card,
 .nux-login-page.nux-login--minimal .nux-login-card {
-  background: #fff; box-sizing: border-box;
+  background: var(--nx-bg-card, #fff); box-sizing: border-box;
 }
 .nux-login-page.nux-login--card .nux-login-card { border-radius: 18px; padding: 32px 30px; box-shadow: 0 12px 40px rgba(30, 41, 59, .10), 0 2px 6px rgba(30, 41, 59, .06); }
 .nux-login-page.nux-login--topbar .nux-login-card { border-radius: 16px; padding: 32px 30px; box-shadow: 0 10px 32px rgba(30, 41, 59, .09); }
@@ -428,8 +430,8 @@
 .nux-login-page.nux-login--card .nux-login-slogan { font-size: var(--nx-text-base); color: var(--nx-text-secondary); }
 .nux-login-page.nux-login--card .nux-login-form-side { padding: 20px 16px 56px; }
 
-.nux-login-page.nux-login--topbar { background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%); }
-.nux-login-page.nux-login--topbar .nux-login-brand { background: #fff; padding: 14px 24px; box-shadow: 0 1px 0 var(--nx-border); }
+.nux-login-page.nux-login--topbar { background: linear-gradient(180deg, var(--nx-bg-base, #f1f5f9) 0%, var(--nux-login-grad-end, #e2e8f0) 100%); }
+.nux-login-page.nux-login--topbar .nux-login-brand { background: var(--nx-bg-surface, #fff); padding: 14px 24px; box-shadow: 0 1px 0 var(--nx-border); }
 .nux-login-page.nux-login--topbar .nux-login-brand-content { display: flex; align-items: center; justify-content: center; gap: 12px; text-align: left; color: var(--nx-text-heading); }
 .nux-login-page.nux-login--topbar .nux-login-icon { margin: 0; font-size: 28px; line-height: 1; }
 .nux-login-page.nux-login--topbar .nux-login-app-name { font-size: 20px; margin: 0; color: var(--nx-text-heading); }
@@ -704,3 +706,14 @@
 }
 .nux-uc-session-meta b { color: var(--nx-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .nux-uc-session-meta span { color: var(--nx-text-secondary); font-size: var(--nx-text-xs); }
+
+/* 登录页三变体暗色：渐变中末段与卡片阴影翻转（起段走 --nx-bg-page 已随块） */
+[data-theme="dark"] .nux-login-page.nux-login--card,
+[data-theme="dark"] .nux-login-page.nux-login--topbar,
+[data-theme="dark"] .nux-login-page.nux-login--minimal {
+  --nux-login-grad-mid: #1b2534;
+  --nux-login-grad-end: #16202f;
+}
+[data-theme="dark"] .nux-login-page.nux-login--card .nux-login-card { box-shadow: 0 12px 40px rgba(0, 0, 0, .45), 0 2px 6px rgba(0, 0, 0, .3); }
+[data-theme="dark"] .nux-login-page.nux-login--topbar .nux-login-card { box-shadow: 0 10px 32px rgba(0, 0, 0, .4); }
+[data-theme="dark"] .nux-login-page.nux-login--minimal .nux-login-card { box-shadow: 0 8px 28px rgba(0, 0, 0, .35); }

@@ -30,7 +30,6 @@
 .nux-btn--text:hover:not(:disabled) { background: rgba(var(--app-accent-rgb), 0.08); }
 
 .nux-btn--sm { padding: 4px var(--nx-space-3); min-height: 30px; font-size: var(--nx-text-xs); }
-.nux-btn--lg { padding: 12px var(--nx-space-6); min-height: 46px; font-size: var(--nx-text-base); border-radius: var(--nx-radius-lg); }
 .nux-btn--block { display: flex; width: 100%; }
 
 .nux-btn-spinner {
@@ -343,11 +342,11 @@
   .nux-btn--sm { min-height: 40px; }
   .nux-input, .nux-search-input { font-size: 16px; }
   .nux-search-box { padding: 0 var(--nx-space-3); }
-  .nux-search-box .nux-field-clear { width: 32px; height: 32px; }
+  .nux-search-box .nux-field-clear { width: 40px; height: 40px; }
   .nux-chip { min-height: 40px; }
   .nux-segmented-item { min-height: 40px; }
   .nux-switch-track { width: 48px; height: 28px; }
   .nux-switch-track--on .nux-switch-thumb { transform: translateX(20px); }
   .nux-check-box { width: 20px; height: 20px; }
-  .nux-field-clear { width: 32px; height: 32px; }
+  .nux-field-clear { width: 40px; height: 40px; }
 }

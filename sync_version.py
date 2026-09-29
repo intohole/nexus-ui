@@ -5,6 +5,8 @@
     python3 nexus-ui/sync_version.py [工作区根目录]
 
 仅替换 nexus-ui/vX.Y.Z/ -> nexus-ui/v{spec}/；跳过 deps.json ignore_paths。
+库自身目录同样纳入同步（README.md/index.html/about.html/site 等），
+避免发版后自引用版本漂移。
 """
 import json
 import os
@@ -34,16 +36,12 @@ def main() -> int:
     root = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     target = _load_spec(root)
     ignore = _load_ignore(root)
-    self_dir = os.path.normpath(os.path.join(root, "nexus-ui")).lower()
     skip_dirs = (".git", "node_modules", "vendor", "__pycache__", "dist", ".venv", "venv", "data", "logs")
     changed, total = 0, 0
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames[:] = [d for d in dirnames if d not in skip_dirs]
-        if os.path.normpath(dirpath).lower() == self_dir:
-            dirnames[:] = []
-            continue
         for fn in filenames:
-            if not (fn.endswith(".html") or fn.endswith(".js")):
+            if not (fn.endswith(".html") or fn.endswith(".js") or fn.endswith(".md")):
                 continue
             path = os.path.join(dirpath, fn)
             if path.lower().startswith(ignore):

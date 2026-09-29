@@ -97,6 +97,7 @@ NexusUtils.deepClone(obj);
 NexusUtils.pick(obj, keys);
 NexusUtils.omit(obj, keys);
 NexusUtils.downloadFile(content, filename, mimeType);
+NexusUtils.focusables(rootEl);        // 弹层焦点陷阱：容器内可见可聚焦元素列表
 NexusUtils.autoResize(textareaElement);
 NexusUtils.formatDateTime(dateString);    // 2026/06/30 10:30:00（含秒）
 NexusUtils.formatPercent(value, decimals); // 15.6%
@@ -213,7 +214,7 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 
 用户协议页面唯一事实源：本仓库 `agreement.html`（协议条款/隐私政策文案直接维护在该页）。
 
-### 全部组件索引（72 个，以 `NexusComponents.list()` 为准）
+### 全部组件索引（70 个，以 `NexusComponents.list()` 为准）
 
 | 分类 | 组件 |
 |------|------|
