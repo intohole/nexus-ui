@@ -806,7 +806,7 @@ widgets: [
                   { label: '登上传送船', description: '推进主线，进入星港篇', recommended: true },
                   { label: '留在基地', description: '先补完支线人物' }
                 ] } },
-              { id: 'w-feedback', type: 'feedback', data: { message: '这章的节奏可以吗？' } },
+              { id: 'w-feedback', type: 'feedback', title: '回答反馈', data: { message: '这章的节奏可以吗？' } },
               { id: 'w-form', type: 'form', title: '发布前收集',
                 data: { message: '补全作品信息后即可发布', submit_text: '确认发布', allow_cancel: true,
                   fields: [

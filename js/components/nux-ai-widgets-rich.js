@@ -4,31 +4,36 @@
     const STYLE_ID = 'nux-ai-widgets-rich-style';
     function ensureStyle() {
         window.NexusUtils && NexusUtils.injectStyle(STYLE_ID, [
-            '.nxw-form{display:flex;flex-direction:column;gap:10px}',
+            '.nxw-form{display:flex;flex-direction:column;gap:11px}',
             '.nxw-field{display:flex;flex-direction:column;gap:4px}',
             '.nxw-field-label{font-size:12px;font-weight:600;color:var(--nx-text-heading,#0f172a)}',
             '.nxw-field-label em{color:var(--nx-danger,#ef4444);font-style:normal;margin-left:2px}',
-            '.nxw-field-input{border:1px solid var(--nx-border,rgba(0,0,0,.08));border-radius:var(--nx-radius-sm,8px);background:var(--nx-bg-surface,#fff);padding:7px 10px;font-size:13px;color:var(--nx-text-heading,#0f172a);font-family:inherit;width:100%;box-sizing:border-box}',
-            '.nxw-field-input:focus{outline:none;border-color:var(--app-accent,#6366f1)}',
+            '.nxw-field-input{border:1px solid var(--nx-border,rgba(0,0,0,.08));border-radius:var(--nx-radius-sm,8px);background:var(--nx-bg-surface,#fff);padding:7px 10px;font-size:13px;color:var(--nx-text-heading,#0f172a);font-family:inherit;width:100%;box-sizing:border-box;transition:border-color var(--nx-transition-fast,150ms),box-shadow var(--nx-transition-fast,150ms)}',
+            '.nxw-field-input::placeholder{color:var(--nx-text-muted,#94a3b8)}',
+            '.nxw-field-input:focus{outline:none;border-color:var(--app-accent,#6366f1);box-shadow:0 0 0 3px rgba(var(--app-accent-rgb,99,102,241),.14)}',
             '.nxw-field-input:disabled{opacity:.5}',
-            '.nxw-field-hint{font-size:11px;color:var(--nx-text-muted,#94a3b8)}',
+            '.nxw-field-hint{font-size:11px;color:var(--nx-text-muted,#94a3b8);line-height:1.5}',
             '.nxw-switch-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--nx-text-body,#334155)}',
             '.nxw-switch{width:40px;height:22px;border-radius:var(--nx-radius-full,999px);border:1px solid var(--nx-border,rgba(0,0,0,.08));background:var(--nx-bg-muted,#f1f5f9);position:relative;cursor:pointer;flex:0 0 40px;padding:0;transition:background .18s,border-color .18s}',
             '.nxw-switch::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--nx-bg-surface,#fff);box-shadow:0 1px 2px rgba(15,23,42,.2);transition:left .18s}',
             '.nxw-switch.is-on{background:var(--app-accent,#6366f1);border-color:var(--app-accent,#6366f1)}',
             '.nxw-switch.is-on::after{left:20px}',
-            '.nxw-ghost{background:var(--nx-bg-surface,#fff);color:var(--nx-text-muted,#94a3b8);border:1px solid var(--nx-border,rgba(0,0,0,.08));border-radius:var(--nx-radius-sm,8px);padding:6px 16px;font-size:12px;cursor:pointer;transition:color .15s,border-color .15s}',
-            '.nxw-ghost:hover{color:var(--nx-text-heading,#0f172a);border-color:var(--nx-border-hover,rgba(0,0,0,.15))}',
+            '.nxw-ghost{background:var(--nx-bg-surface,#fff);color:var(--nx-text-muted,#94a3b8);border:1px solid var(--nx-border,rgba(0,0,0,.08));border-radius:var(--nx-radius-sm,8px);padding:7px 16px;font-size:12px;font-weight:500;cursor:pointer;transition:color var(--nx-transition-fast,150ms),border-color var(--nx-transition-fast,150ms),background var(--nx-transition-fast,150ms)}',
+            '.nxw-ghost:hover{color:var(--nx-text-heading,#0f172a);border-color:var(--nx-border-hover,rgba(0,0,0,.15));background:var(--nx-bg-hover,#f1f5f9)}',
             '.nxw-ghost:disabled{opacity:.5;cursor:default}',
-            '.nxw-danger{background:var(--nx-danger,#ef4444);color:var(--nx-text-on-accent,#fff);border:none;border-radius:var(--nx-radius-sm,8px);padding:6px 16px;font-size:12px;font-weight:600;cursor:pointer}',
+            '.nxw-danger{background:var(--nx-danger,#ef4444);color:var(--nx-text-on-accent,#fff);border:none;border-radius:var(--nx-radius-sm,8px);padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;transition:filter var(--nx-transition-fast,150ms),box-shadow var(--nx-transition-fast,150ms)}',
+            '.nxw-danger:hover{filter:brightness(.94)}',
             '.nxw-danger:disabled{opacity:.5;cursor:default}',
+            '.nxw-danger:disabled:hover{filter:none}',
             '.nxw-chart{width:100%}',
             '.nxw-chart-fallback{display:flex;align-items:center;justify-content:center;height:160px;border:1px dashed var(--nx-border,rgba(0,0,0,.08));border-radius:var(--nx-radius-sm,8px);background:var(--nx-bg-muted,#f1f5f9);color:var(--nx-text-muted,#94a3b8);font-size:12px}',
             '.nxw-cf-message{font-size:13px;font-weight:600;color:var(--nx-text-heading,#0f172a);line-height:1.5}',
-            '.nxw-cf-detail{font-size:12px;color:var(--nx-text-body,#334155);margin-top:4px;line-height:1.5}',
-            '.nxw-cf-items{list-style:none;margin:8px 0 0;padding:8px 10px;background:var(--nx-bg-muted,#f1f5f9);border-radius:var(--nx-radius-sm,8px);font-size:12px;color:var(--nx-text-body,#334155);display:flex;flex-direction:column;gap:4px;max-height:170px;overflow:auto}',
-            '.nxw-cf-warn{margin-top:8px;font-size:11px;color:var(--nx-danger,#ef4444);background:rgba(var(--nx-danger-rgb,239,68,68),.08);border-radius:var(--nx-radius-sm,8px);padding:5px 10px}',
-            '@media(hover:none) and (pointer:coarse){.nxw-field-input{min-height:44px}.nxw-primary{min-height:44px}.nxw-ghost{min-height:44px}.nxw-danger{min-height:44px}}'
+            '.nxw-cf-detail{font-size:12px;color:var(--nx-text-body,#334155);margin-top:4px;line-height:1.55}',
+            '.nxw-cf-items{list-style:none;margin:8px 0 0;padding:8px 10px;background:var(--nx-bg-muted,#f1f5f9);border-radius:var(--nx-radius-sm,8px);font-size:12px;color:var(--nx-text-body,#334155);display:flex;flex-direction:column;gap:4px;max-height:170px;overflow:auto;font-variant-numeric:tabular-nums}',
+            '.nxw-cf-warn{margin-top:8px;font-size:11px;color:var(--nx-danger,#ef4444);background:rgba(var(--nx-danger-rgb,239,68,68),.08);border-radius:var(--nx-radius-sm,8px);padding:6px 10px;line-height:1.5}',
+            '.nxw-field-input:focus-visible,.nxw-switch:focus-visible,.nxw-ghost:focus-visible,.nxw-danger:focus-visible{outline:none;border-color:var(--app-accent,#6366f1);box-shadow:0 0 0 3px rgba(var(--app-accent-rgb,99,102,241),.18)}',
+            '@media(hover:none) and (pointer:coarse){.nxw-field-input{min-height:44px}.nxw-primary{min-height:44px}.nxw-ghost{min-height:44px}.nxw-danger{min-height:44px}}',
+            '@media(prefers-reduced-motion:reduce){.nxw-list *{transition:none!important}}'
         ]);
     }
     ensureStyle();
@@ -46,8 +51,31 @@
     }
 
     const ECHARTS_URL = 'https://registry.npmmirror.com/echarts/5.5.0/files/dist/echarts.min.js';
-    const PALETTE = ['#6366f1', '#38bdf8', '#14b8a6', '#f59e0b', '#94a3b8', '#818cf8'];
+    const PALETTE_REST = ['#38bdf8', '#14b8a6', '#f59e0b', '#818cf8', '#94a3b8'];
     let echartsPromise = null;
+
+    function themeColors() {
+        const cs = getComputedStyle(document.documentElement);
+        const v = (n, fb) => { const s = cs.getPropertyValue(n).trim(); return s || fb; };
+        return {
+            accent: v('--app-accent', '#6366f1'),
+            border: v('--nx-border-hover', 'rgba(0, 0, 0, 0.15)'),
+            split: v('--nx-bg-muted', '#f1f5f9'),
+            label: v('--nx-text-secondary', '#64748b'),
+            surface: v('--nx-bg-surface', '#fff'),
+            elevated: v('--nx-bg-elevated', '#fff'),
+            heading: v('--nx-text-heading', '#0f172a')
+        };
+    }
+
+    function tooltipStyle(t) {
+        return {
+            backgroundColor: t.elevated,
+            borderColor: t.border,
+            textStyle: { color: t.heading, fontSize: 12 },
+            extraCssText: 'box-shadow:0 4px 12px rgba(0,0,0,.12);border-radius:8px;'
+        };
+    }
 
     function loadEcharts() {
         if (window.echarts) return Promise.resolve(window.echarts);
@@ -179,19 +207,22 @@
             const failed = ref(false);
             let instance = null;
             let observer = null;
+            let themeWatcher = null;
             const height = computed(() => (props.data && props.data.height) || 220);
 
             function buildOption() {
                 const d = props.data || {};
+                const t = themeColors();
                 if (d.option) return d.option;
                 const kind = d.chart || 'bar';
+                const palette = [t.accent].concat(PALETTE_REST);
                 const series = (d.series || []).map((s) => {
                     const base = { name: s.name || '', data: s.data || [] };
                     if (kind === 'pie') {
                         return Object.assign(base, {
                             type: 'pie',
                             radius: d.radius || ['42%', '68%'],
-                            itemStyle: { borderColor: 'var(--nx-bg-surface,#fff)', borderWidth: 2 }
+                            itemStyle: { borderColor: t.surface, borderWidth: 2 }
                         });
                     }
                     return Object.assign(base, {
@@ -204,28 +235,28 @@
                 });
                 if (kind === 'pie') {
                     return {
-                        color: PALETTE,
-                        tooltip: { trigger: 'item' },
-                        legend: { bottom: 0, icon: 'circle', itemWidth: 8, itemHeight: 8, textStyle: { fontSize: 11 } },
+                        color: palette,
+                        tooltip: Object.assign({ trigger: 'item' }, tooltipStyle(t)),
+                        legend: { bottom: 0, icon: 'circle', itemWidth: 8, itemHeight: 8, textStyle: { fontSize: 11, color: t.label } },
                         series: series
                     };
                 }
                 return {
-                    color: PALETTE,
+                    color: palette,
                     grid: { left: 4, right: 12, top: series.length > 1 ? 30 : 12, bottom: 4, containLabel: true },
-                    tooltip: { trigger: 'axis' },
-                    legend: series.length > 1 ? { top: 0, icon: 'circle', itemWidth: 8, itemHeight: 8, textStyle: { fontSize: 11 } } : undefined,
+                    tooltip: Object.assign({ trigger: 'axis' }, tooltipStyle(t)),
+                    legend: series.length > 1 ? { top: 0, icon: 'circle', itemWidth: 8, itemHeight: 8, textStyle: { fontSize: 11, color: t.label } } : undefined,
                     xAxis: {
                         type: 'category',
                         data: d.categories || [],
-                        axisLine: { lineStyle: { color: '#cbd5e1' } },
+                        axisLine: { lineStyle: { color: t.border } },
                         axisTick: { show: false },
-                        axisLabel: { fontSize: 11, color: '#64748b' }
+                        axisLabel: { fontSize: 11, color: t.label }
                     },
                     yAxis: {
                         type: 'value',
-                        splitLine: { lineStyle: { color: '#f1f5f9' } },
-                        axisLabel: { fontSize: 11, color: '#64748b' }
+                        splitLine: { lineStyle: { color: t.split } },
+                        axisLabel: { fontSize: 11, color: t.label }
                     },
                     series: series
                 };
@@ -248,10 +279,17 @@
                 }).catch(() => { failed.value = true; });
             }
 
-            onMounted(() => { requestAnimationFrame(render); });
+            onMounted(() => {
+                requestAnimationFrame(render);
+                if (window.MutationObserver) {
+                    themeWatcher = new MutationObserver(() => { if (instance) render(); });
+                    themeWatcher.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+                }
+            });
             watch(() => props.data, render, { deep: true });
             onBeforeUnmount(() => {
                 if (observer) { observer.disconnect(); observer = null; }
+                if (themeWatcher) { themeWatcher.disconnect(); themeWatcher = null; }
                 if (instance) { instance.dispose(); instance = null; }
             });
             return { hostRef, failed, height };
@@ -298,7 +336,7 @@
         `
     };
 
-    registry.register('form', WidgetForm, '📝');
-    registry.register('chart', WidgetChart, '📈');
-    registry.register('confirm', WidgetConfirm, '⚠️');
+    registry.register('form', WidgetForm);
+    registry.register('chart', WidgetChart);
+    registry.register('confirm', WidgetConfirm);
 })();

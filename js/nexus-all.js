@@ -461,7 +461,7 @@
             if (!id || document.getElementById(id)) return;
             const style = document.createElement('style');
             style.id = id;
-            style.textContent = css;
+            style.textContent = Array.isArray(css) ? css.join('\n') : css;
             (document.head || document.documentElement).appendChild(style);
         },
 
