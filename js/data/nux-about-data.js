@@ -191,6 +191,24 @@
       home: '/pptcraft/', appName: '汇报通', appIcon: '📊', slogan: '几分钟出一份能直接开讲的汇报',
       description: '你只需说清楚想汇报什么，AI 会帮你：核对真实资料、设计汇报结构、撰写每页内容、生成逐页演讲稿。生成后可下载 PPTX 编辑，或导出网页分享给别人。',
       version: '2.0.0', accent: '#1F4E79', accentHover: '#1F4E79'
+    },
+    truemirror: {
+      home: '/truemirror/', appName: '照妖镜 TrueMirror', appIcon: '🪞', slogan: '帮你把网站变强',
+      description: '一键看清功能、UI、法务、商业模式、用户体验，以及它到底有没有解决真痛点。每次评测约 1–2 分钟，报告白盒可读、可直接给智能体用。',
+      story: ['创业者的网站经不起「自我感觉良好」：功能看着齐全，但法务有没有雷、商业模式站不站得住，往往没人跟你说真话。', '照妖镜把你的网站「照」一遍——六个面一次照全，确定性信号由代码实测，AI 负责深度剖析，给你敢听的实话。'],
+      features: [
+        { icon: 'fas fa-magnifying-glass-chart', title: '六维评测', desc: '功能 / UI / 法务 / 商业 / 体验 / 真痛点' },
+        { icon: 'fas fa-bolt', title: '一分钟出报告', desc: '约 1–2 分钟出白盒可读的完整报告' },
+        { icon: 'fas fa-plug', title: 'MCP 接入', desc: '智能体可直接读取评测任务与结果' },
+        { icon: 'fas fa-file-export', title: '报告导出', desc: '报告可导出分享，直接给合伙人看' }
+      ],
+      promises: [
+        { icon: 'fas fa-shield-halved', title: '数据安全', desc: '你的数据只属于你，未经授权我们不会访问' },
+        { icon: 'fas fa-robot', title: 'AI 生成说明', desc: '评测/报告部分内容由 AI 生成，仅供参考' },
+        { icon: 'fas fa-microscope', title: '代码实测', desc: '备案、隐私政策等确定性信号由代码硬检测，不凭空断言' },
+        { icon: 'fas fa-arrows-rotate', title: '持续迭代', desc: '产品在持续打磨，定期更新优化功能' }
+      ],
+      version: '1.0.0', accent: '#1F4E79', accentHover: '#2E6FB7'
     }
   };
 })();

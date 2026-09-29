@@ -56,7 +56,13 @@
     ];
 
     function injectStyle() {
-        window.NexusUtils && NexusUtils.injectStyle('nux-about-style', ABOUT_CSS);
+        const id = 'nux-about-style';
+        if (window.NexusUtils) { NexusUtils.injectStyle(id, ABOUT_CSS); return; }
+        if (document.getElementById(id)) return;
+        const el = document.createElement('style');
+        el.id = id;
+        el.textContent = ABOUT_CSS;
+        document.head.appendChild(el);
     }
 
     const NuxAboutPage = {
