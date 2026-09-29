@@ -338,7 +338,6 @@
   .nux-field { margin-bottom: var(--nx-space-3); }
   .nux-segmented { width: 100%; }
   .nux-segmented-item { flex: 1; padding: 7px var(--nx-space-3); }
-  .nux-segmented--scroll .nux-segmented-item { flex: none; }
 }@media (hover: none) and (pointer: coarse){
   .nux-btn { min-height: 44px; }
   .nux-btn--sm { min-height: 40px; }

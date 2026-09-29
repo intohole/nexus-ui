@@ -210,32 +210,6 @@
         }
       },
       {
-        id: 'steps',
-        tag: 'nux-steps',
-        title: '步骤条',
-        desc: '流动填充线，current 控制进度',
-        tpl: `
-<div class="demo-col">
-  <nux-steps :items="items" :current="cur"></nux-steps>
-  <div class="demo-row">
-    <nux-button size="sm" variant="ghost" @click="cur = Math.max(cur - 1, 0)">上一步</nux-button>
-    <nux-button size="sm" @click="cur = Math.min(cur + 1, 3)">下一步</nux-button>
-  </div>
-</div>`,
-        code: `<nux-steps :items="items" :current="cur"></nux-steps>`,
-        data() {
-          return {
-            cur: 1,
-            items: [
-              { title: '选择场景', desc: '确认目标' },
-              { title: '补充信息', desc: '关键细节' },
-              { title: '确认生成', desc: '一键生成' },
-              { title: '查看成果', desc: '编辑导出' }
-            ]
-          };
-        }
-      },
-      {
         id: 'tabs-acc',
         tag: 'nux-tab-group / nux-accordion',
         title: '标签页与折叠面板',

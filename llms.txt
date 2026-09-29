@@ -217,10 +217,10 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 
 | 分类 | 组件 |
 |------|------|
-| 布局骨架 | nux-layout-sidebar / nux-layout-topnav / nux-bottom-nav / nux-side-panel / nux-section / nux-grid / nux-backtop |
+| 布局骨架 | nux-layout-sidebar / nux-layout-topnav / nux-bottom-nav / nux-side-panel / nux-section / nux-backtop |
 | 站点级 | nux-footer / nux-portal-footer / nux-about-page / nux-menu-about / nux-login-page / nux-forgot-password / nux-menu-user / nux-user-center / nux-settings-drawer |
 | 反馈 | nux-undo-toast / nux-modal / nux-drawer / nux-notification-bell / nux-notification-panel / nux-loading / nux-skeleton / nux-empty-state / nux-error-state / nux-ai-task-progress |
-| 数据展示 | nux-stat-card / nux-badge / nux-avatar / nux-progress / nux-steps / nux-breadcrumb / nux-calendar / nux-checkin / nux-radar-chart / nux-result-view / nux-selection-bar / nux-pagination / nux-poster / nux-conversation-list / nux-icon |
+| 数据展示 | nux-stat-card / nux-badge / nux-avatar / nux-progress / nux-breadcrumb / nux-calendar / nux-checkin / nux-radar-chart / nux-result-view / nux-selection-bar / nux-pagination / nux-poster / nux-conversation-list / nux-icon |
 | 表单控件 | nux-form-group / nux-button / nux-input / nux-textarea / nux-select / nux-switch / nux-checkbox / nux-search-box / nux-segmented / nux-chip-group / nux-accordion / nux-tab-group |
 | 交互增强 | nux-file-upload / nux-infinite-scroll / nux-slider / nux-date-picker / nux-qrcode / nux-sortable / nux-theme-toggle / nux-camera-recognize |
 | AI 能力 | nux-ai-badge / nux-ai-chat / nux-ai-indicator / nux-ai-notice / nux-ai-widgets / nux-clarify-card |
@@ -248,7 +248,6 @@ Events: prev/next
 
 Events: change(isDark:Boolean)
 
-| AI 能力 | nux-ai-chat / nux-conversation-list / nux-ai-badge / nux-ai-indicator / nux-ai-widgets / nux-clarify-card / nux-automation / nux-onboarding / nux-onboarding-strip / nux-app-card / nux-app-switcher / nux-poster / nux-ai-notice / nux-camera-recognize |
 
 非组件能力（由 nexus-all.js 直接提供全局函数，**无需引脚本、无需注册**）：`window.showToast(msg, type, duration)` / `window.nuxConfirm(options)` / `window.showUnlock(options)`。
 
@@ -264,11 +263,9 @@ Events: change(isDark:Boolean)
 | nux-search-box | `<nux-search-box v-model="kw" :delay="300" @search="fn"></nux-search-box>`（防抖search+回车确认） |
 | nux-segmented | `<nux-segmented v-model="tab" :options="[{label,value}]"></nux-segmented>`（滑动指示器） |
 | nux-chip-group | `<nux-chip-group v-model="sel" :options="[{label,value}]" :multiple="true" :removable="true" @remove="fn"></nux-chip-group>` |
-| nux-steps | `<nux-steps :items="[{title,desc}]" :current="1"></nux-steps>` |
 | nux-progress | `<nux-progress :value="66" label="标题"></nux-progress>` 或 `<nux-progress type="circle" :value="66" status="success"></nux-progress>` |
 | nux-loading | `<nux-loading text="加载中" size="md" :inline="true"></nux-loading>` |
 | nux-accordion | `<nux-accordion v-model="idx" :items="[{title,content}]"><template #item-0="{item}">自定义</template></nux-accordion>`（单开） |
-| nux-grid | `<nux-grid :cols="4">子元素</nux-grid>`（桌面4列，移动端自动单列）或 `<nux-grid min="220px">`（auto-fill自适应） |
 | nux-section | `<nux-section title="标题" description="描述"><template #actions>操作</template>内容</nux-section>`（flat属性去卡片） |
 | nux-backtop | `<nux-backtop :threshold="300"></nux-backtop>` |
 | nux-file-upload | `<nux-file-upload v-model="files" multiple accept="image/*,.pdf" :max-size-mb="10" :max-count="5" label="附件" hint="支持 jpg/png/pdf" @error="onErr" @remove="onRemove"></nux-file-upload>`（点击或拖拽；图片自动缩略图；超限走 error 事件；加 `compress` 先走 NexusUtils.compressImage 再校验大小，移动端拍照场景建议开启） |
