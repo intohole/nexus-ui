@@ -31,10 +31,7 @@ MAX_LINE_LEN = 3000
 
 # 已知例外：key 为 "<仓库相对路径>#<规则名>"，必须写清原因与收归条件。
 # 仅豁免已明确记录的单条命中，不豁免整个文件，避免掩盖后续新增违规。
-KNOWN_EXCEPTIONS = {
-    "gezhi/static/js/api.js#sse-reader":
-        "gezhi 后端 SSE 用 event: 行协议，与 NexusStream 的 data.type 协议不一致，待后端 schema 对齐后收归",
-}
+KNOWN_EXCEPTIONS: dict[str, str] = {}
 
 RULES = [
     ("clipboard", "fail", r"navigator\.clipboard\s*&&\s*navigator\.clipboard\.writeText|navigator\.clipboard\.writeText",

@@ -58,9 +58,6 @@
             const age = Vue.ref(10);
             const guardianAgreed = Vue.ref(false);
 
-            function markAgreement() {
-                H.markAgreement(props, agreed, props.appName);
-            }
             const smsCode = Vue.ref('');
             const smsCountdown = Vue.ref(0);
             let smsTimer = null;
@@ -133,9 +130,6 @@
                 try {
                     var saved = localStorage.getItem(H.REMEMBER_KEY);
                     if (saved && !form.username && !props.phoneLogin) form.username = saved;
-                    if (props.showTerms && localStorage.getItem(H.GLOBAL_AGREED_KEY)) {
-                        agreed.value = true;
-                    }
                 } catch (e) {}
                 checkCaptchaRequired();
             });
@@ -160,7 +154,6 @@
                         return;
                     }
                     if (!requireAgreed()) return;
-                    markAgreement();
                     emit('sms-login', { phone: form.phone, code: smsCode.value });
                     return;
                 }
@@ -174,7 +167,6 @@
                         return;
                     }
                     if (!requireAgreed()) return;
-                    markAgreement();
                     emit('login', { username: form.phone, phone: form.phone, password: form.password, rememberMe: rememberMe.value });
                     return;
                 }
@@ -192,7 +184,6 @@
                     if (ident && (rememberMe.value || !props.showRememberMe)) localStorage.setItem(H.REMEMBER_KEY, ident);
                     else localStorage.removeItem(H.REMEMBER_KEY);
                 } catch (e) {}
-                markAgreement();
                 var captcha = captchaPayload();
                 var loginPayload = captcha ? { username: form.username || '', email: form.email || '', password: form.password, rememberMe: rememberMe.value, captchaId: captcha.captchaId, captchaCode: captcha.captchaCode } : { username: form.username || '', email: form.email || '', password: form.password, rememberMe: rememberMe.value };
                 if (props.autoLogin) { doLogin(loginPayload); return; }
@@ -315,7 +306,6 @@
                     localError.value = '请先同意用户协议和隐私政策';
                     return;
                 }
-                markAgreement();
                 var captcha = captchaPayload();
                 var payload = {
                     username: form.username || null,

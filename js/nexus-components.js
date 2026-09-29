@@ -108,7 +108,7 @@
                 missing.push(tag);
             }
         });
-        if (!opts.silent && missing.length && window.console) {
+        if (opts.warnMissing && missing.length && window.console) {
             window.console.warn('[NexusComponents] 以下组件脚本未加载，已跳过: ' + missing.join(', '));
         }
         return registered;

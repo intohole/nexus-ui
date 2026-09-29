@@ -42,7 +42,7 @@ NexusComponents.register(app);   // 一次性注册所有已加载的 nux-* 组�
 app.mount('#app');
 ```
 
-`NexusComponents.register(app)` 返回已注册的标签数组；未加载的组件会以 warn 提示并跳过，不会报错。
+`NexusComponents.register(app)` 返回已注册的标签数组；按需加载下「未加载的组件」属正常状态，默认静默跳过；需要排查缺失脚本时传 `NexusComponents.register(app, { warnMissing: true })` 输出缺失清单。
 `NexusComponents.list()` 返回全部可注册标签；`NexusComponents.components` 是 `标签 → window 全局名` 映射；`NexusComponents.helpers` 列出非组件导出（NuxAiChatHelpers / NuxAiChatTemplate / NuxAiWidgetsRegistry / nux-ai-widgets-rich.js 扩展 / NuxLoginHelpers / NuxLoginPageTemplate / NuxRadarDraw / PosterRender）。
 
 ## 主题配置
