@@ -6,7 +6,7 @@
             slogan: { type: String, default: '' },
             year: { type: [String, Number], default: function() { return new Date().getFullYear(); } },
             company: { type: String, default: '杭州子晨科技有限公司' },
-            showFeedback: { type: Boolean, default: true }
+            feedbackUrl: { type: String, default: '' }
         },
         template: `
             <footer class="nux-portal-footer">
@@ -20,7 +20,7 @@
                     <a href="/nexus-ui/about.html" target="_blank" rel="noopener" class="nux-portal-footer-link">关于我们</a>
                     <a href="/nexus-ui/agreement.html" target="_blank" rel="noopener" class="nux-portal-footer-link">用户协议</a>
                     <a href="/nexus-ui/privacy.html" target="_blank" rel="noopener" class="nux-portal-footer-link">隐私政策</a>
-                    <a v-if="showFeedback" href="./feedback.html?h=6ef495a3e7" class="nux-portal-footer-link"><i class="fa fa-envelope"></i> 反馈建议</a>
+                    <a v-if="feedbackUrl" :href="feedbackUrl" class="nux-portal-footer-link"><svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true" style="vertical-align:-2px"><path d="M3 5h18v14H3z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 7l9 6 9-6" fill="none" stroke="currentColor" stroke-width="2"/></svg> 反馈建议</a>
                 </div>
             </footer>
         `

@@ -25,6 +25,8 @@ CDN地址（全工作区统一，版本见 `nexus-ui/deps.json`）：`https://so
 <script src="https://songguokr.com/nexus-ui/v{version}/js/components/nux-login-page.js"></script>
 
 <!-- toast/confirm/unlock 不需要引脚本：nexus-all.js 已提供全局函数 window.showToast / window.nuxConfirm / window.showUnlock -->
+<!-- 以下 6 个组件已随 nexus-all.js 内置，无需再单引脚本：nux-result-view / nux-ai-badge / nux-skeleton / nux-empty-state / nux-error-state / nux-ai-indicator -->
+<!-- 图标依赖说明：nux-checkin / nux-app-card / nux-notification-bell / nux-about-page（含 about 数据）使用 font-awesome 6.x 图标类，宿主需自行引入 FA（deps.json 已纳管 CDN）；其余组件均为内联 SVG，无外部图标依赖 -->
 
 <!-- 按需引入 composables -->
 <script src="https://songguokr.com/nexus-ui/v{version}/js/composables/use-mobile.js"></script>
@@ -53,7 +55,7 @@ app.mount('#app');
 <body class="app-lion">      <!-- 琥珀 #f59e0b -->
 ```
 
-可用主题：app-prompt, app-prompt-manager, app-lion, app-golden-fish, app-code-block, app-one-note, app-ai-pet, app-verse-craft, app-financial-kg, app-resume-ai, app-bee-memory, app-chroma, app-mini-deploy, app-usercenter, app-wisepath, app-golden
+可用主题：app-prompt, app-prompt-manager, app-lion, app-golden-fish, app-code-block, app-one-note, app-ai-pet, app-verse-craft, app-financial-kg, app-resume-ai, app-bee-memory, app-chroma, app-mini-deploy, app-usercenter, app-wisepath, app-golden, app-ad-smart, app-genius-student, app-spider, app-user-feedback, app-nexus-ui, app-admin, app-docs
 
 ## 暗色模式
 

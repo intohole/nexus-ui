@@ -4,7 +4,7 @@
 
     var CSS = [
         '.nux-app-switcher,.nxs-root{all:initial;font-family:var(--nx-font-sans,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif);color:var(--nx-text-body,#334155)}',
-        '.nxs-trigger{position:fixed;left:var(--nxs-left,18px);bottom:18px;z-index:var(--nx-z-max-plus,2147483001);display:flex;align-items:center;gap:9px;height:46px;padding:0 18px;border-radius:var(--nx-radius-full,999px);background:var(--nx-bg-surface,#fff);backdrop-filter:blur(14px);border:1px solid var(--nx-border-accent,rgba(99,102,241,.3));box-shadow:var(--nx-shadow-md,0 4px 12px rgba(0,0,0,.1));color:var(--nx-text-heading,#0f172a);cursor:pointer;transition:transform .25s cubic-bezier(.4,0,.2,1),border-color .25s,box-shadow .25s;-webkit-tap-highlight-color:transparent}',
+        '.nxs-trigger{position:fixed;left:var(--nxs-left,18px);bottom:18px;z-index:var(--nx-z-trigger,150);display:flex;align-items:center;gap:9px;height:46px;padding:0 18px;border-radius:var(--nx-radius-full,999px);background:var(--nx-bg-surface,#fff);backdrop-filter:blur(14px);border:1px solid var(--nx-border-accent,rgba(99,102,241,.3));box-shadow:var(--nx-shadow-md,0 4px 12px rgba(0,0,0,.1));color:var(--nx-text-heading,#0f172a);cursor:pointer;transition:transform .25s cubic-bezier(.4,0,.2,1),border-color .25s,box-shadow .25s;-webkit-tap-highlight-color:transparent}',
         '.nxs-trigger:hover{transform:translateY(-2px);border-color:var(--app-accent,#6366f1);box-shadow:var(--nx-shadow-lg,0 8px 24px rgba(0,0,0,.12)),var(--nx-shadow-glow,0 0 20px rgba(99,102,241,.15))}',
         '.nxs-trigger:active{transform:translateY(0)}',
         '.nxs-trigger-glyph{width:20px;height:20px;flex:none;color:var(--nx-text-muted,#94a3b8)}',

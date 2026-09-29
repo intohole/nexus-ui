@@ -58,6 +58,41 @@
                 window.removeEventListener('resize', sync);
             };
         },
+        createStreamController: function (cfg, content, callbacks, onController) {
+            if (!cfg.streamUrl) { callbacks.onError(new Error('未配置 apiConfig.streamUrl')); return null; }
+            const api = cfg.apiInstance || (window.NexusApi ? new NexusApi() : null);
+            if (!api) { callbacks.onError(new Error('NexusApi 未加载')); return null; }
+            if (!window.NexusChat || !NexusChat.ChatController) { callbacks.onError(new Error('NexusChat 未加载')); return null; }
+            const ctrl = new NexusChat.ChatController({
+                api: api,
+                url: cfg.streamUrl,
+                body: Object.assign({}, cfg.body || {}, { content: content }),
+                contentKey: cfg.contentKey || 'content',
+                eventKey: cfg.eventKey || 'delta',
+                doneKey: cfg.doneKey || 'done',
+                onChunk: (chunk, full) => callbacks.onChunk(chunk, full),
+                onDone: (full) => callbacks.onDone(full),
+                onError: (err) => callbacks.onError(err),
+                onEvent: (ev, data) => { if (callbacks.onEvent) callbacks.onEvent(ev, data); }
+            });
+            if (onController) onController(ctrl);
+            callbacks.registerStop(() => ctrl.stop());
+            ctrl.start();
+            return ctrl;
+        },
+        fallbackRequest: async function (cfg, content, assistantMsg, fx) {
+            let ok = true, err = '';
+            try {
+                const api = cfg.apiInstance || (window.NexusApi ? new NexusApi() : null);
+                if (!api) throw new Error('NexusApi 未加载');
+                const res = await api.post(cfg.fallbackUrl, Object.assign({}, cfg.body || {}, { content: content }));
+                assistantMsg.content = res.data.content || res.data.answer || res.data.reply || '（无内容）';
+            } catch (e) {
+                ok = false;
+                err = e.message || '降级同步也失败';
+            }
+            fx.onFinish(ok, assistantMsg, err);
+        },
         routeRichEvent: function (msg, event, data) {
             const payload = data || {};
             const type = String(event || payload.type || '').toLowerCase();

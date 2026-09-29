@@ -55,7 +55,7 @@
         template: `
             <div class="nux-onboarding-mask" v-if="visible" role="dialog" aria-modal="true" aria-label="新手引导">
                 <div class="nux-onboarding-card" @click.self.stop>
-                    <button type="button" class="nux-onboarding-close" @click="skip" aria-label="跳过引导"><i class="fa fa-xmark"></i></button>
+                    <button type="button" class="nux-onboarding-close" @click="skip" aria-label="跳过引导"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg></button>
                     <div class="nux-onboarding-step-icon" v-if="current">
                         <i v-if="current.icon" :class="current.icon"></i>
                         <span v-else>{{ (current.step || 0) + 1 }}</span>

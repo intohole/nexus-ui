@@ -3952,7 +3952,6 @@ try {
 })();
 
 /* ===== core/nexus-app.js ===== */
-/* ===== core/nexus-app.js ===== */
 (function () {
     'use strict';
 

@@ -127,35 +127,7 @@
             }
 
             async function defaultSendHandler(content, callbacks) {
-                const cfg = props.apiConfig || {};
-                if (!cfg.streamUrl) {
-                    callbacks.onError(new Error('未配置 apiConfig.streamUrl'));
-                    return;
-                }
-                const api = cfg.apiInstance || (window.NexusApi ? new NexusApi() : null);
-                if (!api) {
-                    callbacks.onError(new Error('NexusApi 未加载'));
-                    return;
-                }
-                if (!window.NexusChat || !NexusChat.ChatController) {
-                    callbacks.onError(new Error('NexusChat 未加载'));
-                    return;
-                }
-                const ctrl = new NexusChat.ChatController({
-                    api: api,
-                    url: cfg.streamUrl,
-                    body: Object.assign({}, cfg.body || {}, { content: content }),
-                    contentKey: cfg.contentKey || 'content',
-                    eventKey: cfg.eventKey || 'delta',
-                    doneKey: cfg.doneKey || 'done',
-                    onChunk: (chunk, full) => callbacks.onChunk(chunk, full),
-                    onDone: (full) => callbacks.onDone(full),
-                    onError: (err) => callbacks.onError(err),
-                    onEvent: (ev, data) => { if (callbacks.onEvent) callbacks.onEvent(ev, data); }
-                });
-                controller = ctrl;
-                callbacks.registerStop(() => ctrl.stop());
-                ctrl.start();
+                H.createStreamController(props.apiConfig || {}, content, callbacks, (ctrl) => { controller = ctrl; });
             }
 
             async function send(content) {
@@ -266,37 +238,30 @@
                 }
             }
 
-            async function fallbackSync(content, assistantMsg) {
-                try {
-                    const cfg = props.apiConfig;
-                    const api = cfg.apiInstance || (window.NexusApi ? new NexusApi() : null);
-                    if (!api) throw new Error('NexusApi 未加载');
-                    const res = await api.post(cfg.fallbackUrl, Object.assign({}, cfg.body || {}, { content: content }));
-                    assistantMsg.content = res.data.content || res.data.answer || res.data.reply || '（无内容）';
-                    assistantMsg.streaming = false;
-                    isStreaming.value = false;
-                    stopElapsed();
-                    ctx.emit('stream-end', true);
-                    ctx.emit('done', assistantMsg.content, assistantMsg);
-                    emitMessages();
-                    nextTick(() => {
-                        if (listEl.value) {
-                            const els = listEl.value.querySelectorAll('.nx-ai-chat-msg');
-                            const last = els[els.length - 1];
-                            if (last) postProcessMd(last.querySelector('.nx-ai-chat-bubble'));
+            function fallbackSync(content, assistantMsg) {
+                H.fallbackRequest(props.apiConfig, content, assistantMsg, {
+                    onFinish: (ok, msg, err) => {
+                        msg.streaming = false;
+                        if (!ok) {
+                            msg.error = true;
+                            isError.value = true;
+                            errorMsg.value = err;
                         }
-                    });
-                } catch (e) {
-                    assistantMsg.streaming = false;
-                    assistantMsg.error = true;
-                    isError.value = true;
-                    errorMsg.value = e.message || '降级同步也失败';
-                    isStreaming.value = false;
-                    stopElapsed();
-                    ctx.emit('stream-end', false);
-                    ctx.emit('error', errorMsg.value, assistantMsg);
-                    emitMessages();
-                }
+                        isStreaming.value = false;
+                        stopElapsed();
+                        ctx.emit('stream-end', ok);
+                        if (ok) ctx.emit('done', msg.content, msg);
+                        else ctx.emit('error', err, msg);
+                        emitMessages();
+                        nextTick(() => {
+                            if (listEl.value) {
+                                const els = listEl.value.querySelectorAll('.nx-ai-chat-msg');
+                                const last = els[els.length - 1];
+                                if (last) postProcessMd(last.querySelector('.nx-ai-chat-bubble'));
+                            }
+                        });
+                    }
+                });
             }
 
             function stop() {

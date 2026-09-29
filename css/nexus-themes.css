@@ -89,14 +89,8 @@
 /* admin — 管理后台 — 深石板蓝（区别于FastRPC石板蓝） */
 .app-admin { --app-accent: #334155; --app-accent-rgb: 51, 65, 85; --app-accent-hover: #475569; --app-name: "Admin"; }
 
-/* dashboard — 仪表盘 — 亮紫罗兰（区别于PromptManager紫罗兰） */
-.app-dashboard { --app-accent: #8b5cf6; --app-accent-rgb: 139, 92, 246; --app-accent-hover: #a78bfa; --app-name: "Dashboard"; }
 
-/* chat — 对话系统 — 青绿（区别于CodeBlock翡翠绿） */
-.app-chat { --app-accent: #14b8a6; --app-accent-rgb: 20, 184, 166; --app-accent-hover: #2dd4bf; --app-name: "Chat"; }
 
 /* docs — 文档中心 — 灰色（文档/中性，区别于FinancialKG靛青） */
 .app-docs { --app-accent: #6b7280; --app-accent-rgb: 107, 114, 128; --app-accent-hover: #9ca3af; --app-name: "Docs"; }
 
-/* mountain — 爬虫服务 — 森林绿（区别于Spider深绿） */
-.app-mountain { --app-accent: #15803d; --app-accent-rgb: 21, 128, 61; --app-accent-hover: #16a34a; --app-name: "Mountain"; }

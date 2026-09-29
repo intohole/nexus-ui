@@ -1,4 +1,3 @@
-/* ===== core/nexus-app.js ===== */
 (function () {
     'use strict';
 
