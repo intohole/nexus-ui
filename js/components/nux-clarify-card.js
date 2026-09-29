@@ -2,7 +2,7 @@
     const STYLE_ID = 'nux-clarify-card-style';
     function ensureStyle() {
         window.NexusUtils && NexusUtils.injectStyle(STYLE_ID, `
-.nc-clarify{background:var(--nx-bg-surface,#fff);border:1px solid var(--nx-border,rgba(0,0,0,.08));border-radius:var(--nx-radius-md,10px);padding:14px 16px;display:flex;flex-direction:column;gap:14px;max-width:560px}
+.nc-clarify{background:var(--nx-bg-surface,#fff);border:1px solid var(--nx-border,rgba(0,0,0,.08));border-radius:var(--nx-radius-md,10px);padding:14px 16px;display:flex;flex-direction:column;gap:14px;max-width:min(560px,100%)}
 .nc-clarify-head{display:flex;align-items:center;gap:8px}
 .nc-clarify-title{font-size:14px;font-weight:600;color:var(--nx-text-heading,#0f172a)}
 .nc-q{display:flex;flex-direction:column;gap:8px}

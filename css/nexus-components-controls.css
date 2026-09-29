@@ -334,7 +334,7 @@
   .nux-segmented--scroll .nux-segmented-item { flex: none; }
 }@media (hover: none) and (pointer: coarse){
   .nux-btn { min-height: 44px; }
-  .nux-btn--sm { min-height: 36px; }
+  .nux-btn--sm { min-height: 40px; }
   .nux-input, .nux-search-input { font-size: 16px; }
   .nux-search-box { padding: 0 var(--nx-space-3); }
   .nux-search-box .nux-field-clear { width: 32px; height: 32px; }

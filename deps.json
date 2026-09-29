@@ -20,7 +20,7 @@
       "cdn": "https://registry.npmmirror.com/axios/{version}/files/dist/axios.min.js"
     },
     "nexus-ui": {
-      "version": "2.15.0",
+      "version": "2.16.0",
       "pkg": null,
       "cdn": "https://songguokr.com/nexus-ui/v{version}/"
     },
@@ -77,7 +77,7 @@
     "highlight.js": {
       "version": "11.9.0",
       "pkg": "@highlightjs/cdn-assets",
-      "cdn": "https://registry.npmmirror.com/@highlightjs/cdn-assets/{version}/files/"
+      "cdn": "https://cdn.jsdmirror.com/npm/@highlightjs/cdn-assets@{version}/"
     },
     "js-yaml": {
       "version": "4.1.0",
@@ -113,6 +113,16 @@
       "version": "0.18.5",
       "pkg": "katex",
       "cdn": "https://registry.npmmirror.com/katex/{version}/files/dist/"
+    },
+    "vis-network": {
+      "version": "9.1.9",
+      "pkg": "vis-network",
+      "cdn": "https://cdn.jsdmirror.com/npm/vis-network@{version}/standalone/umd/vis-network.min.js"
+    },
+    "hotkeys-js": {
+      "version": "3.13.7",
+      "pkg": "hotkeys-js",
+      "cdn": "https://registry.npmmirror.com/hotkeys-js/{version}/files/dist/hotkeys.min.js"
     }
   },
   "ignore_paths": [
