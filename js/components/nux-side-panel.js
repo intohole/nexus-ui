@@ -93,13 +93,13 @@
                 locked = need;
                 const vv = window.visualViewport;
                 if (need) {
-                    document.body.classList.add('nxsp-lock');
+                    if (window.NexusUtils) NexusUtils.scrollLock.lock();
                     window.addEventListener('keydown', onKeydown);
                     window.addEventListener('resize', syncViewport);
                     if (vv) { vv.addEventListener('resize', syncViewport); vv.addEventListener('scroll', syncViewport); }
                     nextTick(syncViewport);
                 } else {
-                    document.body.classList.remove('nxsp-lock');
+                    if (window.NexusUtils) NexusUtils.scrollLock.unlock();
                     window.removeEventListener('keydown', onKeydown);
                     window.removeEventListener('resize', syncViewport);
                     if (vv) { vv.removeEventListener('resize', syncViewport); vv.removeEventListener('scroll', syncViewport); }
@@ -182,7 +182,7 @@
                     else mql.removeListener(applyMedia);
                 }
                 if (locked) {
-                    document.body.classList.remove('nxsp-lock');
+                    if (window.NexusUtils) NexusUtils.scrollLock.unlock();
                     window.removeEventListener('keydown', onKeydown);
                     window.removeEventListener('resize', syncViewport);
                     const vv = window.visualViewport;

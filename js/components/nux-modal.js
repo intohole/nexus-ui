@@ -41,6 +41,7 @@
             Vue.watch(() => props.modelValue, (open) => {
                 Vue.nextTick(() => {
                     if (open) {
+                        if (window.NexusUtils) NexusUtils.scrollLock.lock();
                         if (document.activeElement && document.activeElement !== document.body) {
                             restoreFocusEl = document.activeElement;
                         }
@@ -51,12 +52,17 @@
                         });
                     } else {
                         document.removeEventListener('keydown', onKeydown);
+                        if (window.NexusUtils) NexusUtils.scrollLock.unlock();
                         if (restoreFocusEl && restoreFocusEl.focus) {
                             restoreFocusEl.focus();
                         }
                         restoreFocusEl = null;
                     }
                 });
+            });
+            Vue.onBeforeUnmount(() => {
+                document.removeEventListener('keydown', onKeydown);
+                if (props.modelValue && window.NexusUtils) NexusUtils.scrollLock.unlock();
             });
 
             const close = () => emit('update:modelValue', false);

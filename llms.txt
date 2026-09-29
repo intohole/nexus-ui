@@ -105,7 +105,16 @@ NexusUtils.formatDateTimeHyphen(value, withSeconds); // 'YYYY-MM-DD HH:mm'（连
 NexusUtils.pad2(n);                        // 两位补零
 NexusUtils.injectStyle(id, css);           // 幂等注入 <style id>（组件样式注入统一出口）
 NexusUtils.compressImage(file, { maxDim: 1600, quality: 0.85, output: 'file' }); // 图片压缩，output: 'file'|'blob'|'dataurl'，PNG 保透明、JPEG 自动填白底，无需压缩时返回原文件
+NexusUtils.scrollLock.lock();              // 弹层滚动锁定（计数器制，多层叠加安全；配对 unlock()；桌面侧自动补偿滚动条位移）
+NexusUtils.scrollLock.unlock();
 ```
+
+### 多端适配约定（宿主必读）
+
+- **viewport**：加载 nexus-all.js（或 nexus-mobile.js）后自动补齐标准 viewport meta（`width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover, interactive-widget=resizes-content`），宿主无需手写；已有 meta 只补缺失键、不覆盖既有值。手动触发用 `NexusMobile.ensureViewport()`（nexus-mobile.js 暴露 `window.NexusMobile`，另含 `isMobile()` 与 `MOBILE_BREAKPOINT`）。
+- **断点**：JS 单一分界 `window.innerWidth <= 768` 为移动（统一用 `useMobile()` 或 `NexusMobile.isMobile()`，勿自写 `resize` 监听或 `< 768`）；CSS 允许档位 768/480/1024，其余游离值勿用。命中区扩大规则走 `@media (pointer: coarse)`，hover 行为回退走 `@media (hover: none)`，两者语义不同不可混用。
+- **弹层滚动锁定**：modal/drawer/settings/side-panel 已内置 `NexusUtils.scrollLock`，业务自建弹层必须复用它（计数器制，勿直接写 `document.body.style.overflow`）。
+- **safe-area / 视口高度**：CSS 变量 `--nx-safe-{bottom,top,left,right}` 与 `--nx-vh`（dvh 降级）由 nexus-mobile.css 提供，固定底栏/抽屉高度一律 `calc(xx + var(--nx-safe-bottom))`，全屏高度用 `var(--nx-vh) * 100` 或 `100dvh`。
 
 ### NexusStore
 
@@ -258,7 +267,7 @@ Events: change(isDark:Boolean)
 | nux-grid | `<nux-grid :cols="4">子元素</nux-grid>`（桌面4列，移动端自动单列）或 `<nux-grid min="220px">`（auto-fill自适应） |
 | nux-section | `<nux-section title="标题" description="描述"><template #actions>操作</template>内容</nux-section>`（flat属性去卡片） |
 | nux-backtop | `<nux-backtop :threshold="300"></nux-backtop>` |
-| nux-file-upload | `<nux-file-upload v-model="files" multiple accept="image/*,.pdf" :max-size-mb="10" :max-count="5" label="附件" hint="支持 jpg/png/pdf" @error="onErr" @remove="onRemove"></nux-file-upload>`（点击或拖拽；图片自动缩略图；超限走 error 事件） |
+| nux-file-upload | `<nux-file-upload v-model="files" multiple accept="image/*,.pdf" :max-size-mb="10" :max-count="5" label="附件" hint="支持 jpg/png/pdf" @error="onErr" @remove="onRemove"></nux-file-upload>`（点击或拖拽；图片自动缩略图；超限走 error 事件；加 `compress` 先走 NexusUtils.compressImage 再校验大小，移动端拍照场景建议开启） |
 | nux-infinite-scroll | `<nux-infinite-scroll :loading="loading" :finished="finished" :offset="200" :error-text="errText" @load="loadMore">列表内容</nux-infinite-scroll>`（IntersectionObserver 哨兵触发，自动识别最近滚动容器） |
 | nux-slider | `<nux-slider v-model="score" :min="0" :max="100" :step="5" label="评分" unit="分" @change="fn"></nux-slider>`（原生 range，移动端原生体验+键盘可用） |
 | nux-date-picker | `<nux-date-picker v-model="day" type="date|datetime-local|month|time" :min="'2026-01-01'" :max="'2026-12-31'" label="日期" clearable></nux-date-picker>`（原生选择器，移动端调起系统面板） |

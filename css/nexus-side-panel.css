@@ -238,7 +238,6 @@
 .nxsp.is-compact .nxsp-list { -webkit-overflow-scrolling: touch; }
 .nxsp.is-compact .nxsp-del { opacity: 1; }
 
-body.nxsp-lock { overflow: hidden; }
 
 .nxsp button:focus-visible, .nxsp input:focus-visible, .nxsp [role="button"]:focus-visible {
     outline: 2px solid var(--nxsp-accent); outline-offset: 2px;

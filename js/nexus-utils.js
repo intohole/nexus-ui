@@ -1,6 +1,31 @@
 (function() {
     const CN_TZ = 'Asia/Shanghai';
     const utils = {
+        scrollLock: (function() {
+            let count = 0;
+            let prevOverflow = '';
+            let prevPaddingRight = '';
+            return {
+                lock() {
+                    count++;
+                    if (count > 1) return;
+                    const body = document.body;
+                    prevOverflow = body.style.overflow;
+                    prevPaddingRight = body.style.paddingRight;
+                    const gap = window.innerWidth - document.documentElement.clientWidth;
+                    body.style.overflow = 'hidden';
+                    if (gap > 0) body.style.paddingRight = gap + 'px';
+                },
+                unlock() {
+                    if (count === 0) return;
+                    count--;
+                    if (count > 0) return;
+                    document.body.style.overflow = prevOverflow;
+                    document.body.style.paddingRight = prevPaddingRight;
+                }
+            };
+        })(),
+
         parseDate(value) {
             if (!value) return null;
             if (value instanceof Date) return isNaN(value.getTime()) ? null : value;

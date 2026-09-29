@@ -58,7 +58,7 @@
                 <a class="nux-app-card-cover" :href="href" target="_blank" rel="noopener noreferrer" @click="emitOpen" :aria-label="'打开' + name"></a>
                 <span class="nux-app-card-glow"></span>
                 <div class="nux-app-card-top">
-                    <img v-if="icon" :src="icon" :alt="name" class="nux-app-card-icon">
+                    <img v-if="icon" :src="icon" :alt="name" class="nux-app-card-icon" loading="lazy" decoding="async">
                     <div v-else class="nux-app-card-icon-fallback"><i class="fa fa-cube"></i></div>
                     <div class="nux-app-card-actions">
                         <span v-if="badge" :class="['nux-app-card-badge', badge.tone ? 'nux-app-card-badge-' + badge.tone : '']">

@@ -37,6 +37,7 @@
             disabled: { type: Boolean, default: false },
             label: { type: String, default: '' },
             hint: { type: String, default: '' },
+            compress: { type: Boolean, default: false },
             dragText: { type: String, default: '点击或拖拽文件到此处' }
         },
         emits: ['update:modelValue', 'change', 'remove', 'error'],
@@ -91,18 +92,23 @@
                 ctx.emit('change', next);
             }
 
-            function addFiles(fileList) {
+            async function addFiles(fileList) {
                 if (props.disabled) return;
                 const incoming = Array.prototype.slice.call(fileList || []);
                 if (!incoming.length) return;
                 const accepted = [];
-                incoming.forEach((file) => {
+                for (const raw of incoming) {
+                    let file = raw;
+                    if (props.compress && window.NexusUtils && NexusUtils.compressImage &&
+                        typeof Blob !== 'undefined' && file instanceof Blob && /^image\//.test(file.type || '')) {
+                        try { file = await NexusUtils.compressImage(file); } catch (e) { file = raw; }
+                    }
                     if (props.maxSizeMb > 0 && file.size > props.maxSizeMb * 1024 * 1024) {
                         ctx.emit('error', '「' + file.name + '」超过 ' + props.maxSizeMb + 'MB 大小限制');
-                        return;
+                        continue;
                     }
                     accepted.push(file);
-                });
+                }
                 if (!accepted.length) return;
                 let next = props.multiple
                     ? (props.modelValue || []).slice().concat(accepted)

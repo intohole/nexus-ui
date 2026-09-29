@@ -43,7 +43,10 @@
                     :class="{ 'nux-chip--on': isOn(opt.value), 'nux-chip--disabled': opt.disabled }"
                     role="button"
                     :aria-pressed="String(isOn(opt.value))"
+                    :tabindex="disabled || opt.disabled ? -1 : 0"
                     @click="select(opt)"
+                    @keydown.enter.prevent="select(opt)"
+                    @keydown.space.prevent="select(opt)"
                 >
                     {{ opt.label }}
                     <button v-if="removable" type="button" class="nux-chip-remove" aria-label="移除" @click.stop="remove(opt)">×</button>

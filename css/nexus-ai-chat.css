@@ -551,12 +551,12 @@
     }
 
     .nx-ai-chat-action-btn {
-        min-height: 36px;
-        min-width: 36px;
+        min-height: 40px;
+        min-width: 40px;
     }
 
     .nx-ai-chat-retry-btn {
-        min-height: 36px;
+        min-height: 40px;
         padding: 0.25rem 0.875rem;
     }
 

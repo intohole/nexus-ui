@@ -54,7 +54,7 @@
 .nx-settings-page { flex: 1; overflow-y: auto; padding: 14px 24px 24px; }
 @media (max-width: 768px) {
   .nx-settings-drawer { align-items: flex-end; }
-  .nx-settings-wrap { width: 100vw; height: min(640px, 92vh); border-radius: 18px 18px 0 0; flex-direction: column; padding-bottom: env(safe-area-inset-bottom); }
+  .nx-settings-wrap { width: 100vw; height: min(640px, 92dvh); border-radius: 18px 18px 0 0; flex-direction: column; padding-bottom: env(safe-area-inset-bottom); }
   .nx-settings-rail { width: 100%; flex-direction: column; border-right: none; border-bottom: 1px solid var(--nx-border, #e4e9f0); flex: none; }
   .nx-settings-brand { padding: 14px 16px 8px; }
   .nx-settings-nav { display: flex; overflow-x: auto; padding: 0 12px 10px; gap: 8px; }

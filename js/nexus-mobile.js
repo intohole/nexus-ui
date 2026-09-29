@@ -1,9 +1,39 @@
 (function() {
     var SIDEBAR_SEL = '.sidebar, .nx-sidebar';
     var MOBILE_BREAKPOINT = 768;
+    var VIEWPORT_DEFAULTS = {
+        'width': 'device-width',
+        'initial-scale': '1.0',
+        'maximum-scale': '5.0',
+        'viewport-fit': 'cover',
+        'interactive-widget': 'resizes-content'
+    };
 
     function isMobile() {
         return window.innerWidth <= MOBILE_BREAKPOINT;
+    }
+
+    function ensureViewport() {
+        var meta = document.querySelector('meta[name="viewport"]');
+        if (!meta) {
+            meta = document.createElement('meta');
+            meta.setAttribute('name', 'viewport');
+            var parts = [];
+            Object.keys(VIEWPORT_DEFAULTS).forEach(function(k) { parts.push(k + '=' + VIEWPORT_DEFAULTS[k]); });
+            meta.setAttribute('content', parts.join(', '));
+            document.head.appendChild(meta);
+            return;
+        }
+        var existing = (meta.getAttribute('content') || '').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+        var have = {};
+        existing.forEach(function(p) {
+            var i = p.indexOf('=');
+            if (i > 0) have[p.slice(0, i).trim().toLowerCase()] = p.slice(i + 1).trim();
+        });
+        Object.keys(VIEWPORT_DEFAULTS).forEach(function(k) {
+            if (!(k in have)) existing.push(k + '=' + VIEWPORT_DEFAULTS[k]);
+        });
+        meta.setAttribute('content', existing.join(', '));
     }
 
     function init() {
@@ -125,4 +155,7 @@
     } else {
         init();
     }
+
+    window.NexusMobile = { ensureViewport: ensureViewport, isMobile: isMobile, MOBILE_BREAKPOINT: MOBILE_BREAKPOINT };
+    ensureViewport();
 })();

@@ -45,14 +45,14 @@
                 emit('update:modelValue', v);
                 if (v) {
                     syncHash();
-                    document.body.style.overflow = 'hidden';
+                    if (window.NexusUtils) NexusUtils.scrollLock.lock();
                     lastFocus = document.activeElement;
                     nextTick(() => {
                         const el = document.querySelector('.nx-settings-drawer-panel');
                         if (el) el.focus();
                     });
                 } else {
-                    document.body.style.overflow = '';
+                    if (window.NexusUtils) NexusUtils.scrollLock.unlock();
                     try {
                         if (lastFocus && lastFocus.focus) lastFocus.focus();
                     } catch (e) { }
@@ -100,7 +100,7 @@
             onBeforeUnmount(() => {
                 window.removeEventListener('hashchange', onHashChange);
                 window.removeEventListener('keydown', onKeydown);
-                document.body.style.overflow = '';
+                if (open.value && window.NexusUtils) NexusUtils.scrollLock.unlock();
             });
 
             return {

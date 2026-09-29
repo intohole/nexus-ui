@@ -4,10 +4,6 @@
   --nx-safe-top: env(safe-area-inset-top, 0px);
   --nx-safe-left: env(safe-area-inset-left, 0px);
   --nx-safe-right: env(safe-area-inset-right, 0px);
-  --nx-bp-sm: 480px;
-  --nx-bp-md: 768px;
-  --nx-bp-lg: 1024px;
-  --nx-bp-xl: 1200px;
 }@supports (height: 1dvh){
   :root { --nx-vh: 1dvh; }
 }
@@ -197,13 +193,17 @@
   }
   .nux-chip-remove, .nux-notif-panel-item-delete, .nux-onboarding-close, .nux-cal-nav, .nux-field-clear,
   .nux-password-toggle, .nux-notif-btn, .nux-notify-bell, .nux-uc-trigger, .nux-uc-close, .nux-uc-logout,
-  .nux-menu-user-btn, .nux-menu-about-btn, .nux-app-card-fav, .nux-app-card-edit {
+  .nux-menu-user-btn, .nux-menu-about-btn, .nux-app-card-fav, .nux-app-card-edit,
+  .nux-switch-track, .nux-check-box, .nx-settings-close, .nx-hv-btn, .nux-layout-collapse-btn,
+  .nx-conv-list-item-btn {
     position: relative;
   }
   .nux-chip-remove::after, .nux-notif-panel-item-delete::after, .nux-onboarding-close::after,
   .nux-cal-nav::after, .nux-field-clear::after, .nux-password-toggle::after, .nux-notif-btn::after,
   .nux-notify-bell::after, .nux-uc-trigger::after, .nux-uc-close::after, .nux-uc-logout::after,
-  .nux-menu-user-btn::after, .nux-menu-about-btn::after, .nux-app-card-fav::after, .nux-app-card-edit::after {
+  .nux-menu-user-btn::after, .nux-menu-about-btn::after, .nux-app-card-fav::after, .nux-app-card-edit::after,
+  .nux-switch-track::after, .nux-check-box::after, .nx-settings-close::after, .nx-hv-btn::after,
+  .nux-layout-collapse-btn::after, .nx-conv-list-item-btn::after {
     content: "";
     position: absolute;
     inset: -10px;
