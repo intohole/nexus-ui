@@ -1,9 +1,5 @@
 :root {
   --nx-vh: 1vh;
-  --nx-safe-bottom: env(safe-area-inset-bottom, 0px);
-  --nx-safe-top: env(safe-area-inset-top, 0px);
-  --nx-safe-left: env(safe-area-inset-left, 0px);
-  --nx-safe-right: env(safe-area-inset-right, 0px);
 }@supports (height: 1dvh){
   :root { --nx-vh: 1dvh; }
 }
@@ -183,7 +179,7 @@
   .nux-btn, .nux-acc-head, .nux-bottom-nav-item, .nux-layout-nav-item, .nux-layout-collapse-btn,
   .nux-tab-item, .nux-segmented-item, .nux-chip, .nux-cal-nav, .nux-cal-today-btn,
   .nux-checkin-preset,
-  .nux-notif-item, .nux-notif-panel-item, .nux-notif-panel-page-btn, .nux-notif-btn, .nux-notify-bell,
+  .nux-notif-panel-item, .nux-notif-panel-page-btn, .nux-notify-bell,
   .nux-notify-item, .nux-onboarding-btn, .nux-uc-tab, .nux-uc-trigger, .nux-uc-action, .nux-uc-close,
   .nux-uc-logout, .nux-login-tab, .nux-login-subtab, .nux-third-btn, .nux-link, .nux-undo-btn,
   .nux-field-clear, .nux-password-toggle, .nux-sms-btn, .nux-captcha-img, .nux-check, .nux-checkbox,
@@ -192,14 +188,14 @@
     min-height: 44px;
   }
   .nux-chip-remove, .nux-notif-panel-item-delete, .nux-onboarding-close, .nux-cal-nav, .nux-field-clear,
-  .nux-password-toggle, .nux-notif-btn, .nux-notify-bell, .nux-uc-trigger, .nux-uc-close, .nux-uc-logout,
+  .nux-password-toggle, .nux-notify-bell, .nux-uc-trigger, .nux-uc-close, .nux-uc-logout,
   .nux-menu-user-btn, .nux-menu-about-btn, .nux-app-card-fav, .nux-app-card-edit,
   .nux-switch-track, .nux-check-box, .nx-settings-close, .nx-hv-btn, .nux-layout-collapse-btn,
   .nx-conv-list-item-btn {
     position: relative;
   }
   .nux-chip-remove::after, .nux-notif-panel-item-delete::after, .nux-onboarding-close::after,
-  .nux-cal-nav::after, .nux-field-clear::after, .nux-password-toggle::after, .nux-notif-btn::after,
+  .nux-cal-nav::after, .nux-field-clear::after, .nux-password-toggle::after,
   .nux-notify-bell::after, .nux-uc-trigger::after, .nux-uc-close::after, .nux-uc-logout::after,
   .nux-menu-user-btn::after, .nux-menu-about-btn::after, .nux-app-card-fav::after, .nux-app-card-edit::after,
   .nux-switch-track::after, .nux-check-box::after, .nx-settings-close::after, .nx-hv-btn::after,
@@ -300,7 +296,6 @@
   .mobile-menu-btn { display: none !important; }
   .sidebar-overlay { display: none !important; }
 }@media (hover: none) and (pointer: coarse){
-  .btn { min-height: 40px; }
   .nav-item { min-height: 44px; }
   .form-input, .form-select, .form-textarea { min-height: 40px; font-size: 16px; }
   .tab { min-height: 40px; padding: 10px 14px; }

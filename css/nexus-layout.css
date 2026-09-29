@@ -351,7 +351,7 @@
     display: flex;
     background: var(--nx-bg-surface);
     border-top: 1px solid var(--nx-border);
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: var(--nx-safe-bottom);
 }
 
 .nux-layout-bottom-nav-item {
@@ -389,7 +389,7 @@
     }
 
     .nx-bottom-nav-mode .nux-layout-main {
-        padding-bottom: calc(64px + env(safe-area-inset-bottom));
+        padding-bottom: calc(64px + var(--nx-safe-bottom));
     }
 }
 
@@ -407,7 +407,7 @@
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-top: 1px solid var(--nx-border);
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: var(--nx-safe-bottom);
     box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.04);
 }
 

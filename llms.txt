@@ -51,8 +51,8 @@ app.mount('#app');
 
 ```html
 <body class="app-one-note">  <!-- 青色 #14b8a6 -->
-<body class="app-wisepath">  <!-- 粉红 #ec4899 -->
-<body class="app-lion">      <!-- 琥珀 #f59e0b -->
+<body class="app-wisepath">  <!-- 琥珀金 #ca8a04 -->
+<body class="app-lion">      <!-- 深海蓝 #0369a1 -->
 ```
 
 可用主题：app-prompt, app-prompt-manager, app-lion, app-golden-fish, app-code-block, app-one-note, app-ai-pet, app-verse-craft, app-financial-kg, app-resume-ai, app-bee-memory, app-chroma, app-mini-deploy, app-usercenter, app-wisepath, app-golden, app-ad-smart, app-genius-student, app-spider, app-user-feedback, app-nexus-ui, app-admin, app-docs
@@ -116,7 +116,7 @@ NexusUtils.scrollLock.unlock();
 - **viewport**：加载 nexus-all.js（或 nexus-mobile.js）后自动补齐标准 viewport meta（`width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover, interactive-widget=resizes-content`），宿主无需手写；已有 meta 只补缺失键、不覆盖既有值。手动触发用 `NexusMobile.ensureViewport()`（nexus-mobile.js 暴露 `window.NexusMobile`，另含 `isMobile()` 与 `MOBILE_BREAKPOINT`）。
 - **断点**：JS 单一分界 `window.innerWidth <= 768` 为移动（统一用 `useMobile()` 或 `NexusMobile.isMobile()`，勿自写 `resize` 监听或 `< 768`）；CSS 允许档位 768/480/1024，其余游离值勿用。命中区扩大规则走 `@media (pointer: coarse)`，hover 行为回退走 `@media (hover: none)`，两者语义不同不可混用。
 - **弹层滚动锁定**：modal/drawer/settings/side-panel 已内置 `NexusUtils.scrollLock`，业务自建弹层必须复用它（计数器制，勿直接写 `document.body.style.overflow`）。
-- **safe-area / 视口高度**：CSS 变量 `--nx-safe-{bottom,top,left,right}` 与 `--nx-vh`（dvh 降级）由 nexus-mobile.css 提供，固定底栏/抽屉高度一律 `calc(xx + var(--nx-safe-bottom))`，全屏高度用 `var(--nx-vh) * 100` 或 `100dvh`。
+- **safe-area / 视口高度**：CSS 变量 `--nx-safe-{bottom,top,left,right}`（safe-area env 别名，令牌单源 nexus-tokens.css）与 `--nx-vh`（dvh 降级，nexus-mobile.css 提供），固定底栏/抽屉高度一律 `calc(xx + var(--nx-safe-bottom))`，全屏高度用 `var(--nx-vh) * 100` 或 `100dvh`。
 
 ### NexusStore
 
@@ -220,9 +220,11 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 | 布局骨架 | nux-layout-sidebar / nux-layout-topnav / nux-bottom-nav / nux-side-panel / nux-section / nux-grid / nux-backtop |
 | 站点级 | nux-footer / nux-portal-footer / nux-about-page / nux-menu-about / nux-login-page / nux-forgot-password / nux-menu-user / nux-user-center / nux-settings-drawer |
 | 反馈 | nux-undo-toast / nux-modal / nux-drawer / nux-notification-bell / nux-notification-panel / nux-loading / nux-skeleton / nux-empty-state / nux-error-state / nux-ai-task-progress |
-| 数据展示 | nux-stat-card / nux-badge / nux-avatar / nux-progress / nux-steps / nux-breadcrumb / nux-calendar / nux-checkin / nux-radar-chart / nux-result-view / nux-selection-bar |
+| 数据展示 | nux-stat-card / nux-badge / nux-avatar / nux-progress / nux-steps / nux-breadcrumb / nux-calendar / nux-checkin / nux-radar-chart / nux-result-view / nux-selection-bar / nux-pagination / nux-poster / nux-conversation-list / nux-icon |
 | 表单控件 | nux-form-group / nux-button / nux-input / nux-textarea / nux-select / nux-switch / nux-checkbox / nux-search-box / nux-segmented / nux-chip-group / nux-accordion / nux-tab-group |
-| 交互增强 | nux-file-upload / nux-infinite-scroll / nux-slider / nux-date-picker / nux-qrcode / nux-sortable / nux-theme-toggle |
+| 交互增强 | nux-file-upload / nux-infinite-scroll / nux-slider / nux-date-picker / nux-qrcode / nux-sortable / nux-theme-toggle / nux-camera-recognize |
+| AI 能力 | nux-ai-badge / nux-ai-chat / nux-ai-indicator / nux-ai-notice / nux-ai-widgets / nux-clarify-card |
+| 应用与引导 | nux-app-card / nux-app-switcher / nux-automation / nux-onboarding / nux-onboarding-strip |
 
 ### nux-pagination 分页组件
 

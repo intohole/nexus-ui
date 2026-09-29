@@ -111,6 +111,13 @@
   --nx-z-max-plus: 2147483001;
 }
 
+:root {
+  --nx-safe-top: env(safe-area-inset-top, 0px);
+  --nx-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --nx-safe-left: env(safe-area-inset-left, 0px);
+  --nx-safe-right: env(safe-area-inset-right, 0px);
+}
+
 [data-theme="dark"] {
   --nx-bg-base: #1e293b;
   --nx-bg-surface: #243044;

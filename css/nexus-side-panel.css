@@ -171,7 +171,7 @@
     border: 1px solid var(--nxsp-tint-strong);
 }
 .nxsp-personal-head { display: flex; align-items: center; gap: 6px; padding: 0 4px 6px; }
-.nxsp-personal:last-child { margin-bottom: calc(12px + env(safe-area-inset-bottom)); }
+.nxsp-personal:last-child { margin-bottom: calc(12px + var(--nx-safe-bottom)); }
 .nxsp-personal-dot {
     width: 6px; height: 6px; border-radius: 50%;
     background: var(--nxsp-accent); box-shadow: 0 0 0 3px var(--nxsp-tint);
@@ -206,7 +206,7 @@
 
 .nxsp-foot {
     display: flex; align-items: center; gap: 8px;
-    margin-top: 8px; padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
+    margin-top: 8px; padding: 12px 14px calc(12px + var(--nx-safe-bottom));
     border-top: 1px solid var(--nxsp-border);
 }
 .nxsp-user-name {
@@ -234,7 +234,7 @@
     transition: transform .26s cubic-bezier(.4, 0, .2, 1), visibility .26s;
 }
 .nxsp.is-compact .nxsp-aside.open { transform: translateX(0); visibility: visible; }
-.nxsp.is-compact .nxsp-head { padding-top: calc(16px + env(safe-area-inset-top)); }
+.nxsp.is-compact .nxsp-head { padding-top: calc(16px + var(--nx-safe-top)); }
 .nxsp.is-compact .nxsp-list { -webkit-overflow-scrolling: touch; }
 .nxsp.is-compact .nxsp-del { opacity: 1; }
 
