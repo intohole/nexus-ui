@@ -1454,7 +1454,8 @@
         upload(url, formData, options = {}) {
             const token = this._getToken();
             const headers = { ...(token && { 'Authorization': `Bearer ${token}` }), ...options.headers };
-            return fetch(`${this.baseUrl}${url}`, { method: 'POST', body: formData, headers, ...options })
+            const { headers: _mergedHeaders, ...fetchOptions } = options;
+            return fetch(`${this.baseUrl}${url}`, { method: 'POST', body: formData, headers, ...fetchOptions })
             .then(async (res) => {
                 let data; const ct = res.headers.get('content-type') || '';
                 if (ct.includes('application/json')) data = await res.json();
