@@ -443,7 +443,30 @@
 
 .nux-login-page.nux-login--minimal { background: var(--nx-bg-surface, #f8fafc); }
 .nux-login-page.nux-login--minimal .nux-login-brand { display: none; }
-.nux-login-page.nux-login--minimal .nux-login-form-side { padding: 24px 16px; }@media (max-width: 768px){
+.nux-login-page.nux-login--minimal .nux-login-form-side { padding: 24px 16px; }
+/* 登录页暗色适配：三变体页底渐变与卡片边缘随主题翻转（浅色渐变常量保持原值） */
+.nux-login-page.nux-login--card .nux-login-card { box-shadow: var(--nux-login-shadow-card, 0 12px 40px rgba(30, 41, 59, .10), 0 2px 6px rgba(30, 41, 59, .06)); }
+.nux-login-page.nux-login--topbar .nux-login-card { box-shadow: var(--nux-login-shadow-topbar, 0 10px 32px rgba(30, 41, 59, .09)); }
+.nux-login-page.nux-login--minimal .nux-login-card { box-shadow: var(--nux-login-shadow-minimal, 0 8px 28px rgba(30, 41, 59, .06)); }
+[data-theme="dark"] .nux-login-page.nux-login--card,
+[data-theme="dark"] .nux-login-page.nux-login--topbar,
+[data-theme="dark"] .nux-login-page.nux-login--minimal {
+  --nux-login-grad-mid: #1a2436;
+  --nux-login-grad-end: #16202f;
+}
+[data-theme="dark"] .nux-login-page.nux-login--topbar {
+  background: linear-gradient(180deg, var(--nx-bg-base) 0%, var(--nux-login-grad-end) 100%);
+}
+[data-theme="dark"] .nux-login-page.nux-login--minimal { background: var(--nx-bg-surface); }
+[data-theme="dark"] .nux-login-page.nux-login--card .nux-login-card,
+[data-theme="dark"] .nux-login-page.nux-login--topbar .nux-login-card,
+[data-theme="dark"] .nux-login-page.nux-login--minimal .nux-login-card {
+  --nux-login-shadow-card: 0 12px 40px rgba(0, 0, 0, .45), 0 2px 6px rgba(0, 0, 0, .3);
+  --nux-login-shadow-topbar: 0 10px 32px rgba(0, 0, 0, .4);
+  --nux-login-shadow-minimal: 0 8px 28px rgba(0, 0, 0, .35);
+  border: 1px solid var(--nx-border);
+}
+@media (max-width: 768px){
   .nux-login-page { flex-direction: column; }
   .nux-login-brand { min-height: 0; flex: none; padding: var(--nx-space-6); order: -1; }
   .nux-login-brand-content { text-align: center; }
