@@ -14,10 +14,15 @@
             isDark.value = dark;
         };
 
-        const toggleTheme = () => applyTheme(!isDark.value);
+        // 仅用户主动切换才持久化；跟随系统的初始应用不落盘，系统偏好变化才能持续生效
+        const toggleTheme = () => {
+            applyTheme(!isDark.value);
+            try { localStorage.setItem(storageKey, isDark.value ? 'dark' : 'light'); } catch (e) { /* 隐私模式静默 */ }
+        };
 
         onMounted(() => {
-            const saved = localStorage.getItem(storageKey);
+            let saved = null;
+            try { saved = localStorage.getItem(storageKey); } catch (e) { /* 同上 */ }
             if (saved === 'dark' || saved === 'light') {
                 applyTheme(saved === 'dark');
             } else if (followSystem && window.matchMedia) {
@@ -37,8 +42,6 @@
                                           : media.removeListener(onSystemChange);
             }
         });
-
-        watch(isDark, (val) => localStorage.setItem(storageKey, val ? 'dark' : 'light'));
 
         return { isDark, toggleTheme, applyTheme };
     };

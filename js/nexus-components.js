@@ -69,7 +69,6 @@
         'nux-sortable': 'NuxSortable',
         'nux-stat-card': 'NuxStatCard',
         'nux-swipe-actions': 'NuxSwipeActions',
-        'nux-timeline': 'NuxTimeline',
         'nux-switch': 'NuxSwitch',
         'nux-tab-group': 'NuxTabGroup',
         'nux-tag': 'NuxTag',

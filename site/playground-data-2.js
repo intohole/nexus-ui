@@ -81,6 +81,42 @@ if (ok) showToast('已删除', 'success');`,
         }
       },
       {
+        id: 'prompt',
+        tag: 'nux-prompt',
+        title: '输入对话框',
+        desc: 'Promise 风格全局函数，await 得到输入文本（取消为 null），必填校验错误驻留',
+        tpl: `
+<div class="demo-row">
+  <nux-button @click="rename">重命名</nux-button>
+  <nux-button variant="danger" @click="reject">驳回申请</nux-button>
+</div>`,
+        code: `const name = await window.nuxPrompt({
+  title: '重命名', value: '当前名称', placeholder: '输入新名称'
+});
+if (name !== null) showToast('已改名：' + name, 'success');
+
+const reason = await window.nuxPrompt({
+  title: '驳回申请', required: true, requiredMessage: '请填写驳回原因',
+  confirmText: '驳回', confirmType: 'danger'
+});
+if (reason !== null) showToast('已驳回', 'success');`,
+        methods: {
+          async rename() {
+            const name = await window.nuxPrompt({
+              title: '重命名', value: '季度报表', placeholder: '输入新名称'
+            });
+            if (name) window.showToast('已改名：' + name, 'success');
+          },
+          async reject() {
+            const reason = await window.nuxPrompt({
+              title: '驳回申请', message: '将通知申请人', required: true,
+              requiredMessage: '请填写驳回原因', confirmText: '驳回', confirmType: 'danger'
+            });
+            if (reason !== null) window.showToast('已驳回：' + reason, 'success');
+          }
+        }
+      },
+      {
         id: 'empty-skeleton',
         tag: 'nux-empty / nux-skeleton',
         title: '空状态与骨架屏',

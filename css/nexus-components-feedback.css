@@ -108,6 +108,12 @@
 .nux-confirm-overlay.is-in { opacity: 1; }
 .nux-confirm-msg { color: var(--nx-text-secondary); margin: var(--nx-space-4) 0; white-space: pre-line; }
 
+.nux-prompt-modal { max-width: 440px; }
+.nux-prompt-msg { color: var(--nx-text-secondary); margin: var(--nx-space-4) 0 var(--nx-space-3); white-space: pre-line; }
+.nux-prompt-input { resize: vertical; min-height: 0; font-family: inherit; }
+.nux-prompt-input.is-invalid { border-color: var(--nx-danger); box-shadow: 0 0 0 3px color-mix(in srgb, var(--nx-danger) 15%, transparent); }
+.nux-prompt-error { margin: var(--nx-space-2) 0 0; font-size: var(--nx-text-xs); color: var(--nx-danger); }
+
 .nux-error-state { color: var(--nx-danger); }
 .nux-error-state.nx-empty-state i { font-size: 48px; color: var(--nx-danger); }
 .nux-error-state .nux-error-code {

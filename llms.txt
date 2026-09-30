@@ -24,7 +24,7 @@ CDN地址（全工作区统一，版本见 `nexus-ui/deps.json`）：`https://so
 <script src="https://songguokr.com/nexus-ui/v{version}/js/components/nux-modal.js"></script>
 <script src="https://songguokr.com/nexus-ui/v{version}/js/components/nux-login-page.js"></script>
 
-<!-- toast/confirm/unlock 不需要引脚本：nexus-all.js 已提供全局函数 window.showToast / window.nuxConfirm / window.showUnlock -->
+<!-- toast/confirm/prompt/unlock 不需要引脚本：nexus-all.js 已提供全局函数 window.showToast / window.nuxConfirm / window.nuxPrompt / window.showUnlock -->
 <!-- 以下 6 个组件已随 nexus-all.js 内置，无需再单引脚本：nux-result-view / nux-ai-badge / nux-skeleton / nux-empty-state / nux-error-state / nux-ai-indicator -->
 <!-- 图标依赖说明：nux-checkin / nux-app-card / nux-notification-bell / nux-about-page（含 about 数据）使用 font-awesome 6.x 图标类，宿主需自行引入 FA（deps.json 已纳管 CDN）；其余组件均为内联 SVG，无外部图标依赖 -->
 
@@ -137,6 +137,7 @@ NexusComponents.register(app);
 // 命令式调用（无需注册）
 showToast('操作成功', 'success');
 nuxConfirm('确定删除吗？').then(ok => { ... });
+const name = await nuxPrompt({ title: '重命名', required: true }); // 取消得 null
 showUnlock({ icon: '🏆', title: '新成就', desc: '连续打卡 7 天' });
 ```
 
@@ -214,18 +215,23 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 
 用户协议页面唯一事实源：本仓库 `agreement.html`（协议条款/隐私政策文案直接维护在该页）。
 
-### 全部组件索引（76 个，以 `NexusComponents.list()` 为准）
+### 全部组件索引（75 个，以 `NexusComponents.list()` 为准）
 
 | 分类 | 组件 |
 |------|------|
 | 布局骨架 | nux-layout-sidebar / nux-layout-topnav / nux-bottom-nav / nux-side-panel / nux-section / nux-backtop |
 | 站点级 | nux-footer / nux-portal-footer / nux-about-page / nux-menu-about / nux-login-page / nux-forgot-password / nux-menu-user / nux-user-center / nux-settings-drawer |
 | 反馈 | nux-undo-toast / nux-modal / nux-drawer / nux-notification-bell / nux-notification-panel / nux-loading / nux-skeleton / nux-empty-state / nux-error-state / nux-ai-task-progress |
-| 数据展示 | nux-stat-card / nux-badge / nux-tag / nux-avatar / nux-progress / nux-breadcrumb / nux-calendar / nux-checkin / nux-radar-chart / nux-result-view / nux-selection-bar / nux-pagination / nux-poster / nux-conversation-list / nux-timeline / nux-icon |
+| 数据展示 | nux-stat-card / nux-badge / nux-tag / nux-avatar / nux-progress / nux-breadcrumb / nux-calendar / nux-checkin / nux-radar-chart / nux-result-view / nux-selection-bar / nux-pagination / nux-poster / nux-conversation-list / nux-icon |
 | 表单控件 | nux-form-group / nux-button / nux-input / nux-textarea / nux-select / nux-switch / nux-checkbox / nux-radio-group / nux-input-number / nux-search-box / nux-segmented / nux-chip-group / nux-accordion / nux-tab-group |
 | 交互增强 | nux-file-upload / nux-infinite-scroll / nux-slider / nux-date-picker / nux-qrcode / nux-sortable / nux-swipe-actions / nux-theme-toggle / nux-camera-recognize / nux-voice-input |
 | AI 能力 | nux-ai-badge / nux-ai-chat / nux-ai-indicator / nux-ai-notice / nux-ai-widgets / nux-clarify-card |
 | 应用与引导 | nux-app-card / nux-app-switcher / nux-automation / nux-onboarding / nux-onboarding-strip |
+
+### 工具脚本（非组件，按需引 script）
+
+- `js/nexus-stream.js`：SSE v2 流式消费器 `NexusStream.consume(fetchImpl, { onEvent, onDone, onError })`，替代手写分帧；配合 nexus-backend `sse_chat_stream_v2` 协议（type 事件投递+心跳）。
+- `js/nexus-theme-init.js`：首帧防闪烁 IIFE（同步执行，无导出）。读 `nx-theme`，dark 用之，未设置跟随系统。业务仓如有历史存储 key，在引入前声明 `window.NEXUS_THEME_LEGACY_KEYS = ['旧key1','旧key2']`，首访自动迁移到 `nx-theme` 并清除旧 key；迁移只认 `dark/light` 合法值。
 
 ### nux-pagination 分页组件
 
@@ -250,7 +256,26 @@ Events: prev/next
 Events: change(isDark:Boolean)
 
 
-非组件能力（由 nexus-all.js 直接提供全局函数，**无需引脚本、无需注册**）：`window.showToast(msg, type, duration)` / `window.nuxConfirm(options)` / `window.showUnlock(options)`。
+非组件能力（由 nexus-all.js 直接提供全局函数，**无需引脚本、无需注册**）：`window.showToast(msg, type, duration)` / `window.nuxConfirm(options)` / `window.nuxPrompt(options)` / `window.showUnlock(options)`。
+
+### nux-prompt 输入对话框
+
+Promise 风格全局函数（替代原生 `prompt()`），await 得到输入文本，取消/Esc/点遮罩得 `null`。必填校验失败错误驻留（内联红字+输入框红边，弹窗不关闭），多行时 Enter 换行、Cmd/Ctrl+Enter 提交，单行 Enter 直接提交。移动端自动转底部面板形态（复用 nx-modal 布局，safe-bottom 内置）。
+
+```javascript
+const reason = await window.nuxPrompt({
+  title: '驳回申请',            // 标题（可空）
+  message: '将通知申请人',       // 说明文字（可空）
+  value: '',                   // 初始值
+  placeholder: '请填写驳回原因',
+  rows: 3,                     // textarea 行数，1=单行
+  required: true,              // 必填校验（trim 后非空）
+  requiredMessage: '请填写驳回原因',
+  confirmText: '驳回', cancelText: '取消',
+  confirmType: 'primary|danger|success'
+});
+if (reason !== null) { /* 确认提交（含空字符串，required:false 时可能为空） */ }
+```
 
 | 组件 | 核心用法 |
 |------|---------|
@@ -261,7 +286,6 @@ Events: change(isDark:Boolean)
 | nux-select | `<nux-select v-model="val" :options="[{label,value}]" label placeholder></nux-select>`（原生select，移动端原生picker） |
 | nux-radio-group | `<nux-radio-group v-model="val" :options="[{label,value}]" label block></nux-radio-group>`（胶囊单选组，block 纵排） |
 | nux-input-number | `<nux-input-number v-model="n" :min="0" :max="100" :step="1" unit="个" label></nux-input-number>`（步进器，键盘可用） |
-| nux-timeline | `<nux-timeline :items="[{title,time,desc,type}]"></nux-timeline>`（type: accent/success/warning/danger/info/muted） |
 | nux-swipe-actions | `<nux-swipe-actions :left-actions="[{key,label,icon,tone}]" :right-actions="[]" @action="fn(key)"><div>内容</div></nux-swipe-actions>`（滑动单元格：右滑露左操作、左滑露右操作；tone: accent/danger/success/warning/neutral；触摸+鼠标拖拽，touch-action:pan-y 不影响纵向滚动；同页互斥自动收起；暴露 close()） |
 | nux-switch | `<nux-switch v-model="on" label="开启" description="说明文字"></nux-switch>` |
 | nux-checkbox | `<nux-checkbox v-model="on" label="同意"></nux-checkbox>` |
@@ -377,7 +401,7 @@ Props: preset(String='')/rows(Number=3)/cards(Number=4)（沿用既有 loading/a
 ```javascript
 // js/composables/use-mobile.js
 const { isMobile, mobileMenuOpen, toggleMenu, closeMenu } = useMobile();
-// js/composables/use-theme.js
+// js/composables/use-theme.js（仅用户主动 toggleTheme 才持久化；跟随系统的初始应用不落盘，系统偏好变化持续生效）
 const { isDark, toggleTheme } = useTheme();
 // js/composables/use-recent.js（供 nux-app-switcher 记录最近使用/收藏）
 NexusUseRecent.recordVisit(name); NexusUseRecent.recents(8);

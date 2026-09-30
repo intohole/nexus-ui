@@ -41,7 +41,7 @@ def main() -> int:
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames[:] = [d for d in dirnames if d not in skip_dirs]
         for fn in filenames:
-            if not (fn.endswith(".html") or fn.endswith(".js") or fn.endswith(".md")):
+            if not (fn.endswith(".html") or fn.endswith(".js") or fn.endswith(".md") or fn.endswith(".json")):
                 continue
             path = os.path.join(dirpath, fn)
             if path.lower().startswith(ignore):
