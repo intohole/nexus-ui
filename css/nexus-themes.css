@@ -18,11 +18,11 @@
 
 /* promptGenius — AI Prompt优化 — 深靛蓝（AI工具的专业感） */
 .app-prompt { --app-accent: #4f46e5; --app-accent-rgb: 79, 70, 229; --app-accent-hover: #6366f1; --app-name: "PromptGenius"; }
-[data-theme="dark"] .app-prompt { --app-accent: #818cf8; --app-accent-rgb: 129, 140, 248; --app-accent-hover: #a5b4fc; }
+[data-theme="dark"] .app-prompt { --app-accent: #818cf8; --app-accent-rgb: 129, 140, 248; --app-accent-hover: #a5b4fc; --app-accent-contrast: #0f172a; }
 
 /* promptManager — AI Prompt管理中间件 — 专业蓝（基础设施的可靠感） */
 .app-prompt-manager { --app-accent: #2563eb; --app-accent-rgb: 37, 99, 235; --app-accent-hover: #3b82f6; --app-name: "Prompt工坊"; }
-[data-theme="dark"] .app-prompt-manager { --app-accent: #60a5fa; --app-accent-rgb: 96, 165, 250; --app-accent-hover: #93c5fd; }
+[data-theme="dark"] .app-prompt-manager { --app-accent: #60a5fa; --app-accent-rgb: 96, 165, 250; --app-accent-hover: #93c5fd; --app-accent-contrast: #0f172a; }
 
 /* oneNote — 智能笔记 — 深青（Notion式知识管理的冷静感） */
 .app-one-note { --app-accent: #0d9488; --app-accent-rgb: 13, 148, 136; --app-accent-hover: #14b8a6; --app-name: "思悟笔记"; }
@@ -52,7 +52,7 @@
 
 /* goldenStock — 智能投资 — 深蓝（金融的权威感，区别于AI靛蓝） */
 .app-golden { --app-accent: #1d4ed8; --app-accent-rgb: 29, 78, 216; --app-accent-hover: #3b82f6; --app-name: "GoldenStock"; }
-[data-theme="dark"] .app-golden { --app-accent: #60a5fa; --app-accent-rgb: 96, 165, 250; --app-accent-hover: #93c5fd; }
+[data-theme="dark"] .app-golden { --app-accent: #60a5fa; --app-accent-rgb: 96, 165, 250; --app-accent-hover: #93c5fd; --app-accent-contrast: #0f172a; }
 
 /* financialKG — 金融知识图谱 — 靛青（数据/图谱的深度感） */
 .app-financial-kg { --app-accent: #0e7490; --app-accent-rgb: 14, 116, 144; --app-accent-hover: #0891b2; --app-name: "FinancialKG"; }
@@ -74,7 +74,7 @@
 
 /* geniusStudent — 天才学伴 — 琥珀（学习/探索的温暖感，区别于紫罗兰） */
 .app-genius-student { --app-accent: #2F56A7; --app-accent-rgb: 47, 86, 167; --app-accent-hover: #7D9BD4; --app-name: "天才学伴"; }
-[data-theme="dark"] .app-genius-student { --app-accent: #7D9BD4; --app-accent-rgb: 125, 155, 212; --app-accent-hover: #A3BEE3; }
+[data-theme="dark"] .app-genius-student { --app-accent: #7D9BD4; --app-accent-rgb: 125, 155, 212; --app-accent-hover: #A3BEE3; --app-accent-contrast: #0f172a; }
 
 /* ===== 开发工具产品线 ===== */
 
@@ -98,7 +98,7 @@
 
 /* usercenter — 用户中心 — 靛蓝（认证/安全的权威感，区别于紫罗兰） */
 .app-usercenter { --app-accent: #6366f1; --app-accent-rgb: 99, 102, 241; --app-accent-hover: #818cf8; --app-name: "用户中心"; }
-[data-theme="dark"] .app-usercenter { --app-accent: #818cf8; --app-accent-rgb: 129, 140, 248; --app-accent-hover: #a5b4fc; }
+[data-theme="dark"] .app-usercenter { --app-accent: #818cf8; --app-accent-rgb: 129, 140, 248; --app-accent-hover: #a5b4fc; --app-accent-contrast: #0f172a; }
 
 /* goldenFish — 闲鱼助手 — 深青蓝（电商/交易的清爽感，区别于天蓝） */
 .app-golden-fish { --app-accent: #155e75; --app-accent-rgb: 21, 94, 117; --app-accent-hover: #0e7490; --app-name: "GoldenFish"; }
@@ -108,7 +108,7 @@
 
 /* nexus-ui — 设计系统 — 品牌蓝 */
 .app-nexus-ui { --app-accent: #3b82f6; --app-accent-rgb: 59, 130, 246; --app-accent-hover: #60a5fa; --app-name: "NexusUI"; }
-[data-theme="dark"] .app-nexus-ui { --app-accent: #60a5fa; --app-accent-rgb: 96, 165, 250; --app-accent-hover: #93c5fd; }
+[data-theme="dark"] .app-nexus-ui { --app-accent: #60a5fa; --app-accent-rgb: 96, 165, 250; --app-accent-hover: #93c5fd; --app-accent-contrast: #0f172a; }
 
 /* admin — 管理后台 — 深石板蓝（区别于FastRPC石板蓝） */
 .app-admin { --app-accent: #334155; --app-accent-rgb: 51, 65, 85; --app-accent-hover: #475569; --app-name: "Admin"; }
@@ -122,17 +122,17 @@
 
 /* truemirror — 照妖镜（AI 内容检测） — 品红紫（照鉴真伪的锐利感，与 chroma 品红拉开：更深更紫） */
 .app-truemirror { --app-accent: #9333ea; --app-accent-rgb: 147, 51, 234; --app-accent-hover: #a855f7; --app-name: "照妖镜"; }
-[data-theme="dark"] .app-truemirror { --app-accent: #c084fc; --app-accent-rgb: 192, 132, 252; --app-accent-hover: #d8b4fe; }
+[data-theme="dark"] .app-truemirror { --app-accent: #c084fc; --app-accent-rgb: 192, 132, 252; --app-accent-hover: #d8b4fe; --app-accent-contrast: #0f172a; }
 
 /* travelMate — 旅行伴侣 — 松绿（自然/旅途的沉静感） */
 .app-travel-mate { --app-accent: #2e6b4f; --app-accent-rgb: 46, 107, 79; --app-accent-hover: #3d8a66; --app-name: "TravelMate"; }
 [data-theme="dark"] .app-travel-mate { --app-accent: #4ade80; --app-accent-rgb: 74, 222, 128; --app-accent-hover: #86efac; --app-accent-contrast: #0f172a; }
 
 /* MiaoBi — 妙笔（AI 写作） — 藏蓝配琥珀（书写的沉静 + 点睛） */
-.app-miaobi { --app-accent: #2F54A8; --app-accent-rgb: 47, 84, 168; --app-accent-hover: #4066BF; --app-name: "妙笔"; }
-[data-theme="dark"] .app-miaobi { --app-accent: #7D9BD4; --app-accent-rgb: 125, 155, 212; --app-accent-hover: #A3BEE3; }
+.app-miaobi { --app-accent: #1E3A5F; --app-accent-rgb: 30, 58, 95; --app-accent-hover: #2F54A8; --app-name: "妙笔"; }
+[data-theme="dark"] .app-miaobi { --app-accent: #8FAADC; --app-accent-rgb: 143, 170, 220; --app-accent-hover: #A5C0E8; --app-accent-contrast: #0f172a; }
 
 /* gezhi — 格致（学习管理） — 暗钢蓝（格物致知的理性感） */
 .app-gezhi { --app-accent: #1f4e79; --app-accent-rgb: 31, 78, 121; --app-accent-hover: #2a6396; --app-name: "格致"; }
-[data-theme="dark"] .app-gezhi { --app-accent: #649ED8; --app-accent-rgb: 100, 158, 216; --app-accent-hover: #8AB6E6; }
+[data-theme="dark"] .app-gezhi { --app-accent: #649ED8; --app-accent-rgb: 100, 158, 216; --app-accent-hover: #8AB6E6; --app-accent-contrast: #0f172a; }
 
