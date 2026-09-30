@@ -92,10 +92,54 @@ a:hover { color: var(--app-accent-hover); }
 .el-menu-item { color: var(--nx-text-body) !important; }
 .el-menu-item:hover { background: var(--nx-bg-hover) !important; color: var(--nx-text-heading) !important; }
 .el-menu-item.is-active { color: var(--app-accent) !important; }
-.el-card { background: var(--nx-bg-surface) !important; border-color: var(--nx-border) !important; color: var(--nx-text-body) !important; }
+.el-card { background: var(--nx-bg-surface) !important; border-color: var(--nx-border) !important; color: var(--nx-text-body) !important; border-radius: var(--nx-radius-md) !important; }
+.el-button { border-radius: var(--nx-radius-sm) !important; }
 .el-button--primary { background: var(--app-accent) !important; border-color: var(--app-accent) !important; }
+.el-button--primary:hover, .el-button--primary:focus { background: var(--app-accent-hover) !important; border-color: var(--app-accent-hover) !important; }
+.el-button--danger { background: var(--nx-danger) !important; border-color: var(--nx-danger) !important; }
+.el-input__wrapper { border-radius: var(--nx-radius-sm) !important; }
 .el-input__wrapper.is-focus { box-shadow: 0 0 0 1px var(--app-accent) inset !important; }
 .el-table { background: var(--nx-bg-surface) !important; --el-table-bg-color: var(--nx-bg-surface) !important; --el-table-tr-bg-color: var(--nx-bg-surface) !important; --el-table-header-bg-color: var(--nx-bg-elevated) !important; --el-table-row-hover-bg-color: var(--nx-bg-hover) !important; --el-table-border-color: var(--nx-border) !important; --el-table-text-color: var(--nx-text-body) !important; --el-table-header-text-color: var(--nx-text-secondary) !important; }
-.el-dialog { background: var(--nx-bg-elevated) !important; }
+.el-dialog { background: var(--nx-bg-elevated) !important; border-radius: var(--nx-radius-lg) !important; box-shadow: var(--nx-shadow-lg) !important; }
+.el-dialog__title { color: var(--nx-text-heading) !important; }
+.el-overlay { background: var(--nx-overlay-bg) !important; }
 .el-form-item__label { color: var(--nx-text-body) !important; }
 .el-pagination { --el-pagination-bg-color: var(--nx-bg-surface) !important; --el-pagination-text-color: var(--nx-text-body) !important; --el-pagination-button-bg-color: var(--nx-bg-hover) !important; }
+.el-drawer { background: var(--nx-bg-elevated) !important; }
+.el-drawer__header { color: var(--nx-text-heading) !important; }
+
+/* ===== Element Plus 反馈件与 nexus 反馈层视觉对齐（双轨制应用的零改造收口） ===== */
+
+/* ElMessage 对齐 .nux-toast-item：同圆角/阴影/字号/语义色 */
+.el-message {
+  border-radius: var(--nx-radius-md) !important;
+  box-shadow: var(--nx-shadow-md) !important;
+  background: var(--nx-bg-elevated) !important;
+  border: 1px solid var(--nx-border) !important;
+  color: var(--nx-text-body) !important;
+  font-size: var(--nx-text-sm) !important;
+}
+.el-message .el-message__content { color: var(--nx-text-body) !important; }
+.el-message--success { --el-message-bg-color: var(--nx-bg-elevated); }
+.el-message--success .el-message__icon, .el-message--success .el-message__content { color: var(--nx-success) !important; }
+.el-message--warning .el-message__icon, .el-message--warning .el-message__content { color: var(--nx-warning) !important; }
+.el-message--error .el-message__icon, .el-message--error .el-message__content { color: var(--nx-danger) !important; }
+.el-message--info .el-message__icon, .el-message--info .el-message__content { color: var(--nx-text-secondary) !important; }
+
+/* ElMessageBox / ElNotification 对齐 nux-modal 视觉 */
+.el-message-box { border-radius: var(--nx-radius-lg) !important; background: var(--nx-bg-elevated) !important; border: 1px solid var(--nx-border) !important; box-shadow: var(--nx-shadow-lg) !important; }
+.el-message-box__title { color: var(--nx-text-heading) !important; }
+.el-message-box__message { color: var(--nx-text-secondary) !important; }
+.el-notification { border-radius: var(--nx-radius-md) !important; background: var(--nx-bg-elevated) !important; border: 1px solid var(--nx-border) !important; box-shadow: var(--nx-shadow-md) !important; }
+.el-notification__title { color: var(--nx-text-heading) !important; }
+.el-notification__content { color: var(--nx-text-secondary) !important; }
+
+/* v-loading spinner 用主题色 */
+.el-loading-spinner .circular .path { stroke: var(--app-accent) !important; }
+.el-loading-spinner .el-loading-text { color: var(--nx-text-secondary) !important; }
+
+/* el-empty 描述文字对齐 nux-empty-state 层级 */
+.el-empty__description p { color: var(--nx-text-secondary) !important; }
+
+/* ElMessage 图标色（图标元素本身继承 type class 的场景） */
+.el-message .el-message__badge, .el-message__icon { background: transparent !important; }

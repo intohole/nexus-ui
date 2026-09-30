@@ -2,6 +2,7 @@
   --app-accent: #6366f1;
   --app-accent-rgb: 99, 102, 241;
   --app-accent-hover: #818cf8;
+  --app-accent-contrast: #ffffff;
   --app-name: "App";
 }
 
@@ -21,9 +22,9 @@
   --nx-text-secondary: #64748b;
   --nx-text-muted: #94a3b8;
   --nx-text-accent: var(--app-accent);
-  --nx-text-on-accent: #ffffff;
+  --nx-text-on-accent: var(--app-accent-contrast, #ffffff);
 
-  --nx-primary: var(--app-accent, #0ea5e9);
+  --nx-primary: var(--app-accent, #6366f1);
 
   --nx-success: #10b981;
   --nx-warning: #f59e0b;
@@ -66,7 +67,6 @@
   --nx-text-primary: var(--nx-text-heading);
   --nx-text-strong: #0f172a;
   --nx-text-tertiary: var(--nx-text-secondary);
-  --nx-text-accent: var(--app-accent);
   --nx-warning-soft: rgba(245, 158, 11, 0.12);
   --nx-warning-text: var(--nx-warning);
   --nx-chat-kb: var(--nx-bg-elevated);
@@ -155,8 +155,8 @@
   --nx-text-body: #cbd5e1;
   --nx-text-secondary: #94a3b8;
   --nx-text-muted: #7a8a9e;
-  --nx-text-on-accent: #ffffff;
-  --nx-primary: var(--app-accent, #38bdf8);
+  --nx-text-on-accent: var(--app-accent-contrast, #ffffff);
+  --nx-primary: var(--app-accent, #6366f1);
   --nx-success: #34d399;
   --nx-warning: #fbbf24;
   --nx-danger: #f87171;
@@ -181,12 +181,12 @@
   --nx-surface: var(--nx-bg-surface);
   --nx-border-strong: rgba(255, 255, 255, 0.18);
   --nx-accent: var(--nx-primary);
-  --nx-accent-hover: var(--nx-primary);
-  --nx-accent-soft: rgba(56, 189, 248, 0.15);
+  --nx-accent-hover: var(--app-accent-hover);
+  --nx-accent-soft: rgba(var(--app-accent-rgb), 0.18);
   --nx-color-primary: var(--nx-primary);
   --nx-color-primary-strong: var(--nx-primary);
   --nx-color-danger: var(--nx-danger);
-  --nx-primary-soft: rgba(56, 189, 248, 0.15);
+  --nx-primary-soft: rgba(var(--app-accent-rgb), 0.18);
   --nx-text: var(--nx-text-body);
   --nx-text-primary: var(--nx-text-heading);
   --nx-text-strong: #f8fafc;
@@ -195,4 +195,30 @@
   --nx-warning-soft: rgba(251, 191, 36, 0.15);
   --nx-warning-text: var(--nx-warning);
   --nx-chat-kb: var(--nx-bg-elevated);
+}
+
+/*
+ * ===== 主题派生令牌 · body 级解析层 =====
+ * 下列令牌引用 --app-accent*，而主题类挂载在 body（或宿主在 :root 内联覆盖）。
+ * CSS 自定义属性的 var() 在「定义该属性的元素」上完成替换：若只在 :root/[data-theme] 层定义，
+ * 解析时永远取到 :root 默认靛紫，body 主题类无法传导（soft/hover/glow 会整体跑成默认色）。
+ * 故统一在 body 层重定义，使其随 body 上的主题类/内联覆盖一同解析。
+ * 优先级：:root body (0,1,1) > :root (0,1,0)；[data-theme="dark"] body (0,2,1) 压过暗色块。
+ */
+:root body {
+  --nx-primary: var(--app-accent, #6366f1);
+  --nx-accent: var(--nx-primary);
+  --nx-accent-hover: var(--app-accent-hover);
+  --nx-accent-soft: rgba(var(--app-accent-rgb), 0.12);
+  --nx-primary-soft: rgba(var(--app-accent-rgb), 0.12);
+  --nx-text-accent: var(--app-accent);
+  --nx-text-on-accent: var(--app-accent-contrast, #ffffff);
+  --nx-border-accent: rgba(var(--app-accent-rgb), 0.3);
+  --nx-shadow-glow: 0 0 20px rgba(var(--app-accent-rgb), 0.15);
+  --nx-color-primary: var(--nx-primary);
+  --nx-color-primary-strong: var(--app-accent-hover);
+}
+[data-theme="dark"] body {
+  --nx-accent-soft: rgba(var(--app-accent-rgb), 0.18);
+  --nx-primary-soft: rgba(var(--app-accent-rgb), 0.18);
 }

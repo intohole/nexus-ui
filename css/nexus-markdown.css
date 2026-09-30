@@ -85,7 +85,7 @@
     background: var(--nx-bg-subtle, rgb(241, 245, 249));
     color: var(--nx-danger, rgb(190, 18, 60));
     border-radius: var(--nx-radius-sm, 0.375rem);
-    font-family: 'SF Mono', Monaco, Inconsolata, 'Roboto Mono', 'Courier New', monospace;
+    font-family: var(--nx-font-mono, 'SF Mono', Monaco, monospace);
     font-size: 0.875em;
     word-break: break-word;
 }
@@ -170,7 +170,7 @@
     border: 1px solid var(--nx-border, rgb(203, 213, 225));
     border-bottom-width: 2px;
     border-radius: var(--nx-radius-sm, 0.375rem);
-    font-family: 'SF Mono', Monaco, monospace;
+    font-family: var(--nx-font-mono, 'SF Mono', Monaco, monospace);
     font-size: 0.85em;
     color: var(--nx-text-heading, rgb(15, 23, 42));
 }
@@ -239,7 +239,7 @@
     color: rgba(148, 163, 184, 0.7);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    font-family: 'SF Mono', Monaco, monospace;
+    font-family: var(--nx-font-mono, 'SF Mono', Monaco, monospace);
     pointer-events: none;
 }
 

@@ -10,7 +10,7 @@
     --nxsp-surface: color-mix(in srgb, var(--nxsp-text) 4%, var(--nxsp-bg));
     --nxsp-tint: color-mix(in srgb, var(--nxsp-accent) 10%, transparent);
     --nxsp-tint-strong: color-mix(in srgb, var(--nxsp-accent) 17%, transparent);
-    --nxsp-risk: #d5455c;
+    --nxsp-risk: var(--nx-danger, #d5455c);
     position: relative;
     flex: 0 0 auto;
     width: var(--nxsp-w, 264px);
