@@ -1,5 +1,21 @@
 (function() {
     const TOKEN_KEY = 'uc_access_token';
+    const APP_PATHS = {
+        'resumeai': '/resumeai/',
+        'challengeplanet': '/challengeplanet/',
+        'nexus-agent': '/nexus-agent',
+        'travelmate': '/travelmate/',
+        'onenote': '/onenote/',
+        'wisepath': '/wisepath/',
+        'gezhi': '/gezhi/',
+        'goldenfish': '/goldenfish/',
+        'versecraft': '/versecraft/',
+        'miaobi': '/miaobi/',
+        'geniusstudent': '/geniusstudent/',
+        'aipet': '/aipet/',
+        'lifecompass': '/lifecompass/',
+        'truemirror': '/truemirror/'
+    };
     const NuxNotificationBell = {
         name: 'nux-notification-bell',
         props: {
@@ -95,8 +111,19 @@
                 self.unread = 0;
             },
             goto: function(item) {
-                if (item.link) window.location.href = item.link;
+                var url = this.resolveLink(item);
+                if (url) window.location.href = url;
                 this.open = false;
+            },
+            resolveLink: function(item) {
+                if (!item) return '';
+                if (item.link) return item.link;
+                var d = item.data || {};
+                if (typeof d.url === 'string' && d.url) return d.url;
+                var jobs = d.jobs;
+                if (Array.isArray(jobs) && jobs.length && jobs[0] && typeof jobs[0].url === 'string' && jobs[0].url) return jobs[0].url;
+                var key = String(item.app_id || '').toLowerCase();
+                return APP_PATHS[key] || '';
             },
             onDocClick: function(e) {
                 if (this.$el && !this.$el.contains(e.target)) this.open = false;
@@ -124,7 +151,7 @@
                     </div>
                     <div v-else-if="!items.length" class="nux-notify-empty">暂无通知</div>
                     <ul v-else class="nux-notify-list">
-                        <li v-for="item in items" :key="item.id" :class="['nux-notify-item', { 'nux-notify-item-unread': !item.is_read }]" @click="markRead(item)">
+                        <li v-for="item in items" :key="item.id" :class="['nux-notify-item', { 'nux-notify-item-unread': !item.is_read }]" :style="resolveLink(item) ? null : { cursor: 'default' }" @click="markRead(item)">
                             <div class="nux-notify-item-title">{{ item.title }}</div>
                             <div class="nux-notify-item-time">{{ formatTime(item.created_at) }}</div>
                         </li>
