@@ -21,11 +21,11 @@
                     <span class="nux-footer-copy">© {{ company }}</span>
                     <span class="nux-footer-sep">·</span>
                     <span class="nux-footer-ai" v-if="showAiBadge" role="note"><span class="nx-ai-badge nx-ai-badge-md" data-tone="accent">AI 生成</span></span>
-                    <span class="nux-footer-sep">·</span>
+                    <span v-if="showAiBadge" class="nux-footer-sep">·</span>
                     <a v-if="showGongan && gonganNumber" class="nux-footer-link" :href="gonganLink || ('https://beian.mps.gov.cn/#/query/webSearch?code=' + gonganNumber)" target="_blank" rel="noopener">公网安备{{ gonganNumber }}</a>
                     <span v-if="showGongan && gonganNumber" class="nux-footer-sep">·</span>
                     <a v-if="showIcp" class="nux-footer-link" href="https://beian.miit.gov.cn" target="_blank" rel="noopener">{{ icpNumber }}</a>
-                    <span class="nux-footer-sep">·</span>
+                    <span v-if="showIcp" class="nux-footer-sep">·</span>
                     <a class="nux-footer-link" href="/nexus-ui/agreement.html" target="_blank" rel="noopener">用户协议</a>
                     <span class="nux-footer-sep">·</span>
                     <a class="nux-footer-link" href="/nexus-ui/privacy.html" target="_blank" rel="noopener">隐私政策</a>
