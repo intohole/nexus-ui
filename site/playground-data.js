@@ -52,6 +52,42 @@
         data() { return { notify: true, dark: false, agree: true }; }
       },
       {
+        id: 'radio-num',
+        tag: 'nux-radio-group / nux-input-number',
+        title: '单选组与数字步进',
+        desc: '胶囊单选与带步进按钮的数值输入，键盘可用',
+        tpl: `
+<div class="demo-col">
+  <nux-radio-group v-model="plan" :options="plans" label="选择方案"></nux-radio-group>
+  <nux-input-number v-model="count" :min="1" :max="99" label="数量" unit="个"></nux-input-number>
+</div>`,
+        code: `<nux-radio-group v-model="plan"
+  :options="[{label:'基础版',value:'basic'},{label:'专业版',value:'pro'}]"
+  label="选择方案"></nux-radio-group>
+<nux-input-number v-model="count" :min="1" :max="99"
+  label="数量" unit="个"></nux-input-number>`,
+        data() { return { plan: 'pro', count: 3, plans: [{label:'基础版',value:'basic'},{label:'专业版',value:'pro'},{label:'旗舰版',value:'max', disabled:true}] }; }
+      },
+      {
+        id: 'timeline',
+        tag: 'nux-timeline',
+        title: '时间线',
+        desc: '事件流展示，六种语义色节点',
+        tpl: `
+<nux-timeline :items="events"></nux-timeline>`,
+        code: `<nux-timeline :items="[
+  {title:'任务创建', time:'09:00', type:'accent'},
+  {title:'处理中', time:'09:05', desc:'分配给值班坐席', type:'warning'},
+  {title:'已完成', time:'09:12', type:'success'}
+]"></nux-timeline>`,
+        data() { return { events: [
+          { title: '任务创建', time: '09:00', desc: '用户提交了批量导入任务', type: 'accent' },
+          { title: '处理中', time: '09:05', desc: '已解析 120 条记录', type: 'warning' },
+          { title: '校验完成', time: '09:10', desc: '发现 3 条格式异常', type: 'danger' },
+          { title: '导入成功', time: '09:12', desc: '117 条入库，3 条跳过', type: 'success' }
+        ] }; }
+      },
+      {
         id: 'search',
         tag: 'nux-search-box',
         title: '搜索框',

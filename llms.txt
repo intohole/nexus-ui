@@ -221,8 +221,8 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 | 布局骨架 | nux-layout-sidebar / nux-layout-topnav / nux-bottom-nav / nux-side-panel / nux-section / nux-backtop |
 | 站点级 | nux-footer / nux-portal-footer / nux-about-page / nux-menu-about / nux-login-page / nux-forgot-password / nux-menu-user / nux-user-center / nux-settings-drawer |
 | 反馈 | nux-undo-toast / nux-modal / nux-drawer / nux-notification-bell / nux-notification-panel / nux-loading / nux-skeleton / nux-empty-state / nux-error-state / nux-ai-task-progress |
-| 数据展示 | nux-stat-card / nux-badge / nux-avatar / nux-progress / nux-breadcrumb / nux-calendar / nux-checkin / nux-radar-chart / nux-result-view / nux-selection-bar / nux-pagination / nux-poster / nux-conversation-list / nux-icon |
-| 表单控件 | nux-form-group / nux-button / nux-input / nux-textarea / nux-select / nux-switch / nux-checkbox / nux-search-box / nux-segmented / nux-chip-group / nux-accordion / nux-tab-group |
+| 数据展示 | nux-stat-card / nux-badge / nux-avatar / nux-progress / nux-breadcrumb / nux-calendar / nux-checkin / nux-radar-chart / nux-result-view / nux-selection-bar / nux-pagination / nux-poster / nux-conversation-list / nux-timeline / nux-icon |
+| 表单控件 | nux-form-group / nux-button / nux-input / nux-textarea / nux-select / nux-switch / nux-checkbox / nux-radio-group / nux-input-number / nux-search-box / nux-segmented / nux-chip-group / nux-accordion / nux-tab-group |
 | 交互增强 | nux-file-upload / nux-infinite-scroll / nux-slider / nux-date-picker / nux-qrcode / nux-sortable / nux-theme-toggle / nux-camera-recognize |
 | AI 能力 | nux-ai-badge / nux-ai-chat / nux-ai-indicator / nux-ai-notice / nux-ai-widgets / nux-clarify-card |
 | 应用与引导 | nux-app-card / nux-app-switcher / nux-automation / nux-onboarding / nux-onboarding-strip |
@@ -259,6 +259,9 @@ Events: change(isDark:Boolean)
 | nux-textarea | `<nux-textarea v-model="text" :rows="4" :auto-resize="true" :maxlength="500" label error hint></nux-textarea>` |
 | nux-theme-toggle | `<nux-theme-toggle @change="fn"></nux-theme-toggle>`（需先加载 composables/use-theme.js，明暗切换持久化 localStorage `nx-theme`） |
 | nux-select | `<nux-select v-model="val" :options="[{label,value}]" label placeholder></nux-select>`（原生select，移动端原生picker） |
+| nux-radio-group | `<nux-radio-group v-model="val" :options="[{label,value}]" label block></nux-radio-group>`（胶囊单选组，block 纵排） |
+| nux-input-number | `<nux-input-number v-model="n" :min="0" :max="100" :step="1" unit="个" label></nux-input-number>`（步进器，键盘可用） |
+| nux-timeline | `<nux-timeline :items="[{title,time,desc,type}]"></nux-timeline>`（type: accent/success/warning/danger/info/muted） |
 | nux-switch | `<nux-switch v-model="on" label="开启" description="说明文字"></nux-switch>` |
 | nux-checkbox | `<nux-checkbox v-model="on" label="同意"></nux-checkbox>` |
 | nux-search-box | `<nux-search-box v-model="kw" :delay="300" @search="fn"></nux-search-box>`（防抖search+回车确认） |
