@@ -44,24 +44,6 @@
 .nux-modal-enter-from,
 .nux-modal-leave-to { opacity: 0; }
 
-.nx-toast {
-  position: fixed;
-  top: var(--nx-space-6);
-  right: var(--nx-space-6);
-  z-index: var(--nx-z-toast);
-  padding: var(--nx-space-3) var(--nx-space-5);
-  border-radius: var(--nx-radius-md);
-  font-size: var(--nx-text-sm);
-  color: var(--nx-text-on-accent, #fff);
-  box-shadow: var(--nx-shadow-md);
-  animation: nx-slide-in 0.3s ease;
-}
-
-@keyframes nx-slide-in {
-  from { transform: translateX(100%); opacity: 0; }
-  to   { transform: translateX(0); opacity: 1; }
-}
-
 .nux-toast-container {
   position: fixed;
   top: calc(var(--nx-space-6) + var(--nx-safe-top, 0px));
@@ -163,8 +145,7 @@
 }
 
 /* ===== 会话/建议加载骨架屏（工作区规范统一语义类） ===== */
-.session-skeleton,
-.suggest-skeleton {
+.session-skeleton {
   display: flex;
   flex-direction: column;
   gap: var(--nx-space-2, 0.5rem);

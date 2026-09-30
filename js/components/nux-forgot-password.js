@@ -114,7 +114,7 @@
                         <h3 class="nux-forgot-title">找回密码</h3>
                     </div>
                     <div v-if="error" class="nux-login-error">{{ error }}</div>
-                    <div v-if="sentMsg && !error" style="margin:0 0 12px;padding:8px 10px;border-radius:8px;font-size:13px;line-height:1.5;color:#15803d;background:#ecfdf5;">{{ sentMsg }}</div>
+                    <div v-if="sentMsg && !error" style="margin:0 0 12px;padding:8px 10px;border-radius:8px;font-size:13px;line-height:1.5;color:var(--nx-success, #15803d);background:rgba(var(--nx-success-rgb, 22, 163, 74), 0.12);">{{ sentMsg }}</div>
                     <div class="nux-forgot-hint">仅支持已绑定邮箱或手机号的账号找回密码。未绑定：能登录请在「我的数据中心-账号与安全」绑定后重试；无法登录请联系 songguokr@126.com 协助处理。</div>
                     <div class="nux-login-subtabs nux-forgot-tabs">
                         <button :class="['nux-login-subtab', { active: type === 'email' }]" type="button" @click="switchType('email')">邮箱找回</button>

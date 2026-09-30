@@ -23,30 +23,30 @@ Nexus UI（Nexus Design System）是一套基于 Vue 3 CDN 全局模式的前端
 | 框架 | Vue 3.4.21 | CDN 全局模式（非 ES Module），挂载到 window |
 | UI | element-plus 2.6.1 | 可选，按需引入 |
 | HTTP | axios 1.6.8 | 经 nexus-api.js 封装统出 |
-| 基础设施 | nexus-ui | 本工程，CDN 分发，当前版本 v2.27.0 |
+| 基础设施 | nexus-ui | 本工程，CDN 分发，当前版本 v2.31.0 |
 | 渲染 | marked + DOMPurify + hljs | Markdown 安全渲染 |
 
 ## 快速开始 / 使用方式
 
 ### 公共库统一版本
 
-全工作区线上应用统一引用的公共 CDN 库版本以 `deps.json` 为唯一事实来源。当前统一版本：Vue=3.4.21、element-plus=2.6.1、axios=1.6.8、nexus-ui=2.27.0。新增/升级公共库版本必须先更新 `deps.json`，再统一同步所有项目，禁止只改单个项目。
+全工作区线上应用统一引用的公共 CDN 库版本以 `deps.json` 为唯一事实来源。当前统一版本：Vue=3.4.21、element-plus=2.6.1、axios=1.6.8、nexus-ui=2.31.0。新增/升级公共库版本必须先更新 `deps.json`，再统一同步所有项目，禁止只改单个项目。
 
 ### CSS 引入（HTML head）
 
 > 分发主源为 `https://songguokr.com/nexus-ui/v<版本>/`（版本化 URL 是前缀重写，始终指向当前最新版）。下方以 jsDelivr 镜像为例，镜像依赖 GitHub tag，若 tag 缺失请改用主源。
 
 ```html
-<link rel="stylesheet" href="https://songguokr.com/nexus-ui/v2.30.0/css/nexus-all.css">
+<link rel="stylesheet" href="https://songguokr.com/nexus-ui/v2.31.0/css/nexus-all.css">
 ```
 
 ### JS 引入（Vue 3 之后，基础工具最先引入）
 
 ```html
-<script src="https://songguokr.com/nexus-ui/v2.30.0/js/nexus-utils.js"></script>
-<script src="https://songguokr.com/nexus-ui/v2.30.0/js/nexus-api.js"></script>
-<script src="https://songguokr.com/nexus-ui/v2.30.0/js/nexus-crud.js"></script>
-<script src="https://songguokr.com/nexus-ui/v2.30.0/js/nexus-store.js"></script>
+<script src="https://songguokr.com/nexus-ui/v2.31.0/js/nexus-utils.js"></script>
+<script src="https://songguokr.com/nexus-ui/v2.31.0/js/nexus-api.js"></script>
+<script src="https://songguokr.com/nexus-ui/v2.31.0/js/nexus-crud.js"></script>
+<script src="https://songguokr.com/nexus-ui/v2.31.0/js/nexus-store.js"></script>
 ```
 
 ### 主题切换
@@ -87,8 +87,8 @@ python3 nexus-ui/check_deps.py [工作区根目录]
 成就解锁由 `nexus-overlay-host.js` 内置提供（`nexus-all.js` 已聚合，无需单独引脚本、无需注册组件）：
 
 ```html
-<script src="https://songguokr.com/nexus-ui/v2.30.0/js/nexus-overlay-host.js"></script>
-<script src="https://songguokr.com/nexus-ui/v2.30.0/js/components/nux-empty-state.js"></script>
+<script src="https://songguokr.com/nexus-ui/v2.31.0/js/nexus-overlay-host.js"></script>
+<script src="https://songguokr.com/nexus-ui/v2.31.0/js/components/nux-empty-state.js"></script>
 ```
 
 ```javascript
@@ -121,8 +121,8 @@ await NexusUtils.copyText(text, { success: '已复制', fail: '复制失败' });
 统一「AI/接口返回结构化数据 → 表格/键值对展示」，自动探测 `{data:[...]}` 数组为表格（带 summary）、纯键值对象为 KV 列表、其余回退原始 `pre`。替代过去各项目在工具调用结果里手写同一套 table/kv 渲染模板。
 
 ```html
-<script src="https://songguokr.com/nexus-ui/v2.30.0/js/nexus-structured.js"></script>
-<script src="https://songguokr.com/nexus-ui/v2.30.0/js/components/nux-result-view.js"></script>
+<script src="https://songguokr.com/nexus-ui/v2.31.0/js/nexus-structured.js"></script>
+<script src="https://songguokr.com/nexus-ui/v2.31.0/js/components/nux-result-view.js"></script>
 ```
 
 ```javascript

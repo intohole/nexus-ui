@@ -1,6 +1,6 @@
 /* 设置中心（nux-settings-drawer）与自动化管理（nux-automation）共享样式 */
 .nx-settings-overlay {
-  position: fixed; inset: 0; z-index: var(--nx-z-settings); background: rgba(15, 32, 50, 0.42);
+  position: fixed; inset: 0; z-index: var(--nx-z-settings); background: var(--nx-overlay-bg, rgba(15, 32, 50, 0.42));
   backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
 }
 .nx-settings-drawer {
@@ -128,7 +128,7 @@
   border-radius: 12px; padding: 12px; font-size: 14px; font-weight: 600; cursor: pointer;
 }
 .nx-auto-add:hover { background: rgba(var(--app-accent-rgb, 31, 78, 121), 0.1); }
-.nx-auto-modal-mask { position: fixed; inset: 0; z-index: var(--nx-z-settings); background: rgba(15, 32, 50, 0.42); }
+.nx-auto-modal-mask { position: fixed; inset: 0; z-index: var(--nx-z-settings); background: var(--nx-overlay-bg, rgba(15, 32, 50, 0.42)); }
 .nx-auto-modal {
   position: fixed; z-index: var(--nx-z-settings-panel); left: 50%; top: 50%; transform: translate(-50%, -50%);
   width: min(460px, calc(100vw - 30px)); max-height: min(620px, 88vh); display: flex; flex-direction: column;

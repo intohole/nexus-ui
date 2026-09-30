@@ -143,7 +143,14 @@
 .nc-chip,
 .nc-btn,
 .nxw-chip,
-.nxw-choice-btn {
+.nxw-choice-btn,
+.nvi-btn,
+.nx-conv-list-new,
+.nx-ai-chat-quick-btn,
+.nx-auto-act,
+.nux-input-number-btn,
+.nx-settings-nav-item,
+.nx-ai-chat-scroll-btn {
     min-height: 44px;
   }
   .nux-chip-remove,
@@ -164,7 +171,9 @@
 .nux-check-box,
 .nx-settings-close,
 .nux-layout-collapse-btn,
-.nx-conv-list-item-btn {
+.nx-conv-list-item-btn,
+.nx-ai-chat-action-btn,
+.nx-auto-switch {
     position: relative;
   }
   .nux-chip-remove::after,
@@ -185,7 +194,9 @@
 .nux-check-box::after,
 .nx-settings-close::after,
 .nux-layout-collapse-btn::after,
-.nx-conv-list-item-btn::after {
+.nx-conv-list-item-btn::after,
+.nx-ai-chat-action-btn::after,
+.nx-auto-switch::after {
     content: "";
     position: absolute;
     inset: -10px;
@@ -218,7 +229,7 @@
 }@media (max-width: 768px){
   .sidebar { position: fixed !important; top: 0; left: 0; bottom: 0; z-index: var(--nx-z-drawer); width: 260px !important; max-width: 85vw; transform: translateX(-100%); transition: transform 0.3s ease; }
   .sidebar.sidebar-open, .sidebar.open { transform: translateX(0); }
-  .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: var(--nx-z-overlay); display: none; }
+  .sidebar-overlay { position: fixed; inset: 0; background: var(--nx-overlay-bg, rgba(0,0,0,0.5)); z-index: var(--nx-z-overlay); display: none; }
   .sidebar-overlay.active { display: block; }
   .main { width: 100% !important; }
   .content { padding: 12px !important; }

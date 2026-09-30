@@ -171,7 +171,7 @@
 
 .nx-ai-chat-user .nx-ai-chat-bubble {
     background: var(--nx-accent, rgb(79, 70, 229));
-    color: rgb(255, 255, 255);
+    color: var(--nx-text-on-accent, #ffffff);
     border-bottom-right-radius: var(--nx-radius-sm, 0.25rem);
 }
 
@@ -195,11 +195,11 @@
 }
 
 .nx-ai-chat-user .nx-ai-chat-bubble .nx-ai-chat-content {
-    color: rgb(255, 255, 255);
+    color: var(--nx-text-on-accent, #ffffff);
 }
 
 .nx-ai-chat-user .nx-ai-chat-bubble .nx-ai-chat-content a {
-    color: rgb(255, 255, 255);
+    color: var(--nx-text-on-accent, #ffffff);
     text-decoration: underline;
 }
 

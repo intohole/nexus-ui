@@ -53,7 +53,7 @@
     padding: 0 0.75rem;
     border: none;
     background: var(--nx-accent, rgb(79, 70, 229));
-    color: rgb(255, 255, 255);
+    color: var(--nx-text-on-accent, #ffffff);
     font-size: 0.875rem;
     border-radius: var(--nx-radius-lg, 0.75rem);
     cursor: pointer;
