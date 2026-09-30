@@ -55,6 +55,7 @@
             const showConfirmPassword = Vue.ref(false);
             const rememberMe = Vue.ref(false);
             const agreed = Vue.ref(false);
+            const submitted = Vue.ref(false);
             const age = Vue.ref(10);
             const guardianAgreed = Vue.ref(false);
 
@@ -144,6 +145,7 @@
 
             function onLogin() {
                 localError.value = '';
+                submitted.value = true;
                 if (isSmsMode.value) {
                     if (!/^1[3-9]\d{9}$/.test(form.phone)) {
                         localError.value = '请输入正确的手机号';
@@ -257,6 +259,7 @@
 
             function onRegister() {
                 localError.value = '';
+                submitted.value = true;
                 if (!form.username && !form.email && !form.phone) {
                     localError.value = '请填写用户名、邮箱或手机号';
                     return;
@@ -347,6 +350,7 @@
 
             function switchMode(m) {
                 localError.value = '';
+                submitted.value = false;
                 mode.value = m;
                 loginType.value = 'account';
                 form.confirmPassword = '';
@@ -358,6 +362,7 @@
 
             function switchLoginType(t) {
                 localError.value = '';
+                submitted.value = false;
                 loginType.value = t;
             }
 
@@ -377,7 +382,7 @@
             }
 
             return {
-                mode, loginType, form, smsCode, smsCountdown, agreed, age, guardianAgreed, rememberMe,
+                mode, loginType, form, smsCode, smsCountdown, agreed, submitted, age, guardianAgreed, rememberMe,
                 showPassword, showConfirmPassword, combinedError, isSmsMode, regSms, effectiveSdk,
                 effectiveTermsUrl, effectivePrivacyUrl,
                 forgotOpen, forgotLoading, forgotComp,

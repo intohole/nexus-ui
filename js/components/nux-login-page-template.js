@@ -125,14 +125,14 @@
                                 </div>
                             </div>
                             <div v-if="showTerms" class="nux-form-group">
-                                <label :class="['nux-checkbox', 'nux-terms', { 'nux-terms-warn': showTerms && !agreed }]">
+                                <label :class="['nux-checkbox', 'nux-terms', { 'nux-terms-warn': submitted && !agreed }]">
                                     <input type="checkbox" v-model="agreed">
                                     <span v-if="effectiveTermsUrl || effectivePrivacyUrl">我已阅读并同意
                                         <a v-if="effectiveTermsUrl" :href="effectiveTermsUrl" target="_blank" rel="noopener">《用户协议》</a><a v-if="effectivePrivacyUrl" :href="effectivePrivacyUrl" target="_blank" rel="noopener">《隐私政策》</a>
                                     </span>
                                     <span v-else>{{ termsText }}</span>
                                 </label>
-                                <div v-if="showTerms && !agreed" class="nux-terms-hint">请先勾选同意用户协议和隐私政策，再{{ mode === 'login' ? '登录' : '注册' }}</div>
+                                <div v-if="submitted && !agreed" class="nux-terms-hint">请先勾选同意用户协议和隐私政策，再{{ mode === 'login' ? '登录' : '注册' }}</div>
                             </div>
                             <button type="submit" class="nux-login-submit" :disabled="loading || registering || loginBusy">
                                 <span v-if="loading || registering || loginBusy" class="nx-spinner"></span>

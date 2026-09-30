@@ -123,10 +123,12 @@ class UserCenterSDK {
         this._onTokenUpdate = config.onTokenUpdate || null;
         this._onAuthError = config.onAuthError || null;
         this._loadPersistedTokens();
-        if (!window.ucSDK && !config.silent) {
+        if (!window.ucSDK && !config.silent && this.baseUrl) {
             window.ucSDK = this;
         }
     }
+
+    get isConfigured() { return !!this.baseUrl; }
 
     static initFromConfig(config) {
         return new UserCenterSDK({ baseUrl: config.baseUrl, appKey: config.appKey });
@@ -506,8 +508,9 @@ class UserCenterSDK {
 
     static ensureGlobalSdk() {
         const existing = window.ucSDK || window.__UC_SDK__ || window.ucSdk || null;
-        if (existing && typeof existing.changePassword === 'function') return existing;
+        if (existing && existing.baseUrl && typeof existing.changePassword === 'function') return existing;
         const cfg = UserCenterSDK.resolveConfig();
+        if (!cfg.baseUrl) return null;
         const sdk = new UserCenterSDK({ baseUrl: cfg.baseUrl, appKey: cfg.appKey, silent: true });
         window.ucSDK = sdk;
         return sdk;

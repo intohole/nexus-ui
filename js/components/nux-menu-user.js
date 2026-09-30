@@ -146,7 +146,7 @@
 
             function resolveSdk() {
                 var sdkObj = window.ucSDK || window.__UC_SDK__ || window.ucSdk || null;
-                if (sdkObj && typeof sdkObj.changePassword === 'function') return sdkObj;
+                if (sdkObj && sdkObj.baseUrl && typeof sdkObj.changePassword === 'function') return sdkObj;
                 return createSdk();
             }
 
