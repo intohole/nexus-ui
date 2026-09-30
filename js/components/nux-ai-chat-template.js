@@ -90,6 +90,15 @@
                     <span class="nx-ai-chat-status-text">AI 正在生成，已用时 {{ elapsed }}s</span>
                 </div>
                 <div class="nx-ai-chat-input-row">
+                    <nux-voice-input
+                        v-if="feat.voice && inputCfg.voiceUrl"
+                        class="nx-ai-chat-voice"
+                        :transcribe-url="inputCfg.voiceUrl"
+                        :max-seconds="inputCfg.voiceMaxSeconds || 60"
+                        :disabled="disabled"
+                        size="sm"
+                        @result="onVoiceResult"
+                    ></nux-voice-input>
                     <textarea
                         ref="inputEl"
                         v-model="input"

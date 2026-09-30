@@ -13,7 +13,8 @@
             keyboardAvoid: true,
             richReasoning: true,
             richTools: true,
-            richReferences: true
+            richReferences: true,
+            voice: false
         },
         defaultInput: {
             enterToSend: true,
@@ -22,7 +23,9 @@
             maxLength: 4000,
             rateLimit: 0,
             checkComposing: true,
-            maxRows: 6
+            maxRows: 6,
+            voiceUrl: '',
+            voiceMaxSeconds: 60
         },
         defaultRoles: {
             user: { avatar: '🧑', label: '我' },

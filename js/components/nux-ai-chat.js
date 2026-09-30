@@ -27,8 +27,11 @@
             scrollThreshold: { type: Number, default: 150 },
             streaming: { type: Boolean, default: false }
         },
-        emits: ['update:messages', 'send', 'chunk', 'done', 'error', 'stop', 'retry', 'clear', 'stream-start', 'stream-end', 'meta', 'widget-action'],
-        components: { NuxAiWidgets: window.NuxAiWidgets },
+        emits: ['update:messages', 'send', 'chunk', 'done', 'error', 'stop', 'retry', 'clear', 'stream-start', 'stream-end', 'meta', 'widget-action', 'voice-result'],
+        components: Object.assign(
+            { NuxAiWidgets: window.NuxAiWidgets },
+            window.NuxVoiceInput ? { NuxVoiceInput: window.NuxVoiceInput } : {}
+        ),
         setup(props, ctx) {
             const feat = Object.assign({}, DEFAULT_FEATURES, props.features);
             const inputCfg = Object.assign({}, DEFAULT_INPUT, props.inputConfig);
@@ -320,6 +323,15 @@
                 ctx.emit('widget-action', ev, msg);
             }
 
+            function onVoiceResult(payload) {
+                const text = payload && payload.text ? String(payload.text).trim() : '';
+                if (!text) return;
+                input.value = input.value ? input.value + text : text;
+                autoResize();
+                ctx.emit('voice-result', payload);
+                if (inputEl.value) inputEl.value.focus();
+            }
+
             function onInput() { autoResize(); }
             function onKeydown(e) {
                 if (!inputCfg.enterToSend) return;
@@ -378,7 +390,7 @@
                 elapsed, kbHeight, scrollEl, inputEl, listEl, feat, inputCfg, roleCfg,
                 renderMarkdown, send, stop, retry, clear, copyMessage, scrollToBottom,
                 onScroll, onInput, onKeydown, onCompositionStart, onCompositionEnd,
-                clickQuickReply, smartScroll, onWidgetAction
+                clickQuickReply, smartScroll, onWidgetAction, onVoiceResult
             };
         },
         template: window.NuxAiChatTemplate
