@@ -113,9 +113,18 @@
                 emit('toggle', rule, enabled);
             }
 
+            function runRule(rule) {
+                emit('run', rule);
+            }
+
+            function removeRule(rule) {
+                emit('remove', rule);
+            }
+
             return {
                 showForm, editing, form, presetIdx, customTrigger, currentTemplate,
-                triggerText, openCreate, openEdit, pickTemplate, pickPreset, save, toggle
+                triggerText, openCreate, openEdit, pickTemplate, pickPreset, save, toggle,
+                runRule, removeRule
             };
         },
         template: `
@@ -156,7 +165,7 @@
                 <div v-else class="nx-auto-empty">
                     <div class="nx-auto-empty-icon">⚡</div>
                     <h3>用自动化省点事</h3>
-                    <p>临期提醒、借出归还、定期盘点，让格致主动替你把关。</p>
+                    <p>定时提醒、定期汇总、到点执行，把重复的事交给规则。</p>
                 </div>
                 <button class="nx-auto-add" @click="openCreate">＋ 新建规则</button>
             </template>

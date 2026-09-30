@@ -26,10 +26,13 @@
 .nux-btn--ghost:hover:not(:disabled) { background: var(--nx-bg-hover); border-color: var(--nx-border-hover); color: var(--nx-text-heading); }
 .nux-btn--danger { background: var(--nx-danger); color: var(--nx-text-on-accent); border-color: var(--nx-danger); }
 .nux-btn--danger:hover:not(:disabled) { opacity: 0.9; }
+.nux-btn--success { background: var(--nx-success); color: var(--nx-text-on-accent); border-color: var(--nx-success); }
+.nux-btn--success:hover:not(:disabled) { opacity: 0.9; }
 .nux-btn--text { background: transparent; color: var(--app-accent); padding-left: var(--nx-space-2); padding-right: var(--nx-space-2); }
 .nux-btn--text:hover:not(:disabled) { background: rgba(var(--app-accent-rgb), 0.08); }
 
 .nux-btn--sm { padding: 4px var(--nx-space-3); min-height: 30px; font-size: var(--nx-text-xs); }
+.nux-btn--lg { padding: 12px var(--nx-space-6); min-height: 46px; font-size: var(--nx-text-base); }
 .nux-btn--block { display: flex; width: 100%; }
 
 .nux-btn-spinner {

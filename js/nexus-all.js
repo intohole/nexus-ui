@@ -2952,6 +2952,7 @@
         'nux-timeline': 'NuxTimeline',
         'nux-switch': 'NuxSwitch',
         'nux-tab-group': 'NuxTabGroup',
+        'nux-tag': 'NuxTag',
         'nux-textarea': 'NuxTextarea',
         'nux-theme-toggle': 'NuxThemeToggle',
         'nux-undo-toast': 'NuxUndoToast',

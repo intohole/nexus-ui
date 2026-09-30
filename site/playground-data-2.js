@@ -282,13 +282,15 @@ const html = NexusMarkdown.render(mdText);`,
         id: 'aichat',
         tag: 'nux-ai-chat',
         title: 'AI 对话组件',
-        desc: '流式输出、停止、重试、快捷回复全部内置；本页用本地模拟流演示，接 sendHandler 即接真实模型',
+        desc: '流式输出、停止、重试、快捷回复、语音输入全部内置；本页用本地模拟流演示，接 sendHandler 即接真实模型',
         tpl: `
 <div style="height: 420px">
   <nux-ai-chat :messages="msgs" :send-handler="handler"
+               :features="{ voice: true }" :input-config="{ voiceUrl: '/mock/transcribe' }"
                placeholder="问点什么，回车发送"></nux-ai-chat>
 </div>`,
         code: `<nux-ai-chat :messages="msgs" :send-handler="handler"
+  :features="{ voice: true }" :input-config="{ voiceUrl: '/api/transcribe' }"
   placeholder="问点什么，回车发送"></nux-ai-chat>
 
 async handler(text, cb) {

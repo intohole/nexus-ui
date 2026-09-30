@@ -1,4 +1,6 @@
 (function() {
+    const modalStack = [];
+    let modalUid = 0;
     const NuxModal = {
         name: 'NuxModal',
         props: {
@@ -12,9 +14,12 @@
         emits: ['update:modelValue', 'confirm', 'cancel'],
         setup(props, { emit }) {
             const refs = Vue.ref(null);
+            const uid = ++modalUid;
             let restoreFocusEl = null;
+            const isTop = () => modalStack[modalStack.length - 1] === uid;
 
             function onKeydown(e) {
+                if (!isTop()) return;
                 if (e.key === 'Escape') {
                     if (props.escClose) close();
                     return;
@@ -36,6 +41,7 @@
             Vue.watch(() => props.modelValue, (open) => {
                 Vue.nextTick(() => {
                     if (open) {
+                        modalStack.push(uid);
                         if (window.NexusUtils) NexusUtils.scrollLock.lock();
                         if (document.activeElement && document.activeElement !== document.body) {
                             restoreFocusEl = document.activeElement;
@@ -47,6 +53,8 @@
                         });
                     } else {
                         document.removeEventListener('keydown', onKeydown);
+                        const idx = modalStack.indexOf(uid);
+                        if (idx > -1) modalStack.splice(idx, 1);
                         if (window.NexusUtils) NexusUtils.scrollLock.unlock();
                         if (restoreFocusEl && restoreFocusEl.focus) {
                             restoreFocusEl.focus();
@@ -57,6 +65,8 @@
             });
             Vue.onBeforeUnmount(() => {
                 document.removeEventListener('keydown', onKeydown);
+                const idx = modalStack.indexOf(uid);
+                if (idx > -1) modalStack.splice(idx, 1);
                 if (props.modelValue && window.NexusUtils) NexusUtils.scrollLock.unlock();
             });
 

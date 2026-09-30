@@ -19,6 +19,8 @@
   padding: var(--nx-space-8);
   max-width: 520px;
   width: calc(100% - 2rem);
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
   box-shadow: var(--nx-shadow-lg);
 }
 .nx-modal-title {
@@ -104,7 +106,7 @@
 
 .nux-confirm-overlay { opacity: 0; }
 .nux-confirm-overlay.is-in { opacity: 1; }
-.nux-confirm-msg { color: var(--nx-text-secondary); margin: var(--nx-space-4) 0; }
+.nux-confirm-msg { color: var(--nx-text-secondary); margin: var(--nx-space-4) 0; white-space: pre-line; }
 
 .nux-error-state { color: var(--nx-danger); }
 .nux-error-state.nx-empty-state i { font-size: 48px; color: var(--nx-danger); }

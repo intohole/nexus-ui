@@ -214,16 +214,16 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 
 用户协议页面唯一事实源：本仓库 `agreement.html`（协议条款/隐私政策文案直接维护在该页）。
 
-### 全部组件索引（70 个，以 `NexusComponents.list()` 为准）
+### 全部组件索引（76 个，以 `NexusComponents.list()` 为准）
 
 | 分类 | 组件 |
 |------|------|
 | 布局骨架 | nux-layout-sidebar / nux-layout-topnav / nux-bottom-nav / nux-side-panel / nux-section / nux-backtop |
 | 站点级 | nux-footer / nux-portal-footer / nux-about-page / nux-menu-about / nux-login-page / nux-forgot-password / nux-menu-user / nux-user-center / nux-settings-drawer |
 | 反馈 | nux-undo-toast / nux-modal / nux-drawer / nux-notification-bell / nux-notification-panel / nux-loading / nux-skeleton / nux-empty-state / nux-error-state / nux-ai-task-progress |
-| 数据展示 | nux-stat-card / nux-badge / nux-avatar / nux-progress / nux-breadcrumb / nux-calendar / nux-checkin / nux-radar-chart / nux-result-view / nux-selection-bar / nux-pagination / nux-poster / nux-conversation-list / nux-timeline / nux-icon |
+| 数据展示 | nux-stat-card / nux-badge / nux-tag / nux-avatar / nux-progress / nux-breadcrumb / nux-calendar / nux-checkin / nux-radar-chart / nux-result-view / nux-selection-bar / nux-pagination / nux-poster / nux-conversation-list / nux-timeline / nux-icon |
 | 表单控件 | nux-form-group / nux-button / nux-input / nux-textarea / nux-select / nux-switch / nux-checkbox / nux-radio-group / nux-input-number / nux-search-box / nux-segmented / nux-chip-group / nux-accordion / nux-tab-group |
-| 交互增强 | nux-file-upload / nux-infinite-scroll / nux-slider / nux-date-picker / nux-qrcode / nux-sortable / nux-swipe-actions / nux-theme-toggle / nux-camera-recognize |
+| 交互增强 | nux-file-upload / nux-infinite-scroll / nux-slider / nux-date-picker / nux-qrcode / nux-sortable / nux-swipe-actions / nux-theme-toggle / nux-camera-recognize / nux-voice-input |
 | AI 能力 | nux-ai-badge / nux-ai-chat / nux-ai-indicator / nux-ai-notice / nux-ai-widgets / nux-clarify-card |
 | 应用与引导 | nux-app-card / nux-app-switcher / nux-automation / nux-onboarding / nux-onboarding-strip |
 
@@ -268,6 +268,7 @@ Events: change(isDark:Boolean)
 | nux-search-box | `<nux-search-box v-model="kw" :delay="300" @search="fn"></nux-search-box>`（防抖search+回车确认） |
 | nux-segmented | `<nux-segmented v-model="tab" :options="[{label,value}]"></nux-segmented>`（滑动指示器） |
 | nux-chip-group | `<nux-chip-group v-model="sel" :options="[{label,value}]" :multiple="true" :removable="true" @remove="fn"></nux-chip-group>` |
+| nux-tag | `<nux-tag type="success|warning|danger|info|primary" size="sm|md" :plain="true">文案</nux-tag>`（状态标签，plain 描边款；type 缺省为中性灰） |
 | nux-progress | `<nux-progress :value="66" label="标题"></nux-progress>` 或 `<nux-progress type="circle" :value="66" status="success"></nux-progress>` |
 | nux-loading | `<nux-loading text="加载中" size="md" :inline="true"></nux-loading>` |
 | nux-accordion | `<nux-accordion v-model="idx" :items="[{title,content}]"><template #item-0="{item}">自定义</template></nux-accordion>`（单开） |
@@ -282,6 +283,9 @@ Events: change(isDark:Boolean)
 | nux-login-page | 登录/注册一体化组件。**加载顺序**：`nux-login-page-helpers.js` → `nux-login-page-template.js` → `nux-login-page.js`（与 nux-ai-chat 系同模式），再 `NexusComponents.register(app)`。Props 见文末 nux-login-page 段落；支持账号/手机号/验证码登录、注册、忘记密码动态加载（nux-forgot-password.js）、图形验证码、协议勾选、主题色注入 |
 | nux-ai-widgets | AI 对话消息内组件渲染器（后端 SSE `widget` / `widget_update` 事件驱动，nux-ai-chat 自动路由到 `msg.widgets` 并渲染）。**加载顺序**：`nux-ai-chat-helpers.js` → `nux-ai-chat-template.js` → `nux-ai-widgets.js` →（可选增强）`nux-ai-widgets-rich.js` → `nux-ai-chat.js`。基础类型：table / cards / steps / related / choice / feedback；`nux-ai-widgets-rich.js` 追加：form（表单收集）/ chart（图表，echarts 按需 CDN 加载）/ confirm（危险操作二次确认）。steps 支持 `percent` + `status`（running/done/failed）呈现任务进度，可经 `widget_update` 流式更新。交互统一经 `@widget-action` 透传 `{id,type,action,payload}`，action ∈ send/submit/confirm/cancel/feedback/open |
 | nux-camera-recognize | `<nux-camera-recognize upload-url="/api/vision/recognize" prompt="识别图片内容" :json-mode="false" :auto-recognize="true" :stages="['上传图片','AI 识别中','整理结果']" @capture @success @error @cancel></nux-camera-recognize>`（拍照/相册 → 识别 → 结果展示一条龙；自动降级系统相机；结果默认 Markdown 或 JSON 键值表，`#result` 插槽可覆盖） |
+| nux-voice-input | `<nux-voice-input :handler="transcribe" @result="onResult" @error="onErr" @state-change="fn"></nux-voice-input>`（录音 → WAV 16kHz → 转写；`handler(blob)` 自定义转写，不传则 POST `transcribeUrl`（multipart，字段名 `fieldName`，经 NexusApi.uploadFile）；事件 result `{text,duration}` / error / state-change；`max-seconds` 默认 60 自动截断，size sm/md） |
+| nux-automation | `<nux-automation :rules="rules" :templates="templates" :trigger-presets="presets" :loading="loading" @create="fn" @update="(id,p)=>fn" @toggle="(rule,on)=>fn" @run="fn" @remove="fn"></nux-automation>`（自动化规则管理面板：列表 + 模板化新建/编辑弹窗；规则元素含 id/name/icon/enabled/action_type/action_config/trigger_type/trigger_config/last_run_at/last_status/last_message；trigger_type=event 为手动触发） |
+| nux-result-view | `<nux-result-view :struct="struct"></nux-result-view>`（AI 结构化结果：`kind:'table'` 用 `columns` + `rows`（**对象数组按列名取值**）+ 可选 `summary` 对象；`kind:'kv'` 用 `pairs: [{k,v}]`；与 nexus-structured.js 产出同构，struct 为 null 不渲染） |
 
 ### 本次新增组件（nux-camera-recognize）
 
