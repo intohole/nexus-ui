@@ -33,6 +33,15 @@
             const bindCountdown = Vue.ref(0);
             let bindTimer = null;
             let sessionTimer = null;
+            const wallet = Vue.ref(null);
+            const walletTxs = Vue.ref([]);
+            const walletTotal = Vue.ref(0);
+            const walletPage = Vue.ref(1);
+            const walletDirection = Vue.ref('all');
+            const catalog = Vue.ref(null);
+            const meters = Vue.ref(null);
+            const walletLoading = Vue.ref(false);
+            const walletPageSize = 20;
 
             const confirmMismatch = Vue.computed(function() {
                 return confirmPassword.value && newPassword.value && newPassword.value !== confirmPassword.value;
@@ -246,6 +255,66 @@
                 return window.NexusUtils ? NexusUtils.formatDateTimeHyphen(t) : '';
             }
 
+            function loadWallet() {
+                if (walletLoading.value) return;
+                walletLoading.value = true;
+                Promise.all([
+                    props.sdk.getPointsSummary(),
+                    loadWalletTxs(),
+                    props.sdk.getPointsCatalog(window.ucConfig && window.ucConfig.app_key),
+                    props.sdk.getMetersSummary()
+                ]).then(function(results) {
+                    if (results[0] && results[0].success) wallet.value = results[0].data;
+                    if (results[2] && results[2].success) catalog.value = results[2].data;
+                    if (results[3] && results[3].success) meters.value = results[3].data;
+                }).catch(function() {}).finally(function() {
+                    walletLoading.value = false;
+                });
+            }
+
+            function loadWalletTxs() {
+                return props.sdk.getPointsTransactions(walletDirection.value, walletPage.value, walletPageSize)
+                    .then(function(res) {
+                        if (res && res.success) {
+                            walletTxs.value = (res.data && res.data.items) || [];
+                            walletTotal.value = (res.data && res.data.total) || 0;
+                        }
+                    });
+            }
+
+            function switchWalletDirection(d) {
+                walletDirection.value = d;
+                walletPage.value = 1;
+                loadWalletTxs();
+            }
+
+            function walletPageDelta(delta) {
+                const maxPage = Math.max(1, Math.ceil(walletTotal.value / walletPageSize));
+                const next = walletPage.value + delta;
+                if (next < 1 || next > maxPage) return;
+                walletPage.value = next;
+                loadWalletTxs();
+            }
+
+            function txReasonLabel(code) {
+                const map = {
+                    register_gift: '注册赠送', daily_gift: '每日赠送',
+                    consume: 'AI 能力消耗', award: '运营发放'
+                };
+                return map[code] || code || '积分变动';
+            }
+
+            function chargeModeLabel() {
+                const w = wallet.value;
+                if (!w) return '';
+                return { trial: '体验期', formal: '正式期', off: '免费期' }[w.charge_mode] || '';
+            }
+
+            function openWalletTab() {
+                tab.value = 'points';
+                loadWallet();
+            }
+
             Vue.onMounted(function() {
                 loadUser();
             });
@@ -260,9 +329,12 @@
                 oldPassword, newPassword, confirmPassword, passwordError, submitting, userError,
                 showOldPwd, showNewPwd, showConfirmPwd, confirmMismatch,
                 bindError, bindTarget, bindCode, bindType, bindSending, bindSubmitting, bindCountdown,
+                wallet, walletTxs, walletTotal, walletPage, walletDirection, catalog, meters, walletLoading,
                 toggleOpen, loadSessions, changePassword, revokeSession, revokeAll, doLogout, gotoDatacenter,
                 sendBindCode, submitBind, switchBindType, boundContact,
-                avatarName, avatarInitial, deviceLabel, timeLabel
+                avatarName, avatarInitial, deviceLabel, timeLabel,
+                loadWallet, loadWalletTxs, switchWalletDirection, walletPageDelta,
+                txReasonLabel, chargeModeLabel, openWalletTab
             };
         },
         template: `
@@ -288,9 +360,66 @@
                         <div v-if="userError" class="nux-login-error">{{ userError }}</div>
                         <div class="nux-uc-tabs">
                             <button :class="['nux-uc-tab', { active: tab === 'profile' }]" type="button" @click="tab = 'profile'">个人资料</button>
+                            <button :class="['nux-uc-tab', { active: tab === 'points' }]" type="button" @click="openWalletTab">我的积分</button>
                             <button :class="['nux-uc-tab', { active: tab === 'password' }]" type="button" @click="tab = 'password'">修改密码</button>
                             <button :class="['nux-uc-tab', { active: tab === 'security' }]" type="button" @click="tab = 'security'">安全设置</button>
                             <button :class="['nux-uc-tab', { active: tab === 'sessions' }]" type="button" @click="tab = 'sessions'; loadSessions()">会话管理</button>
+                        </div>
+                        <div v-if="tab === 'points'" class="nux-uc-pane">
+                            <div v-if="walletLoading && !wallet" class="nux-uc-empty">加载中…</div>
+                            <template v-else-if="wallet">
+                                <div class="nux-wallet-card">
+                                    <div class="nux-wallet-balance">
+                                        <span class="nux-wallet-amount">{{ wallet.balance }}</span>
+                                        <span class="nux-wallet-unit">积分</span>
+                                        <span v-if="chargeModeLabel()" class="nux-wallet-badge">{{ chargeModeLabel() }}</span>
+                                    </div>
+                                    <div class="nux-wallet-gifts">
+                                        <span :class="{ done: wallet.register_gift && wallet.register_gift.granted }">
+                                            {{ wallet.register_gift ? '注册赠送 ' + wallet.register_gift.amount : '' }}{{ wallet.register_gift && wallet.register_gift.granted ? ' ✓' : '' }}
+                                        </span>
+                                        <span :class="{ done: wallet.daily_gift && wallet.daily_gift.granted_today }">
+                                            {{ wallet.daily_gift ? '每日赠送 ' + wallet.daily_gift.amount : '' }}{{ wallet.daily_gift && wallet.daily_gift.granted_today ? ' · 今日已领 ✓' : '' }}
+                                        </span>
+                                    </div>
+                                    <div v-if="meters && meters.month" class="nux-wallet-usage">
+                                        本月 AI 调用 {{ meters.month.calls || 0 }} 次<span v-if="chargeModeLabel() === '体验期'">（体验期内平台承担）</span>
+                                    </div>
+                                </div>
+                                <div class="nux-uc-sessions-head">
+                                    <div class="nux-login-subtabs nux-wallet-filter">
+                                        <button :class="['nux-login-subtab', { active: walletDirection === 'all' }]" type="button" @click="switchWalletDirection('all')">全部</button>
+                                        <button :class="['nux-login-subtab', { active: walletDirection === 'income' }]" type="button" @click="switchWalletDirection('income')">收入</button>
+                                        <button :class="['nux-login-subtab', { active: walletDirection === 'expense' }]" type="button" @click="switchWalletDirection('expense')">支出</button>
+                                    </div>
+                                </div>
+                                <div v-if="!walletTxs.length" class="nux-uc-empty">暂无积分流水</div>
+                                <div v-else class="nux-uc-session-list">
+                                    <div v-for="t in walletTxs" :key="t.id" class="nux-uc-session">
+                                        <div class="nux-uc-session-meta">
+                                            <b>{{ txReasonLabel(t.reason_code) }}</b>
+                                            <span>{{ t.description || (t.app ? '应用 ' + t.app : '') }} · {{ timeLabel(t.created_at) }}</span>
+                                        </div>
+                                        <b :class="t.amount > 0 ? 'nux-wallet-in' : 'nux-wallet-out'">{{ t.amount > 0 ? '+' : '' }}{{ t.amount }}</b>
+                                    </div>
+                                </div>
+                                <div v-if="walletTotal > walletPageSize" class="nux-wallet-pager">
+                                    <button type="button" class="nux-link" :disabled="walletPage <= 1" @click="walletPageDelta(-1)">上一页</button>
+                                    <span>{{ walletPage }} / {{ Math.ceil(walletTotal / walletPageSize) }}</span>
+                                    <button type="button" class="nux-link" :disabled="walletPage >= Math.ceil(walletTotal / walletPageSize)" @click="walletPageDelta(1)">下一页</button>
+                                </div>
+                                <template v-if="catalog && catalog.items && catalog.items.length">
+                                    <div class="nux-uc-divider"></div>
+                                    <div class="nux-uc-sessions-head"><span>AI 能力定价</span></div>
+                                    <div class="nux-wallet-prices">
+                                        <div v-for="p in catalog.items" :key="p.app + '/' + p.feature" class="nux-wallet-price">
+                                            <span>{{ p.description || p.feature }}</span>
+                                            <b>{{ p.cost }} 积分/次</b>
+                                        </div>
+                                    </div>
+                                    <p class="nux-uc-tip">体验期内积分不足不拦截，可放心使用。</p>
+                                </template>
+                            </template>
                         </div>
                         <div v-if="tab === 'profile'" class="nux-uc-pane">
                             <div class="nux-uc-info">

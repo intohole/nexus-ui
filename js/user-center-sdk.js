@@ -434,6 +434,16 @@ class UserCenterSDK {
     async revokeSession(sessionId) { return this._request('DELETE', `/api/auth/sessions/${sessionId}`); }
     async revokeAllSessions() { return this._request('DELETE', '/api/auth/sessions'); }
 
+    async getPointsSummary() { return this._request('GET', '/api/points/summary'); }
+    async getPointsTransactions(direction = 'all', page = 1, pageSize = 20) {
+        return this._request('GET', `/api/points/transactions?direction=${direction}&page=${page}&page_size=${pageSize}`);
+    }
+    async getPointsCatalog(appKey = '') {
+        const q = appKey ? `?app=${encodeURIComponent(appKey)}` : '';
+        return this._request('GET', `/api/billing/catalog${q}`);
+    }
+    async getMetersSummary() { return this._request('GET', '/api/billing/meters/summary'); }
+
     async getAccountExport() { return this._request('GET', '/api/auth/account/export'); }
 
     async deleteAccount({ password }) {
