@@ -315,6 +315,43 @@ struct = { kind: 'kv', pairs: [{ k: '作品状态', v: '连载中' }] }
           };
         },
         methods: {}
+      },
+      {
+        id: 'poster',
+        tag: 'nux-poster',
+        title: '海报渲染',
+        desc: 'blueprint 声明式海报：渐变背景 + 纹理 + 光斑，文字/徽标/列表/按钮元素按画布等比缩放',
+        tpl: `
+<div style="display:flex; justify-content:center">
+  <nux-poster :blueprint="bp" :max-width="300"></nux-poster>
+</div>`,
+        code: `<nux-poster :blueprint="blueprint" :max-width="420"
+  :downloadable="true"></nux-poster>
+// blueprint: { canvas: {width,height}, background: {from,to,pattern,glow}, elements: [...] }
+// element_type: text / badge / cta / divider / info-card / image / price / decoration`,
+        data() {
+          return {
+            bp: {
+              canvas: { width: 1080, height: 1440 },
+              background: {
+                from: '#101c3a', to: '#2b4c8c', direction: '165deg', pattern: 'dots',
+                glow: [
+                  { color: '#6366f1', x: 28, y: 22, size: 52, opacity: 0.5 },
+                  { color: '#0ea5e9', x: 78, y: 72, size: 58, opacity: 0.4 }
+                ]
+              },
+              elements: [
+                { element_type: 'badge', content: '创作马拉松 · 报名中', position: { x: 8, y: 7, w: 42, h: 5 }, style: { background: 'rgba(99,102,241,0.9)', color: '#ffffff', fontSize: 30, fontWeight: 600 } },
+                { element_type: 'text', content: '把想法', position: { x: 8, y: 20, w: 84, h: 13 }, style: { fontSize: 104, fontWeight: 800, color: '#ffffff' } },
+                { element_type: 'text', content: '变成作品', position: { x: 8, y: 33, w: 84, h: 13 }, style: { fontSize: 104, fontWeight: 800, textGradient: { from: '#7dd3fc', to: '#c4b5fd', direction: '120deg' } } },
+                { element_type: 'text', content: '七天时间，和同路人一起把搁置已久的点子做完并发布。', position: { x: 8, y: 50, w: 66, h: 10 }, style: { fontSize: 38, color: 'rgba(255,255,255,0.85)', lineHeight: '1.7' } },
+                { element_type: 'divider', content: '', position: { x: 8, y: 64, w: 28, h: 1 }, style: { borderWidth: 2, color: 'rgba(255,255,255,0.4)' } },
+                { element_type: 'info-card', content: '每日打卡督促\n导师直播答疑\n优秀作品展示位', position: { x: 8, y: 69, w: 50, h: 15 }, style: { fontSize: 30, padding: 22 } },
+                { element_type: 'cta', content: '立即报名', position: { x: 64, y: 86, w: 28, h: 6 }, style: { background: '#ffffff', color: '#16233f', fontSize: 36, fontWeight: 800 } }
+              ]
+            }
+          };
+        }
       }
     ]
   });

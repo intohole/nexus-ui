@@ -138,6 +138,61 @@ if (reason !== null) showToast('已驳回', 'success');`,
   description="创建第一条记录，开始你的积累"></nux-empty-state>`,
         data() { return { loading: true }; },
         mounted() { setTimeout(() => { this.loading = false; }, 2600); }
+      },
+      {
+        id: 'error-state',
+        tag: 'nux-error-state',
+        title: '错误态',
+        desc: '加载失败的兜底视图：图标 + 标题 + 描述 + 错误码，内置重试按钮',
+        tpl: `
+<nux-error-state icon="🛰️" title="服务暂时不可用"
+  message="请求超时，请检查网络后重试" code="ERR-504"
+  retry-text="重新加载" @retry="onRetry"></nux-error-state>`,
+        code: `<nux-error-state icon="🛰️" title="服务暂时不可用"
+  message="请求超时，请检查网络后重试" code="ERR-504"
+  retry-text="重新加载" @retry="reload"></nux-error-state>`,
+        data() { return { tries: 0 }; },
+        methods: {
+          onRetry() {
+            this.tries++;
+            window.showToast('第 ' + this.tries + ' 次重试请求…（演示）', 'info');
+          }
+        }
+      },
+      {
+        id: 'undo-toast',
+        tag: 'nux-undo-toast',
+        title: '可撤销提示',
+        desc: 'text 变化即弹出，倒计时结束自动消失；与删除操作搭配防误触',
+        tpl: `
+<div>
+  <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+    <div v-for="t in topics" :key="t"
+         style="padding:10px 14px;border:1px solid var(--nx-border);border-radius:10px;font-size:14px">{{ t }}</div>
+    <div v-if="deleted"
+         style="padding:10px 14px;border:1px dashed var(--nx-border);border-radius:10px;color:var(--nx-text-muted);font-size:13px">「晨间随笔」已删除</div>
+  </div>
+  <nux-button variant="danger" :disabled="deleted" @click="doDelete">删除「晨间随笔」</nux-button>
+  <nux-undo-toast :text="undoText" :duration="5000"
+    @undo="onUndo" @dismiss="onDismiss"></nux-undo-toast>
+</div>`,
+        code: `<nux-button variant="danger" @click="doDelete">删除</nux-button>
+<nux-undo-toast :text="undoText" :duration="6000"
+  @undo="onUndo" @dismiss="onDismiss"></nux-undo-toast>
+// doDelete: undoText = '已删除「晨间随笔」'；onUndo: 恢复数据并清空 text`,
+        data() { return { deleted: false, undoText: '', topics: ['晨间随笔', '读书摘抄', '周末骑行路线'] }; },
+        methods: {
+          doDelete() {
+            this.deleted = true;
+            this.undoText = '已删除「晨间随笔」';
+          },
+          onUndo() {
+            this.deleted = false;
+            this.undoText = '';
+            window.showToast('已恢复「晨间随笔」', 'success');
+          },
+          onDismiss() { this.undoText = ''; }
+        }
       }
     ]
   });
@@ -275,6 +330,61 @@ if (reason !== null) showToast('已驳回', 'success');`,
         methods: {
           showToast(msg, type) { window.showToast(msg, type); }
         }
+      },
+      {
+        id: 'checkin',
+        tag: 'nux-checkin',
+        title: '打卡挑战卡',
+        desc: '连续天数 + 里程碑 + 打卡日历一体；binary/counter/timer/text 四种任务形态与补签冻结',
+        tpl: `
+<nux-checkin title="每日写作打卡" icon="✍️" task-type="binary"
+  :streak="streak" :prev-streak="prevStreak"
+  :completed-days="completedDays" :total-days="30"
+  :start-date="start" :records="records" :missed-dates="missedDates"
+  :mend-left="1" :freeze-left="1" :checked-in="checkedIn"
+  @checkin="onCheckin"
+  @open-day="d => showToast('查看 ' + d + ' 的打卡详情', 'info')"
+  @mend="showToast('补签申请已提交（演示）', 'info')"
+  @freeze="showToast('已使用冻结卡（演示）', 'info')"
+  @repair="showToast('已发起修复（演示）', 'info')"></nux-checkin>`,
+        code: `<nux-checkin title="每日写作打卡" icon="✍️" task-type="binary"
+  :streak="12" :prev-streak="11" :completed-days="12" :total-days="30"
+  :start-date="start" :records="records" :checked-in="false"
+  @checkin="onCheckin" @open-day="openDay"></nux-checkin>
+// task-type: binary | counter | timer | text；@checkin({ value }) 上报打卡`,
+        data() {
+          const pad = n => String(n).padStart(2, '0')
+          const key = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate())
+          const start = new Date()
+          start.setDate(start.getDate() - 22)
+          const records = []
+          const missedDates = []
+          for (let i = 0; i <= 22; i++) {
+            const d = new Date(start)
+            d.setDate(d.getDate() + i)
+            const k = key(d)
+            if (i === 6 || i === 13) { missedDates.push(k); continue }
+            const st = i === 9 ? 'frozen' : (i === 17 ? 'mended' : 'checked')
+            records.push({ date: k, status: st })
+          }
+          const checkedDays = records.filter(r => r.status !== 'frozen').length
+          return {
+            start: key(start), records, missedDates,
+            streak: 9, prevStreak: 9, checkedIn: false,
+            completedDays: checkedDays
+          }
+        },
+        methods: {
+          showToast(msg, type) { window.showToast(msg, type); },
+          onCheckin() {
+            if (this.checkedIn) return;
+            this.checkedIn = true;
+            this.prevStreak = this.streak;
+            this.streak += 1;
+            this.completedDays += 1;
+            window.showToast('打卡成功，已连续 ' + this.streak + ' 天', 'success');
+          }
+        }
       }
     ]
   });
@@ -403,6 +513,75 @@ async handler(text, cb) {
           onSuccess(payload) { window.showToast('识别完成：' + String(payload).slice(0, 20) + '…', 'success'); },
           onError(err) { if (err && err.name !== 'AbortError') window.showToast(err.message || '识别失败', 'error'); },
           onCancel() { window.showToast('已取消识别', 'info'); }
+        }
+      },
+      {
+        id: 'conversation-list',
+        tag: 'nux-conversation-list',
+        title: '会话列表',
+        desc: '搜索 / 新建 / 归档 / 删除全内置，挂载即拉取列表；本页用 mockApi 假数据演示，传 api 即接真实接口',
+        tpl: `
+<div style="height: 430px; max-width: 360px; border: 1px solid var(--nx-border); border-radius: 12px; overflow: hidden">
+  <nux-conversation-list :api="mockApi" :active-id="activeId"
+    @select="onSelect" @created="onCreated" @deleted="onDeleted"
+    @archive="onArchive" @error="onError"></nux-conversation-list>
+</div>`,
+        code: `<nux-conversation-list :api="api" :active-id="activeId"
+  new-title="新对话" @select="onSelect" @created="onCreated"
+  @deleted="onDeleted" @archive="onArchive" @error="onError"></nux-conversation-list>
+// api 需实现 get/post/patch/delete；listAdapter / itemAdapter 可适配返回结构`,
+        data() {
+          const wait = (ms) => new Promise(r => setTimeout(r, ms));
+          const ago = (h) => new Date(Date.now() - h * 3600e3).toISOString();
+          const store = [
+            { id: 'c1', title: '九月的旅行路书', status: 'active', updated_at: ago(0.5) },
+            { id: 'c2', title: '产品命名头脑风暴', status: 'active', updated_at: ago(5) },
+            { id: 'c3', title: '周报草稿润色', status: 'active', updated_at: ago(26) },
+            { id: 'c4', title: '上季度的复盘讨论', status: 'archived', updated_at: ago(72) },
+            { id: 'c5', title: '给新人的上手指南', status: 'active', updated_at: ago(120) }
+          ];
+          let seq = 100;
+          return {
+            activeId: 'c1',
+            mockApi: {
+              async get(url, params) {
+                await wait(420);
+                if (url.indexOf('/search') >= 0) {
+                  const kw = ((params && params.q) || '').toLowerCase();
+                  const hit = store.filter(c => c.title.toLowerCase().indexOf(kw) >= 0);
+                  return { data: { items: hit, total: hit.length } };
+                }
+                return { data: { items: store.slice(), total: store.length } };
+              },
+              async post(url, body) {
+                await wait(460);
+                const conv = { id: 'c' + (++seq), title: (body && body.title) || '新对话', status: 'active', updated_at: new Date().toISOString() };
+                store.unshift(conv);
+                return { data: conv };
+              },
+              async patch(url, body) {
+                await wait(360);
+                const conv = store.find(c => url.indexOf('/' + c.id) >= 0);
+                if (conv && body && body.status) conv.status = body.status;
+                return conv ? { data: { id: conv.id, status: conv.status } } : null;
+              },
+              async delete(url) {
+                await wait(360);
+                const idx = store.findIndex(c => url.indexOf('/' + c.id) >= 0);
+                if (idx >= 0) store.splice(idx, 1);
+              }
+            }
+          };
+        },
+        methods: {
+          onSelect(c) { this.activeId = c.id; window.showToast('已切换到「' + (c.title || '新对话') + '」', 'info'); },
+          onCreated(c) { this.activeId = c.id; window.showToast('已创建「' + c.title + '」', 'success'); },
+          onDeleted(id) {
+            if (this.activeId === id) this.activeId = '';
+            window.showToast('会话已删除', 'success');
+          },
+          onArchive(c, toArchive) { window.showToast('已' + (toArchive ? '归档' : '恢复') + '「' + (c.title || '会话') + '」', 'info'); },
+          onError() { window.showToast('接口异常（演示为本地 mock，不应出现）', 'error'); }
         }
       }
     ]
@@ -587,6 +766,196 @@ NuxAppSwitcher.refresh();
           });
           NuxAppSwitcher.refresh().then(() => window.showToast('切换器已就绪，看左下角', 'info'));
         }
+      },
+      {
+        id: 'layout-topnav',
+        tag: 'nux-layout-topnav',
+        title: '顶部导航布局',
+        desc: '品牌 + 横向导航 + 头部操作插槽；窗口缩到 ≤768px 自动收进汉堡抽屉（useMobile 驱动）',
+        tpl: `
+<div class="pgls-scope" style="position: relative; height: 420px; border: 1px solid var(--nx-border); border-radius: 12px; overflow: hidden;">
+  <nux-layout-topnav app-name="星光工作台" app-icon="🧭"
+    :nav-items="navItems" :current-path="current" @navigate="onNav">
+    <template #header-actions>
+      <nux-button size="sm" variant="ghost" @click="note('新公告已发布')">发布公告</nux-button>
+    </template>
+    <div style="padding: 22px 26px">
+      <p style="margin: 0 0 6px; font-weight: 600; font-size: 15px">当前栏目：{{ labelOf(current) }}</p>
+      <p class="demo-note" style="margin: 0">这里是主内容区。窄屏下导航收进右上角汉堡按钮。</p>
+    </div>
+  </nux-layout-topnav>
+</div>`,
+        code: `<nux-layout-topnav app-name="工作台" app-icon="🧭"
+  :nav-items="navItems" :current-path="current" @navigate="onNav">
+  <template #header-actions>…</template>
+  <main>内容</main>
+</nux-layout-topnav>
+// 依赖 js/composables/use-mobile.js（汉堡/抽屉联动）`,
+        data() {
+          return {
+            current: '/home',
+            navItems: [
+              { path: '/home', label: '首页', icon: '🏠' },
+              { path: '/works', label: '作品', icon: '📚' },
+              { path: '/data', label: '数据', icon: '📊' },
+              { path: '/team', label: '协作', icon: '🤝' }
+            ]
+          };
+        },
+        methods: {
+          labelOf(path) {
+            const hit = this.navItems.find(i => i.path === path);
+            return hit ? hit.label : '—';
+          },
+          onNav(path) {
+            this.current = path;
+            window.showToast('切换到「' + this.labelOf(path) + '」', 'info');
+          },
+          note(msg) { window.showToast(msg, 'success'); }
+        }
+      },
+      {
+        id: 'section',
+        tag: 'nux-section',
+        title: '内容分区',
+        desc: '标题 + 描述 + actions 插槽的标准分区壳，flat 模式去内边距便于嵌套',
+        tpl: `
+<div class="demo-col">
+  <nux-section title="创作概览" description="最近 30 天的产出与节奏">
+    <template #actions>
+      <nux-button size="sm" variant="ghost" @click="note('数据已刷新')">刷新</nux-button>
+    </template>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px">
+      <nux-stat-card icon="📝" value="26" label="发布作品"></nux-stat-card>
+      <nux-stat-card icon="💬" value="1,208" label="收到评论"></nux-stat-card>
+      <nux-stat-card icon="⭐" value="96" label="收到收藏"></nux-stat-card>
+    </div>
+  </nux-section>
+  <nux-section title="嵌套分区" description="flat 模式：无内边距，适合放进卡片或弹层">
+    <p class="demo-note" style="margin:0">这里是 flat 分区的内容，留白由外层容器控制。</p>
+  </nux-section>
+</div>`,
+        code: `<nux-section title="创作概览" description="最近 30 天的产出与节奏">
+  <template #actions>
+    <nux-button size="sm" @click="refresh">刷新</nux-button>
+  </template>
+  <any-content></any-content>
+</nux-section>
+<nux-section title="嵌套分区" flat>…</nux-section>`,
+        methods: { note(msg) { window.showToast(msg, 'success'); } }
+      },
+      {
+        id: 'side-panel',
+        tag: 'nux-side-panel',
+        title: '会话侧栏',
+        desc: '品牌区 + 新建按钮 + tab + 可搜索列表 + 日期分组，桌面平铺、窄屏自动变抽屉',
+        tpl: `
+<div style="display:flex; height: 460px; border: 1px solid var(--nx-border); border-radius: 12px; overflow: hidden">
+  <nux-side-panel layout="fill" brand-icon="✳️" brand-name="会话工作台"
+    action-label="新建会话" :tabs="tabs" v-model:active-tab="tab"
+    :items="items" :active-key="activeKey" :search-min="3" :group-by-date="true"
+    @select="onPick" @action="onNew" @remove="onRemove" @brand="onBrand"></nux-side-panel>
+  <div style="flex:1; display:flex; align-items:center; justify-content:center; padding: 16px; text-align:center">
+    <div>
+      <p class="demo-note" style="margin:0 0 4px">当前 tab：{{ tab }}（列表不打假数据过滤，仅演示切换）</p>
+      <p style="margin:0; font-weight:600; font-size:15px">选中：{{ activeTitle() }}</p>
+    </div>
+  </div>
+</div>`,
+        code: `<nux-side-panel layout="fill" brand-icon="✳️" brand-name="工作台"
+  action-label="新建会话" :tabs="tabs" v-model:active-tab="tab"
+  :items="items" :active-key="activeKey" :group-by-date="true"
+  @select="onPick" @action="onNew" @remove="onRemove"></nux-side-panel>
+// items: [{ id, title, meta, icon, status, updated_at }]
+// status: generating 显示进行中转圈，failed 显示失败角标`,
+        data() {
+          const pad = n => String(n).padStart(2, '0');
+          const iso = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':00';
+          const ago = h => { const d = new Date(); d.setHours(d.getHours() - h); return iso(d); };
+          return {
+            tab: 'all',
+            activeKey: 's1',
+            tabs: [
+              { key: 'all', label: '全部' },
+              { key: 'doc', label: '文档' },
+              { key: 'chat', label: '会话' }
+            ],
+            items: [
+              { id: 's1', title: '产品发布会开场稿', meta: '刚更新', icon: '📝', status: 'done', updated_at: ago(1) },
+              { id: 's2', title: '用户访谈纪要整理', meta: '生成中', icon: '🎧', status: 'generating', updated_at: ago(3) },
+              { id: 's3', title: '季度路标讨论', meta: '12 条消息', icon: '💬', status: 'done', updated_at: ago(26) },
+              { id: 's4', title: '官网文案重写', meta: '生成失败', icon: '🖥️', status: 'failed', updated_at: ago(50) },
+              { id: 's5', title: '新人上手指南', meta: '8 条消息', icon: '📘', status: 'done', updated_at: ago(96) }
+            ]
+          };
+        },
+        methods: {
+          activeTitle() {
+            const hit = this.items.find(i => i.id === this.activeKey);
+            return hit ? hit.title : '（未选择）';
+          },
+          onPick(item) {
+            this.activeKey = item.id;
+            window.showToast('已打开「' + item.title + '」', 'info');
+          },
+          onNew() { window.showToast('新建会话（演示）', 'success'); },
+          onRemove(item) {
+            this.items = this.items.filter(i => i.id !== item.id);
+            if (this.activeKey === item.id) this.activeKey = '';
+            window.showToast('已删除「' + item.title + '」', 'success');
+          },
+          onBrand() { window.showToast('点击了品牌区（演示）', 'info'); }
+        }
+      },
+      {
+        id: 'settings-drawer',
+        tag: 'nux-settings-drawer',
+        title: '设置抽屉',
+        desc: '左侧栏目导航 + 右侧自定义内容页，hash 路由 #/settings/xxx 可直达，Esc 关闭',
+        tpl: `
+<div>
+  <nux-button @click="showSettings = true">打开设置抽屉</nux-button>
+  <nux-settings-drawer v-model="showSettings" app-name="星光工作台" app-icon="🧭" title="偏好设置"
+    :sections="sections" @navigate="onNav" @close="onClose">
+    <template #page="{ key, section }">
+      <div v-if="key === 'general'" class="demo-col">
+        <nux-switch v-model="optNotify" label="桌面通知" description="重要事件第一时间提醒"></nux-switch>
+        <nux-switch v-model="optAutosave" label="自动保存" description="编辑内容实时写入本地"></nux-switch>
+      </div>
+      <div v-else class="demo-col">
+        <nux-radio-group v-model="density" :options="densities" label="界面密度"></nux-radio-group>
+        <p class="demo-note" style="margin:0">当前栏目：{{ section.label }} —— 这是插槽自定义的页面内容。</p>
+      </div>
+    </template>
+  </nux-settings-drawer>
+</div>`,
+        code: `<nux-settings-drawer v-model="open" app-name="工作台" title="偏好设置"
+  :sections="[{ key:'general', icon:'⚙️', label:'通用', desc:'基础偏好' }]">
+  <template #page="{ key, section }">
+    <my-settings-page :name="key"></my-settings-page>
+  </template>
+</nux-settings-drawer>
+// hash 路由：打开后写入 #/settings/general，可从任意页面直达指定栏目`,
+        data() {
+          return {
+            showSettings: false,
+            optNotify: true,
+            optAutosave: true,
+            density: 'cozy',
+            densities: [
+              { label: '宽松', value: 'cozy' },
+              { label: '紧凑', value: 'compact' }
+            ],
+            sections: [
+              { key: 'general', icon: '⚙️', label: '通用', desc: '通知与保存' },
+              { key: 'appearance', icon: '🎨', label: '外观', desc: '密度与主题' }
+            ]
+          };
+        },
+        methods: {
+          onNav(key) { window.showToast('切换到「' + key + '」栏目', 'info'); },
+          onClose() { window.showToast('设置已关闭（即存即生效）', 'info'); }
+        }
       }
     ]
   });
@@ -755,6 +1124,119 @@ NuxAppSwitcher.refresh();
             window.showToast(this.favs[a.name] ? '已收藏「' + a.display_name + '」' : '已取消收藏', 'success');
           },
           onOpen(a) { window.showToast('打开「' + a.display_name + '」（演示不跳转）', 'info'); }
+        }
+      },
+      {
+        id: 'about-page',
+        tag: 'nux-about-page',
+        title: '关于页',
+        desc: '整页组件（100dvh）：品牌 hero + 故事 / 能力 / 承诺 / 生态分区；此处 420px 容器缩览，生态接口失败自动回退内置数据',
+        tpl: `
+<div style="position: relative; height: 420px; border: 1px solid var(--nx-border); border-radius: 12px; overflow: hidden">
+  <nux-about-page app-name="拾光笔记" app-icon="📒"
+    slogan="记录，是最温柔的自我对话"
+    description="多端同步的轻量笔记应用"
+    :story="story" :features="features" :promises="promises"
+    :ecosystem="ecos" version="v2.3.0"
+    back-url="#" contact-email="feedback@example.com"></nux-about-page>
+</div>
+<p class="demo-note" style="margin-top: 10px">整页组件实际占满 100dvh，这里限制容器高度做缩览，页面内可滚动。</p>`,
+        code: `<nux-about-page app-name="拾光笔记" app-icon="📒"
+  slogan="记录，是最温柔的自我对话"
+  :story="story" :features="features" :promises="promises"
+  :ecosystem="ecos" version="v2.3.0"></nux-about-page>
+// mounted 会请求 /api/portal/apps 拉取生态；失败或非 200 时回退 ecosystem 内置数据`,
+        data() {
+          return {
+            story: [
+              '最开始只是为了给自己记点东西，后来发现身边的朋友也想要一个干净不吵的笔记工具，于是有了它。',
+              '我们相信记录应该像呼吸一样自然：打开就能写，写完就走，其余的交给同步。'
+            ],
+            features: [
+              { title: '极速记录', desc: '三秒内进入编辑状态，灵感不用等', icon: 'fas fa-bolt' },
+              { title: '多端同步', desc: '手机、平板、电脑无缝衔接', icon: 'fas fa-cloud' },
+              { title: '全文检索', desc: '忘记标题也能一秒找回', icon: 'fas fa-magnifying-glass' }
+            ],
+            promises: [
+              { title: '无广告', desc: '永不在内容里插入任何推广', icon: 'fas fa-ban' },
+              { title: '可导出', desc: '数据随时带走，不做绑架', icon: 'fas fa-file-export' },
+              { title: '本地加密', desc: '敏感内容端侧加密存储', icon: 'fas fa-lock' }
+            ],
+            ecos: [
+              { name: '时光手账', desc: '日记手账', color: '#0ea5e9' },
+              { name: '简白板', desc: '思维白板', color: '#8b5cf6' },
+              { name: '轻日历', desc: '日程管理', color: '#f59e0b' }
+            ]
+          };
+        }
+      },
+      {
+        id: 'onboarding',
+        tag: 'nux-onboarding',
+        title: '新手引导蒙层',
+        desc: 'doneKey 未写入 localStorage 时挂载即弹出；分步前进、可跳过，完成后不再打扰',
+        tpl: `
+<div class="demo-col">
+  <nux-button @click="replay">清除记忆并重播引导</nux-button>
+  <p class="demo-note" style="margin:0">真实场景：doneKey 不存在时组件挂载即自动弹出；本页为避免打扰改为手动触发。</p>
+  <nux-onboarding v-if="showGuide" done-key="pg_onboarding_demo"
+    :steps="steps" @done="onDone" @skip="onSkip"></nux-onboarding>
+</div>`,
+        code: `<nux-onboarding done-key="my_app_onboarding" :steps="steps"
+  @done="onDone" @skip="onSkip"></nux-onboarding>
+// steps: [{ title, desc, icon }]，icon 为 FontAwesome 类名
+// 重新触发：localStorage.removeItem(doneKey) 后重新挂载组件`,
+        data() {
+          return {
+            showGuide: false,
+            steps: [
+              { title: '欢迎来到工作台', desc: '接下来用三步完成初始化，全程不到一分钟。', icon: 'fas fa-rocket', step: 0 },
+              { title: '创建第一个作品', desc: '从空白画布或模板开始，模板可以随时更换。', icon: 'fas fa-pen-nib', step: 1 },
+              { title: '邀请协作者', desc: '把链接发给伙伴，实时协作从这里开始。', icon: 'fas fa-user-plus', step: 2 }
+            ]
+          };
+        },
+        methods: {
+          replay() {
+            try { window.localStorage.removeItem('pg_onboarding_demo'); } catch (e) {}
+            this.showGuide = false;
+            this.$nextTick(() => { this.showGuide = true; });
+          },
+          onDone() { window.showToast('引导完成，开始使用吧', 'success'); },
+          onSkip() { window.showToast('已跳过引导（doneKey 已写入，不再弹出）', 'info'); }
+        }
+      },
+      {
+        id: 'onboarding-strip',
+        tag: 'nux-onboarding-strip',
+        title: '引导横幅条',
+        desc: '按 done 数组依次展示未完成步骤，完成一条自动切下一条；✕ 暂时忽略',
+        tpl: `
+<div class="demo-col">
+  <nux-onboarding-strip :steps="steps" :done="done"
+    dismiss-key="pg_ob_strip_dismiss" @action="onAction" @dismiss="onDismiss"></nux-onboarding-strip>
+  <p class="demo-note" style="margin:0">点击「去完成」推进步骤，全部完成后横幅自动消失。</p>
+</div>`,
+        code: `<nux-onboarding-strip :steps="steps" :done="doneSteps"
+  dismiss-key="ob_strip" @action="onAction" @dismiss="onDismiss"></nux-onboarding-strip>
+// steps: [{ key, title, desc, icon, btn }]；done 为已完成的 key 数组`,
+        data() {
+          return {
+            done: [],
+            steps: [
+              { key: 'profile', icon: '🧑', title: '完善个人资料', desc: '上传头像并填写昵称，让伙伴认识你', btn: '去完善' },
+              { key: 'first-work', icon: '✍️', title: '创建第一个作品', desc: '从模板开始，两分钟出稿', btn: '去创建' },
+              { key: 'invite', icon: '🤝', title: '邀请一位协作者', desc: '把邀请链接发给伙伴即可', btn: '去邀请' }
+            ]
+          };
+        },
+        methods: {
+          onAction(step) {
+            if (this.done.indexOf(step.key) < 0) this.done.push(step.key);
+            const tail = this.done.length < this.steps.length ? '，看下一条' : '，全部搞定';
+            window.showToast('已完成「' + step.title + '」' + tail, 'success');
+          },
+          onDismiss() { window.showToast('已暂时忽略，刷新页面可恢复', 'info'); }
         }
       }
     ]

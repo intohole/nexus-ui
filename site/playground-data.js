@@ -129,6 +129,149 @@
           this.timer = setInterval(() => { this.pct = this.pct >= 100 ? 10 : this.pct + 9; }, 1600);
         },
         beforeUnmount() { clearInterval(this.timer); }
+      },
+      {
+        id: 'sortable',
+        tag: 'nux-sortable',
+        title: '拖拽排序',
+        desc: 'Pointer 拖拽 + 键盘方向键/Home/End，松手即提交新顺序并抛出 change',
+        tpl: `
+<div class="demo-col">
+  <nux-sortable v-model="list" item-key="id" @change="onChange">
+    <template #item="{ item, index }">
+      <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;padding:10px 12px;border:1px solid var(--nx-border);border-radius:10px;background:var(--nx-bg-surface)">
+        <span style="font-size:16px">{{ item.icon }}</span>
+        <span style="font-weight:600;font-size:14px">{{ item.name }}</span>
+        <span class="demo-note" style="margin:0 0 0 auto">第 {{ index + 1 }} 位</span>
+      </div>
+    </template>
+  </nux-sortable>
+  <p class="demo-note" style="margin:0">按住左侧圆点拖动；聚焦手柄后也可用方向键 / Home / End 调整。</p>
+</div>`,
+        code: `<nux-sortable v-model="list" item-key="id" @change="onChange">
+  <template #item="{ item, index }">
+    <div class="row">{{ item.name }}（第 {{ index + 1 }} 位）</div>
+  </template>
+</nux-sortable>
+// @change(next, { from, to })：next 为新数组，落地后持久化即可`,
+        data() {
+          return {
+            list: [
+              { id: 'a', icon: '🌅', name: '晨间写作' },
+              { id: 'b', icon: '📚', name: '主题阅读' },
+              { id: 'c', icon: '🏃', name: '三公里慢跑' },
+              { id: 'd', icon: '🧘', name: '睡前复盘' }
+            ]
+          };
+        },
+        methods: {
+          onChange(next, pos) {
+            this.list = next;
+            window.showToast('第 ' + (pos.from + 1) + ' 项移到第 ' + (pos.to + 1) + ' 位', 'success');
+          }
+        }
+      },
+      {
+        id: 'backtop',
+        tag: 'nux-backtop',
+        title: '回到顶部',
+        desc: '窗口滚动超过 threshold 出现于右下角，点击平滑回顶，bottom/right 可调',
+        tpl: `
+<div>
+  <div style="height: 480px; display:flex; align-items:center; justify-content:center; border:1px dashed var(--nx-border); border-radius:12px; color: var(--nx-text-muted); font-size: 13px; text-align:center">
+    长页面占位（480px）<br>向下滚动本页，右下角会出现回到顶部按钮
+  </div>
+  <nux-backtop :threshold="240" @click="onBack"></nux-backtop>
+</div>`,
+        code: `<nux-backtop :threshold="300" bottom="32px" right="24px"
+  @click="onBack"></nux-backtop>`,
+        methods: { onBack() { window.showToast('正在回到顶部', 'info'); } }
+      },
+      {
+        id: 'infinite-scroll',
+        tag: 'nux-infinite-scroll',
+        title: '无限滚动',
+        desc: '滚动触底自动派发 load，loading / finished 状态内置展示，容器内滚动即可',
+        tpl: `
+<div>
+  <div style="height: 300px; overflow-y: auto; border: 1px solid var(--nx-border); border-radius: 12px; padding: 4px">
+    <nux-infinite-scroll :loading="loading" :finished="finished" :offset="60" @load="onLoad">
+      <div v-for="n in items" :key="n"
+           style="padding: 12px 14px; margin: 6px; border-radius: 10px; background: var(--nx-bg-muted); font-size: 14px">
+        模拟记录 #{{ String(n).padStart(2, '0') }}
+      </div>
+    </nux-infinite-scroll>
+  </div>
+  <p class="demo-note" style="margin-top: 10px">已加载 {{ items.length }} / 30 条{{ finished ? '，全部加载完毕' : '，继续滚动加载' }}</p>
+</div>`,
+        code: `<nux-infinite-scroll :loading="loading" :finished="finished"
+  :offset="200" @load="onLoad">
+  <div v-for="item in items" :key="item.id">{{ item.title }}</div>
+</nux-infinite-scroll>`,
+        data() { return { items: [1, 2, 3, 4, 5], loading: false, finished: false, seq: 5 }; },
+        methods: {
+          onLoad() {
+            if (this.loading || this.finished) return;
+            this.loading = true;
+            setTimeout(() => {
+              const add = [];
+              for (let i = 0; i < 5 && this.items.length < 30; i++) add.push(++this.seq);
+              this.items = this.items.concat(add);
+              this.loading = false;
+              if (this.items.length >= 30) this.finished = true;
+            }, 700);
+          }
+        }
+      },
+      {
+        id: 'selection-bar',
+        tag: 'nux-selection-bar',
+        title: '批量操作条',
+        desc: 'count 大于 0 时浮出底部操作条（fixed），{n} 占位显示数量，取消一键清空',
+        tpl: `
+<div class="demo-col">
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div v-for="row in rows" :key="row.id"
+         style="display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--nx-border);border-radius:10px">
+      <nux-checkbox v-model="row.picked"></nux-checkbox>
+      <span style="font-size:14px">{{ row.name }}</span>
+    </div>
+  </div>
+  <p class="demo-note" style="margin:0">已勾选 {{ pickedCount() }} 项，勾选后页面底部会浮出操作条。</p>
+  <nux-selection-bar :count="pickedCount()" count-label="已选 {n} 条记录" @clear="clearAll">
+    <nux-button size="sm" variant="ghost" @click="markDone">标记完成</nux-button>
+    <nux-button size="sm" variant="danger" @click="removePicked">删除</nux-button>
+  </nux-selection-bar>
+</div>`,
+        code: `<nux-selection-bar :count="picked.length" count-label="已选 {n} 条记录"
+  @clear="picked = []">
+  <nux-button size="sm" variant="ghost" @click="markDone">标记完成</nux-button>
+</nux-selection-bar>`,
+        data() {
+          return {
+            rows: [
+              { id: 1, name: '整理会议纪要', picked: false },
+              { id: 2, name: '回复合作邮件', picked: true },
+              { id: 3, name: '更新版本计划', picked: false },
+              { id: 4, name: '复审设计稿', picked: false }
+            ]
+          };
+        },
+        methods: {
+          pickedCount() { return this.rows.filter(r => r.picked).length; },
+          clearAll() {
+            this.rows.forEach(r => { r.picked = false; });
+            window.showToast('已清空选择', 'info');
+          },
+          markDone() {
+            window.showToast('已标记 ' + this.pickedCount() + ' 条为完成', 'success');
+            this.rows.forEach(r => { r.picked = false; });
+          },
+          removePicked() {
+            window.showToast('已删除 ' + this.pickedCount() + ' 条（演示不真删）', 'success');
+            this.rows.forEach(r => { r.picked = false; });
+          }
+        }
       }
     ]
   });
@@ -196,6 +339,39 @@
               { label: '深圳', value: '深圳' }
             ]
           };
+        }
+      },
+      {
+        id: 'form-group',
+        tag: 'nux-form-group',
+        title: '表单分组',
+        desc: '统一的 label / 必填星号 / hint / error 排版壳，任意控件放进去就成表单',
+        tpl: `
+<div class="demo-col">
+  <nux-form-group label="邮箱" required hint="用于登录与找回密码">
+    <nux-input v-model="mail" placeholder="you@example.com" clearable></nux-input>
+  </nux-form-group>
+  <nux-form-group label="邀请码" required :error="codeError">
+    <nux-input v-model="code" placeholder="请输入 6 位邀请码" :maxlength="6"></nux-input>
+  </nux-form-group>
+  <nux-form-group label="备注" hint="选填，不超过 50 字">
+    <nux-input v-model="memo" placeholder="补充说明"></nux-input>
+  </nux-form-group>
+  <nux-form-group label="横排布局" :horizontal="true" hint="label 与控件同行，适合设置页">
+    <nux-input v-model="nick" placeholder="昵称"></nux-input>
+  </nux-form-group>
+</div>`,
+        code: `<nux-form-group label="邮箱" required hint="用于登录与找回密码">
+  <nux-input v-model="mail" placeholder="you@example.com"></nux-input>
+</nux-form-group>
+<nux-form-group label="邀请码" required :error="codeError">
+  <nux-input v-model="code"></nux-input>
+</nux-form-group>`,
+        data() { return { mail: '', code: '', memo: '', nick: '', codeError: '' }; },
+        watch: {
+          code(v) {
+            this.codeError = v.length > 0 && v.length < 6 ? '邀请码为 6 位，还差 ' + (6 - v.length) + ' 位' : '';
+          }
         }
       }
     ]

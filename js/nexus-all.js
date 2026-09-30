@@ -329,9 +329,11 @@
             return null;
         },
 
-        formatRelativeTime(dateString) {
+        formatRelativeTime(dateString, options = {}) {
             const date = utils.parseDate(dateString);
             if (!date) return '';
+            const dayLimit = options.dayLimit > 0 ? options.dayLimit : 30;
+            const space = options.space === true ? ' ' : '';
             const now = Date.now();
             const diff = now - date.getTime();
             const seconds = Math.floor(diff / 1000);
@@ -339,9 +341,16 @@
             const hours = Math.floor(minutes / 60);
             const days = Math.floor(hours / 24);
             if (seconds < 60) return '刚刚';
-            if (minutes < 60) return `${minutes}分钟前`;
-            if (hours < 24) return `${hours}小时前`;
-            if (days < 30) return `${days}天前`;
+            if (minutes < 60) return `${minutes}${space}分钟前`;
+            if (hours < 24) return `${hours}${space}小时前`;
+            if (days < dayLimit) return `${days}${space}天前`;
+            if (options.fallback === 'md') {
+                const sameYear = date.getFullYear() === new Date().getFullYear();
+                const p = (n) => String(n).padStart(2, '0');
+                return sameYear
+                    ? `${p(date.getMonth() + 1)}-${p(date.getDate())}`
+                    : `${date.getFullYear()}-${p(date.getMonth() + 1)}-${p(date.getDate())}`;
+            }
             return utils.formatDateShort(dateString);
         },
 
