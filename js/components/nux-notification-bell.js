@@ -117,13 +117,24 @@
             },
             resolveLink: function(item) {
                 if (!item) return '';
-                if (item.link) return item.link;
-                var d = item.data || {};
-                if (typeof d.url === 'string' && d.url) return d.url;
-                var jobs = d.jobs;
-                if (Array.isArray(jobs) && jobs.length && jobs[0] && typeof jobs[0].url === 'string' && jobs[0].url) return jobs[0].url;
-                var key = String(item.app_id || '').toLowerCase();
-                return APP_PATHS[key] || '';
+                var url = item.link || '';
+                if (!url) {
+                    var d = item.data || {};
+                    if (typeof d.url === 'string' && d.url) url = d.url;
+                    else {
+                        var jobs = d.jobs;
+                        if (Array.isArray(jobs) && jobs.length && jobs[0] && typeof jobs[0].url === 'string') url = jobs[0].url || '';
+                    }
+                    if (!url) url = APP_PATHS[String(item.app_id || '').toLowerCase()] || '';
+                }
+                return this.normalizeLink(url);
+            },
+            normalizeLink: function(url) {
+                if (!url || url.charAt(0) !== '/') return url;
+                var seg = url.split('/')[1] || '';
+                var canonical = APP_PATHS[seg.toLowerCase()];
+                if (!canonical) return url;
+                return canonical.replace(/\/$/, '') + url.slice(seg.length + 1);
             },
             onDocClick: function(e) {
                 if (this.$el && !this.$el.contains(e.target)) this.open = false;
