@@ -85,6 +85,22 @@
             if (window.NexusStore) { try { NexusStore.prototype.logout && new NexusStore().logout(); } catch (e) {} }
         },
 
+        bindSsoGuard() {
+            if (NexusApp._ssoBound) return;
+            NexusApp._ssoBound = true;
+            const check = function () {
+                if (!window.NexusUtils || typeof window.NexusUtils.ssoSessionGuard !== 'function') return;
+                let forced = false;
+                try { forced = window.NexusUtils.ssoSessionGuard(); } catch (e) { return; }
+                if (!forced) return;
+                window.location.reload();
+            };
+            window.addEventListener('focus', check);
+            document.addEventListener('visibilitychange', function () { if (!document.hidden) check(); });
+            setInterval(check, 30000);
+            check();
+        },
+
         registerCoreComponents(app) {
             if (!app || !app.component) return;
             const map = {
@@ -170,6 +186,7 @@
 
     if (typeof window !== 'undefined') {
         NexusApp.bindGlobal();
+        NexusApp.bindSsoGuard();
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', function () { NexusApp.initAppLoading(); });
         } else {

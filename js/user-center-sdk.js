@@ -191,6 +191,7 @@ class UserCenterSDK {
             }
             if (this._accessToken) {
                 writeCookieBridge({ a: this._accessToken, r: this._refreshToken, e: this._tokenExpiresAt }, keep);
+                try { window.localStorage.setItem('uc_session_epoch', String(Date.now())); } catch (e) {}
             } else {
                 clearCookieBridge();
             }
@@ -362,6 +363,7 @@ class UserCenterSDK {
             await this._request('POST', '/api/auth/logout', null, true, true);
         } catch (e) {}
         this.clearTokens();
+        try { window.NexusUtils && window.NexusUtils.markSsoLogout && window.NexusUtils.markSsoLogout(); } catch (e) {}
         try { localStorage.removeItem('nux_remembered_identifier'); } catch (e) {}
     }
 

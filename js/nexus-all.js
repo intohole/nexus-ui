@@ -1,6 +1,10 @@
 /* ===== nexus-utils.js ===== */
 (function() {
     const CN_TZ = 'Asia/Shanghai';
+    const SSO_COOKIE_DOMAIN = '.songguokr.com';
+    const SSO_LOGOUT_COOKIE = 'uc_sso_logout';
+    const SSO_LOGOUT_MAX_AGE = 30 * 24 * 3600;
+    const SSO_EPOCH_KEY = 'uc_session_epoch';
     const utils = {
         scrollLock: (function() {
             let count = 0;
@@ -503,6 +507,40 @@
             return utils.prefersReducedMotion() ? 0 : ms;
         },
 
+        ssoCookieDomain() {
+            try {
+                const host = window.location.hostname || '';
+                if (host === 'localhost' || host === '127.0.0.1') return null;
+                return (host === 'songguokr.com' || host.endsWith('.songguokr.com')) ? SSO_COOKIE_DOMAIN : null;
+            } catch (e) { return null; }
+        },
+
+        markSsoLogout() {
+            try { window.localStorage.removeItem(SSO_EPOCH_KEY); } catch (e) {}
+            if (!utils.ssoCookieDomain()) return;
+            try {
+                document.cookie = SSO_LOGOUT_COOKIE + '=' + Date.now() +
+                    ';Domain=' + SSO_COOKIE_DOMAIN + ';Path=/;Max-Age=' + SSO_LOGOUT_MAX_AGE + ';SameSite=Lax';
+            } catch (e) {}
+        },
+
+        ssoLogoutPending() {
+            if (!utils.ssoCookieDomain()) return false;
+            try {
+                const epoch = window.localStorage.getItem(SSO_EPOCH_KEY);
+                if (!epoch) return false;
+                const m = document.cookie.match(new RegExp('(?:^|;\\s*)' + SSO_LOGOUT_COOKIE + '=(\\d+)'));
+                if (!m) return false;
+                return parseInt(m[1], 10) > parseInt(epoch, 10);
+            } catch (e) { return false; }
+        },
+
+        ssoSessionGuard() {
+            if (!utils.ssoLogoutPending()) return false;
+            utils.clearAuthState();
+            return true;
+        },
+
         createDualStorage(tokenKey = 'uc_access_token') {
             const read = (s, k) => { try { return s.getItem(k); } catch (e) { return null; } };
             const write = (s, k, v) => { try { s.setItem(k, v); } catch (e) {} };
@@ -510,13 +548,7 @@
             const preferSession = () => read(window.sessionStorage, tokenKey) !== null;
             const SSO_COOKIE = 'uc_sso_token';
             const BRIDGE_KEYS = ['uc_access_token', 'uc_refresh_token', 'uc_token_expires_at'];
-            const ssoDomain = () => {
-                try {
-                    const host = window.location.hostname || '';
-                    if (host === 'localhost' || host === '127.0.0.1') return null;
-                    return (host === 'songguokr.com' || host.endsWith('.songguokr.com')) ? '.songguokr.com' : null;
-                } catch (e) { return null; }
-            };
+            const ssoDomain = () => utils.ssoCookieDomain();
             const readStorage = (key) => {
                 const v = read(window.sessionStorage, key);
                 if (v !== null) return v;
@@ -570,6 +602,9 @@
                     const useSession = preferSession();
                     write(useSession ? window.sessionStorage : window.localStorage, key, value);
                     clear(useSession ? window.localStorage : window.sessionStorage, key);
+                    if (key === tokenKey && value) {
+                        try { window.localStorage.setItem(SSO_EPOCH_KEY, String(Date.now())); } catch (e) {}
+                    }
                     if (BRIDGE_KEYS.indexOf(key) !== -1) writeBridge();
                 },
                 removeItem(key) {
@@ -585,6 +620,7 @@
                 const ds = utils.createDualStorage('uc_access_token');
                 ['uc_access_token', 'uc_refresh_token', 'uc_token_expires_at'].forEach((k) => ds.removeItem(k));
             } catch (e) {}
+            try { window.localStorage.removeItem(SSO_EPOCH_KEY); } catch (e) {}
             try { window.dispatchEvent(new CustomEvent('uc:authchange', { detail: { authenticated: false } })); } catch (e) {}
         },
 
@@ -1798,6 +1834,7 @@
 
         logout() {
             this._clearAuth();
+            try { window.NexusUtils && window.NexusUtils.markSsoLogout && window.NexusUtils.markSsoLogout(); } catch (e) {}
             if (this.onUnauthorized) this.onUnauthorized();
         }
     }
@@ -3326,6 +3363,7 @@ class UserCenterSDK {
             }
             if (this._accessToken) {
                 writeCookieBridge({ a: this._accessToken, r: this._refreshToken, e: this._tokenExpiresAt }, keep);
+                try { window.localStorage.setItem('uc_session_epoch', String(Date.now())); } catch (e) {}
             } else {
                 clearCookieBridge();
             }
@@ -3497,6 +3535,7 @@ class UserCenterSDK {
             await this._request('POST', '/api/auth/logout', null, true, true);
         } catch (e) {}
         this.clearTokens();
+        try { window.NexusUtils && window.NexusUtils.markSsoLogout && window.NexusUtils.markSsoLogout(); } catch (e) {}
         try { localStorage.removeItem('nux_remembered_identifier'); } catch (e) {}
     }
 
@@ -4177,6 +4216,22 @@ try {
             if (window.NexusStore) { try { NexusStore.prototype.logout && new NexusStore().logout(); } catch (e) {} }
         },
 
+        bindSsoGuard() {
+            if (NexusApp._ssoBound) return;
+            NexusApp._ssoBound = true;
+            const check = function () {
+                if (!window.NexusUtils || typeof window.NexusUtils.ssoSessionGuard !== 'function') return;
+                let forced = false;
+                try { forced = window.NexusUtils.ssoSessionGuard(); } catch (e) { return; }
+                if (!forced) return;
+                window.location.reload();
+            };
+            window.addEventListener('focus', check);
+            document.addEventListener('visibilitychange', function () { if (!document.hidden) check(); });
+            setInterval(check, 30000);
+            check();
+        },
+
         registerCoreComponents(app) {
             if (!app || !app.component) return;
             const map = {
@@ -4262,6 +4317,7 @@ try {
 
     if (typeof window !== 'undefined') {
         NexusApp.bindGlobal();
+        NexusApp.bindSsoGuard();
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', function () { NexusApp.initAppLoading(); });
         } else {

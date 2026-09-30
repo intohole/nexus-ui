@@ -467,6 +467,7 @@
 
         logout() {
             this._clearAuth();
+            try { window.NexusUtils && window.NexusUtils.markSsoLogout && window.NexusUtils.markSsoLogout(); } catch (e) {}
             if (this.onUnauthorized) this.onUnauthorized();
         }
     }
