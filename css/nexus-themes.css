@@ -100,9 +100,9 @@
 .app-usercenter { --app-accent: #6366f1; --app-accent-rgb: 99, 102, 241; --app-accent-hover: #818cf8; --app-name: "用户中心"; }
 [data-theme="dark"] .app-usercenter { --app-accent: #818cf8; --app-accent-rgb: 129, 140, 248; --app-accent-hover: #a5b4fc; --app-accent-contrast: #0f172a; }
 
-/* goldenFish — 闲鱼助手 — 深青蓝（电商/交易的清爽感，区别于天蓝） */
-.app-golden-fish { --app-accent: #155e75; --app-accent-rgb: 21, 94, 117; --app-accent-hover: #0e7490; --app-name: "GoldenFish"; }
-[data-theme="dark"] .app-golden-fish { --app-accent: #22d3ee; --app-accent-rgb: 34, 211, 238; --app-accent-hover: #67e8f9; --app-accent-contrast: #0f172a; }
+/* goldenFish — 闲鱼助手 — 金鱼橙（品牌主色，白字对比 5.2:1，暖橙 × 石板蓝灰互补） */
+.app-golden-fish { --app-accent: #c2410c; --app-accent-rgb: 194, 65, 12; --app-accent-hover: #9a3412; --app-name: "GoldenFish"; }
+[data-theme="dark"] .app-golden-fish { --app-accent: #fb923c; --app-accent-rgb: 251, 146, 60; --app-accent-hover: #fdba74; --app-accent-contrast: #431407; }
 
 /* ===== 通用主题 ===== */
 

@@ -88,6 +88,31 @@
         ] }; }
       },
       {
+        id: 'swipe',
+        tag: 'nux-swipe-actions',
+        title: '滑动操作',
+        desc: '右滑露左操作、左滑露右操作，触摸与鼠标拖拽，同页互斥',
+        tpl: `
+<nux-swipe-actions :left-actions="leftOps" :right-actions="rightOps" @action="onAction">
+  <div class="demo-swipe-cell">👈 左滑标红 / 右滑标蓝 👉</div>
+</nux-swipe-actions>
+<p class="demo-note" v-if="last">触发：{{ last }}</p>`,
+        code: `<nux-swipe-actions
+  :left-actions="[{key:'open',label:'查看',icon:'👀',tone:'accent'}]"
+  :right-actions="[{key:'delete',label:'删除',icon:'🗑',tone:'danger'}]"
+  @action="onAction(key)">
+  <div>任意卡片内容</div>
+</nux-swipe-actions>`,
+        data() {
+          return {
+            last: '',
+            leftOps: [{ key: 'open', label: '查看', icon: '👀', tone: 'accent' }],
+            rightOps: [{ key: 'archive', label: '归档', icon: '📦', tone: 'neutral' }, { key: 'delete', label: '删除', icon: '🗑', tone: 'danger' }]
+          };
+        },
+        methods: { onAction(k) { this.last = k; } }
+      },
+      {
         id: 'search',
         tag: 'nux-search-box',
         title: '搜索框',
