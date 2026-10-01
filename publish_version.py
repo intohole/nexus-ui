@@ -34,7 +34,32 @@ HASH_PARAM_RE = re.compile(r"(^|[&?])h=[0-9a-f]{10}(?=&|$)")
 
 
 def tree_files(root: Path) -> dict[str, Path]:
-    out: dict[str, Path] = {}
+    """快照文件清单：git 跟踪文件白名单优先，无 .git 时回退目录遍历。
+
+    工作树常有未跟踪残留（旧版本遗留文件、本地试验产物），按目录遍历会
+    把它们冻结进快照造成节点间指纹不一致；git ls-files 以仓库为唯一事实源。
+    """
+    import subprocess
+
+    if (root / ".git").exists():
+        try:
+            proc = subprocess.run(
+                ["git", "-C", str(root), "ls-files", "-z"],
+                capture_output=True, check=True,
+            )
+            names = [n for n in proc.stdout.decode().split("\0") if n]
+            out: dict[str, Path] = {}
+            for rel_text in names:
+                parts = Path(rel_text).parts
+                if any(part in EXCLUDE_DIRS or SNAPSHOT_RE.match(part) for part in parts):
+                    continue
+                p = root / rel_text
+                if p.is_file():
+                    out[rel_text] = p
+            return out
+        except (subprocess.CalledProcessError, OSError):
+            pass
+    out = {}
     for p in sorted(root.rglob("*")):
         if not p.is_file():
             continue
