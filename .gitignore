@@ -9,3 +9,5 @@ readme.html
 data/
 !js/data/
 logs/
+# 版本快照(部署产物, publish_version.py 生成, 不进 git)
+v[0-9]*/
