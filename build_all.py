@@ -18,6 +18,7 @@ FILES: list[str] = [
     "nexus-api-error.js",
     "nexus-stream.js",
     "nexus-api.js",
+    "nexus-api-factory.js",
     "nexus-markdown.js",
     "nexus-chat.js",
     "nexus-structured.js",

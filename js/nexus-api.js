@@ -39,6 +39,10 @@
             this.timeout = config.timeout || 30000;
             this.responseAdapter = config.responseAdapter || null;
             this.serviceHeaders = config.serviceHeaders || null;
+            this.headerBuilder = config.headers || null;
+            this.cacheTtl = (config.cache && config.cache.ttl) || 0;
+            this._cache = new Map();
+            this._pendingGet = new Map();
             this.storage = config.dualStorage && window.NexusUtils && typeof window.NexusUtils.createDualStorage === 'function'
                 ? window.NexusUtils.createDualStorage(this.tokenKey)
                 : (config.storage || localStorage);
@@ -114,9 +118,11 @@
 
         _buildHeaders(extra) {
             const token = this._getToken();
+            const dynamic = this.headerBuilder ? (this.headerBuilder() || {}) : {};
             return {
                 'Content-Type': 'application/json',
                 ...(this.serviceHeaders || {}),
+                ...dynamic,
                 ...(token && { 'Authorization': `Bearer ${token}` }),
                 ...extra
             };
@@ -227,6 +233,7 @@
                                 throw new ApiError(errorMsg, response.status, data, errorCode);
                             }
 
+                        if (!isIdempotent && this._cache.size) this._cache.clear();
                         return data;
                     } catch (error) {
                         lastError = error;
@@ -261,7 +268,35 @@
                 if (v !== undefined && v !== null && v !== '') filtered[k] = v;
             });
             const qs = new URLSearchParams(filtered).toString();
-            return this.request(qs ? `${url}?${qs}` : url, { method: 'GET', ...options });
+            const fullUrl = qs ? `${url}?${qs}` : url;
+            if (this.cacheTtl > 0 && !options.fresh && !options.skipCache) {
+                return this._cached(fullUrl, () => this.request(fullUrl, { method: 'GET', ...options }));
+            }
+            return this.request(fullUrl, { method: 'GET', ...options });
+        }
+
+        _cached(key, loader) {
+            const hit = this._cache.get(key);
+            if (hit && Date.now() - hit.at < this.cacheTtl) return Promise.resolve(hit.data);
+            if (this._pendingGet.has(key)) return this._pendingGet.get(key);
+            const pending = loader().then((data) => {
+                if (this._cache.size >= 300) this._cache.delete(this._cache.keys().next().value);
+                this._cache.set(key, { data, at: Date.now() });
+                this._pendingGet.delete(key);
+                return data;
+            }).catch((err) => {
+                this._pendingGet.delete(key);
+                throw err;
+            });
+            this._pendingGet.set(key, pending);
+            return pending;
+        }
+
+        invalidateCache(prefix) {
+            if (!prefix) { this._cache.clear(); return; }
+            for (const key of Array.from(this._cache.keys())) {
+                if (key.includes(prefix)) this._cache.delete(key);
+            }
         }
 
         post(url, data = {}, options = {}) {
@@ -293,6 +328,7 @@
                     this._handleSessionExpired();
                 }
                 if (!res.ok) throw new ApiError(this._extractError(data), res.status, data, this._extractErrorCode(data));
+                if (this._cache.size) this._cache.clear();
                 return data;
             }).catch((err) => {
                 if (err.name === 'NexusApiError') throw err;

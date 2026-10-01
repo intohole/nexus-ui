@@ -80,6 +80,23 @@ api.createCrud('/notes'); // 返回 { create, list, get, update, delete }
 api.download('/notes/export', { format: 'pdf' }); // 返回 Blob
 ```
 
+### NexusApi.create（工厂：unwrap/unauthorized 预设 + 声明式域方法 + GET 缓存）
+
+```javascript
+const api = NexusApi.create({
+  baseUrl: '/api/v1', tokenKey: 'uc_access_token', dualStorage: true,
+  unwrap: 'code200',            // 'raw'(默认直通) | 'code200'({code,data}信封) | 'dataOrRes'(有data字段即解包) | 自定义 (data, response) => data
+  unauthorized: { clearKeys: ['cp_user_id'], redirect: '/login' },  // 或 { event: 'auth-expired' } 或 function()
+  headers: () => ({ 'X-Team-Id': teamId }),   // 每次请求求值的动态头钩子
+  cache: { ttl: 15000 },        // GET 缓存 + 并发去重；写操作自动失效；options.fresh 跳过；api.invalidateCache(prefix)
+  methods: {                    // 声明式域方法（静态 URL）；复杂逻辑用 fn(this=api)
+    listBooks: ['GET', '/books'],
+    createBook: ['POST', '/books'],
+    search(kw) { return this.get('/search', { kw }); }
+  }
+});
+```
+
 ### NexusUtils
 
 ```javascript

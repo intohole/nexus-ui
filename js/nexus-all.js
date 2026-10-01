@@ -1670,6 +1670,10 @@
             this.timeout = config.timeout || 30000;
             this.responseAdapter = config.responseAdapter || null;
             this.serviceHeaders = config.serviceHeaders || null;
+            this.headerBuilder = config.headers || null;
+            this.cacheTtl = (config.cache && config.cache.ttl) || 0;
+            this._cache = new Map();
+            this._pendingGet = new Map();
             this.storage = config.dualStorage && window.NexusUtils && typeof window.NexusUtils.createDualStorage === 'function'
                 ? window.NexusUtils.createDualStorage(this.tokenKey)
                 : (config.storage || localStorage);
@@ -1745,9 +1749,11 @@
 
         _buildHeaders(extra) {
             const token = this._getToken();
+            const dynamic = this.headerBuilder ? (this.headerBuilder() || {}) : {};
             return {
                 'Content-Type': 'application/json',
                 ...(this.serviceHeaders || {}),
+                ...dynamic,
                 ...(token && { 'Authorization': `Bearer ${token}` }),
                 ...extra
             };
@@ -1858,6 +1864,7 @@
                                 throw new ApiError(errorMsg, response.status, data, errorCode);
                             }
 
+                        if (!isIdempotent && this._cache.size) this._cache.clear();
                         return data;
                     } catch (error) {
                         lastError = error;
@@ -1892,7 +1899,35 @@
                 if (v !== undefined && v !== null && v !== '') filtered[k] = v;
             });
             const qs = new URLSearchParams(filtered).toString();
-            return this.request(qs ? `${url}?${qs}` : url, { method: 'GET', ...options });
+            const fullUrl = qs ? `${url}?${qs}` : url;
+            if (this.cacheTtl > 0 && !options.fresh && !options.skipCache) {
+                return this._cached(fullUrl, () => this.request(fullUrl, { method: 'GET', ...options }));
+            }
+            return this.request(fullUrl, { method: 'GET', ...options });
+        }
+
+        _cached(key, loader) {
+            const hit = this._cache.get(key);
+            if (hit && Date.now() - hit.at < this.cacheTtl) return Promise.resolve(hit.data);
+            if (this._pendingGet.has(key)) return this._pendingGet.get(key);
+            const pending = loader().then((data) => {
+                if (this._cache.size >= 300) this._cache.delete(this._cache.keys().next().value);
+                this._cache.set(key, { data, at: Date.now() });
+                this._pendingGet.delete(key);
+                return data;
+            }).catch((err) => {
+                this._pendingGet.delete(key);
+                throw err;
+            });
+            this._pendingGet.set(key, pending);
+            return pending;
+        }
+
+        invalidateCache(prefix) {
+            if (!prefix) { this._cache.clear(); return; }
+            for (const key of Array.from(this._cache.keys())) {
+                if (key.includes(prefix)) this._cache.delete(key);
+            }
         }
 
         post(url, data = {}, options = {}) {
@@ -1924,6 +1959,7 @@
                     this._handleSessionExpired();
                 }
                 if (!res.ok) throw new ApiError(this._extractError(data), res.status, data, this._extractErrorCode(data));
+                if (this._cache.size) this._cache.clear();
                 return data;
             }).catch((err) => {
                 if (err.name === 'NexusApiError') throw err;
@@ -2072,6 +2108,83 @@
     }
 
     window.NexusApi = NexusApi;
+})();
+
+/* ===== nexus-api-factory.js ===== */
+(function() {
+    if (!window.NexusApi) return;
+    const ApiError = window.NexusApiError || Error;
+
+    const UNWRAP_PRESETS = {
+        raw: null,
+        code200: function(data, response) {
+            if (response && !response.ok) return data;
+            if (data && typeof data === 'object' && 'code' in data) {
+                if (data.code === 200) return data.data;
+                throw new ApiError(data.message || data.detail || data.error || '操作失败', (response && response.status) || null, data, String(data.code));
+            }
+            return (data && typeof data === 'object' && 'data' in data) ? data.data : data;
+        },
+        dataOrRes: function(data) {
+            return (data && typeof data === 'object' && 'data' in data) ? data.data : data;
+        }
+    };
+
+    function buildUnauthorized(spec) {
+        if (typeof spec === 'function') return spec;
+        const clearKeys = spec.clearKeys || [];
+        const event = spec.event || null;
+        const redirect = spec.redirect || null;
+        return function() {
+            clearKeys.forEach((k) => {
+                try { localStorage.removeItem(k); } catch (e) {}
+                try { sessionStorage.removeItem(k); } catch (e) {}
+            });
+            if (event) { try { window.dispatchEvent(new CustomEvent(event)); } catch (e) {} }
+            if (redirect) { try { window.location.href = redirect; } catch (e) {} }
+        };
+    }
+
+    function applyMethods(api, methods) {
+        if (!methods) return api;
+        Object.keys(methods).forEach((name) => {
+            const def = methods[name];
+            if (typeof def === 'function') {
+                api[name] = function(...args) { return def.apply(api, args); };
+                return;
+            }
+            if (!Array.isArray(def)) return;
+            const verb = String(def[0] || 'GET').toUpperCase();
+            const url = def[1];
+            if (verb === 'GET') api[name] = (params, options) => api.get(url, params, options);
+            else if (verb === 'POST') api[name] = (data, options) => api.post(url, data, options);
+            else if (verb === 'PUT') api[name] = (data) => api.put(url, data);
+            else if (verb === 'PATCH') api[name] = (data) => api.patch(url, data);
+            else if (verb === 'DELETE') api[name] = () => api.delete(url);
+            else api[name] = (options) => api.request(url, { method: verb, ...options });
+        });
+        return api;
+    }
+
+    NexusApi.create = function(config = {}) {
+        const opts = { ...config };
+        const unwrap = opts.unwrap;
+        delete opts.unwrap;
+        if (typeof unwrap === 'function') {
+            opts.responseAdapter = unwrap;
+        } else if (unwrap !== undefined) {
+            if (!(unwrap in UNWRAP_PRESETS)) throw new Error(`[NexusApi.create] Unknown unwrap preset: ${unwrap}`);
+            if (UNWRAP_PRESETS[unwrap]) opts.responseAdapter = UNWRAP_PRESETS[unwrap];
+        }
+        if (opts.unauthorized) {
+            opts.onUnauthorized = buildUnauthorized(opts.unauthorized);
+            delete opts.unauthorized;
+        }
+        const methods = opts.methods;
+        delete opts.methods;
+        const api = new NexusApi(opts);
+        return applyMethods(api, methods);
+    };
 })();
 
 /* ===== nexus-markdown.js ===== */
