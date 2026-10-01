@@ -18,8 +18,10 @@
         },
         methods: {
             onChange(e) {
-                this.$emit('update:modelValue', e.target.value);
-                this.$emit('change', e.target.value);
+                const opt = this.options.find(o => String(o.value) === e.target.value);
+                const value = opt ? opt.value : e.target.value;
+                this.$emit('update:modelValue', value);
+                this.$emit('change', value);
             }
         },
         template: `

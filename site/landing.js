@@ -23,10 +23,10 @@
         ],
         busy: false,
         quickCode: [
-          '<link rel="stylesheet" href="https://songguokr.com/nexus-ui/v2.32.0/css/nexus-all.css">',
-          '<script src="https://songguokr.com/nexus-ui/v2.32.0/vendor/vue.global.prod.js"><\/script>',
-          '<script src="https://songguokr.com/nexus-ui/v2.32.0/js/nexus-all.js"><\/script>',
-          '<script src="https://songguokr.com/nexus-ui/v2.32.0/js/components/nux-button.js"><\/script>'
+          '<link rel="stylesheet" href="https://songguokr.com/nexus-ui/v2.33.0/css/nexus-all.css">',
+          '<script src="https://songguokr.com/nexus-ui/v2.33.0/vendor/vue.global.prod.js"><\/script>',
+          '<script src="https://songguokr.com/nexus-ui/v2.33.0/js/nexus-all.js"><\/script>',
+          '<script src="https://songguokr.com/nexus-ui/v2.33.0/js/components/nux-button.js"><\/script>'
         ],
         compCats: [
           { name: '基础控件', count: 10, items: ['nux-button', 'nux-input', 'nux-textarea', 'nux-select', 'nux-switch', 'nux-checkbox', 'nux-search-box', 'nux-segmented', 'nux-chip-group', 'nux-form-group'] },
@@ -35,7 +35,7 @@
           { name: '导航布局', count: 8, items: ['nux-tab-group', 'nux-accordion', 'nux-section', 'nux-backtop', 'nux-layout-sidebar', 'nux-layout-topnav', 'nux-bottom-nav', 'nux-app-switcher'] },
           { name: 'AI 对话', count: 4, items: ['nux-ai-chat', 'nux-conversation-list', 'nux-clarify-card', 'NexusMarkdown 渲染引擎'] },
           { name: '业务套件', count: 8, items: ['nux-login-page', 'nux-forgot-password', 'nux-user-center', 'nux-about-page', 'nux-notification-bell', 'nux-notification-panel', 'nux-selection-bar', 'nux-camera-recognize'] },
-          { name: '基础能力 JS', count: 13, items: ['nexus-api 重试/超时/401', 'nexus-api-error 中文翻译', 'nexus-markdown 安全渲染', 'nexus-chat 流式工具集', 'nexus-store 持久化状态', 'nexus-crud CRUD 工厂', 'nexus-validators 校验器', '13 个 use-* Composables'] }
+          { name: '基础能力 JS', count: 13, items: ['nexus-api 重试/超时/401', 'nexus-api-error 中文翻译', 'nexus-markdown 安全渲染', 'nexus-chat 流式工具集', 'nexus-store 持久化状态', 'nexus-crud CRUD 工厂', 'nexus-validators 校验器', 'use-mobile / use-theme / use-recent'] }
         ],
         apps: ['思悟笔记', 'VerseCraft', 'ResumeAI', '宠康管家', '码趣星', '天才学伴', '知路', 'BeeMemory', 'GoldenStock', 'FinancialKG', 'Prompt工坊', '妙笔']
       };

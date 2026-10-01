@@ -21,7 +21,7 @@
 }
 .nx-settings-brand-icon {
   width: 36px; height: 36px; border-radius: 11px; display: flex; align-items: center; justify-content: center;
-  background: rgba(var(--app-accent-rgb, 31, 78, 121), 0.12); font-size: 18px;
+  background: rgba(var(--app-accent-rgb, 99, 102, 241), 0.12); font-size: 18px;
 }
 .nx-settings-brand-text { flex: 1; min-width: 0; }
 .nx-settings-brand-text strong { display: block; font-size: 14px; color: var(--nx-text-heading, #1f2937); }
@@ -40,12 +40,12 @@
   width: 34px; height: 34px; flex: none; border-radius: 10px; display: flex; align-items: center; justify-content: center;
   font-size: 16px; background: var(--nx-bg-surface, #fff); border: 1px solid var(--nx-border, #e4e9f0);
 }
-.nx-settings-nav-item.active .nx-settings-nav-ico { background: var(--app-accent, #1f4e79); border-color: var(--app-accent, #1f4e79); }
+.nx-settings-nav-item.active .nx-settings-nav-ico { background: var(--app-accent, #6366f1); border-color: var(--app-accent, #6366f1); }
 .nx-settings-nav-main { min-width: 0; }
 .nx-settings-nav-label { display: block; font-size: 13px; font-weight: 600; color: var(--nx-text-heading, #1f2937); }
 .nx-settings-nav-desc { display: block; font-size: 11px; color: var(--nx-text-tertiary, #9aa5b5); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.nx-settings-nav-item.active .nx-settings-nav-label { color: var(--app-accent, #1f4e79); }
-.nx-settings-nav-item.active { background: rgba(var(--app-accent-rgb, 31, 78, 121), 0.08); }
+.nx-settings-nav-item.active .nx-settings-nav-label { color: var(--app-accent, #6366f1); }
+.nx-settings-nav-item.active { background: rgba(var(--app-accent-rgb, 99, 102, 241), 0.08); }
 .nx-settings-rail-foot { padding: 12px 16px; font-size: 11px; color: var(--nx-text-tertiary, #9aa5b5); }
 .nx-settings-body { flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--nx-bg-surface, #fff); }
 .nx-settings-page-head { padding: 20px 24px 0; }
@@ -61,7 +61,7 @@
   .nx-settings-nav-item { flex: none; padding: 8px 12px; border-radius: 999px; background: var(--nx-bg-surface, #fff); border: 1px solid var(--nx-border, #e4e9f0); }
   .nx-settings-nav-ico { width: 26px; height: 26px; font-size: 14px; border: none; border-radius: 8px; }
   .nx-settings-nav-desc { display: none; }
-  .nx-settings-nav-item.active { background: rgba(var(--app-accent-rgb, 31, 78, 121), 0.1); border-color: rgba(var(--app-accent-rgb, 31, 78, 121), 0.3); }
+  .nx-settings-nav-item.active { background: rgba(var(--app-accent-rgb, 99, 102, 241), 0.1); border-color: rgba(var(--app-accent-rgb, 99, 102, 241), 0.3); }
   .nx-settings-rail-foot { display: none; }
   .nx-settings-page { padding: 12px 16px 24px; }
 }
@@ -88,7 +88,7 @@
 .nx-auto-card-head { display: flex; align-items: center; gap: 10px; }
 .nx-auto-ico {
   width: 38px; height: 38px; flex: none; border-radius: 11px; display: flex; align-items: center; justify-content: center;
-  font-size: 18px; background: rgba(var(--app-accent-rgb, 31, 78, 121), 0.1);
+  font-size: 18px; background: rgba(var(--app-accent-rgb, 99, 102, 241), 0.1);
 }
 .nx-auto-card-name { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
 .nx-auto-card-name strong { font-size: 14px; color: var(--nx-text-heading, #1f2937); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -102,11 +102,11 @@
   content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%;
   background: var(--nx-text-on-accent, #fff); box-shadow: 0 1px 3px rgba(15, 32, 50, 0.25); transition: transform 0.18s;
 }
-.nx-auto-switch input:checked + span { background: var(--app-accent, #1f4e79); }
+.nx-auto-switch input:checked + span { background: var(--app-accent, #6366f1); }
 .nx-auto-switch input:checked + span::after { transform: translateX(18px); }
 .nx-auto-flow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 12px 0 8px; }
 .nx-auto-flow-node { font-size: 12px; padding: 4px 10px; border-radius: 999px; }
-.nx-auto-trigger { background: rgba(31, 78, 121, 0.07); color: var(--app-accent, #1f4e79); border: 1px dashed rgba(var(--app-accent-rgb, 31, 78, 121), 0.35); }
+.nx-auto-trigger { background: rgba(var(--app-accent-rgb, 99, 102, 241), 0.07); color: var(--app-accent, #6366f1); border: 1px dashed rgba(var(--app-accent-rgb, 99, 102, 241), 0.35); }
 .nx-auto-action { background: var(--nx-bg-tertiary, #eef1f6); color: var(--nx-text-body, #475569); border: 1px solid var(--nx-border, #e4e9f0); }
 .nx-auto-flow-arrow { color: var(--nx-text-tertiary, #9aa5b5); font-size: 13px; }
 .nx-auto-card-meta { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--nx-text-tertiary, #9aa5b5); }
@@ -115,7 +115,7 @@
 .nx-auto-dot.err { background: var(--nx-danger, #ef4444); }
 .nx-auto-card-actions { display: flex; gap: 8px; margin-top: 10px; }
 .nx-auto-act { border: 1px solid var(--nx-border, #e4e9f0); background: var(--nx-bg-surface, #fff); border-radius: 9px; padding: 6px 12px; font-size: 12px; color: var(--nx-text-secondary, #64748b); cursor: pointer; }
-.nx-auto-act:hover { border-color: rgba(var(--app-accent-rgb, 31, 78, 121), 0.4); color: var(--app-accent, #1f4e79); }
+.nx-auto-act:hover { border-color: rgba(var(--app-accent-rgb, 99, 102, 241), 0.4); color: var(--app-accent, #6366f1); }
 .nx-auto-act.danger { color: var(--nx-danger, #dc2626); }
 .nx-auto-act.danger:hover { border-color: rgba(220, 38, 38, 0.4); color: var(--nx-danger, #dc2626); }
 .nx-auto-empty { text-align: center; padding: 40px 20px; }
@@ -123,11 +123,11 @@
 .nx-auto-empty h3 { margin: 12px 0 6px; font-size: 16px; color: var(--nx-text-heading, #1f2937); }
 .nx-auto-empty p { margin: 0; font-size: 13px; color: var(--nx-text-tertiary, #9aa5b5); }
 .nx-auto-add {
-  width: 100%; margin-top: 14px; border: 1px dashed rgba(var(--app-accent-rgb, 31, 78, 121), 0.45);
-  background: rgba(var(--app-accent-rgb, 31, 78, 121), 0.05); color: var(--app-accent, #1f4e79);
+  width: 100%; margin-top: 14px; border: 1px dashed rgba(var(--app-accent-rgb, 99, 102, 241), 0.45);
+  background: rgba(var(--app-accent-rgb, 99, 102, 241), 0.05); color: var(--app-accent, #6366f1);
   border-radius: 12px; padding: 12px; font-size: 14px; font-weight: 600; cursor: pointer;
 }
-.nx-auto-add:hover { background: rgba(var(--app-accent-rgb, 31, 78, 121), 0.1); }
+.nx-auto-add:hover { background: rgba(var(--app-accent-rgb, 99, 102, 241), 0.1); }
 .nx-auto-modal-mask { position: fixed; inset: 0; z-index: var(--nx-z-settings); background: var(--nx-overlay-bg, rgba(15, 32, 50, 0.42)); }
 .nx-auto-modal {
   position: fixed; z-index: var(--nx-z-settings-panel); left: 50%; top: 50%; transform: translate(-50%, -50%);
@@ -145,8 +145,8 @@
   display: flex; align-items: center; gap: 12px; text-align: left; padding: 12px;
   border: 1px solid var(--nx-border, #e4e9f0); border-radius: 12px; background: var(--nx-bg-surface, #fff); cursor: pointer;
 }
-.nx-auto-tpl:hover { border-color: rgba(var(--app-accent-rgb, 31, 78, 121), 0.45); background: rgba(var(--app-accent-rgb, 31, 78, 121), 0.04); }
-.nx-auto-tpl-ico { width: 40px; height: 40px; flex: none; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 19px; background: rgba(var(--app-accent-rgb, 31, 78, 121), 0.1); }
+.nx-auto-tpl:hover { border-color: rgba(var(--app-accent-rgb, 99, 102, 241), 0.45); background: rgba(var(--app-accent-rgb, 99, 102, 241), 0.04); }
+.nx-auto-tpl-ico { width: 40px; height: 40px; flex: none; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 19px; background: rgba(var(--app-accent-rgb, 99, 102, 241), 0.1); }
 .nx-auto-tpl strong { display: block; font-size: 14px; color: var(--nx-text-heading, #1f2937); }
 .nx-auto-tpl em { font-style: normal; font-size: 12px; color: var(--nx-text-tertiary, #9aa5b5); line-height: 1.5; }
 .nx-auto-form-field { margin-bottom: 14px; }
@@ -155,15 +155,15 @@
   border: 1px solid var(--nx-border, #e4e9f0); border-radius: 10px; padding: 9px 12px;
   font-size: 13px; font-family: inherit; color: var(--nx-text-heading, #1f2937); outline: none; width: 100%; background: var(--nx-bg-surface, #fff);
 }
-.nx-auto-form-field input:focus, .nx-auto-form-field select:focus { border-color: rgba(var(--app-accent-rgb, 31, 78, 121), 0.45); box-shadow: 0 0 0 3px rgba(var(--app-accent-rgb, 31, 78, 121), 0.08); }
+.nx-auto-form-field input:focus, .nx-auto-form-field select:focus { border-color: rgba(var(--app-accent-rgb, 99, 102, 241), 0.45); box-shadow: 0 0 0 3px rgba(var(--app-accent-rgb, 99, 102, 241), 0.08); }
 .nx-auto-presets { display: flex; flex-wrap: wrap; gap: 8px; }
 .nx-auto-preset { border: 1px solid var(--nx-border, #e4e9f0); background: var(--nx-bg-surface, #fff); border-radius: 999px; padding: 6px 12px; font-size: 12px; color: var(--nx-text-secondary, #64748b); cursor: pointer; }
-.nx-auto-preset.active { border-color: rgba(var(--app-accent-rgb, 31, 78, 121), 0.5); background: rgba(var(--app-accent-rgb, 31, 78, 121), 0.08); color: var(--app-accent, #1f4e79); font-weight: 600; }
+.nx-auto-preset.active { border-color: rgba(var(--app-accent-rgb, 99, 102, 241), 0.5); background: rgba(var(--app-accent-rgb, 99, 102, 241), 0.08); color: var(--app-accent, #6366f1); font-weight: 600; }
 .nx-auto-custom-trigger { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
 .nx-auto-custom-unit { font-size: 12px; color: var(--nx-text-secondary, #64748b); }
 .nx-auto-modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 12px 18px 16px; }
 .nx-auto-btn { border: none; border-radius: 10px; padding: 9px 20px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
-.nx-auto-btn.primary { background: var(--app-accent, #1f4e79); color: #fff; }
+.nx-auto-btn.primary { background: var(--app-accent, #6366f1); color: #fff; }
 .nx-auto-btn.primary:hover { filter: brightness(1.06); }
 .nx-auto-btn.ghost { background: var(--nx-bg-tertiary, #eef1f6); color: var(--nx-text-secondary, #64748b); }
 .nx-auto-fade-enter-active, .nx-auto-fade-leave-active { transition: opacity 0.16s; }
@@ -176,11 +176,7 @@
   .nx-auto-skeleton::after { animation: none; }
 }
 
-/* 开关轨令牌（浅色定义；暗色随块翻转） */
-:root { --nx-switch-track: #d5dce6; }
-[data-theme="dark"] {
-  --nx-switch-track: #3b4a5f;
-}
+/* 开关轨令牌 --nx-switch-track 已收归 nexus-tokens.css（浅色/暗色双份） */
 [data-theme="dark"] .nx-auto-skeleton::after {
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
 }

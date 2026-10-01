@@ -119,6 +119,13 @@ NexusUtils.scrollLock.unlock();
 - **弹层滚动锁定**：modal/drawer/settings/side-panel 已内置 `NexusUtils.scrollLock`，业务自建弹层必须复用它（计数器制，勿直接写 `document.body.style.overflow`）。
 - **safe-area / 视口高度**：CSS 变量 `--nx-safe-{bottom,top,left,right}`（safe-area env 别名，令牌单源 nexus-tokens.css）与 `--nx-vh`（dvh 降级，nexus-mobile.css 提供），固定底栏/抽屉高度一律 `calc(xx + var(--nx-safe-bottom))`，全屏高度用 `var(--nx-vh) * 100` 或 `100dvh`。
 
+### 布局骨架与层级契约（v2.33.0+，宿主必读）
+
+- **顶栏高度单源**：`--nxs-header-h`（默认 56px，nexus-tokens.css 定义）。nux-layout 的 header/aside/main、topnav-drawer、移动端通知面板全部引用它并自动叠加 `--nx-safe-top`；宿主改顶栏高度只需 `:root { --nxs-header-h: 64px }`，禁止在业务里写死 56px。
+- **z-index 只用令牌**：阶梯（低→高）nav 90 → header 100 → side-mask 110 → side-panel 120 → trigger/hamburger 150 → popover 180 → modal 200 → settings 400 → overlay 998 → drawer 999 → toast-host 1100 → unlock 1150 → topmost 1200。导航抽屉（drawer 999）刻意置顶于 modal/settings——抽屉打开期间二者的 header 触发器不可达，不会叠加；通知下拉用 popover（180），不再压住 modal。业务自建浮层必须消费 `--nx-z-*`，禁止裸数字。
+- **弹层关闭契约对称**：nux-modal 与 nux-drawer 均支持 `esc-close` / `close-on-overlay`（默认 true）。
+- **组件取值域**：语义色 prop 新组件统一 `variant`（存量 nux-tag/nux-badge 的 `type` 保留兼容）；nux-button `size` 接受 `sm/md/lg` 及 `small/medium/large` 别名（自动归一）；nux-select 无论选项 value 是 string/number/boolean，emit 回业务时保持原类型（原生 select 的字符串化在组件内消化）。
+
 ### NexusStore
 
 ```javascript

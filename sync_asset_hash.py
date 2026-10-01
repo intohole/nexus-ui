@@ -55,7 +55,9 @@ def sync_html(path: str, base_dir: str, fix: bool, add: bool = False):
 
     def repl(match: "re.Match[str]") -> str:
         url = match.group("url")
-        if url.startswith(SKIP_URL_PREFIX) or HTML_TARGET_RE.search(url.split("?")[0]):
+        # 纯锚点/带 fragment 的页内跳转（如 index.html#features）不是资源，禁止加指纹——
+        # 否则指纹被拼进 fragment 导致锚点失效（playground.html 曾中招）。
+        if url.startswith(SKIP_URL_PREFIX) or "#" in url or HTML_TARGET_RE.search(url.split("?")[0]):
             return match.group(0)
         if "h=" not in url:
             if not add or VERSION_PARAM_RE.search(url):

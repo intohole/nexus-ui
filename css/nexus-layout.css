@@ -11,11 +11,13 @@
     top: 0;
     left: 0;
     right: 0;
-    height: 56px;
+    height: calc(var(--nxs-header-h, 56px) + var(--nx-safe-top, 0px));
+    padding-top: var(--nx-safe-top, 0px);
     display: flex;
     align-items: center;
     gap: var(--nx-space-3);
-    padding: 0 var(--nx-space-4);
+    padding-left: var(--nx-space-4);
+    padding-right: var(--nx-space-4);
     background: var(--nx-bg-surface);
     border-bottom: 1px solid var(--nx-border);
     z-index: var(--nx-z-header);
@@ -50,7 +52,7 @@
 /* ========== Sidebar Layout ========== */
 .nux-layout-sidebar .nux-layout-aside {
     position: fixed;
-    top: 56px;
+    top: calc(var(--nxs-header-h, 56px) + var(--nx-safe-top, 0px));
     left: 0;
     bottom: 0;
     width: var(--nxs-w, 240px);
@@ -70,10 +72,10 @@
 
 .nux-layout-sidebar .nux-layout-main {
     margin-left: var(--nxs-w, 240px);
-    margin-top: 56px;
+    margin-top: calc(var(--nxs-header-h, 56px) + var(--nx-safe-top, 0px));
     padding: var(--nx-space-6);
-    min-height: calc(100vh - 56px);
-    min-height: calc(100dvh - 56px);
+    min-height: calc(100vh - var(--nxs-header-h, 56px) - var(--nx-safe-top, 0px));
+    min-height: calc(100dvh - var(--nxs-header-h, 56px) - var(--nx-safe-top, 0px));
 }
 
 /* ========== TopNav Layout ========== */
@@ -108,7 +110,7 @@
 .nux-layout-topnav-drawer {
     display: none;
     position: fixed;
-    top: 56px;
+    top: calc(var(--nxs-header-h, 56px) + var(--nx-safe-top, 0px));
     left: 0;
     bottom: 0;
     width: 280px;
@@ -168,6 +170,7 @@
 }
 
 .nux-layout-nav-item {
+    position: relative;
     display: flex;
     align-items: center;
     gap: var(--nx-space-3);
@@ -219,10 +222,6 @@
 .nux-layout-nav-icon svg {
     display: block;
     margin: 0 auto;
-}
-
-.nux-layout-nav-item {
-    position: relative;
 }
 
 .nux-layout-nav-badge {
@@ -295,8 +294,10 @@
 }
 
 /* ========== Utility Classes ========== */
-.nx-hide-mobile { }
-.nx-show-mobile { display: none !important; }@media (max-width: 768px){
+/* nx-show-mobile 移动端强制 flex 是有意设计：.nx-hamburger 基础态 display:none，
+   依赖此 !important 翻转显示并让其 align/justify 居中生效（全工作区消费者均为汉堡钮）。 */
+.nx-show-mobile { display: none !important; }
+@media (max-width: 768px) {
     .nx-hide-mobile { display: none !important; }
     .nx-show-mobile { display: flex !important; }
 }
@@ -377,7 +378,9 @@
 .nux-layout-bottom-nav-item.active {
     color: var(--app-accent, var(--nx-primary));
     font-weight: 500;
-}@media (max-width: 768px){
+}
+
+@media (max-width: 768px) {
     .nx-bottom-nav-mode .nux-layout-aside {
         display: none;
     }
@@ -474,6 +477,8 @@
     background: var(--nx-danger, #ef4444);
     border-radius: 999px;
     pointer-events: none;
-}@media (max-width: 768px){
+}
+
+@media (max-width: 768px) {
     .nux-bottom-nav { display: flex; }
 }

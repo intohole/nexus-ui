@@ -4,7 +4,9 @@
         props: {
             modelValue: { type: Boolean, default: false },
             side: { type: String, default: 'left' },
-            width: { type: String, default: '280px' }
+            width: { type: String, default: '280px' },
+            escClose: { type: Boolean, default: true },
+            closeOnOverlay: { type: Boolean, default: true }
         },
         emits: ['update:modelValue'],
         setup(props, { emit }) {
@@ -12,10 +14,11 @@
             let restoreFocusEl = null;
 
             const close = () => emit('update:modelValue', false);
+            const onOverlayClick = () => { if (props.closeOnOverlay) close(); };
 
             function onKeydown(e) {
                 if (e.key === 'Escape') {
-                    if (props.modelValue) close();
+                    if (props.escClose && props.modelValue) close();
                     return;
                 }
                 if (e.key !== 'Tab') return;
@@ -59,12 +62,12 @@
                 if (props.modelValue && window.NexusUtils) NexusUtils.scrollLock.unlock();
             });
 
-            return { refs, close };
+            return { refs, close, onOverlayClick };
         },
         template: `
             <teleport to="body">
                 <transition name="nux-drawer-overlay">
-                    <div v-if="modelValue" class="nx-drawer-overlay" :class="{'open': modelValue}" @click="close"></div>
+                    <div v-if="modelValue" class="nx-drawer-overlay" :class="{'open': modelValue}" @click="onOverlayClick"></div>
                 </transition>
                 <transition :name="side === 'right' ? 'nux-drawer-right' : 'nux-drawer-left'">
                     <div v-if="modelValue" ref="refs"

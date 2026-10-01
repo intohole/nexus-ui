@@ -332,12 +332,11 @@
   z-index: var(--nx-z-topmost);
   display: flex; align-items: center; gap: 14px;
   padding: 10px 14px 10px 18px;
-  background: #475569;
+  background: var(--nx-undo-bg, #475569);
   border-radius: 999px;
   box-shadow: var(--nx-shadow-lg);
   max-width: calc(100vw - 24px);
 }
-[data-theme="dark"] .nux-undo-toast { background: #64748b; }
 .nux-undo-toast.raised {
   bottom: calc(var(--nux-undo-bottom, 88px) + 66px + var(--nx-safe-bottom));
 }
@@ -346,7 +345,7 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .nux-undo-btn {
-  background: #ffffff; color: #475569;
+  background: var(--nx-undo-btn-bg, #ffffff); color: var(--nx-undo-bg, #475569);
   border: none; border-radius: 999px;
   padding: 5px 16px; font-size: 13px; font-weight: 700;
   cursor: pointer; flex-shrink: 0;

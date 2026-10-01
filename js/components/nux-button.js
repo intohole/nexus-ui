@@ -1,20 +1,24 @@
 (function() {
+    const SIZE_ALIAS = { small: 'sm', medium: 'md', large: 'lg' };
     const NuxButton = {
         name: 'NuxButton',
         props: {
             variant: { type: String, default: 'primary' },
-            size: { type: String, default: 'md' },
+            size: { type: String, default: 'md', validator: v => ['sm', 'md', 'lg', 'small', 'medium', 'large'].includes(v) },
             block: { type: Boolean, default: false },
             disabled: { type: Boolean, default: false },
             loading: { type: Boolean, default: false }
         },
         emits: ['click'],
         computed: {
+            normSize() {
+                return SIZE_ALIAS[this.size] || this.size;
+            },
             cls() {
                 return [
                     'nux-btn',
                     'nux-btn--' + this.variant,
-                    this.size !== 'md' ? 'nux-btn--' + this.size : '',
+                    this.normSize !== 'md' ? 'nux-btn--' + this.normSize : '',
                     this.block ? 'nux-btn--block' : ''
                 ].filter(Boolean).join(' ');
             }

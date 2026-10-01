@@ -70,6 +70,9 @@
   --nx-warning-soft: rgba(245, 158, 11, 0.12);
   --nx-warning-text: var(--nx-warning);
   --nx-chat-kb: var(--nx-bg-elevated);
+  --nx-switch-track: #d5dce6;
+  --nx-undo-bg: #475569;
+  --nx-undo-btn-bg: #ffffff;
 }
 
 :root {
@@ -115,16 +118,28 @@
 }
 
 :root {
+  /* 布局骨架（nexus-layout.css 消费；宿主可覆盖 --nxs-header-h 调整顶栏高度） */
+  --nxs-header-h: 56px;
+}
+
+/*
+ * 层级阶梯（由低到高）。约束：
+ * - 弹层（modal 200）之下的触发器（trigger/hamburger/popover）：模态打开时页面交互被遮罩接管；
+ * - 导航抽屉（drawer 999）刻意置顶于 modal/settings——移动端导航抽屉是最高优先级交互面，
+ *   且 modal/settings 的触发器都在 header（100），抽屉打开期间不可达，二者不会叠加。
+ * - toast-host(1100) / unlock(1150) / topmost(1200) 永远在最上层。
+ */
+:root {
   --nx-z-nav: 90;
   --nx-z-fab: 99;
   --nx-z-header: 100;
   --nx-z-side-mask: 110;
   --nx-z-side-panel: 120;
   --nx-z-trigger: 150;
+  --nx-z-hamburger: 150;
+  --nx-z-popover: 180;
   --nx-z-modal: 200;
-  --nx-z-popover: 250;
   --nx-z-toast: 300;
-  --nx-z-hamburger: 310;
   --nx-z-settings: 400;
   --nx-z-settings-panel: 401;
   --nx-z-overlay: 998;
@@ -195,6 +210,9 @@
   --nx-warning-soft: rgba(251, 191, 36, 0.15);
   --nx-warning-text: var(--nx-warning);
   --nx-chat-kb: var(--nx-bg-elevated);
+  --nx-switch-track: #3b4a5f;
+  --nx-undo-bg: #64748b;
+  --nx-undo-btn-bg: #ffffff;
 }
 
 /*

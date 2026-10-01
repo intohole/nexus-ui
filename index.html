@@ -6,8 +6,8 @@
 <title>Nexus UI — 开源 Vue 3 设计系统，引入即用</title>
 <meta name="description" content="Nexus UI 是一套开源的 Vue 3 CDN 设计系统：75 个组件、27 套应用主题、移动端适配内置，两行代码引入即用，零构建。">
 <link rel="icon" href="icon.svg?h=f31d40e7e3" type="image/svg+xml">
-<link rel="stylesheet" href="css/nexus-all.css?h=acf0116d32">
-<link rel="stylesheet" href="site/site.css?h=431b16a42e">
+<link rel="stylesheet" href="css/nexus-all.css?h=26ccb1928b">
+<link rel="stylesheet" href="site/site.css?h=d6ff9432c4">
 </head>
 <body class="app-nexus-ui">
 <div id="app" v-cloak>
@@ -26,7 +26,7 @@
   <section class="hero">
     <div class="wrap">
       <div class="hero-title">
-        <p class="eyebrow">Nexus UI · v2.32.0 · MIT 开源</p>
+        <p class="eyebrow">Nexus UI · v2.33.0 · MIT 开源</p>
         <h1>引入两行，<br><em>设计系统</em>就位</h1>
         <p class="lede">为 Vue 3 CDN 应用打造的开源设计系统。75 个组件、27 套应用主题、移动端适配全部内置——把时间留给产品本身。</p>
         <div class="hero-cta">
@@ -34,8 +34,8 @@
           <a class="btn btn-ghost" href="#quickstart">两行接入</a>
         </div>
         <div class="hero-meta" role="list" aria-label="关键数据">
-          <span class="meta-pill">57 组件</span>
-          <span class="meta-pill">13 Composables</span>
+          <span class="meta-pill">75 组件</span>
+          <span class="meta-pill">3 Composables</span>
           <span class="meta-pill">27 主题</span>
           <span class="meta-pill">0 构建</span>
         </div>
@@ -60,7 +60,7 @@
           <nux-chip-group v-model="chips" :options="chipOpts" :multiple="true"></nux-chip-group>
         </div>
         <div class="board-row">
-          <nux-stat-card icon="🧩" value="56" label="组件"></nux-stat-card>
+          <nux-stat-card icon="🧩" value="75" label="组件"></nux-stat-card>
           <nux-stat-card icon="🎨" value="27" label="主题"></nux-stat-card>
           <nux-button :loading="busy" @click="poke">试试交互</nux-button>
         </div>
@@ -79,29 +79,24 @@
       <div class="spec-grid">
         <div class="spec-col">
           <article class="spec-card big reveal">
-            <div class="spec-num">01</div>
             <h3>零构建，两行接入</h3>
             <p>不装依赖、不搭脚手架，一行 CSS 一行 JS 即刻生效。全集群共享浏览器缓存，从第二个应用起，加载成本趋近于零。</p>
           </article>
           <article class="spec-card big reveal">
-            <div class="spec-num">02</div>
             <h3>27 套主题，一套组件</h3>
             <p>点右上角「主题罗盘」，整页即时换肤。每个应用只需一个 body class，主色与浅色、深色模式全部联动。</p>
           </article>
         </div>
         <div class="spec-col">
           <article class="spec-card reveal">
-            <div class="spec-num">03</div>
             <h3>移动端适配收口</h3>
             <p>安全区、dvh、44px 触摸命中区、软键盘适配都在中间件完成，业务代码不写一行媒体查询。</p>
           </article>
           <article class="spec-card reveal">
-            <div class="spec-num">04</div>
             <h3>生产级 API 客户端</h3>
             <p>重试、超时、取消、401 统一处理、CRUD 工厂、SSE 流式。AI 对话与 Markdown 安全渲染开箱即用。</p>
           </article>
           <article class="spec-card reveal">
-            <div class="spec-num">05</div>
             <h3>版本统一收口</h3>
             <p>deps.json 是全工作区 CDN 版本的唯一事实来源，check_deps.py 一键校验，杜绝版本漂移。</p>
           </article>
@@ -151,10 +146,10 @@
       <div class="codeblock reveal">
         <button class="code-copy" @click="copyQuick">复制</button>
 <pre><span class="c-t">&lt;link</span> <span class="c-a">rel=</span><span class="c-s">"stylesheet"</span>
-      <span class="c-a">href=</span><span class="c-s">"https://songguokr.com/nexus-ui/v2.32.0/css/nexus-all.css"</span><span class="c-t">&gt;</span>
-<span class="c-t">&lt;script</span> <span class="c-a">src=</span><span class="c-s">"https://songguokr.com/nexus-ui/v2.32.0/vendor/vue.global.prod.js"</span><span class="c-t">&gt;&lt;/script&gt;</span>
-<span class="c-t">&lt;script</span> <span class="c-a">src=</span><span class="c-s">"https://songguokr.com/nexus-ui/v2.32.0/js/nexus-all.js"</span><span class="c-t">&gt;&lt;/script&gt;</span>
-<span class="c-t">&lt;script</span> <span class="c-a">src=</span><span class="c-s">"https://songguokr.com/nexus-ui/v2.32.0/js/components/nux-button.js"</span><span class="c-t">&gt;&lt;/script&gt;</span>
+      <span class="c-a">href=</span><span class="c-s">"https://songguokr.com/nexus-ui/v2.33.0/css/nexus-all.css"</span><span class="c-t">&gt;</span>
+<span class="c-t">&lt;script</span> <span class="c-a">src=</span><span class="c-s">"https://songguokr.com/nexus-ui/v2.33.0/vendor/vue.global.prod.js"</span><span class="c-t">&gt;&lt;/script&gt;</span>
+<span class="c-t">&lt;script</span> <span class="c-a">src=</span><span class="c-s">"https://songguokr.com/nexus-ui/v2.33.0/js/nexus-all.js"</span><span class="c-t">&gt;&lt;/script&gt;</span>
+<span class="c-t">&lt;script</span> <span class="c-a">src=</span><span class="c-s">"https://songguokr.com/nexus-ui/v2.33.0/js/components/nux-button.js"</span><span class="c-t">&gt;&lt;/script&gt;</span>
 
 app.component(<span class="c-s">'nux-button'</span>, NuxButton)</pre>
       </div>
@@ -176,24 +171,26 @@ app.component(<span class="c-s">'nux-button'</span>, NuxButton)</pre>
   <div class="wrap">
     <span class="brand">NEXUS UI</span>
     <span>MIT License</span>
-    <span>v2.32.0</span>
+    <span>v2.33.0</span>
     <div class="sp">
       <a href="https://github.com/intohole/nexus-ui" target="_blank" rel="noopener">GitHub</a>
       <a href="playground.html">Playground</a>
+      <a href="about.html">关于</a>
+      <a href="help.html">帮助</a>
       <a href="https://songguokr.com" target="_blank" rel="noopener">songguokr.com</a>
     </div>
   </div>
 </footer>
 </div>
-<script src="https://songguokr.com/nexus-ui/v2.32.0/vendor/vue.global.prod.js"></script>
-<script src="js/nexus-all.js?h=37e760d446"></script>
-<script src="js/components/nux-button.js?h=527fa4e3ed"></script>
+<script src="https://songguokr.com/nexus-ui/v2.33.0/vendor/vue.global.prod.js"></script>
+<script src="js/nexus-all.js?h=fe377340b0"></script>
+<script src="js/components/nux-button.js?h=346e809263"></script>
 <script src="js/components/nux-switch.js?h=9312a2a61b"></script>
 <script src="js/components/nux-segmented.js?h=ca2c5d3910"></script>
 <script src="js/components/nux-chip-group.js?h=4495987a19"></script>
 <script src="js/components/nux-progress.js?h=813ed49499"></script>
 <script src="js/components/nux-stat-card.js?h=2d9e234814"></script>
 <script src="site/site.js?h=24c5f76287"></script>
-<script src="site/landing.js?h=6b48ea74b9"></script>
+<script src="site/landing.js?h=c75549a30f"></script>
 </body>
 </html>
