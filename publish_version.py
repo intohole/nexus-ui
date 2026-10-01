@@ -28,7 +28,7 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent
-EXCLUDE_DIRS = {".git", "__pycache__", "logs", "node_modules", "dist", ".venv", "venv"}
+EXCLUDE_DIRS = {".git", "__pycache__", "logs", "node_modules", "dist", ".venv", "venv", "data"}
 SNAPSHOT_RE = re.compile(r"^v\d+(?:\.\d+)+$")
 HASH_PARAM_RE = re.compile(r"(^|[&?])h=[0-9a-f]{10}(?=&|$)")
 
@@ -39,8 +39,11 @@ def tree_files(root: Path) -> dict[str, Path]:
         if not p.is_file():
             continue
         rel = p.relative_to(root)
-        if any(part in EXCLUDE_DIRS or SNAPSHOT_RE.match(part) for part in rel.parts):
-            continue
+        parts = rel.parts
+        if any(part in EXCLUDE_DIRS or SNAPSHOT_RE.match(part) for part in parts):
+            # 例外: js/data/ 是组件演示数据, 随 .gitignore 的 !js/data/ 语义保留
+            if not (len(parts) >= 2 and parts[0] == "js" and parts[1] == "data"):
+                continue
         if p.suffix == ".pyc":
             continue
         out[rel.as_posix()] = p
