@@ -615,6 +615,10 @@
             };
         },
 
+        authToken() {
+            return utils.createDualStorage('uc_access_token').getItem() || '';
+        },
+
         clearAuthState() {
             try {
                 const ds = utils.createDualStorage('uc_access_token');
