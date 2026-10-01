@@ -361,7 +361,7 @@
   bottom: calc(var(--nux-undo-bottom, 88px) + 66px + var(--nx-safe-bottom));
 }
 .nux-undo-text {
-  font-size: 13px; color: #ffffff;
+  font-size: 13px; color: var(--nx-text-on-accent);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .nux-undo-btn {

@@ -1,5 +1,5 @@
 (function() {
-    const modalStack = [];
+    const modalStack = NexusUtils.overlayStack();
     let modalUid = 0;
     const NuxModal = {
         name: 'NuxModal',
@@ -15,62 +15,24 @@
         setup(props, { emit }) {
             const refs = Vue.ref(null);
             const uid = ++modalUid;
-            let restoreFocusEl = null;
-            const isTop = () => modalStack[modalStack.length - 1] === uid;
-
-            function onKeydown(e) {
-                if (!isTop()) return;
-                if (e.key === 'Escape') {
-                    if (props.escClose) close();
-                    return;
-                }
-                if (e.key !== 'Tab') return;
-                const list = NexusUtils.focusables(refs.value);
-                if (!list.length) return;
-                const first = list[0];
-                const last = list[list.length - 1];
-                if (e.shiftKey && document.activeElement === first) {
-                    e.preventDefault();
-                    last.focus();
-                } else if (!e.shiftKey && document.activeElement === last) {
-                    e.preventDefault();
-                    first.focus();
-                }
-            }
+            const close = () => emit('update:modelValue', false);
+            const overlay = NexusUtils.overlayBehavior({
+                panel: () => refs.value,
+                stack: modalStack,
+                uid: uid,
+                canInteract: () => modalStack.isTop(uid),
+                escEnabled: () => props.escClose,
+                requestClose: close
+            });
 
             Vue.watch(() => props.modelValue, (open) => {
                 Vue.nextTick(() => {
-                    if (open) {
-                        modalStack.push(uid);
-                        if (window.NexusUtils) NexusUtils.scrollLock.lock();
-                        if (document.activeElement && document.activeElement !== document.body) {
-                            restoreFocusEl = document.activeElement;
-                        }
-                        document.addEventListener('keydown', onKeydown);
-                        Vue.nextTick(() => {
-                            const list = NexusUtils.focusables(refs.value);
-                            if (list.length) list[0].focus();
-                        });
-                    } else {
-                        document.removeEventListener('keydown', onKeydown);
-                        const idx = modalStack.indexOf(uid);
-                        if (idx > -1) modalStack.splice(idx, 1);
-                        if (window.NexusUtils) NexusUtils.scrollLock.unlock();
-                        if (restoreFocusEl && restoreFocusEl.focus) {
-                            restoreFocusEl.focus();
-                        }
-                        restoreFocusEl = null;
-                    }
+                    if (open) overlay.acquire();
+                    else overlay.release();
                 });
             });
-            Vue.onBeforeUnmount(() => {
-                document.removeEventListener('keydown', onKeydown);
-                const idx = modalStack.indexOf(uid);
-                if (idx > -1) modalStack.splice(idx, 1);
-                if (props.modelValue && window.NexusUtils) NexusUtils.scrollLock.unlock();
-            });
+            Vue.onBeforeUnmount(() => overlay.release());
 
-            const close = () => emit('update:modelValue', false);
             const onOverlayClick = () => { if (props.closeOnOverlay) close(); };
             const confirm = () => { emit('confirm'); close(); };
             const cancel = () => { emit('cancel'); close(); };

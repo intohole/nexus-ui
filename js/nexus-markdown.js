@@ -122,13 +122,6 @@
         return libsLoading;
     }
 
-    function escapeHtml(str) {
-        if (str === null || str === undefined) return '';
-        return String(str)
-            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    }
-
     function wrapBareLatex(text) {
         const BARE_OPS = 'times|cdot|pm|mp|le|leq|ge|geq|ne|neq|approx|equiv|infty|partial|nabla|alpha|beta|gamma|delta|epsilon|theta|lambda|mu|pi|sigma|phi|omega|sum|prod|int|sqrt|vec|left|right|begin|end|qquad|quad';
         const BARE_LATEX_RE = new RegExp('\\\\[a-zA-Z]+\\s*(?:\\[[^\\]]*\\]\\s*)?(?:\\{[^{}]*\\})+|\\\\(' + BARE_OPS + ')(?![a-zA-Z])', 'g');
@@ -196,11 +189,11 @@
                 try {
                     const hasCJK = /[\u4e00-\u9fff]/.test(body);
                     const looksMath = /[\\^_{}]/.test(body);
-                    if (hasCJK && !looksMath) return escapeHtml(body);
+                    if (hasCJK && !looksMath) return NexusUtils.escapeHtml(body);
                     return katex.renderToString(body, { displayMode: display, throwOnError: false, strict: false });
                 } catch (e) {}
             }
-            return escapeHtml(body);
+            return NexusUtils.escapeHtml(body);
         });
     }
 
@@ -253,7 +246,7 @@
                 console.warn('[NexusMarkdown] render fail:', e);
             }
         }
-        return escapeHtml(normalized).replace(/\n/g, '<br>');
+        return NexusUtils.escapeHtml(normalized).replace(/\n/g, '<br>');
     }
 
     async function renderAsync(text, options) {
@@ -332,7 +325,7 @@
 
     function applyDirective(el, value, opts) {
         const text = value === null || value === undefined ? '' : String(value);
-        const fallback = () => { el.innerHTML = escapeHtml(text).replace(/\n/g, '<br>'); };
+        const fallback = () => { el.innerHTML = NexusUtils.escapeHtml(text).replace(/\n/g, '<br>'); };
         if (!window.NexusMarkdown) { fallback(); return; }
         NexusMarkdown.injectLibs().then(() => {
             el.innerHTML = NexusMarkdown.render(text, opts);
@@ -355,7 +348,7 @@
         renderAsync,
         renderTo,
         renderToAsync,
-        escapeHtml,
+        escapeHtml: NexusUtils.escapeHtml,
         postProcess,
         directive,
         install,

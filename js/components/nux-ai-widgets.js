@@ -367,7 +367,4 @@
     };
 
     window.NuxAiWidgets = NuxAiWidgets;
-    if (window.Vue && Vue.component) {
-        try { Vue.component('nux-ai-widgets', NuxAiWidgets); } catch (e) {}
-    }
 })();

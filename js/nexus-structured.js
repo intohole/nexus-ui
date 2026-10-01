@@ -82,13 +82,6 @@
         return { kind: 'raw', text: stringifyVal(body) };
     }
 
-    function escapeHtml(str) {
-        if (str === null || str === undefined) return '';
-        return String(str)
-            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    }
-
     async function injectLibs() {
         if (window.NexusMarkdown && typeof window.NexusMarkdown.injectLibs === 'function') {
             return window.NexusMarkdown.injectLibs();
@@ -218,7 +211,7 @@
         build: build,
         format: format,
         isError: isError,
-        escapeHtml: escapeHtml,
+        escapeHtml: NexusUtils.escapeHtml,
         injectLibs: injectLibs,
         StructuredController: StructuredController,
         consume: consume

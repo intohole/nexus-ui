@@ -112,9 +112,9 @@
 .nxsp-item-ico {
     width: 34px; height: 34px; flex-shrink: 0; border-radius: 9px;
     display: inline-flex; align-items: center; justify-content: center;
-    font-size: 16px; color: #fff; background: var(--nxsp-tint-strong);
+    font-size: 16px; color: var(--nx-text-on-accent); background: var(--nxsp-tint-strong);
 }
-.nxsp-item-ico.is-grad { color: #fff; }
+.nxsp-item-ico.is-grad { color: var(--nx-text-on-accent); }
 .nxsp-item-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .nxsp-item-title {
     font-size: 13.5px; color: var(--nxsp-text);
@@ -196,7 +196,7 @@
 }
 .nxsp-personal-badge {
     flex-shrink: 0; padding: 1px 7px; border-radius: 999px; font-size: 12px; font-weight: 600;
-    font-style: normal; color: #fff; background: var(--nxsp-accent);
+    font-style: normal; color: var(--nx-text-on-accent); background: var(--nxsp-accent);
 }
 .nxsp-personal-desc {
     font-size: 12px; color: var(--nxsp-text-muted);

@@ -40,8 +40,28 @@
             const walletDirection = Vue.ref('all');
             const catalog = Vue.ref(null);
             const meters = Vue.ref(null);
+            const billing = Vue.ref(null);
+            const packages = Vue.ref([]);
+            const recharging = Vue.ref(false);
+            const claiming = Vue.ref(false);
             const walletLoading = Vue.ref(false);
             const walletPageSize = 20;
+
+            const APP_NAMES = {
+                golden: '金股标', resumeAI: '跃职', aiPet: 'AI 宠物', geniusStudent: '贴身家教',
+                verseCraft: '小说工坊', MiaoBi: '妙笔', promptGenius: '提示词天才', travelMate: '旅行助手',
+                LifeCompass: '司南', codeBlock: '代码块', suki: 'Suki', oneNote: '笔记', challengePlanet: '星轨'
+            };
+
+            const lowBalance = Vue.computed(function() {
+                return !!(wallet.value && typeof wallet.value.balance === 'number' && wallet.value.balance < 200);
+            });
+            const canClaimDaily = Vue.computed(function() {
+                return !!(wallet.value && wallet.value.daily_gift && !wallet.value.daily_gift.granted_today);
+            });
+            const isFormal = Vue.computed(function() {
+                return !!(wallet.value && wallet.value.charge_mode === 'formal');
+            });
 
             const confirmMismatch = Vue.computed(function() {
                 return confirmPassword.value && newPassword.value && newPassword.value !== confirmPassword.value;
@@ -262,14 +282,71 @@
                     props.sdk.getPointsSummary(),
                     loadWalletTxs(),
                     props.sdk.getPointsCatalog(window.ucConfig && window.ucConfig.app_key),
-                    props.sdk.getMetersSummary()
+                    props.sdk.getMetersSummary(),
+                    props.sdk.getBillingSummary()
                 ]).then(function(results) {
                     if (results[0] && results[0].success) wallet.value = results[0].data;
                     if (results[2] && results[2].success) catalog.value = results[2].data;
                     if (results[3] && results[3].success) meters.value = results[3].data;
+                    if (results[4] && results[4].success) billing.value = results[4].data;
+                    if (isFormal.value && !packages.value.length) loadPackages();
                 }).catch(function() {}).finally(function() {
                     walletLoading.value = false;
                 });
+            }
+
+            function loadPackages() {
+                props.sdk.getCreditPackages().then(function(res) {
+                    if (res && res.success) packages.value = (res.data && res.data.items) || [];
+                }).catch(function() {});
+            }
+
+            function claimDaily() {
+                if (claiming.value) return;
+                claiming.value = true;
+                props.sdk.getPointsSummary().then(function(res) {
+                    if (res && res.success) {
+                        wallet.value = res.data;
+                        if (wallet.value.daily_gift && wallet.value.daily_gift.granted_today) {
+                            toast('今日 ' + wallet.value.daily_gift.amount + ' 积分已到账');
+                            loadWalletTxs();
+                        } else {
+                            toast('今日赠送待领取，稍后再来看看', 'info');
+                        }
+                    }
+                }).catch(function() {}).finally(function() {
+                    claiming.value = false;
+                });
+            }
+
+            function buyPackage(p) {
+                if (recharging.value) return;
+                recharging.value = true;
+                props.sdk.createCreditOrder(p.id).then(function(res) {
+                    if (!res || !res.success) throw new Error((res && res.message) || '下单失败');
+                    const order = res.data;
+                    return props.sdk.payCreditOrder(order.order_no).then(function(payRes) {
+                        if (payRes && payRes.success) {
+                            toast('充值成功，' + (order.points + (order.bonus_points || 0)) + ' 积分已到账');
+                            loadWallet();
+                        } else {
+                            return props.sdk.cancelCreditOrder(order.order_no).catch(function() {})
+                                .then(function() { toast('支付渠道即将开放，敬请期待', 'info'); });
+                        }
+                    });
+                }).catch(function(e) {
+                    toast(e.message || '充值未完成', 'error');
+                }).finally(function() {
+                    recharging.value = false;
+                });
+            }
+
+            function appDisplayName(app) {
+                return APP_NAMES[app] || app;
+            }
+
+            function moneyLabel(cents) {
+                return '¥' + (cents / 100).toFixed(cents % 100 ? 2 : 0);
             }
 
             function loadWalletTxs() {
@@ -299,7 +376,7 @@
             function txReasonLabel(code) {
                 const map = {
                     register_gift: '注册赠送', daily_gift: '每日赠送',
-                    consume: 'AI 能力消耗', award: '运营发放'
+                    consume: 'AI 能力消耗', award: '运营发放', recharge: '充值到账'
                 };
                 return map[code] || code || '积分变动';
             }
@@ -330,10 +407,12 @@
                 showOldPwd, showNewPwd, showConfirmPwd, confirmMismatch,
                 bindError, bindTarget, bindCode, bindType, bindSending, bindSubmitting, bindCountdown,
                 wallet, walletTxs, walletTotal, walletPage, walletDirection, catalog, meters, walletLoading,
+                billing, packages, recharging, claiming, lowBalance, canClaimDaily, isFormal,
                 toggleOpen, loadSessions, changePassword, revokeSession, revokeAll, doLogout, gotoDatacenter,
                 sendBindCode, submitBind, switchBindType, boundContact,
                 avatarName, avatarInitial, deviceLabel, timeLabel,
                 loadWallet, loadWalletTxs, switchWalletDirection, walletPageDelta,
+                claimDaily, buyPackage, appDisplayName, moneyLabel,
                 txReasonLabel, chargeModeLabel, openWalletTab
             };
         },
@@ -374,6 +453,9 @@
                                         <span class="nux-wallet-unit">积分</span>
                                         <span v-if="chargeModeLabel()" class="nux-wallet-badge">{{ chargeModeLabel() }}</span>
                                     </div>
+                                    <div v-if="lowBalance" :class="['nux-wallet-warn', { formal: isFormal }]">
+                                        {{ isFormal ? '积分即将用完，正式期余额不足将无法使用 AI 能力' : '积分即将用完，明日自动赠送 200 分，体验期内不拦截' }}
+                                    </div>
                                     <div class="nux-wallet-gifts">
                                         <span :class="{ done: wallet.register_gift && wallet.register_gift.granted }">
                                             {{ wallet.register_gift ? '注册赠送 ' + wallet.register_gift.amount : '' }}{{ wallet.register_gift && wallet.register_gift.granted ? ' ✓' : '' }}
@@ -381,12 +463,38 @@
                                         <span :class="{ done: wallet.daily_gift && wallet.daily_gift.granted_today }">
                                             {{ wallet.daily_gift ? '每日赠送 ' + wallet.daily_gift.amount : '' }}{{ wallet.daily_gift && wallet.daily_gift.granted_today ? ' · 今日已领 ✓' : '' }}
                                         </span>
+                                        <button v-if="canClaimDaily" type="button" class="nux-wallet-claim" :disabled="claiming" @click="claimDaily">
+                                            {{ claiming ? '领取中…' : '领取今日积分' }}
+                                        </button>
                                     </div>
                                     <div v-if="meters && meters.month" class="nux-wallet-usage">
                                         本月 AI 调用 {{ meters.month.calls || 0 }} 次<span v-if="chargeModeLabel() === '体验期'">（体验期内平台承担）</span>
                                     </div>
                                 </div>
-                                <div class="nux-uc-sessions-head">
+                                <div v-if="billing && billing.by_app && billing.by_app.length" class="nux-wallet-block">
+                                    <div class="nux-uc-sessions-head"><span>消费汇总</span><span class="nux-wallet-sum">本月 {{ billing.month_cost || 0 }} · 累计 {{ billing.total_cost || 0 }} 积分</span></div>
+                                    <div class="nux-wallet-apps">
+                                        <div v-for="b in billing.by_app" :key="b.app" class="nux-wallet-app">
+                                            <div class="nux-wallet-app-row">
+                                                <span>{{ appDisplayName(b.app) }}</span>
+                                                <b>{{ b.cost }} 积分<i>/ {{ b.count }} 次</i></b>
+                                            </div>
+                                            <div class="nux-wallet-bar"><i :style="{ width: Math.min(100, b.ratio) + '%' }"></i></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <template v-if="isFormal && packages.length">
+                                    <div class="nux-uc-divider"></div>
+                                    <div class="nux-uc-sessions-head"><span>充值</span></div>
+                                    <div class="nux-wallet-packages">
+                                        <button v-for="p in packages" :key="p.id" type="button" class="nux-wallet-package" :disabled="recharging" @click="buyPackage(p)">
+                                            <b>{{ p.points + (p.bonus_points || 0) }} 积分</b>
+                                            <span v-if="p.bonus_points" class="nux-wallet-bonus">含赠 {{ p.bonus_points }}</span>
+                                            <i>{{ moneyLabel(p.price_cents) }}</i>
+                                        </button>
+                                    </div>
+                                </template>
+                                <div class="nux-uc-sessions-head nux-wallet-tx-head">
                                     <div class="nux-login-subtabs nux-wallet-filter">
                                         <button :class="['nux-login-subtab', { active: walletDirection === 'all' }]" type="button" @click="switchWalletDirection('all')">全部</button>
                                         <button :class="['nux-login-subtab', { active: walletDirection === 'income' }]" type="button" @click="switchWalletDirection('income')">收入</button>
@@ -417,8 +525,15 @@
                                             <b>{{ p.cost }} 积分/次</b>
                                         </div>
                                     </div>
-                                    <p class="nux-uc-tip">体验期内积分不足不拦截，可放心使用。</p>
                                 </template>
+                                <div class="nux-uc-divider"></div>
+                                <div class="nux-wallet-rules">
+                                    <b>积分规则</b>
+                                    <p>获取：注册赠 {{ wallet.register_gift ? wallet.register_gift.amount : 1000 }} 分；每日自动赠 {{ wallet.daily_gift ? wallet.daily_gift.amount : 200 }} 分{{ isFormal ? '；也可充值补充' : '' }}。</p>
+                                    <p>消耗：调用 AI 能力按上方目录价扣积分，按应用记录在消费汇总。</p>
+                                    <p v-if="!isFormal">当前为体验期：余额不足不拦截、由平台承担，正式计费开启前会提前通知。</p>
+                                    <p v-else>当前为正式期：余额不足时将无法使用 AI 能力，请及时充值。</p>
+                                </div>
                             </template>
                         </div>
                         <div v-if="tab === 'profile'" class="nux-uc-pane">

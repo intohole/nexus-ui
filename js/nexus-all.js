@@ -677,6 +677,87 @@
         });
     };
 
+    utils.overlayStack = function () {
+        const stack = [];
+        return {
+            push(uid) { stack.push(uid); },
+            remove(uid) { const i = stack.indexOf(uid); if (i > -1) stack.splice(i, 1); },
+            isTop(uid) { return stack[stack.length - 1] === uid; }
+        };
+    };
+
+    utils.overlayBehavior = function (options) {
+        const opts = options || {};
+        const canInteract = opts.canInteract || (() => true);
+        const escEnabled = opts.escEnabled || (() => true);
+        let restoreEl = null;
+        let active = false;
+
+        function trapTab(e) {
+            const panel = opts.panel ? opts.panel() : null;
+            if (!panel) return;
+            const list = utils.focusables(panel);
+            if (!list.length) return;
+            const first = list[0];
+            const last = list[list.length - 1];
+            if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
+        }
+
+        function onKeydown(e) {
+            if (!canInteract()) return;
+            if (e.key === 'Escape') {
+                if (escEnabled()) opts.requestClose();
+                return;
+            }
+            if (e.key === 'Tab' && opts.trap !== false) trapTab(e);
+        }
+
+        function focusPanel() {
+            let el = opts.focusEl ? opts.focusEl() : null;
+            if (!el && opts.panel) {
+                const list = utils.focusables(opts.panel());
+                el = list.length ? list[0] : null;
+            }
+            if (el && el.focus) {
+                try { el.focus(); } catch (e) { }
+            }
+        }
+
+        function acquire() {
+            if (active) return;
+            active = true;
+            if (opts.stack) opts.stack.push(opts.uid);
+            if (utils.scrollLock) utils.scrollLock.lock();
+            if (document.activeElement && document.activeElement !== document.body) {
+                restoreEl = document.activeElement;
+            }
+            document.addEventListener('keydown', onKeydown);
+            const schedule = (window.Vue && Vue.nextTick) ? Vue.nextTick
+                : (window.requestAnimationFrame ? window.requestAnimationFrame : function (fn) { fn(); });
+            schedule(focusPanel);
+        }
+
+        function release() {
+            if (!active) return;
+            active = false;
+            document.removeEventListener('keydown', onKeydown);
+            if (opts.stack) opts.stack.remove(opts.uid);
+            if (utils.scrollLock) utils.scrollLock.unlock();
+            if (restoreEl && restoreEl.focus) {
+                try { restoreEl.focus(); } catch (e) { }
+            }
+            restoreEl = null;
+        }
+
+        return { acquire, release };
+    };
+
     window.NexusUtils = utils;
 })();
 
@@ -1272,6 +1353,7 @@
     const DEFAULT_ERROR_MAP = {
         400: '请求参数有误，请检查后重试',
         401: '登录已过期，请重新登录',
+        402: '积分余额不足，请充值后重试',
         403: '没有权限执行此操作',
         404: '请求的资源不存在',
         408: '请求超时，请稍后重试',
@@ -1299,6 +1381,7 @@
     const ERROR_CODE_TEXT_MAP = {
         'RATE_LIMIT_EXCEEDED': '操作过于频繁，请稍后再试',
         'AUTH_ERROR': '登录已失效，请重新登录',
+        'INSUFFICIENT_CREDITS': '积分余额不足，请充值后重试',
         'FORBIDDEN': '没有权限执行此操作',
         'NOT_FOUND': '请求的资源不存在',
         'VALIDATION_ERROR': '提交的数据有误，请检查后重试',
@@ -1359,9 +1442,163 @@
         return msg || '操作失败';
     }
 
+    function isInsufficientCreditsError(err) {
+        if (!err) return false;
+        if (err.status === 402) return true;
+        const code = err.errorCode || err.code || '';
+        if (code === 'INSUFFICIENT_CREDITS') return true;
+        const msg = err.message || String(err);
+        return msg.indexOf('余额不足') !== -1;
+    }
+
     window.NexusApiError = NexusApiError;
     window.isNetworkError = isNetworkError;
+    window.isInsufficientCreditsError = isInsufficientCreditsError;
     window.mapHttpError = mapHttpError;
+})();
+
+/* ===== nexus-stream.js ===== */
+(function () {
+    const DEFAULT_IDLE_TIMEOUT = 90000;
+
+    class NexusStreamError extends Error {
+        constructor(message, status) {
+            super(message);
+            this.name = 'NexusStreamError';
+            this.status = status;
+        }
+    }
+
+    function _parseEvent(line, defaultEvent) {
+        const match = /^data:\s?/.exec(line);
+        if (!match) return null;
+        const raw = line.slice(match[0].length).trim();
+        if (!raw || raw === '[DONE]') return null;
+        let data = raw;
+        try { data = JSON.parse(raw); } catch (e) { }
+        const event = (data && typeof data === 'object' && !Array.isArray(data) && data.type)
+            ? data.type : defaultEvent;
+        return { event, data, raw };
+    }
+
+    async function* post(url, options = {}) {
+        const {
+            body,
+            headers,
+            signal = null,
+            idleTimeout = DEFAULT_IDLE_TIMEOUT,
+            onUnauthorized = null,
+            clearAuth = null,
+            defaultEvent = 'message',
+            method = 'POST',
+        } = options;
+
+        const ctrl = new AbortController();
+        let watchdog = null;
+        let timedOut = false;
+        const abort = () => { try { ctrl.abort(); } catch (e) { } };
+        const resetWatchdog = () => {
+            if (!idleTimeout) return;
+            if (watchdog) clearTimeout(watchdog);
+            watchdog = setTimeout(() => { timedOut = true; abort(); }, idleTimeout);
+        };
+        if (signal && signal.aborted) abort();
+        if (signal) signal.addEventListener('abort', abort, { once: true });
+
+        try {
+            const resp = await fetch(url, {
+                method,
+                headers,
+                body,
+                signal: ctrl.signal,
+            });
+            if (!resp.ok) {
+                if (resp.status === 401) {
+                    if (clearAuth) clearAuth();
+                    if (onUnauthorized) onUnauthorized();
+                    throw new NexusStreamError('登录已过期，请重新登录', 401);
+                }
+                const text = await resp.text().catch(() => '');
+                throw new Error('HTTP ' + resp.status + ' ' + text.slice(0, 200));
+            }
+            if (!resp.body) return;
+
+            const reader = resp.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            resetWatchdog();
+            while (true) {
+                const { done, value } = await reader.read();
+                resetWatchdog();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+                for (const line of lines) {
+                    const evt = _parseEvent(line, defaultEvent);
+                    if (evt) yield evt;
+                }
+            }
+            if (buffer) {
+                const evt = _parseEvent(buffer, defaultEvent);
+                if (evt) yield evt;
+            }
+        } catch (e) {
+            if (timedOut) throw new Error('连接超时，请重试');
+            throw e;
+        } finally {
+            if (watchdog) clearTimeout(watchdog);
+            if (signal) signal.removeEventListener('abort', abort);
+            try { ctrl.abort(); } catch (e) { }
+        }
+    }
+
+    async function read(response, options = {}) {
+        const { onChunk, onDone, onError } = options;
+        if (!response || !response.body) {
+            if (onDone) onDone();
+            return;
+        }
+        try {
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+                for (const line of lines) {
+                    const evt = _parseEvent(line, 'message');
+                    if (evt && onChunk) onChunk(evt.data, evt.event);
+                }
+            }
+            if (buffer) {
+                const evt = _parseEvent(buffer, 'message');
+                if (evt && onChunk) onChunk(evt.data, evt.event);
+            }
+            if (onDone) onDone();
+        } catch (e) {
+            if (onError) onError(e);
+            else throw e;
+        }
+    }
+
+    async function consume(url, options = {}) {
+        const { onEvent, onDone, onError } = options;
+        try {
+            for await (const evt of post(url, options)) {
+                if (onEvent) onEvent(evt.event, evt.data, evt.raw);
+            }
+            if (onDone) onDone();
+        } catch (e) {
+            if (onError) onError(e);
+            else throw e;
+        }
+    }
+
+    window.NexusStream = { post, read, consume };
 })();
 
 /* ===== nexus-api.js ===== */
@@ -1967,13 +2204,6 @@
         return libsLoading;
     }
 
-    function escapeHtml(str) {
-        if (str === null || str === undefined) return '';
-        return String(str)
-            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    }
-
     function wrapBareLatex(text) {
         const BARE_OPS = 'times|cdot|pm|mp|le|leq|ge|geq|ne|neq|approx|equiv|infty|partial|nabla|alpha|beta|gamma|delta|epsilon|theta|lambda|mu|pi|sigma|phi|omega|sum|prod|int|sqrt|vec|left|right|begin|end|qquad|quad';
         const BARE_LATEX_RE = new RegExp('\\\\[a-zA-Z]+\\s*(?:\\[[^\\]]*\\]\\s*)?(?:\\{[^{}]*\\})+|\\\\(' + BARE_OPS + ')(?![a-zA-Z])', 'g');
@@ -2041,11 +2271,11 @@
                 try {
                     const hasCJK = /[\u4e00-\u9fff]/.test(body);
                     const looksMath = /[\\^_{}]/.test(body);
-                    if (hasCJK && !looksMath) return escapeHtml(body);
+                    if (hasCJK && !looksMath) return NexusUtils.escapeHtml(body);
                     return katex.renderToString(body, { displayMode: display, throwOnError: false, strict: false });
                 } catch (e) {}
             }
-            return escapeHtml(body);
+            return NexusUtils.escapeHtml(body);
         });
     }
 
@@ -2098,7 +2328,7 @@
                 console.warn('[NexusMarkdown] render fail:', e);
             }
         }
-        return escapeHtml(normalized).replace(/\n/g, '<br>');
+        return NexusUtils.escapeHtml(normalized).replace(/\n/g, '<br>');
     }
 
     async function renderAsync(text, options) {
@@ -2177,7 +2407,7 @@
 
     function applyDirective(el, value, opts) {
         const text = value === null || value === undefined ? '' : String(value);
-        const fallback = () => { el.innerHTML = escapeHtml(text).replace(/\n/g, '<br>'); };
+        const fallback = () => { el.innerHTML = NexusUtils.escapeHtml(text).replace(/\n/g, '<br>'); };
         if (!window.NexusMarkdown) { fallback(); return; }
         NexusMarkdown.injectLibs().then(() => {
             el.innerHTML = NexusMarkdown.render(text, opts);
@@ -2200,7 +2430,7 @@
         renderAsync,
         renderTo,
         renderToAsync,
-        escapeHtml,
+        escapeHtml: NexusUtils.escapeHtml,
         postProcess,
         directive,
         install,
@@ -2517,13 +2747,6 @@
         return { kind: 'raw', text: stringifyVal(body) };
     }
 
-    function escapeHtml(str) {
-        if (str === null || str === undefined) return '';
-        return String(str)
-            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    }
-
     async function injectLibs() {
         if (window.NexusMarkdown && typeof window.NexusMarkdown.injectLibs === 'function') {
             return window.NexusMarkdown.injectLibs();
@@ -2653,7 +2876,7 @@
         build: build,
         format: format,
         isError: isError,
-        escapeHtml: escapeHtml,
+        escapeHtml: NexusUtils.escapeHtml,
         injectLibs: injectLibs,
         StructuredController: StructuredController,
         consume: consume
@@ -3090,7 +3313,6 @@
         'nux-menu-user': 'NuxMenuUser',
         'nux-modal': 'NuxModal',
         'nux-notification-bell': 'NuxNotificationBell',
-        'nux-notification-panel': 'NuxNotificationPanel',
         'nux-onboarding': 'NuxOnboarding',
         'nux-onboarding-strip': 'NuxOnboardingStrip',
         'nux-pagination': 'NuxPagination',
@@ -3617,6 +3839,20 @@ class UserCenterSDK {
         return this._request('GET', `/api/billing/catalog${q}`);
     }
     async getMetersSummary() { return this._request('GET', '/api/billing/meters/summary'); }
+    async getBillingSummary() { return this._request('GET', '/api/billing/summary'); }
+
+    async getCreditPackages() { return this._request('GET', '/api/billing/packages'); }
+    async createCreditOrder(packageId) {
+        const appKey = (window.ucConfig && window.ucConfig.app_key) || null;
+        const data = { package_id: packageId };
+        if (appKey) data.app = appKey;
+        return this._request('POST', '/api/billing/orders', data);
+    }
+    async getCreditOrders(page = 1, pageSize = 20) {
+        return this._request('GET', `/api/billing/orders?page=${page}&page_size=${pageSize}`);
+    }
+    async cancelCreditOrder(orderNo) { return this._request('POST', `/api/billing/orders/${orderNo}/cancel`); }
+    async payCreditOrder(orderNo) { return this._request('POST', `/api/billing/orders/${orderNo}/pay`); }
 
     async getAccountExport() { return this._request('GET', '/api/auth/account/export'); }
 
@@ -3791,10 +4027,7 @@ try {
     }
 
     function maskPhone(phone) {
-        if (typeof phone !== 'string') return '';
-        const p = phone.trim();
-        if (p.length >= 7) return p.slice(0, 3) + '****' + p.slice(-4);
-        return p ? '****' : '';
+        return NexusUtils.formatPhone(typeof phone === 'string' ? phone.trim() : phone);
     }
 
     function maskEmail(email) {

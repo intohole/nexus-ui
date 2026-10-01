@@ -43,6 +43,13 @@
     transform: scale(0.96);
 }
 
+@media (hover: none) and (pointer: coarse) {
+    .nx-chat-retry {
+        min-height: 44px;
+        font-size: var(--nx-text-sm, 0.875rem);
+    }
+}
+
 .nx-chat-streaming {
     background: rgba(190, 18, 60, 0.08) !important;
     border-color: rgba(190, 18, 60, 0.4) !important;

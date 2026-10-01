@@ -271,16 +271,26 @@
         mounted() {
             var self = this;
             _rootRef = this;
+            self._overlay = (window.NexusUtils && NexusUtils.overlayBehavior) ? NexusUtils.overlayBehavior({
+                panel: function () { return self.$el ? self.$el.querySelector('.nxs-panel') : null; },
+                escEnabled: function () { return self.open; },
+                requestClose: function () { self.open = false; }
+            }) : null;
             _keyHandler = function(e) { if (e.key === 'Escape') self.open = false; };
             _resizeHandler = function() { self.syncSideOffset(); };
             document.addEventListener('keydown', _keyHandler);
             window.addEventListener('resize', _resizeHandler);
+            this.$watch('open', function(v) {
+                if (!self._overlay) return;
+                if (v) self._overlay.acquire(); else self._overlay.release();
+            });
             this.syncSideOffset();
             watchSidePanel();
         },
         beforeUnmount() {
             document.removeEventListener('keydown', _keyHandler);
             window.removeEventListener('resize', _resizeHandler);
+            if (this._overlay) this._overlay.release();
             if (_sideTimer) clearTimeout(_sideTimer);
         },
         methods: {

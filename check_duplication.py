@@ -39,7 +39,7 @@ RULES = [
     ("exec-command-copy", "fail", r"execCommand\(\s*['\"]copy['\"]",
      "自实现 execCommand 复制回退 → NexusUtils.copyToClipboard"),
     ("sse-reader", "fail", r"\.getReader\(\)",
-     "自实现 SSE 流分块解析 → NexusStream.post / NexusStream.read"),
+     "自实现 SSE 流分块解析 → NexusStream.post / read / consume"),
     ("intersection-observer", "fail", r"new\s+IntersectionObserver",
      "自实现滚动加载观察器 → nux-infinite-scroll"),
     ("local-format-util", "warn",

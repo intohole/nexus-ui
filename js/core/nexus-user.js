@@ -29,10 +29,7 @@
     }
 
     function maskPhone(phone) {
-        if (typeof phone !== 'string') return '';
-        const p = phone.trim();
-        if (p.length >= 7) return p.slice(0, 3) + '****' + p.slice(-4);
-        return p ? '****' : '';
+        return NexusUtils.formatPhone(typeof phone === 'string' ? phone.trim() : phone);
     }
 
     function maskEmail(email) {

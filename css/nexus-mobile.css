@@ -1,7 +1,5 @@
 :root {
   --nx-vh: 1vh;
-}@supports (height: 1dvh){
-  :root { --nx-vh: 1dvh; }
 }
 
 .nx-app {
@@ -301,7 +299,62 @@ html {
 
 html, body {
   overscroll-behavior-y: contain;
-}@media (max-width: 768px){
+}
+
+body {
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+}
+
+.full-height {
+  height: 100vh;
+  height: 100svh;
+  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100svh;
+  min-height: 100dvh;
+}
+
+img, video, canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+@supports not (padding: env(safe-area-inset-top)) {
+  :root {
+    --safe-top: 0px;
+    --safe-bottom: 0px;
+    --safe-left: 0px;
+    --safe-right: 0px;
+  }
+}
+
+@media (max-width: 768px) {
+  .show-mobile {
+    display: block !important;
+  }
+  .container,
+  .container-fluid {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+@media (min-width: 769px) {
+  .show-mobile {
+    display: none !important;
+  }
+}
+
+@media (pointer: coarse) {
+  .tooltip:hover {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px){
   button:not([class]),
   .btn,
   [role="button"],

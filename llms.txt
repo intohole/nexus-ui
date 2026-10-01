@@ -110,6 +110,8 @@ NexusUtils.injectStyle(id, css);           // 幂等注入 <style id>（组件�
 NexusUtils.compressImage(file, { maxDim: 1600, quality: 0.85, output: 'file' }); // 图片压缩，output: 'file'|'blob'|'dataurl'，PNG 保透明、JPEG 自动填白底，无需压缩时返回原文件
 NexusUtils.scrollLock.lock();              // 弹层滚动锁定（计数器制，多层叠加安全；配对 unlock()；桌面侧自动补偿滚动条位移）
 NexusUtils.scrollLock.unlock();
+NexusUtils.overlayBehavior(opts);     // 弹层公共行为：Esc 关闭/Tab 焦点陷阱/滚动锁/焦点恢复（opts: panel/focusEl/requestClose/escEnabled/canInteract/trap/stack/uid），返回 {acquire, release}
+NexusUtils.overlayStack();            // 弹层层级栈（配 overlayBehavior 的 stack/uid/canInteract 用，多层弹窗只有栈顶响应 Esc/Tab）
 ```
 
 ### 多端适配约定（宿主必读）
@@ -237,7 +239,7 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 
 ### 工具脚本（非组件，按需引 script）
 
-- `js/nexus-stream.js`：SSE v2 流式消费器 `NexusStream.consume(fetchImpl, { onEvent, onDone, onError })`，替代手写分帧；配合 nexus-backend `sse_chat_stream_v2` 协议（type 事件投递+心跳）。
+- `js/nexus-stream.js`：SSE v2 流式消费器 `NexusStream.consume(fetchImpl, { onEvent, onDone, onError })`，替代手写分帧；配合 nexus-backend `sse_chat_stream_v2` 协议（type 事件投递+心跳）。v2.35.0 起已纳入 nexus-all.js 装配（历史独立 script 引用继续有效）。
 - `js/nexus-theme-init.js`：首帧防闪烁 IIFE（同步执行，无导出）。读 `nx-theme`，dark 用之，未设置跟随系统。业务仓如有历史存储 key，在引入前声明 `window.NEXUS_THEME_LEGACY_KEYS = ['旧key1','旧key2']`，首访自动迁移到 `nx-theme` 并清除旧 key；迁移只认 `dark/light` 合法值。
 
 ### nux-pagination 分页组件

@@ -445,6 +445,20 @@ class UserCenterSDK {
         return this._request('GET', `/api/billing/catalog${q}`);
     }
     async getMetersSummary() { return this._request('GET', '/api/billing/meters/summary'); }
+    async getBillingSummary() { return this._request('GET', '/api/billing/summary'); }
+
+    async getCreditPackages() { return this._request('GET', '/api/billing/packages'); }
+    async createCreditOrder(packageId) {
+        const appKey = (window.ucConfig && window.ucConfig.app_key) || null;
+        const data = { package_id: packageId };
+        if (appKey) data.app = appKey;
+        return this._request('POST', '/api/billing/orders', data);
+    }
+    async getCreditOrders(page = 1, pageSize = 20) {
+        return this._request('GET', `/api/billing/orders?page=${page}&page_size=${pageSize}`);
+    }
+    async cancelCreditOrder(orderNo) { return this._request('POST', `/api/billing/orders/${orderNo}/cancel`); }
+    async payCreditOrder(orderNo) { return this._request('POST', `/api/billing/orders/${orderNo}/pay`); }
 
     async getAccountExport() { return this._request('GET', '/api/auth/account/export'); }
 

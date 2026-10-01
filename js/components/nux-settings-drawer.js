@@ -1,6 +1,6 @@
 (function () {
     'use strict';
-    const { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } = Vue;
+    const { ref, computed, watch, onMounted, onBeforeUnmount } = Vue;
 
     const NuxSettingsDrawer = {
         name: 'NuxSettingsDrawer',
@@ -17,7 +17,7 @@
         setup(props, { emit }) {
             const open = ref(props.modelValue);
             const current = ref(props.activeKey || (props.sections[0] || {}).key || '');
-            let lastFocus = null;
+            const panelRef = ref(null);
 
             const first = computed(() => (props.sections[0] || {}).key || '');
             const currentSection = computed(() => props.sections.find((s) => s.key === current.value) || {});
@@ -40,22 +40,21 @@
                 }
             }
 
+            const overlay = NexusUtils.overlayBehavior({
+                panel: () => panelRef.value,
+                focusEl: () => panelRef.value,
+                escEnabled: () => open.value,
+                requestClose: close
+            });
+
             function setOpen(v) {
                 open.value = v;
                 emit('update:modelValue', v);
                 if (v) {
                     syncHash();
-                    if (window.NexusUtils) NexusUtils.scrollLock.lock();
-                    lastFocus = document.activeElement;
-                    nextTick(() => {
-                        const el = document.querySelector('.nx-settings-drawer-panel');
-                        if (el) el.focus();
-                    });
+                    overlay.acquire();
                 } else {
-                    if (window.NexusUtils) NexusUtils.scrollLock.unlock();
-                    try {
-                        if (lastFocus && lastFocus.focus) lastFocus.focus();
-                    } catch (e) { }
+                    overlay.release();
                 }
             }
 
@@ -76,10 +75,6 @@
                 }
             }
 
-            function onKeydown(e) {
-                if (e.key === 'Escape') close();
-            }
-
             const onHashChange = () => {
                 if (!location.hash) { if (open.value) setOpen(false); return; }
                 applyHash();
@@ -94,18 +89,16 @@
             onMounted(() => {
                 if (props.sections.length && !current.value) current.value = props.sections[0].key;
                 window.addEventListener('hashchange', onHashChange);
-                window.addEventListener('keydown', onKeydown);
                 applyHash();
             });
             onBeforeUnmount(() => {
                 window.removeEventListener('hashchange', onHashChange);
-                window.removeEventListener('keydown', onKeydown);
-                if (open.value && window.NexusUtils) NexusUtils.scrollLock.unlock();
+                overlay.release();
             });
 
             return {
-                open, current, currentSection, first,
-                setOpen, pick, close, onKeydown
+                open, current, currentSection, first, panelRef,
+                setOpen, pick, close
             };
         },
         template: `
@@ -114,7 +107,7 @@
                     <div v-if="open" class="nx-settings-overlay" @click.self="close"></div>
                 </transition>
                 <transition name="nx-settings-pop">
-                    <div v-if="open" class="nx-settings-drawer" role="dialog" aria-modal="true"
+                    <div v-if="open" ref="panelRef" class="nx-settings-drawer" role="dialog" aria-modal="true"
                          tabindex="-1" @keydown.esc="close">
                         <div class="nx-settings-wrap">
                             <aside class="nx-settings-rail">

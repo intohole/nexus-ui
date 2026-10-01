@@ -79,9 +79,12 @@
                 root.value.style.setProperty('--nxsp-h', h + 'px');
             }
 
-            function onKeydown(e) {
-                if (e.key === 'Escape') close();
-            }
+            const overlay = NexusUtils.overlayBehavior({
+                panel: () => root.value ? root.value.querySelector('.nxsp-aside') : null,
+                escEnabled: () => compact.value && drawerOpen.value,
+                trap: false,
+                requestClose: close
+            });
 
             let locked = false;
             function syncListeners() {
@@ -93,14 +96,12 @@
                 locked = need;
                 const vv = window.visualViewport;
                 if (need) {
-                    if (window.NexusUtils) NexusUtils.scrollLock.lock();
-                    window.addEventListener('keydown', onKeydown);
+                    overlay.acquire();
                     window.addEventListener('resize', syncViewport);
                     if (vv) { vv.addEventListener('resize', syncViewport); vv.addEventListener('scroll', syncViewport); }
                     nextTick(syncViewport);
                 } else {
-                    if (window.NexusUtils) NexusUtils.scrollLock.unlock();
-                    window.removeEventListener('keydown', onKeydown);
+                    overlay.release();
                     window.removeEventListener('resize', syncViewport);
                     if (vv) { vv.removeEventListener('resize', syncViewport); vv.removeEventListener('scroll', syncViewport); }
                 }
@@ -181,13 +182,10 @@
                     if (mql.removeEventListener) mql.removeEventListener('change', applyMedia);
                     else mql.removeListener(applyMedia);
                 }
-                if (locked) {
-                    if (window.NexusUtils) NexusUtils.scrollLock.unlock();
-                    window.removeEventListener('keydown', onKeydown);
-                    window.removeEventListener('resize', syncViewport);
-                    const vv = window.visualViewport;
-                    if (vv) { vv.removeEventListener('resize', syncViewport); vv.removeEventListener('scroll', syncViewport); }
-                }
+                overlay.release();
+                window.removeEventListener('resize', syncViewport);
+                const vv = window.visualViewport;
+                if (vv) { vv.removeEventListener('resize', syncViewport); vv.removeEventListener('scroll', syncViewport); }
             });
 
             return {

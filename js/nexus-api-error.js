@@ -15,6 +15,7 @@
     const DEFAULT_ERROR_MAP = {
         400: '请求参数有误，请检查后重试',
         401: '登录已过期，请重新登录',
+        402: '积分余额不足，请充值后重试',
         403: '没有权限执行此操作',
         404: '请求的资源不存在',
         408: '请求超时，请稍后重试',
@@ -42,6 +43,7 @@
     const ERROR_CODE_TEXT_MAP = {
         'RATE_LIMIT_EXCEEDED': '操作过于频繁，请稍后再试',
         'AUTH_ERROR': '登录已失效，请重新登录',
+        'INSUFFICIENT_CREDITS': '积分余额不足，请充值后重试',
         'FORBIDDEN': '没有权限执行此操作',
         'NOT_FOUND': '请求的资源不存在',
         'VALIDATION_ERROR': '提交的数据有误，请检查后重试',
@@ -102,7 +104,17 @@
         return msg || '操作失败';
     }
 
+    function isInsufficientCreditsError(err) {
+        if (!err) return false;
+        if (err.status === 402) return true;
+        const code = err.errorCode || err.code || '';
+        if (code === 'INSUFFICIENT_CREDITS') return true;
+        const msg = err.message || String(err);
+        return msg.indexOf('余额不足') !== -1;
+    }
+
     window.NexusApiError = NexusApiError;
     window.isNetworkError = isNetworkError;
+    window.isInsufficientCreditsError = isInsufficientCreditsError;
     window.mapHttpError = mapHttpError;
 })();

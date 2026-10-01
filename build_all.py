@@ -16,6 +16,7 @@ FILES: list[str] = [
     "nexus-overlay-host.js",
     "nexus-validators.js",
     "nexus-api-error.js",
+    "nexus-stream.js",
     "nexus-api.js",
     "nexus-markdown.js",
     "nexus-chat.js",

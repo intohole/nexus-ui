@@ -676,5 +676,86 @@
         });
     };
 
+    utils.overlayStack = function () {
+        const stack = [];
+        return {
+            push(uid) { stack.push(uid); },
+            remove(uid) { const i = stack.indexOf(uid); if (i > -1) stack.splice(i, 1); },
+            isTop(uid) { return stack[stack.length - 1] === uid; }
+        };
+    };
+
+    utils.overlayBehavior = function (options) {
+        const opts = options || {};
+        const canInteract = opts.canInteract || (() => true);
+        const escEnabled = opts.escEnabled || (() => true);
+        let restoreEl = null;
+        let active = false;
+
+        function trapTab(e) {
+            const panel = opts.panel ? opts.panel() : null;
+            if (!panel) return;
+            const list = utils.focusables(panel);
+            if (!list.length) return;
+            const first = list[0];
+            const last = list[list.length - 1];
+            if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
+        }
+
+        function onKeydown(e) {
+            if (!canInteract()) return;
+            if (e.key === 'Escape') {
+                if (escEnabled()) opts.requestClose();
+                return;
+            }
+            if (e.key === 'Tab' && opts.trap !== false) trapTab(e);
+        }
+
+        function focusPanel() {
+            let el = opts.focusEl ? opts.focusEl() : null;
+            if (!el && opts.panel) {
+                const list = utils.focusables(opts.panel());
+                el = list.length ? list[0] : null;
+            }
+            if (el && el.focus) {
+                try { el.focus(); } catch (e) { }
+            }
+        }
+
+        function acquire() {
+            if (active) return;
+            active = true;
+            if (opts.stack) opts.stack.push(opts.uid);
+            if (utils.scrollLock) utils.scrollLock.lock();
+            if (document.activeElement && document.activeElement !== document.body) {
+                restoreEl = document.activeElement;
+            }
+            document.addEventListener('keydown', onKeydown);
+            const schedule = (window.Vue && Vue.nextTick) ? Vue.nextTick
+                : (window.requestAnimationFrame ? window.requestAnimationFrame : function (fn) { fn(); });
+            schedule(focusPanel);
+        }
+
+        function release() {
+            if (!active) return;
+            active = false;
+            document.removeEventListener('keydown', onKeydown);
+            if (opts.stack) opts.stack.remove(opts.uid);
+            if (utils.scrollLock) utils.scrollLock.unlock();
+            if (restoreEl && restoreEl.focus) {
+                try { restoreEl.focus(); } catch (e) { }
+            }
+            restoreEl = null;
+        }
+
+        return { acquire, release };
+    };
+
     window.NexusUtils = utils;
 })();

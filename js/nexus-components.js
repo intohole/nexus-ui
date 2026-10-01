@@ -46,7 +46,6 @@
         'nux-menu-user': 'NuxMenuUser',
         'nux-modal': 'NuxModal',
         'nux-notification-bell': 'NuxNotificationBell',
-        'nux-notification-panel': 'NuxNotificationPanel',
         'nux-onboarding': 'NuxOnboarding',
         'nux-onboarding-strip': 'NuxOnboardingStrip',
         'nux-pagination': 'NuxPagination',
