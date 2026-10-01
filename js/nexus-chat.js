@@ -58,78 +58,45 @@
             this.controller = new AbortController();
             const requestId = `chat_${Date.now()}_${Math.random().toString(36).slice(2)}`;
             this.api._registerController(requestId, this.controller);
-            let timedOut = false;
-            let idleTimer = null;
-            const resetIdle = () => {
-                if (idleTimer) clearTimeout(idleTimer);
-                idleTimer = setTimeout(() => {
-                    timedOut = true;
-                    try { this.controller.abort(); } catch (e) {}
-                }, this.timeout);
-            };
-            resetIdle();
             try {
-                const response = await fetch(`${this.api.baseUrl}${this.url}`, {
-                    method: 'POST',
-                    headers: this.api._buildHeaders({ 'Accept': 'text/event-stream' }),
+                for await (const evt of NexusStream.post(`${this.api.baseUrl}${this.url}`, {
                     body: JSON.stringify(this.body),
-                    signal: this.controller.signal
-                });
-                if (!response.ok) {
-                    let errData;
-                    try { errData = await response.json(); } catch (e) { errData = {}; }
-                    this.onError(this.api._extractError(errData) || `请求失败 ${response.status}`);
-                    return;
-                }
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let buffer = '';
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    resetIdle();
-                    buffer += decoder.decode(value, { stream: true });
-                    let newlineIdx;
-                    while ((newlineIdx = buffer.indexOf('\n')) !== -1) {
-                        const line = buffer.slice(0, newlineIdx).replace(/\r$/, '');
-                        buffer = buffer.slice(newlineIdx + 1);
-                        if (line.startsWith('event:')) {
-                            this._currentEvent = line.slice(6).trim();
-                        } else if (line.startsWith('data:')) {
-                            const payload = line.slice(5).trim();
-                            if (!payload) continue;
-                            try { this._handleData(JSON.parse(payload)); }
-                            catch (e) {}
-                        } else if (line === '') {
-                            this._currentEvent = null;
-                        }
-                    }
+                    headers: this.api._buildHeaders({ 'Accept': 'text/event-stream' }),
+                    signal: this.controller.signal,
+                    idleTimeout: this.timeout,
+                    priority: 'data-type-then-sse-event',
+                    defaultEvent: this.eventKey,
+                })) {
+                    this._handleData(evt.data, evt.event);
                 }
                 this.onDone(this.receivedChunks);
             } catch (error) {
-                if (error.name === 'AbortError') {
-                    if (timedOut) {
-                        this.onError(this.receivedChunks
-                            ? '响应超时，已保留前面生成的内容，请重试或缩短问题'
-                            : '响应超时，请重试或更换问题');
-                    } else {
-                        this.onDone(this.receivedChunks);
+                if (error && error.name === 'AbortError') {
+                    this.onDone(this.receivedChunks);
+                } else if (error && error.code === 'timeout') {
+                    this.onError(this.receivedChunks
+                        ? '响应超时，已保留前面生成的内容，请重试或缩短问题'
+                        : '响应超时，请重试或更换问题');
+                } else if (error && error.status === 401) {
+                    this.onError('登录已过期，请重新登录');
+                } else if (error && error.status) {
+                    const m = /^HTTP \d+ (.*)$/s.exec(error.message || '');
+                    let msg = null;
+                    if (m) {
+                        try { msg = this.api._extractError(JSON.parse(m[1])); } catch (e) { }
                     }
+                    this.onError(msg || `请求失败 ${error.status}`);
                 } else {
-                    this.onError(error.message || '网络错误');
+                    this.onError((error && error.message) || '网络错误');
                 }
             } finally {
-                if (idleTimer) clearTimeout(idleTimer);
                 this.api.abortControllers.delete(requestId);
                 this.controller = null;
                 this._currentEvent = null;
             }
         }
 
-        _handleData(data) {
-            const event = (data && typeof data.type === 'string' && data.type)
-                ? data.type
-                : (this._currentEvent || this.eventKey);
+        _handleData(data, event) {
             if (this.onEvent) this.onEvent(event, data);
             if (event === 'error') {
                 this.onError(data.message || data.error || 'AI处理出错');

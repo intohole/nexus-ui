@@ -300,79 +300,47 @@
             });
         }
 
-        async streamPost(url, data = {}, { onEvent, onError, timeout = 60000, headers = {} } = {}) {
+        async streamPost(url, data = {}, { onEvent, onError, timeout = 60000, idleTimeout, headers = {} } = {}) {
             const controller = new AbortController();
             const requestId = this._generateRequestId(url);
             this._registerController(requestId, controller);
-            const timeoutId = setTimeout(() => controller.abort(), timeout);
             try {
-                const response = await fetch(`${this.baseUrl}${url}`, {
-                    method: 'POST',
-                    headers: this._buildHeaders(headers),
+                for await (const evt of NexusStream.post(`${this.baseUrl}${url}`, {
                     body: JSON.stringify(data),
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                if (!response.ok) {
-                    let errData;
-                    try { errData = await response.json(); } catch { errData = {}; }
-                    const errorMsg = this._extractError(errData);
-                    const errorCode = this._extractErrorCode(errData);
-                    if (response.status === 401) {
-                        this._handleSessionExpired();
-                        if (onError) onError('登录已过期，请重新登录');
-                        return;
+                    headers: this._buildHeaders(headers),
+                    signal: controller.signal,
+                    idleTimeout: idleTimeout || Math.max(timeout, 90000),
+                    priority: 'sse-event',
+                    onUnauthorized: () => this._handleSessionExpired(),
+                })) {
+                    if (onEvent) {
+                        try { onEvent(evt.event, evt.data); } catch (e) { }
                     }
-                    if (this.onError) this.onError(response.status, errorMsg);
-                    if (onError) onError(errorMsg, errorCode);
-                    return;
-                }
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let buffer = '';
-                let currentEvent = null;
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    buffer += decoder.decode(value, { stream: true });
-                    let newlineIdx;
-                    while ((newlineIdx = buffer.indexOf('\n')) !== -1) {
-                        const line = buffer.slice(0, newlineIdx);
-                        buffer = buffer.slice(newlineIdx + 1);
-                        if (line.startsWith('event:')) {
-                            currentEvent = line.slice(6).trim();
-                        } else if (line.startsWith('data:')) {
-                            const payload = line.slice(5).trim();
-                            if (payload && onEvent) {
-                                try { onEvent(currentEvent, JSON.parse(payload)); }
-                                catch (e) { /* ignore parse error */ }
-                            }
-                        } else if (line === '') {
-                            currentEvent = null;
-                        }
-                    }
-                }
-                if (buffer && buffer.length) {
-                    const line = buffer.trim();
-                    if (line.startsWith('data:')) {
-                        const payload = line.slice(5).trim();
-                        if (payload && onEvent) {
-                            try { onEvent(currentEvent, JSON.parse(payload)); }
-                            catch (e) { /* ignore parse error */ }
-                        }
-                    }
-                    buffer = '';
                 }
             } catch (error) {
-                if (error.name === 'AbortError') {
-                    if (onError) onError('连接超时，请检查网络后重试');
+                let msg = (error && error.message) || '网络错误';
+                let code = (error && error.code) || null;
+                if (error && error.status === 401) {
+                    msg = '登录已过期，请重新登录';
+                    code = null;
+                } else if (error && error.status) {
+                    const m = /^HTTP \d+ (.*)$/s.exec(error.message || '');
+                    if (m) {
+                        try {
+                            const errData = JSON.parse(m[1]);
+                            const detail = this._extractError(errData);
+                            if (detail) msg = detail;
+                            code = this._extractErrorCode(errData);
+                        } catch (e) { }
+                    }
+                    if (this.onError) this.onError(error.status, msg);
+                } else if (error && (error.code === 'timeout' || error.name === 'AbortError')) {
+                    msg = '连接超时，请检查网络后重试';
                 } else if (_isNetworkErr(error)) {
-                    if (onError) onError('网络连接失败，请检查网络后重试');
-                } else if (onError) {
-                    onError(error.message || '网络错误');
+                    msg = '网络连接失败，请检查网络后重试';
                 }
+                if (onError) onError(msg, code);
             } finally {
-                clearTimeout(timeoutId);
                 this.abortControllers.delete(requestId);
             }
         }

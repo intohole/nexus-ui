@@ -1466,22 +1466,43 @@
     const DEFAULT_IDLE_TIMEOUT = 90000;
 
     class NexusStreamError extends Error {
-        constructor(message, status) {
+        constructor(message, status, code) {
             super(message);
             this.name = 'NexusStreamError';
             this.status = status;
+            this.code = code || null;
         }
     }
 
-    function _parseEvent(line, defaultEvent) {
+    // SSE 帧解析单一实现。priority 决定事件名判定策略：
+    // - 'data-type'：data.type 优先（NexusStream 默认约定）
+    // - 'sse-event'：event: 行优先，无则 null（NexusApi.streamPost 约定）
+    // - 'data-type-then-sse-event'：data.type → event: 行 → defaultEvent（ChatController 约定）
+    function _parseSseLine(line, opts) {
+        const { defaultEvent = 'message', priority = 'data-type', state = null } = opts || {};
+        if (state && line === '') {
+            state.sseEvent = null;
+            return null;
+        }
+        if (state && /^event:/.test(line)) {
+            state.sseEvent = line.slice(6).trim();
+            return null;
+        }
         const match = /^data:\s?/.exec(line);
         if (!match) return null;
         const raw = line.slice(match[0].length).trim();
         if (!raw || raw === '[DONE]') return null;
         let data = raw;
         try { data = JSON.parse(raw); } catch (e) { }
-        const event = (data && typeof data === 'object' && !Array.isArray(data) && data.type)
-            ? data.type : defaultEvent;
+        const hasType = data && typeof data === 'object' && !Array.isArray(data) && data.type;
+        let event;
+        if (priority === 'sse-event') {
+            event = state ? state.sseEvent : null;
+        } else if (priority === 'data-type-then-sse-event') {
+            event = hasType || (state && state.sseEvent) || defaultEvent;
+        } else {
+            event = hasType || defaultEvent;
+        }
         return { event, data, raw };
     }
 
@@ -1494,6 +1515,7 @@
             onUnauthorized = null,
             clearAuth = null,
             defaultEvent = 'message',
+            priority = 'data-type',
             method = 'POST',
         } = options;
 
@@ -1508,6 +1530,7 @@
         };
         if (signal && signal.aborted) abort();
         if (signal) signal.addEventListener('abort', abort, { once: true });
+        resetWatchdog();
 
         try {
             const resp = await fetch(url, {
@@ -1523,14 +1546,14 @@
                     throw new NexusStreamError('登录已过期，请重新登录', 401);
                 }
                 const text = await resp.text().catch(() => '');
-                throw new Error('HTTP ' + resp.status + ' ' + text.slice(0, 200));
+                throw new NexusStreamError('HTTP ' + resp.status + ' ' + text.slice(0, 200), resp.status);
             }
             if (!resp.body) return;
 
             const reader = resp.body.getReader();
             const decoder = new TextDecoder();
+            const state = { sseEvent: null };
             let buffer = '';
-            resetWatchdog();
             while (true) {
                 const { done, value } = await reader.read();
                 resetWatchdog();
@@ -1539,16 +1562,16 @@
                 const lines = buffer.split('\n');
                 buffer = lines.pop() || '';
                 for (const line of lines) {
-                    const evt = _parseEvent(line, defaultEvent);
+                    const evt = _parseSseLine(line, { defaultEvent, priority, state });
                     if (evt) yield evt;
                 }
             }
             if (buffer) {
-                const evt = _parseEvent(buffer, defaultEvent);
+                const evt = _parseSseLine(buffer, { defaultEvent, priority, state });
                 if (evt) yield evt;
             }
         } catch (e) {
-            if (timedOut) throw new Error('连接超时，请重试');
+            if (timedOut) throw new NexusStreamError('连接超时，请重试', null, 'timeout');
             throw e;
         } finally {
             if (watchdog) clearTimeout(watchdog);
@@ -1574,12 +1597,12 @@
                 const lines = buffer.split('\n');
                 buffer = lines.pop() || '';
                 for (const line of lines) {
-                    const evt = _parseEvent(line, 'message');
+                    const evt = _parseSseLine(line, { defaultEvent: 'message' });
                     if (evt && onChunk) onChunk(evt.data, evt.event);
                 }
             }
             if (buffer) {
-                const evt = _parseEvent(buffer, 'message');
+                const evt = _parseSseLine(buffer, { defaultEvent: 'message' });
                 if (evt && onChunk) onChunk(evt.data, evt.event);
             }
             if (onDone) onDone();
@@ -1908,79 +1931,47 @@
             });
         }
 
-        async streamPost(url, data = {}, { onEvent, onError, timeout = 60000, headers = {} } = {}) {
+        async streamPost(url, data = {}, { onEvent, onError, timeout = 60000, idleTimeout, headers = {} } = {}) {
             const controller = new AbortController();
             const requestId = this._generateRequestId(url);
             this._registerController(requestId, controller);
-            const timeoutId = setTimeout(() => controller.abort(), timeout);
             try {
-                const response = await fetch(`${this.baseUrl}${url}`, {
-                    method: 'POST',
-                    headers: this._buildHeaders(headers),
+                for await (const evt of NexusStream.post(`${this.baseUrl}${url}`, {
                     body: JSON.stringify(data),
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                if (!response.ok) {
-                    let errData;
-                    try { errData = await response.json(); } catch { errData = {}; }
-                    const errorMsg = this._extractError(errData);
-                    const errorCode = this._extractErrorCode(errData);
-                    if (response.status === 401) {
-                        this._handleSessionExpired();
-                        if (onError) onError('登录已过期，请重新登录');
-                        return;
+                    headers: this._buildHeaders(headers),
+                    signal: controller.signal,
+                    idleTimeout: idleTimeout || Math.max(timeout, 90000),
+                    priority: 'sse-event',
+                    onUnauthorized: () => this._handleSessionExpired(),
+                })) {
+                    if (onEvent) {
+                        try { onEvent(evt.event, evt.data); } catch (e) { }
                     }
-                    if (this.onError) this.onError(response.status, errorMsg);
-                    if (onError) onError(errorMsg, errorCode);
-                    return;
-                }
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let buffer = '';
-                let currentEvent = null;
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    buffer += decoder.decode(value, { stream: true });
-                    let newlineIdx;
-                    while ((newlineIdx = buffer.indexOf('\n')) !== -1) {
-                        const line = buffer.slice(0, newlineIdx);
-                        buffer = buffer.slice(newlineIdx + 1);
-                        if (line.startsWith('event:')) {
-                            currentEvent = line.slice(6).trim();
-                        } else if (line.startsWith('data:')) {
-                            const payload = line.slice(5).trim();
-                            if (payload && onEvent) {
-                                try { onEvent(currentEvent, JSON.parse(payload)); }
-                                catch (e) { /* ignore parse error */ }
-                            }
-                        } else if (line === '') {
-                            currentEvent = null;
-                        }
-                    }
-                }
-                if (buffer && buffer.length) {
-                    const line = buffer.trim();
-                    if (line.startsWith('data:')) {
-                        const payload = line.slice(5).trim();
-                        if (payload && onEvent) {
-                            try { onEvent(currentEvent, JSON.parse(payload)); }
-                            catch (e) { /* ignore parse error */ }
-                        }
-                    }
-                    buffer = '';
                 }
             } catch (error) {
-                if (error.name === 'AbortError') {
-                    if (onError) onError('连接超时，请检查网络后重试');
+                let msg = (error && error.message) || '网络错误';
+                let code = (error && error.code) || null;
+                if (error && error.status === 401) {
+                    msg = '登录已过期，请重新登录';
+                    code = null;
+                } else if (error && error.status) {
+                    const m = /^HTTP \d+ (.*)$/s.exec(error.message || '');
+                    if (m) {
+                        try {
+                            const errData = JSON.parse(m[1]);
+                            const detail = this._extractError(errData);
+                            if (detail) msg = detail;
+                            code = this._extractErrorCode(errData);
+                        } catch (e) { }
+                    }
+                    if (this.onError) this.onError(error.status, msg);
+                } else if (error && (error.code === 'timeout' || error.name === 'AbortError')) {
+                    msg = '连接超时，请检查网络后重试';
                 } else if (_isNetworkErr(error)) {
-                    if (onError) onError('网络连接失败，请检查网络后重试');
-                } else if (onError) {
-                    onError(error.message || '网络错误');
+                    msg = '网络连接失败，请检查网络后重试';
                 }
+                if (onError) onError(msg, code);
             } finally {
-                clearTimeout(timeoutId);
                 this.abortControllers.delete(requestId);
             }
         }
@@ -2505,78 +2496,45 @@
             this.controller = new AbortController();
             const requestId = `chat_${Date.now()}_${Math.random().toString(36).slice(2)}`;
             this.api._registerController(requestId, this.controller);
-            let timedOut = false;
-            let idleTimer = null;
-            const resetIdle = () => {
-                if (idleTimer) clearTimeout(idleTimer);
-                idleTimer = setTimeout(() => {
-                    timedOut = true;
-                    try { this.controller.abort(); } catch (e) {}
-                }, this.timeout);
-            };
-            resetIdle();
             try {
-                const response = await fetch(`${this.api.baseUrl}${this.url}`, {
-                    method: 'POST',
-                    headers: this.api._buildHeaders({ 'Accept': 'text/event-stream' }),
+                for await (const evt of NexusStream.post(`${this.api.baseUrl}${this.url}`, {
                     body: JSON.stringify(this.body),
-                    signal: this.controller.signal
-                });
-                if (!response.ok) {
-                    let errData;
-                    try { errData = await response.json(); } catch (e) { errData = {}; }
-                    this.onError(this.api._extractError(errData) || `请求失败 ${response.status}`);
-                    return;
-                }
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let buffer = '';
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    resetIdle();
-                    buffer += decoder.decode(value, { stream: true });
-                    let newlineIdx;
-                    while ((newlineIdx = buffer.indexOf('\n')) !== -1) {
-                        const line = buffer.slice(0, newlineIdx).replace(/\r$/, '');
-                        buffer = buffer.slice(newlineIdx + 1);
-                        if (line.startsWith('event:')) {
-                            this._currentEvent = line.slice(6).trim();
-                        } else if (line.startsWith('data:')) {
-                            const payload = line.slice(5).trim();
-                            if (!payload) continue;
-                            try { this._handleData(JSON.parse(payload)); }
-                            catch (e) {}
-                        } else if (line === '') {
-                            this._currentEvent = null;
-                        }
-                    }
+                    headers: this.api._buildHeaders({ 'Accept': 'text/event-stream' }),
+                    signal: this.controller.signal,
+                    idleTimeout: this.timeout,
+                    priority: 'data-type-then-sse-event',
+                    defaultEvent: this.eventKey,
+                })) {
+                    this._handleData(evt.data, evt.event);
                 }
                 this.onDone(this.receivedChunks);
             } catch (error) {
-                if (error.name === 'AbortError') {
-                    if (timedOut) {
-                        this.onError(this.receivedChunks
-                            ? '响应超时，已保留前面生成的内容，请重试或缩短问题'
-                            : '响应超时，请重试或更换问题');
-                    } else {
-                        this.onDone(this.receivedChunks);
+                if (error && error.name === 'AbortError') {
+                    this.onDone(this.receivedChunks);
+                } else if (error && error.code === 'timeout') {
+                    this.onError(this.receivedChunks
+                        ? '响应超时，已保留前面生成的内容，请重试或缩短问题'
+                        : '响应超时，请重试或更换问题');
+                } else if (error && error.status === 401) {
+                    this.onError('登录已过期，请重新登录');
+                } else if (error && error.status) {
+                    const m = /^HTTP \d+ (.*)$/s.exec(error.message || '');
+                    let msg = null;
+                    if (m) {
+                        try { msg = this.api._extractError(JSON.parse(m[1])); } catch (e) { }
                     }
+                    this.onError(msg || `请求失败 ${error.status}`);
                 } else {
-                    this.onError(error.message || '网络错误');
+                    this.onError((error && error.message) || '网络错误');
                 }
             } finally {
-                if (idleTimer) clearTimeout(idleTimer);
                 this.api.abortControllers.delete(requestId);
                 this.controller = null;
                 this._currentEvent = null;
             }
         }
 
-        _handleData(data) {
-            const event = (data && typeof data.type === 'string' && data.type)
-                ? data.type
-                : (this._currentEvent || this.eventKey);
+        _handleData(data, event) {
             if (this.onEvent) this.onEvent(event, data);
             if (event === 'error') {
                 this.onError(data.message || data.error || 'AI处理出错');

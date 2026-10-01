@@ -2,22 +2,43 @@
     const DEFAULT_IDLE_TIMEOUT = 90000;
 
     class NexusStreamError extends Error {
-        constructor(message, status) {
+        constructor(message, status, code) {
             super(message);
             this.name = 'NexusStreamError';
             this.status = status;
+            this.code = code || null;
         }
     }
 
-    function _parseEvent(line, defaultEvent) {
+    // SSE 帧解析单一实现。priority 决定事件名判定策略：
+    // - 'data-type'：data.type 优先（NexusStream 默认约定）
+    // - 'sse-event'：event: 行优先，无则 null（NexusApi.streamPost 约定）
+    // - 'data-type-then-sse-event'：data.type → event: 行 → defaultEvent（ChatController 约定）
+    function _parseSseLine(line, opts) {
+        const { defaultEvent = 'message', priority = 'data-type', state = null } = opts || {};
+        if (state && line === '') {
+            state.sseEvent = null;
+            return null;
+        }
+        if (state && /^event:/.test(line)) {
+            state.sseEvent = line.slice(6).trim();
+            return null;
+        }
         const match = /^data:\s?/.exec(line);
         if (!match) return null;
         const raw = line.slice(match[0].length).trim();
         if (!raw || raw === '[DONE]') return null;
         let data = raw;
         try { data = JSON.parse(raw); } catch (e) { }
-        const event = (data && typeof data === 'object' && !Array.isArray(data) && data.type)
-            ? data.type : defaultEvent;
+        const hasType = data && typeof data === 'object' && !Array.isArray(data) && data.type;
+        let event;
+        if (priority === 'sse-event') {
+            event = state ? state.sseEvent : null;
+        } else if (priority === 'data-type-then-sse-event') {
+            event = hasType || (state && state.sseEvent) || defaultEvent;
+        } else {
+            event = hasType || defaultEvent;
+        }
         return { event, data, raw };
     }
 
@@ -30,6 +51,7 @@
             onUnauthorized = null,
             clearAuth = null,
             defaultEvent = 'message',
+            priority = 'data-type',
             method = 'POST',
         } = options;
 
@@ -44,6 +66,7 @@
         };
         if (signal && signal.aborted) abort();
         if (signal) signal.addEventListener('abort', abort, { once: true });
+        resetWatchdog();
 
         try {
             const resp = await fetch(url, {
@@ -59,14 +82,14 @@
                     throw new NexusStreamError('登录已过期，请重新登录', 401);
                 }
                 const text = await resp.text().catch(() => '');
-                throw new Error('HTTP ' + resp.status + ' ' + text.slice(0, 200));
+                throw new NexusStreamError('HTTP ' + resp.status + ' ' + text.slice(0, 200), resp.status);
             }
             if (!resp.body) return;
 
             const reader = resp.body.getReader();
             const decoder = new TextDecoder();
+            const state = { sseEvent: null };
             let buffer = '';
-            resetWatchdog();
             while (true) {
                 const { done, value } = await reader.read();
                 resetWatchdog();
@@ -75,16 +98,16 @@
                 const lines = buffer.split('\n');
                 buffer = lines.pop() || '';
                 for (const line of lines) {
-                    const evt = _parseEvent(line, defaultEvent);
+                    const evt = _parseSseLine(line, { defaultEvent, priority, state });
                     if (evt) yield evt;
                 }
             }
             if (buffer) {
-                const evt = _parseEvent(buffer, defaultEvent);
+                const evt = _parseSseLine(buffer, { defaultEvent, priority, state });
                 if (evt) yield evt;
             }
         } catch (e) {
-            if (timedOut) throw new Error('连接超时，请重试');
+            if (timedOut) throw new NexusStreamError('连接超时，请重试', null, 'timeout');
             throw e;
         } finally {
             if (watchdog) clearTimeout(watchdog);
@@ -110,12 +133,12 @@
                 const lines = buffer.split('\n');
                 buffer = lines.pop() || '';
                 for (const line of lines) {
-                    const evt = _parseEvent(line, 'message');
+                    const evt = _parseSseLine(line, { defaultEvent: 'message' });
                     if (evt && onChunk) onChunk(evt.data, evt.event);
                 }
             }
             if (buffer) {
-                const evt = _parseEvent(buffer, 'message');
+                const evt = _parseSseLine(buffer, { defaultEvent: 'message' });
                 if (evt && onChunk) onChunk(evt.data, evt.event);
             }
             if (onDone) onDone();

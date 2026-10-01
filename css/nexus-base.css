@@ -143,3 +143,18 @@ a:hover { color: var(--app-accent-hover); }
 
 /* ElMessage 图标色（图标元素本身继承 type class 的场景） */
 .el-message .el-message__badge, .el-message__icon { background: transparent !important; }
+
+/* ===== 可访问性质量地板（全端生效） ===== */
+:focus-visible {
+  outline: 2px solid rgba(var(--app-accent-rgb, 99, 102, 241), 0.6);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
