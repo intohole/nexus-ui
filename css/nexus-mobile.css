@@ -390,6 +390,17 @@ img, video, canvas {
   }
 }
 
+/* iOS Safari 防聚焦缩放：文本输入控件字号 <16px 时聚焦会强制放大页面（多端地板统一防御） */
+@media (max-width: 768px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]),
+  select,
+  textarea,
+  .form-control,
+  .form-select {
+    font-size: 16px;
+  }
+}
+
 /* 弹层移动端收敛：modal 转底部动作面板形态，贴合并规避误触 */
 @media (max-width: 768px) {
   .nx-modal-overlay {

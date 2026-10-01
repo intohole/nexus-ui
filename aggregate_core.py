@@ -6,7 +6,6 @@
 
 仅折叠 nexus-all.js 已包含的核心库；nux-* 组件与 composables 保持独立引用。
 """
-import json
 
 from build_common import load_ignore
 import os

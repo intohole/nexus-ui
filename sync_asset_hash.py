@@ -10,7 +10,6 @@ CSS 引用: @import 的本地样式 -> 缺失则补 h=，陈旧则重算
     python3 nexus-ui/sync_asset_hash.py --fix promptGenius
 """
 import hashlib
-import json
 
 from build_common import load_ignore
 import os
