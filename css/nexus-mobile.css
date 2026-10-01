@@ -153,6 +153,12 @@
 .nxsp-close,
 .nxsp-tab,
 .nxsp-personal-item,
+.nux-wallet-claim,
+.nx-auto-modal-close,
+.nux-notify-reload,
+.nux-checkin-ghost,
+.nux-checkin-mini,
+.nux-ob-btn,
 .nux-footer .nux-footer-link {
     min-height: 44px;
   }
@@ -185,6 +191,11 @@
 .nux-layout-collapse-btn,
 .nx-conv-list-item-btn,
 .nx-ai-chat-action-btn,
+.nx-ai-chat-reasoning-toggle,
+.nx-ai-chat-retry-btn,
+.nxsp-search-clear,
+.nxw-card-link,
+.nux-ob-dismiss,
 .nx-auto-switch {
     position: relative;
   }
@@ -208,6 +219,11 @@
 .nux-layout-collapse-btn::after,
 .nx-conv-list-item-btn::after,
 .nx-ai-chat-action-btn::after,
+.nx-ai-chat-reasoning-toggle::after,
+.nx-ai-chat-retry-btn::after,
+.nxsp-search-clear::after,
+.nxw-card-link::after,
+.nux-ob-dismiss::after,
 .nx-auto-switch::after {
     content: "";
     position: absolute;
