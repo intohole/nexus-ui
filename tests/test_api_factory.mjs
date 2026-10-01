@@ -143,6 +143,63 @@ check('default: default baseUrl pattern', typeof api8.baseUrl === 'string');
 try { NexusApi.create({ unwrap: 'nope' }); check('unknown preset throws', false); }
 catch (e) { check('unknown preset throws', String(e.message).includes('nope')); }
 
+// 11. options.signal 透传：外部取消 → 499 不重试
+{
+    const apiS = new NexusApi({ baseUrl: '', maxRetry: 3 });
+    let hits = 0;
+    global.__respond = (url, opts) => new Promise((resolve, reject) => {
+        const t = setTimeout(() => { hits++; resolve({ ok: true, status: 200, headers: { get: () => 'application/json' }, json: async () => ({ n: hits }) }); }, 50);
+        if (opts.signal) opts.signal.addEventListener('abort', () => { clearTimeout(t); reject(new DOMException('aborted', 'AbortError')); }, { once: true });
+    });
+    const ac = new AbortController();
+    const p = apiS.get('/slow', {}, { signal: ac.signal }).catch((e) => e);
+    setTimeout(() => ac.abort(), 10);
+    const err = await p;
+    check('external cancel → 499 no retry', err instanceof NexusApiError && err.status === 499 && hits === 0);
+    // 12. 未取消的 signal 正常返回
+    global.__respond = () => ({ ok: true, status: 200, headers: { get: () => 'application/json' }, json: async () => ({ fine: true }) });
+    const ac2 = new AbortController();
+    check('signal intact passes', (await apiS.get('/ok', {}, { signal: ac2.signal })).fine === true);
+}
+
+// 13. upload() 应用 responseAdapter + headerBuilder
+{
+    const up = NexusApi.create({
+        baseUrl: '', tokenKey: 'uc_access_token', unwrap: 'code200',
+        headers: () => ({ 'X-Team-Id': 'team9' })
+    });
+    localStorage.setItem('uc_access_token', 'up-tok');
+    global.__respond = () => ({ ok: true, status: 200, headers: { get: () => 'application/json' }, json: async () => ({ code: 200, data: { uploaded: true } }) });
+    const fd = new FormData();
+    const got = await up.upload('/up', fd);
+    const last = fetchLog[fetchLog.length - 1];
+    check('upload adapter applied', got.uploaded === true);
+    check('upload headerBuilder + token', last.headers['X-Team-Id'] === 'team9' && last.headers['Authorization'] === 'Bearer up-tok');
+    check('upload no forced content-type', !last.headers['Content-Type']);
+}
+
+// 14. ensureFreshToken：临期预刷新 / 新鲜 token 不动 / 刷新失败静默
+{
+    global.__refreshHits = 0;
+    const b64url = (obj) => Buffer.from(JSON.stringify(obj)).toString('base64url');
+    const mkJwt = (expSec) => `${b64url({ alg: 'none' })}.${b64url({ exp: expSec })}.sig`;
+    const apiF = NexusApi.create({ baseUrl: '', tokenKey: 'fx_tok', refreshTokenKey: 'fx_r', refreshUrl: '/auth/refresh' });
+    global.__respond = (url) => {
+        if (String(url).includes('/auth/refresh')) { global.__refreshHits++; return { ok: true, status: 200, headers: { get: () => 'application/json' }, json: async () => ({ access_token: 'brand-new', refresh_token: 'r2' }) }; }
+        return { ok: true, status: 200, headers: { get: () => 'application/json' }, json: async () => ({}) };
+    };
+    localStorage.setItem('fx_r', 'r1');
+    localStorage.setItem('fx_tok', mkJwt(Math.floor(Date.now() / 1000) + 60));
+    await apiF.ensureFreshToken();
+    check('ensureFreshToken refreshes expiring token', global.__refreshHits === 1 && localStorage.getItem('fx_tok') === 'brand-new');
+    localStorage.setItem('fx_tok', mkJwt(Math.floor(Date.now() / 1000) + 3600));
+    await apiF.ensureFreshToken();
+    check('ensureFreshToken skips fresh token', global.__refreshHits === 1);
+    localStorage.setItem('fx_tok', 'garbage');
+    await apiF.ensureFreshToken();
+    check('ensureFreshToken tolerant to non-JWT', global.__refreshHits === 1);
+}
+
 let fail = 0;
 for (const [name, ok] of results) { if (!ok) fail++; console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}`); }
 console.log(`\n${results.length - fail}/${results.length} passed`);

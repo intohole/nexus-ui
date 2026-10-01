@@ -1818,6 +1818,17 @@
             return this._refreshPromise;
         }
 
+        ensureFreshToken(skewMs = 120000) {
+            const token = this._getToken();
+            if (!token || token.split('.').length < 2 || !this.refreshUrl) return Promise.resolve();
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+                const expMs = (payload.exp || 0) * 1000;
+                if (expMs && Date.now() > expMs - skewMs) return this._tryRefresh().catch(() => {});
+            } catch (e) {}
+            return Promise.resolve();
+        }
+
         async request(url, options = {}) {
             const timeoutValue = options.timeout !== undefined ? options.timeout : this.timeout;
 
@@ -1830,6 +1841,10 @@
                 const controller = new AbortController();
                 const requestId = this._generateRequestId(url);
                 this._registerController(requestId, controller);
+                if (options.signal) {
+                    if (options.signal.aborted) controller.abort();
+                    else options.signal.addEventListener('abort', () => controller.abort(), { once: true });
+                }
                 const timeoutId = setTimeout(() => controller.abort(), timeoutValue);
                 try {
                     const { response, data } = await this._doFetch(url, options, controller);
@@ -1869,6 +1884,7 @@
                     } catch (error) {
                         lastError = error;
                         if (error.name === 'AbortError') {
+                            if (options.signal && options.signal.aborted) throw new ApiError('请求已取消', 499, null);
                             if (attempt < maxAttempts) {
                                 const delay = Math.min(MAX_DELAY, BASE_DELAY * 2 ** (attempt - 1)) * (0.5 + Math.random() * 0.5);
                                 await new Promise(r => setTimeout(r, delay));
@@ -1948,7 +1964,8 @@
 
         upload(url, formData, options = {}) {
             const token = this._getToken();
-            const headers = { ...(token && { 'Authorization': `Bearer ${token}` }), ...options.headers };
+            const dynamic = this.headerBuilder ? (this.headerBuilder() || {}) : {};
+            const headers = { ...dynamic, ...(token && { 'Authorization': `Bearer ${token}` }), ...options.headers };
             const { headers: _mergedHeaders, ...fetchOptions } = options;
             return fetch(`${this.baseUrl}${url}`, { method: 'POST', body: formData, headers, ...fetchOptions })
             .then(async (res) => {
@@ -1959,6 +1976,7 @@
                     this._handleSessionExpired();
                 }
                 if (!res.ok) throw new ApiError(this._extractError(data), res.status, data, this._extractErrorCode(data));
+                if (this.responseAdapter) data = this.responseAdapter(data, res);
                 if (this._cache.size) this._cache.clear();
                 return data;
             }).catch((err) => {
