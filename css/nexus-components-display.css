@@ -172,6 +172,7 @@
 .nux-footer .nux-footer-link {
   color: var(--nx-text-muted);
   text-decoration: none;
+  padding: 5px 2px;
   transition: color .2s;
 }
 .nux-footer .nux-footer-link:hover {

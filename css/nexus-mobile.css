@@ -150,8 +150,22 @@
 .nx-auto-act,
 .nux-input-number-btn,
 .nx-settings-nav-item,
-.nx-ai-chat-scroll-btn {
+.nx-ai-chat-scroll-btn,
+.nx-modal-close,
+.nxsp-close,
+.nxsp-tab,
+.nxsp-personal-item,
+.nux-footer .nux-footer-link {
     min-height: 44px;
+  }
+  .nux-menu-user-btn,
+.nux-menu-about-btn,
+.nvi-btn,
+.nux-backtop,
+.nux-notify-bell,
+.nx-modal-close,
+.nxsp-close {
+    min-width: 44px;
   }
   .nux-chip-remove,
 .nux-notif-panel-item-delete,

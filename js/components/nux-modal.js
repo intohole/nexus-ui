@@ -81,6 +81,9 @@
                 <transition name="nux-modal">
                     <div v-if="modelValue" class="nx-modal-overlay" @click="onOverlayClick">
                         <div ref="refs" class="nx-modal" :style="{ maxWidth: width }" role="dialog" aria-modal="true" :aria-label="title || '弹窗'" @click.stop>
+                            <button type="button" class="nx-modal-close" aria-label="关闭" @click="close">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+                            </button>
                             <div v-if="title" class="nx-modal-title">{{ title }}</div>
                             <slot></slot>
                             <div v-if="showFooter" class="nux-modal-footer">

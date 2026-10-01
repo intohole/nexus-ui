@@ -13,6 +13,7 @@
   opacity: 0;
 }
 .nx-modal {
+  position: relative;
   background: var(--nx-bg-elevated);
   border: 1px solid var(--nx-border);
   border-radius: var(--nx-radius-xl);
@@ -28,7 +29,26 @@
   font-weight: 600;
   color: var(--nx-text-heading);
   margin-bottom: var(--nx-space-4);
+  padding-right: 40px;
 }
+.nx-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--nx-text-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.nx-modal-close:hover { background: var(--nx-bg-hover, rgba(15, 23, 42, 0.06)); color: var(--nx-text-heading); }
+.nx-modal-close svg { width: 18px; height: 18px; }
 
 .nux-modal-footer {
   display: flex;
@@ -492,8 +512,8 @@
   border-radius: var(--nx-radius-sm, 4px);
   white-space: nowrap;
 }
-.nx-ai-badge-sm { font-size: 0.625rem; padding: 2px 6px; }
-.nx-ai-badge-md { font-size: 0.6875rem; padding: 3px 8px; }
+.nx-ai-badge-sm { font-size: 0.6875rem; padding: 2px 6px; }
+.nx-ai-badge-md { font-size: 0.75rem; padding: 3px 8px; }
 .nx-ai-badge[data-tone="accent"] {
   background: var(--nx-accent-soft, rgba(79, 70, 229, 0.1));
   color: var(--nx-accent, rgb(79, 70, 229));
