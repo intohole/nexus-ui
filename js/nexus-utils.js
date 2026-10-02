@@ -348,17 +348,33 @@
             if (hours < 24) return `${hours}${space}小时前`;
             if (days < dayLimit) return `${days}${space}天前`;
             if (options.fallback === 'md') {
-                const sameYear = date.getFullYear() === new Date().getFullYear();
-                const p = (n) => String(n).padStart(2, '0');
-                return sameYear
-                    ? `${p(date.getMonth() + 1)}-${p(date.getDate())}`
-                    : `${date.getFullYear()}-${p(date.getMonth() + 1)}-${p(date.getDate())}`;
+                const cn = utils.cnParts(date);
+                const nowCn = utils.cnParts(new Date());
+                return cn.year === nowCn.year
+                    ? `${cn.month}-${cn.day}`
+                    : `${cn.year}-${cn.month}-${cn.day}`;
             }
             return utils.formatDateShort(dateString);
         },
 
         pad2(n) {
             return String(n == null ? 0 : n).padStart(2, '0');
+        },
+
+        cnParts(value) {
+            const out = { year: '', month: '', day: '', hour: '', minute: '', second: '' };
+            const d = value instanceof Date ? value : utils.parseDate(value);
+            if (!d || isNaN(d.getTime())) return out;
+            try {
+                new Intl.DateTimeFormat('zh-CN', {
+                    year: 'numeric', month: '2-digit', day: '2-digit',
+                    hour: '2-digit', minute: '2-digit', second: '2-digit',
+                    hourCycle: 'h23', timeZone: CN_TZ
+                }).formatToParts(d).forEach((part) => {
+                    if (Object.prototype.hasOwnProperty.call(out, part.type)) out[part.type] = part.value;
+                });
+            } catch (e) {}
+            return out;
         },
 
         formatDateKey(value) {
@@ -370,8 +386,9 @@
         formatDateTimeHyphen(value, withSeconds = false) {
             const d = value instanceof Date ? value : utils.parseDate(value);
             if (!d || isNaN(d.getTime())) return '';
-            const base = utils.formatDateKey(d) + ' ' + utils.pad2(d.getHours()) + ':' + utils.pad2(d.getMinutes());
-            return withSeconds ? base + ':' + utils.pad2(d.getSeconds()) : base;
+            const p = utils.cnParts(d);
+            const base = p.year + '-' + p.month + '-' + p.day + ' ' + p.hour + ':' + p.minute;
+            return withSeconds ? base + ':' + p.second : base;
         },
 
         formatDateTime(dateString, options = {}) {
