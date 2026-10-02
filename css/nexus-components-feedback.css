@@ -756,3 +756,65 @@
   flex: none;
 }
 
+
+/* 通知面板：时间分组 / 来源徽标 / 岗位迷你卡 / 应用静音区 */
+.nux-notif-group-label {
+  font-size: var(--nx-text-xs); font-weight: 600; color: var(--nx-text-muted);
+  margin: var(--nx-space-4) var(--nx-space-2) var(--nx-space-2);
+}
+.nux-notif-panel-item-meta {
+  display: flex; align-items: center; gap: var(--nx-space-2); margin-top: 4px;
+}
+.nux-notif-app-tag {
+  font-size: 11px; line-height: 1; padding: 3px 7px; border-radius: var(--nx-radius-full);
+  background: var(--nx-bg-muted); color: var(--nx-text-secondary); white-space: nowrap;
+}
+.nux-notif-panel-item-time { margin-top: 0; }
+.nux-notif-jobs { margin-top: var(--nx-space-2); display: flex; flex-direction: column; gap: 4px; }
+.nux-notif-job {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--nx-space-2);
+  width: 100%; text-align: left; border: none; cursor: pointer;
+  background: var(--nx-bg-muted); color: var(--nx-text-secondary);
+  font-size: var(--nx-text-xs); padding: 6px 10px; border-radius: var(--nx-radius-sm);
+  transition: background var(--nx-transition-fast), color var(--nx-transition-fast);
+}
+.nux-notif-job:hover { background: var(--nx-bg-hover); color: var(--nx-text-heading); }
+.nux-notif-job-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nux-notif-job i, .nux-notif-more i { font-size: 10px; color: var(--nx-text-muted); flex-shrink: 0; }
+.nux-notif-more {
+  display: inline-flex; align-items: center; gap: 4px; align-self: flex-start;
+  border: none; background: transparent; cursor: pointer;
+  color: var(--nx-text-accent); font-size: var(--nx-text-xs); padding: 4px 2px;
+}
+.nux-notif-more:hover { text-decoration: underline; }
+.nux-notif-more i { color: var(--nx-text-accent); }
+.nux-notif-mute { border-top: 1px solid var(--nx-border); margin-top: var(--nx-space-4); }
+.nux-notif-mute-head {
+  display: flex; align-items: center; gap: var(--nx-space-2); width: 100%;
+  border: none; background: transparent; cursor: pointer;
+  color: var(--nx-text-muted); font-size: var(--nx-text-sm); font-weight: 600;
+  padding: var(--nx-space-3) var(--nx-space-2);
+}
+.nux-notif-mute-head:hover { color: var(--nx-text-secondary); }
+.nux-notif-mute-head i:last-child { margin-left: auto; font-size: 11px; }
+.nux-notif-mute-list { display: flex; flex-direction: column; gap: 2px; padding-bottom: var(--nx-space-2); }
+.nux-notif-mute-row {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: var(--nx-text-sm); color: var(--nx-text-secondary); padding: 2px var(--nx-space-2);
+}
+.nux-notif-mute-toggle {
+  border: 1px solid var(--nx-border); background: var(--nx-bg-surface); cursor: pointer;
+  color: var(--nx-text-accent); font-size: var(--nx-text-xs);
+  padding: 5px 12px; border-radius: var(--nx-radius-full); min-height: 28px;
+  transition: all var(--nx-transition-fast);
+}
+.nux-notif-mute-toggle.is-muted {
+  color: var(--nx-text-muted); background: var(--nx-bg-muted); border-color: transparent;
+}
+.nux-notif-mute-hint {
+  font-size: 11px; color: var(--nx-text-muted); margin: var(--nx-space-2) var(--nx-space-2) 0;
+}
+@media (max-width: 768px){
+  .nux-notif-job { padding: 10px 12px; }
+  .nux-notif-mute-toggle { padding: 8px 16px; }
+}

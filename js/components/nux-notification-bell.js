@@ -1,21 +1,4 @@
 (function() {
-    const TOKEN_KEY = 'uc_access_token';
-    const APP_PATHS = {
-        'resumeai': '/resumeai/',
-        'challengeplanet': '/challengeplanet/',
-        'nexus-agent': '/nexus-agent',
-        'travelmate': '/travelmate/',
-        'onenote': '/onenote/',
-        'wisepath': '/wisepath/',
-        'gezhi': '/gezhi/',
-        'goldenfish': '/goldenfish/',
-        'versecraft': '/versecraft/',
-        'miaobi': '/miaobi/',
-        'geniusstudent': '/geniusstudent/',
-        'aipet': '/aipet/',
-        'lifecompass': '/lifecompass/',
-        'truemirror': '/truemirror/'
-    };
     const NuxNotificationBell = {
         name: 'nux-notification-bell',
         props: {
@@ -116,25 +99,15 @@
                 this.open = false;
             },
             resolveLink: function(item) {
-                if (!item) return '';
-                var url = item.link || '';
-                if (!url) {
-                    var d = item.data || {};
-                    if (typeof d.url === 'string' && d.url) url = d.url;
-                    else {
-                        var jobs = d.jobs;
-                        if (Array.isArray(jobs) && jobs.length && jobs[0] && typeof jobs[0].url === 'string') url = jobs[0].url || '';
-                    }
-                    if (!url) url = APP_PATHS[String(item.app_id || '').toLowerCase()] || '';
-                }
-                return this.normalizeLink(url);
+                if (window.NexusUtils && NexusUtils.notify) return NexusUtils.notify.resolve(item);
+                return '';
             },
-            normalizeLink: function(url) {
-                if (!url || url.charAt(0) !== '/') return url;
-                var seg = url.split('/')[1] || '';
-                var canonical = APP_PATHS[seg.toLowerCase()];
-                if (!canonical) return url;
-                return canonical.replace(/\/$/, '') + url.slice(seg.length + 1);
+            appLabel: function(appId) {
+                return NexusUtils.notify ? NexusUtils.notify.appLabel(appId) : (appId || '');
+            },
+            summary: function(content) {
+                if (!content) return '';
+                return content.length > 60 ? content.substring(0, 60) + '...' : content;
             },
             onDocClick: function(e) {
                 if (this.$el && !this.$el.contains(e.target)) this.open = false;
@@ -164,7 +137,11 @@
                     <ul v-else class="nux-notify-list">
                         <li v-for="item in items" :key="item.id" :class="['nux-notify-item', { 'nux-notify-item-unread': !item.is_read }]" :style="resolveLink(item) ? null : { cursor: 'default' }" @click="markRead(item)">
                             <div class="nux-notify-item-title">{{ item.title }}</div>
-                            <div class="nux-notify-item-time">{{ formatTime(item.created_at) }}</div>
+                            <div v-if="item.content" class="nux-notify-item-summary">{{ summary(item.content) }}</div>
+                            <div class="nux-notify-item-meta">
+                                <span class="nux-notify-item-app">{{ appLabel(item.app_id) }}</span>
+                                <span class="nux-notify-item-time">{{ formatTime(item.created_at) }}</span>
+                            </div>
                         </li>
                     </ul>
                 </div>
