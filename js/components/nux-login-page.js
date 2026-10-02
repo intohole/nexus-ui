@@ -353,11 +353,20 @@
                 submitted.value = false;
                 mode.value = m;
                 loginType.value = 'account';
+                form.username = '';
                 form.confirmPassword = '';
                 form.password = '';
                 form.email = '';
                 form.phone = '';
+                form.inviteCode = '';
                 smsCode.value = '';
+                agreed.value = false;
+                if (m === 'login' && !props.phoneLogin) {
+                    try {
+                        var saved = localStorage.getItem(H.REMEMBER_KEY);
+                        if (saved) form.username = saved;
+                    } catch (e) {}
+                }
             }
 
             function switchLoginType(t) {
