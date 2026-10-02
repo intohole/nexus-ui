@@ -460,6 +460,10 @@ class UserCenterSDK {
     async cancelCreditOrder(orderNo) { return this._request('POST', `/api/billing/orders/${orderNo}/cancel`); }
     async payCreditOrder(orderNo) { return this._request('POST', `/api/billing/orders/${orderNo}/pay`); }
 
+    async getCreditTasks() { return this._request('GET', '/api/credits/tasks'); }
+    async checkinCreditTask() { return this._request('POST', '/api/credits/tasks/checkin'); }
+    async claimCreditTask(code) { return this._request('POST', `/api/credits/tasks/${encodeURIComponent(code)}/claim`); }
+
     async getAccountExport() { return this._request('GET', '/api/auth/account/export'); }
 
     async deleteAccount({ password }) {

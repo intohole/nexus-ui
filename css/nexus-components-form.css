@@ -971,3 +971,28 @@
 }
 .nux-wallet-rules b { font-size: 13px; color: var(--nx-text-primary, #0f172a); }
 .nux-wallet-rules p { margin: 0; line-height: 1.6; }
+.nux-wallet-tasks { display: flex; flex-direction: column; gap: var(--nx-space-2, 8px); }
+.nux-wallet-task {
+  padding: var(--nx-space-2, 8px) var(--nx-space-3, 12px);
+  border: 1px solid var(--nx-border, #e2e8f0);
+  border-radius: var(--nx-radius-md, 10px);
+  background: var(--nx-bg-subtle, #f8fafc);
+}
+.nux-wallet-task.ready { border-color: var(--nx-accent, #3b82f6); background: var(--nx-accent-soft, rgba(59, 130, 246, 0.08)); }
+.nux-wallet-task.claimed { opacity: 0.72; }
+.nux-wallet-task-row {
+  display: flex;
+  align-items: center;
+  gap: var(--nx-space-3, 12px);
+}
+.nux-wallet-task-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.nux-wallet-task-main b { font-size: 13px; }
+.nux-wallet-task-desc { font-size: 12px; color: var(--nx-text-secondary, #64748b); font-variant-numeric: tabular-nums; }
+.nux-wallet-task-reward {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--nx-success, #16a34a);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.nux-wallet-task-ok { font-size: 12px; color: var(--nx-success, #16a34a); white-space: nowrap; }
