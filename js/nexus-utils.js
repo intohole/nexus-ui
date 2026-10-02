@@ -591,25 +591,29 @@
                     document.cookie = SSO_COOKIE + '=;Domain=' + domain + ';Path=/;Max-Age=0';
                 } catch (e) {}
             };
+            const resolveKey = (key) => (key === undefined || key === null ? tokenKey : key);
             return {
                 getItem(key) {
-                    const v = readStorage(key);
+                    const k = resolveKey(key);
+                    const v = readStorage(k);
                     if (v !== null) return v;
-                    return BRIDGE_KEYS.indexOf(key) !== -1 ? bridgeValue(key) : null;
+                    return BRIDGE_KEYS.indexOf(k) !== -1 ? bridgeValue(k) : null;
                 },
                 setItem(key, value) {
+                    const k = resolveKey(key);
                     const useSession = preferSession();
-                    write(useSession ? window.sessionStorage : window.localStorage, key, value);
-                    clear(useSession ? window.localStorage : window.sessionStorage, key);
-                    if (key === tokenKey && value) {
+                    write(useSession ? window.sessionStorage : window.localStorage, k, value);
+                    clear(useSession ? window.localStorage : window.sessionStorage, k);
+                    if (k === tokenKey && value) {
                         try { window.localStorage.setItem(SSO_EPOCH_KEY, String(Date.now())); } catch (e) {}
                     }
-                    if (BRIDGE_KEYS.indexOf(key) !== -1) writeBridge();
+                    if (BRIDGE_KEYS.indexOf(k) !== -1) writeBridge();
                 },
                 removeItem(key) {
-                    clear(window.sessionStorage, key);
-                    clear(window.localStorage, key);
-                    if (BRIDGE_KEYS.indexOf(key) !== -1) clearBridge();
+                    const k = resolveKey(key);
+                    clear(window.sessionStorage, k);
+                    clear(window.localStorage, k);
+                    if (BRIDGE_KEYS.indexOf(k) !== -1) clearBridge();
                 }
             };
         },
