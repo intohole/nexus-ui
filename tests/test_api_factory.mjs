@@ -200,6 +200,47 @@ catch (e) { check('unknown preset throws', String(e.message).includes('nope')); 
     check('ensureFreshToken tolerant to non-JWT', global.__refreshHits === 1);
 }
 
+// 15. 认证入口 401：不再误触发「登录已过期」清登录态，透传服务端错误
+{
+    global.__unauthHits = 0;
+    // 15a. 无 refresh 配置：登录 401 保留服务端错误、不清 token、不回调 onUnauthorized
+    const apiL = NexusApi.create({ baseUrl: '', tokenKey: 'lg_tok', onUnauthorized() { global.__unauthHits = (global.__unauthHits || 0) + 1; } });
+    localStorage.setItem('lg_tok', 'sess-1');
+    global.__respond = () => ({ ok: false, status: 401, headers: { get: () => 'application/json' }, json: async () => ({ detail: '用户名或密码错误' }) });
+    let loginErr;
+    try { await apiL.post('/auth/login', { u: 1 }); } catch (e) { loginErr = e; }
+    check('auth entry 401 keeps server message', loginErr && loginErr.status === 401 && loginErr.message === '用户名或密码错误');
+    check('auth entry 401 keeps token', localStorage.getItem('lg_tok') === 'sess-1');
+    check('auth entry 401 no onUnauthorized', !global.__unauthHits);
+
+    // 15b. 有 refresh 配置：登录 401 不触发 refresh 重试
+    global.__refreshHits = 0;
+    const apiL2 = NexusApi.create({ baseUrl: '', tokenKey: 'lg2_tok', refreshTokenKey: 'lg2_r', refreshUrl: '/auth/refresh' });
+    localStorage.setItem('lg2_tok', 'sess-2');
+    localStorage.setItem('lg2_r', 'r1');
+    global.__respond = (url) => {
+        if (String(url).includes('/auth/refresh')) { global.__refreshHits++; return { ok: true, status: 200, headers: { get: () => 'application/json' }, json: async () => ({ access_token: 'n', refresh_token: 'r2' }) }; }
+        return { ok: false, status: 401, headers: { get: () => 'application/json' }, json: async () => ({ detail: '验证码错误' }) };
+    };
+    let smsErr;
+    try { await apiL2.post('/auth/sms-login', {}); } catch (e) { smsErr = e; }
+    check('auth entry skips refresh attempt', global.__refreshHits === 0 && smsErr.message === '验证码错误');
+    check('auth entry keeps token with refresh cfg', localStorage.getItem('lg2_tok') === 'sess-2');
+
+    // 15c. 业务端点 401：仍走会话过期（回归护栏）
+    global.__respond = () => ({ ok: false, status: 401, headers: { get: () => 'application/json' }, json: async () => ({ detail: 'expired' }) });
+    const apiB = NexusApi.create({ baseUrl: '', tokenKey: 'lg_tok', onUnauthorized() { global.__unauthHits++; } });
+    let bizErr;
+    try { await apiB.get('/orders'); } catch (e) { bizErr = e; }
+    check('business 401 still expires session', bizErr.message === '登录已过期，请重新登录' && localStorage.getItem('lg_tok') === null && global.__unauthHits === 1);
+
+    // 15d. refresh 端点本身 401：不循环、不清 token
+    global.__respond = () => ({ ok: false, status: 401, headers: { get: () => 'application/json' }, json: async () => ({ detail: 'refresh 无效' }) });
+    let rErr;
+    try { await apiL2.post('/auth/refresh', {}); } catch (e) { rErr = e; }
+    check('refresh endpoint 401 no loop', rErr && rErr.message === 'refresh 无效' && localStorage.getItem('lg2_tok') === 'sess-2');
+}
+
 let fail = 0;
 for (const [name, ok] of results) { if (!ok) fail++; console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}`); }
 console.log(`\n${results.length - fail}/${results.length} passed`);

@@ -1726,6 +1726,11 @@
             } catch (e) {}
         }
 
+        _isAuthEntry(url) {
+            const path = String(url || '').split('?')[0].split('#')[0];
+            return /(\/login|\/register|\/sms-login|\/refresh)$/.test(path);
+        }
+
         _handleSessionExpired() {
             this._clearAuth();
             this._rememberReturnUrl();
@@ -1857,7 +1862,7 @@
                                 const errorMsg = this._extractError(data);
                                 const errorCode = this._extractErrorCode(data);
                                 const skipUnauthorized = options.skipUnauthorized === true;
-                                if (response.status === 401 && !skipUnauthorized && !skipAuthRefresh && this.refreshUrl) {
+                                if (response.status === 401 && !skipUnauthorized && !skipAuthRefresh && this.refreshUrl && !this._isAuthEntry(url)) {
                                     try {
                                         await this._tryRefresh();
                                         const retryResult = await this._doFetch(url, options, controller);
@@ -1873,10 +1878,12 @@
                                     }
                                 }
                                 if (response.status === 401) {
-                                    if (!skipUnauthorized) {
+                                    const authEntry = this._isAuthEntry(url);
+                                    if (!skipUnauthorized && !authEntry) {
                                         this._handleSessionExpired();
                                     }
-                                    const msg401 = skipUnauthorized ? (errorMsg || '认证失败') : (skipAuthRefresh ? (errorMsg || '认证失败') : '登录已过期，请重新登录');
+                                    const keepServerMsg = skipUnauthorized || skipAuthRefresh || authEntry;
+                                    const msg401 = keepServerMsg ? (errorMsg || '认证失败') : '登录已过期，请重新登录';
                                     throw new ApiError(msg401, 401, data, errorCode);
                                 }
                                 if (this.onError) this.onError(response.status, errorMsg);

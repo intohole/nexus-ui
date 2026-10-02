@@ -90,6 +90,7 @@ const api = NexusApi.create({
   baseUrl: '/api/v1', tokenKey: 'uc_access_token', dualStorage: true,
   unwrap: 'code200',            // 'raw'(默认直通) | 'code200'({code,data}信封) | 'dataOrRes'(有data字段即解包) | 自定义 (data, response) => data
   unauthorized: { clearKeys: ['cp_user_id'], redirect: '/login' },  // 或 { event: 'auth-expired' } 或 function()
+  // 401 语义：登录/注册/短信登录/refresh 端点的 401 视为业务失败（透传服务端错误，不清登录态、不触发 unauthorized）；其余端点 401 走会话过期流程
   headers: () => ({ 'X-Team-Id': teamId }),   // 每次请求求值的动态头钩子（get/post/put/upload/streamPost 全路径生效；upload 不强制 Content-Type）
   cache: { ttl: 15000 },        // GET 缓存 + 并发去重；写操作自动失效；options.fresh 跳过；api.invalidateCache(prefix)
   methods: {                    // 声明式域方法（静态 URL）；复杂逻辑用 fn(this=api)
