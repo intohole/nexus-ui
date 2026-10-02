@@ -32,6 +32,13 @@
     }
 
     let _libBase = null;
+    (function captureLibBaseEarly() {
+        try {
+            const cur = (document.currentScript && document.currentScript.src) || '';
+            const m = cur.match(/^(.*)\/js\/nexus-(?:all|markdown)\.js(?:[?#].*)?$/);
+            if (m) _libBase = m[1] + '/vendor/';
+        } catch (e) { /* ignore */ }
+    })();
     function libBase() {
         if (_libBase === null) _libBase = resolveLibBase();
         return _libBase;
