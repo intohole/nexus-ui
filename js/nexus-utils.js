@@ -803,7 +803,8 @@
             'financialkg': '金融图谱', 'goldenfish': 'GoldenFish',
             'goldenstock': 'GoldenStock', 'versecraft': 'VerseCraft',
             'beememory': 'beeMemory', 'minideploy': 'miniDeploy',
-            'userfeedback': 'userFeedback', 'notifycenter': '通知中心', 'system': '系统'
+            'userfeedback': 'userFeedback', 'usercenter': '钱包',
+            'notifycenter': '通知中心', 'system': '系统'
         };
         function normalize(url) {
             if (!url || url.charAt(0) !== '/') return url;

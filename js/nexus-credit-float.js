@@ -40,6 +40,7 @@
             + 'transition:opacity .3s,transform .3s;opacity:.72;}'
             + '#' + ROOT_ID + ' .nxcf-badge:hover{opacity:1;transform:translateY(-1px);}'
             + '#' + ROOT_ID + ' .nxcf-badge.pulse{animation:nxcf-pulse .9s ease;}'
+            + '#' + ROOT_ID + ' .nxcf-badge.credit{border-color:rgba(251,191,36,0.65);}'
             + '#' + ROOT_ID + ' .nxcf-badge svg{flex:none;}'
             + '#' + ROOT_ID + ' .nxcf-toast{position:absolute;left:0;bottom:44px;white-space:nowrap;padding:8px 14px;'
             + 'border-radius:10px;background:rgba(15,23,42,0.92);color:#fff;font-size:13px;'
@@ -57,6 +58,9 @@
 
     var state = {
         balance: null,
+        overdraftUsed: 0,
+        overdraftLimit: null,
+        overdraftExhausted: false,
         failures: 0,
         timer: null,
         lastToastAt: 0,
@@ -101,6 +105,15 @@
         if (num && state.balance !== null) {
             num.textContent = state.balance.toLocaleString('zh-CN');
         }
+        renderBadgeState();
+    }
+
+    function renderBadgeState() {
+        var badge = badgeEl();
+        if (!badge) return;
+        var onCredit = state.overdraftUsed > 0;
+        badge.classList.toggle('credit', onCredit);
+        badge.title = onCredit ? '积分余额（体验授信垫付中，点击查看钱包）' : '积分余额（点击查看钱包）';
     }
 
     function pulse() {
@@ -133,17 +146,35 @@
         warnIfLow(balance);
     }
 
+    function flushCreditToast() {
+        var now = Date.now();
+        if (now - state.lastToastAt < TOAST_THROTTLE_MS) return;
+        var limit = state.overdraftLimit === null ? '不限' : state.overdraftLimit.toLocaleString('zh-CN');
+        showToast('AI 调用由平台垫付 · 累计 ' + state.overdraftUsed.toLocaleString('zh-CN') + '/' + limit, true);
+        state.lastToastAt = now;
+    }
+
     function warnIfLow(balance) {
         if (state.lowWarned || balance >= LOW_BALANCE) return;
         state.lowWarned = true;
         var formal = typeof state.chargeMode === 'string' && state.chargeMode === 'formal';
+        if (!formal && state.overdraftExhausted) {
+            showToast('免费体验额度已用完，每日赠送积分仍可正常使用', true);
+            return;
+        }
         showToast(formal ? '积分即将用完，余额不足将无法使用 AI 能力' : '积分即将用完，明日自动赠送 200 分', true);
     }
 
     function applySummary(data) {
         var prev = state.balance;
+        var prevOverdraft = state.overdraftUsed;
         state.balance = typeof data.balance === 'number' ? data.balance : prev;
         state.chargeMode = data.charge_mode || state.chargeMode;
+        var od = data.overdraft || {};
+        state.overdraftUsed = typeof od.used === 'number' ? od.used : state.overdraftUsed;
+        if (typeof od.limit === 'number') state.overdraftLimit = od.limit;
+        else if ('limit' in od && od.limit === null) state.overdraftLimit = null;
+        state.overdraftExhausted = !!od.exhausted;
         renderBalance();
         if (prev !== null && state.balance !== null && state.balance < prev) {
             state.pendingCost += prev - state.balance;
@@ -151,6 +182,10 @@
             flushCostToast(state.balance);
         } else if (prev !== null && state.balance > prev) {
             pulse();
+        }
+        if (state.overdraftUsed > prevOverdraft) {
+            pulse();
+            flushCreditToast();
         }
         if (state.balance !== null) warnIfLow(state.balance);
     }

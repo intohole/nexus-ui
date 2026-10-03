@@ -64,6 +64,26 @@
             const isFormal = Vue.computed(function() {
                 return !!(wallet.value && wallet.value.charge_mode === 'formal');
             });
+            const vipBadge = Vue.computed(function() {
+                const v = wallet.value && wallet.value.vip;
+                if (!v || !v.level || v.level === 'free' || !(v.discount < 1)) return '';
+                const off = (v.discount * 10).toFixed(1).replace(/\.0$/, '');
+                return (v.level_name || v.level) + ' · AI 调用 ' + off + ' 折';
+            });
+            const overdraftInfo = Vue.computed(function() {
+                const od = wallet.value && wallet.value.overdraft;
+                if (!od || !od.limit || !(od.used > 0)) return null;
+                return {
+                    used: od.used,
+                    limit: od.limit,
+                    pct: Math.min(100, Math.round(od.used * 100 / od.limit)),
+                    exhausted: !!od.exhausted
+                };
+            });
+            const monthSaved = Vue.computed(function() {
+                const b = billing.value;
+                return b && b.month_discount_given > 0 ? b.month_discount_given : 0;
+            });
 
             const confirmMismatch = Vue.computed(function() {
                 return confirmPassword.value && newPassword.value && newPassword.value !== confirmPassword.value;
@@ -470,6 +490,7 @@
                 bindError, bindTarget, bindCode, bindType, bindSending, bindSubmitting, bindCountdown,
                 wallet, walletTxs, walletTotal, walletPage, walletDirection, catalog, meters, walletLoading,
                 billing, packages, recharging, claiming, lowBalance, canClaimDaily, isFormal,
+                vipBadge, overdraftInfo, monthSaved,
                 creditTasks, claimingCode,
                 taskMetricLabel, taskRewardLabel, doCheckin, doClaimTask,
                 toggleOpen, loadSessions, changePassword, revokeSession, revokeAll, doLogout, gotoDatacenter,
@@ -515,10 +536,11 @@
                                     <div class="nux-wallet-balance">
                                         <span class="nux-wallet-amount">{{ wallet.balance }}</span>
                                         <span class="nux-wallet-unit">积分</span>
+                                        <span v-if="vipBadge" class="nux-wallet-badge vip">{{ vipBadge }}</span>
                                         <span v-if="chargeModeLabel()" class="nux-wallet-badge">{{ chargeModeLabel() }}</span>
                                     </div>
                                     <div v-if="lowBalance" :class="['nux-wallet-warn', { formal: isFormal }]">
-                                        {{ isFormal ? '积分即将用完，正式期余额不足将无法使用 AI 能力' : '积分即将用完，明日自动赠送 200 分，体验期内不拦截' }}
+                                        {{ isFormal ? '积分即将用完，正式期余额不足将无法使用 AI 能力' : (overdraftInfo && overdraftInfo.exhausted ? '免费体验额度已用完，每日赠送积分仍可正常使用' : '积分即将用完，明日自动赠送 200 分，体验期内不拦截') }}
                                     </div>
                                     <div class="nux-wallet-gifts">
                                         <span :class="{ done: wallet.register_gift && wallet.register_gift.granted }">
@@ -530,6 +552,10 @@
                                         <button v-if="canClaimDaily" type="button" class="nux-wallet-claim" :disabled="claiming" @click="claimDaily">
                                             {{ claiming ? '领取中…' : '领取今日积分' }}
                                         </button>
+                                    </div>
+                                    <div v-if="overdraftInfo" class="nux-wallet-overdraft">
+                                        <span>{{ overdraftInfo.exhausted ? '体验授信已用完' : ('体验授信垫付中 ' + overdraftInfo.used + '/' + overdraftInfo.limit + ' 积分') }}</span>
+                                        <div class="nux-wallet-bar"><i :style="{ width: overdraftInfo.pct + '%' }"></i></div>
                                     </div>
                                     <div v-if="meters && meters.month" class="nux-wallet-usage">
                                         本月 AI 调用 {{ meters.month.calls || 0 }} 次<span v-if="chargeModeLabel() === '体验期'">（体验期内平台承担）</span>
@@ -563,7 +589,7 @@
                                     </div>
                                 </template>
                                 <div v-if="billing && billing.by_app && billing.by_app.length" class="nux-wallet-block">
-                                    <div class="nux-uc-sessions-head"><span>消费汇总</span><span class="nux-wallet-sum">本月 {{ billing.month_cost || 0 }} · 累计 {{ billing.total_cost || 0 }} 积分</span></div>
+                                    <div class="nux-uc-sessions-head"><span>消费汇总</span><span class="nux-wallet-sum">本月 {{ billing.month_cost || 0 }} · 累计 {{ billing.total_cost || 0 }} 积分<span v-if="monthSaved" class="nux-wallet-saved"> · 已省 {{ monthSaved }}</span></span></div>
                                     <div class="nux-wallet-apps">
                                         <div v-for="b in billing.by_app" :key="b.app" class="nux-wallet-app">
                                             <div class="nux-wallet-app-row">
@@ -622,7 +648,7 @@
                                     <b>积分规则</b>
                                     <p>获取：注册赠 {{ wallet.register_gift ? wallet.register_gift.amount : 1000 }} 分；每日自动赠 {{ wallet.daily_gift ? wallet.daily_gift.amount : 200 }} 分；签到与任务可再赚{{ isFormal ? '；也可充值补充' : '' }}。</p>
                                     <p>消耗：调用 AI 能力按上方目录价扣积分，按应用记录在消费汇总。</p>
-                                    <p v-if="!isFormal">当前为体验期：余额不足不拦截、由平台承担，正式计费开启前会提前通知。</p>
+                                    <p v-if="!isFormal">当前为体验期：余额不足时由平台垫付（体验授信 {{ wallet.overdraft && wallet.overdraft.limit ? wallet.overdraft.limit + ' 分' : '有限额度' }}），授信用完后每日赠送积分仍可正常使用；正式计费开启前会提前通知。</p>
                                     <p v-else>当前为正式期：余额不足时将无法使用 AI 能力，请及时充值。</p>
                                 </div>
                             </template>

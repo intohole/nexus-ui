@@ -862,6 +862,20 @@
   background: var(--nx-accent-soft, rgba(59, 130, 246, 0.12));
   color: var(--nx-accent, #3b82f6);
 }
+.nux-wallet-badge.vip {
+  margin-left: 0;
+  background: rgba(202, 138, 4, 0.12);
+  color: #a16207;
+}
+.nux-wallet-overdraft {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #a16207;
+}
+.nux-wallet-overdraft .nux-wallet-bar i { background: #d97706; }
+.nux-wallet-saved { color: var(--nx-success, #16a34a); }
 .nux-wallet-gifts {
   display: flex;
   flex-wrap: wrap;
