@@ -792,7 +792,7 @@
             'aipet': '/aipet/', 'lifecompass': '/lifecompass/', 'truemirror': '/truemirror/',
             'suki': '/suki/', 'lyra': '/lyra/', 'codeblock': '/codeblock/',
             'promptgenius': '/promptgenius/', 'financialkg': '/financialkg/',
-            'goldenstock': '/goldenstock/', 'beememory': '/beememory/', 'drawio': '/drawio/'
+            'goldenstock': '/golden/', 'beememory': '/beememory/', 'drawio': '/drawio/'
         };
         const APP_LABELS = {
             'resumeai': '跃职', 'challengeplanet': '跬步', 'onenote': '拾光',
