@@ -64,6 +64,8 @@ def iter_files(root: Path):
         parts = set(path.relative_to(root).parts)
         if parts & SKIP_DIRS:
             continue
+        if any(part.startswith("venv") for part in parts):
+            continue
         if any(part in path.name for part in SKIP_NAME_PARTS):
             continue
         if path.stat().st_size > MAX_FILE_BYTES:
