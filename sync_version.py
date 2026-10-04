@@ -14,6 +14,7 @@ import re
 import sys
 
 NX_RE = re.compile(r"(nexus-ui/v[0-9.]+/?)")
+SNAPSHOT_RE = re.compile(r"^v\d+(?:\.\d+)+$")
 
 
 def _load_spec(root: str) -> str:
@@ -39,7 +40,7 @@ def main() -> int:
     skip_dirs = (".git", "node_modules", "vendor", "__pycache__", "dist", ".venv", "venv", "data", "logs")
     changed, total = 0, 0
     for dirpath, dirnames, filenames in os.walk(root):
-        dirnames[:] = [d for d in dirnames if d not in skip_dirs]
+        dirnames[:] = [d for d in dirnames if d not in skip_dirs and not SNAPSHOT_RE.match(d)]
         for fn in filenames:
             if not (fn.endswith(".html") or fn.endswith(".js") or fn.endswith(".md") or fn.endswith(".json")):
                 continue

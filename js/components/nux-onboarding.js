@@ -74,7 +74,6 @@
                     <div class="nux-onboarding-actions">
                         <button type="button" v-if="!isLast" class="nux-onboarding-btn nux-onboarding-btn-primary" @click="next">下一步</button>
                         <button type="button" v-else class="nux-onboarding-btn nux-onboarding-btn-primary" @click="finish">开始使用</button>
-                        <button type="button" class="nux-onboarding-btn nux-onboarding-btn-ghost" @click="skip">跳过</button>
                     </div>
                 </div>
             </div>

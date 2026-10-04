@@ -811,15 +811,15 @@
             'goldenstock': '/golden/', 'beememory': '/beememory/', 'drawio': '/drawio/'
         };
         const APP_LABELS = {
-            'resumeai': '跃职', 'challengeplanet': '跬步', 'onenote': '拾光',
-            'wisepath': '智途', 'gezhi': '格致', 'travelmate': '拾途', 'miaobi': '秒笔',
+            'resumeai': '跃职', 'challengeplanet': '星轨挑战', 'onenote': '拾光',
+            'wisepath': '智途志愿', 'gezhi': '格致', 'travelmate': '拾途旅行', 'miaobi': '秒笔',
             'aipet': '宠康管家', 'lifecompass': '司南', 'truemirror': '照妖镜',
             'geniusstudent': '天才学伴', 'codeblock': '编程学伴', 'suki': '璇玑',
             'lyra': '灵弦', 'nexus-agent': '灵犀', 'promptgenius': '镕裁',
-            'financialkg': '金融图谱', 'goldenfish': 'GoldenFish',
-            'goldenstock': 'GoldenStock', 'versecraft': 'VerseCraft',
-            'beememory': 'beeMemory', 'minideploy': 'miniDeploy',
-            'userfeedback': 'userFeedback', 'usercenter': '钱包',
+            'financialkg': '知识图谱', 'goldenfish': '金鱼助手',
+            'goldenstock': '金股智投', 'golden': '金股智投', 'versecraft': '墨韵创作',
+            'beememory': '蜜蜂记忆', 'minideploy': '部署平台',
+            'userfeedback': '意见反馈', 'usercenter': '钱包',
             'notifycenter': '通知中心', 'system': '系统'
         };
         function normalize(url) {

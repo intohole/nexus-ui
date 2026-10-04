@@ -12,6 +12,7 @@
                 open: false,
                 unread: 0,
                 items: [],
+                total: 0,
                 loading: false,
                 error: '',
                 timer: null
@@ -23,7 +24,8 @@
                     return NexusUtils.createDualStorage('uc_access_token').getItem('uc_access_token') || '';
                 } catch (e) { return ''; }
             },
-            authed: function() { return !!this.token; }
+            authed: function() { return !!this.token; },
+            hiddenCount: function() { return Math.max(0, this.total - this.items.length); }
         },
         mounted: function() {
             if (!this.authed) return;
@@ -72,6 +74,7 @@
                 self.error = '';
                 self.fetchJson('/api/notify/notifications?page=1&page_size=' + self.maxVisible).then(function(d) {
                     self.items = (d && Array.isArray(d.items)) ? d.items : [];
+                    self.total = (d && typeof d.total === 'number') ? d.total : self.items.length;
                 }).catch(function(e) {
                     self.error = '通知加载失败';
                     if (e && e.status === 404) self.unread = 0;
@@ -144,6 +147,10 @@
                             </div>
                         </li>
                     </ul>
+                    <div v-if="!loading && !error && items.length" class="nux-notify-foot">
+                        <span>共 {{ total }} 条</span>
+                        <span v-if="hiddenCount" class="nux-notify-foot-hint">仅显示最新 {{ items.length }} 条</span>
+                    </div>
                 </div>
             </div>
         `
