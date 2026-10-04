@@ -7,7 +7,8 @@
     'use strict';
     if (window.NexusFeedbackFloat) return;
 
-    var API_BASE = String(window.NEXUS_FEEDBACK_BASE || '/userfeedback').replace(/\/+$/, '');
+    var API_BASE = String(window.NEXUS_FEEDBACK_BASE
+        || (location.origin + '/userfeedback')).replace(/\/+$/, '');
     var ROOT_ID = 'nux-feedback-root';
     var PANEL_Z = 1600;
     var MAX_CONSOLE = 8;
