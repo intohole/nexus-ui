@@ -1,4 +1,5 @@
 (function() {
+    let fieldUid = 0;
     const NuxTextarea = {
         name: 'NuxTextarea',
         props: {
@@ -18,6 +19,15 @@
         computed: {
             count() {
                 return String(this.modelValue == null ? '' : this.modelValue).length;
+            },
+            fieldId() {
+                if (!this._fieldId) this._fieldId = 'nux-textarea-' + (++fieldUid);
+                return this._fieldId;
+            },
+            describedBy() {
+                if (this.error) return this.fieldId + '-error';
+                if (this.hint) return this.fieldId + '-hint';
+                return undefined;
             }
         },
         methods: {
@@ -38,11 +48,12 @@
         },
         template: `
             <div class="nux-field" :class="{ 'nux-field--error': error }">
-                <label v-if="label" class="nux-field-label">
+                <label v-if="label" class="nux-field-label" :for="fieldId">
                     {{ label }}<span v-if="required" class="nux-field-required">*</span>
                 </label>
                 <textarea
                     ref="ta"
+                    :id="fieldId"
                     class="nux-input nux-textarea"
                     :rows="rows"
                     :value="modelValue"
@@ -50,12 +61,14 @@
                     :disabled="disabled"
                     :readonly="readonly"
                     :maxlength="maxlength || null"
+                    :aria-invalid="error ? 'true' : undefined"
+                    :aria-describedby="describedBy"
                     @input="onInput"
                     @blur="onBlur"
                 ></textarea>
                 <div class="nux-field-foot">
-                    <span v-if="error" class="nux-field-error">{{ error }}</span>
-                    <span v-else-if="hint" class="nux-field-hint">{{ hint }}</span>
+                    <span v-if="error" :id="fieldId + '-error'" class="nux-field-error">{{ error }}</span>
+                    <span v-else-if="hint" :id="fieldId + '-hint'" class="nux-field-hint">{{ hint }}</span>
                     <span v-if="maxlength" class="nux-field-count">{{ count }}/{{ maxlength }}</span>
                 </div>
             </div>

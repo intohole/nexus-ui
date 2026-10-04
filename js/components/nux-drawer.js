@@ -5,6 +5,7 @@
             modelValue: { type: Boolean, default: false },
             side: { type: String, default: 'left' },
             width: { type: String, default: '280px' },
+            label: { type: String, default: '' },
             escClose: { type: Boolean, default: true },
             closeOnOverlay: { type: Boolean, default: true }
         },
@@ -37,6 +38,7 @@
                 </transition>
                 <transition :name="side === 'right' ? 'nux-drawer-right' : 'nux-drawer-left'">
                     <div v-if="modelValue" ref="refs"
+                         role="dialog" aria-modal="true" :aria-label="label || undefined"
                          :class="['nx-drawer', side === 'right' ? 'nx-drawer-right' : '']"
                          :style="{ width: width, maxWidth: '85vw', transform: modelValue ? 'translateX(0)' : '' }">
                         <slot></slot>

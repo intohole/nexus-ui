@@ -5,6 +5,7 @@
             modelValue: { type: Boolean, default: false },
             label: { type: String, default: '' },
             description: { type: String, default: '' },
+            ariaLabel: { type: String, default: '' },
             disabled: { type: Boolean, default: false }
         },
         emits: ['update:modelValue', 'change'],
@@ -16,7 +17,7 @@
             }
         },
         template: `
-            <div class="nux-switch-field" :class="{ 'nux-switch-field--disabled': disabled }" @click="toggle" role="switch" :aria-checked="String(modelValue)" :tabindex="disabled ? -1 : 0" @keydown.enter.prevent="toggle" @keydown.space.prevent="toggle">
+            <div class="nux-switch-field" :class="{ 'nux-switch-field--disabled': disabled }" @click="toggle" role="switch" :aria-checked="String(modelValue)" :aria-label="ariaLabel || undefined" :tabindex="disabled ? -1 : 0" @keydown.enter.prevent="toggle" @keydown.space.prevent="toggle">
                 <div v-if="label || description" class="nux-switch-text">
                     <span v-if="label" class="nux-switch-label">{{ label }}</span>
                     <span v-if="description" class="nux-switch-desc">{{ description }}</span>

@@ -701,6 +701,22 @@
         });
     };
 
+    // 方向键在列表索引间移动（左右/上下/Home/End，首尾环绕）；非导航键返回 -1
+    utils.rovingIndex = function (e, count, current) {
+        if (!count || count <= 0) return -1;
+        let idx = (current === undefined || current < 0 || current >= count) ? 0 : current;
+        switch (e.key) {
+            case 'ArrowRight': case 'ArrowDown': idx += 1; break;
+            case 'ArrowLeft': case 'ArrowUp': idx -= 1; break;
+            case 'Home': idx = 0; break;
+            case 'End': idx = count - 1; break;
+            default: return -1;
+        }
+        if (idx < 0) idx = count - 1;
+        if (idx >= count) idx = 0;
+        return idx;
+    };
+
     utils.overlayStack = function () {
         const stack = [];
         return {

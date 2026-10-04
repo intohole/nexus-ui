@@ -119,6 +119,7 @@ NexusUtils.pick(obj, keys);
 NexusUtils.omit(obj, keys);
 NexusUtils.downloadFile(content, filename, mimeType);
 NexusUtils.focusables(rootEl);        // 弹层焦点陷阱：容器内可见可聚焦元素列表
+NexusUtils.rovingIndex(e, count, current); // 方向键在列表索引间移动（左右/上下/Home/End 首尾环绕），非导航键返回 -1
 NexusUtils.autoResize(textareaElement);
 NexusUtils.formatDateTime(dateString);    // 2026/06/30 10:30:00（含秒）
 NexusUtils.formatPercent(value, decimals); // 15.6%
@@ -147,6 +148,8 @@ NexusUtils.overlayStack();            // 弹层层级栈（配 overlayBehavior �
 - **顶栏高度单源**：`--nxs-header-h`（默认 56px，nexus-tokens.css 定义）。nux-layout 的 header/aside/main、topnav-drawer、移动端通知面板全部引用它并自动叠加 `--nx-safe-top`；宿主改顶栏高度只需 `:root { --nxs-header-h: 64px }`，禁止在业务里写死 56px。
 - **z-index 只用令牌**：阶梯（低→高）nav 90 → header 100 → side-mask 110 → side-panel 120 → trigger/hamburger 150 → popover 180 → modal 200 → settings 400 → overlay 998 → drawer 999 → toast-host 1100 → unlock 1150 → topmost 1200。导航抽屉（drawer 999）刻意置顶于 modal/settings——抽屉打开期间二者的 header 触发器不可达，不会叠加；通知下拉用 popover（180），不再压住 modal。业务自建浮层必须消费 `--nx-z-*`，禁止裸数字。
 - **弹层关闭契约对称**：nux-modal 与 nux-drawer 均支持 `esc-close` / `close-on-overlay`（默认 true）。
+- **浮层可访问性契约（v2.47.0+）**：nux-modal/nux-drawer 渲染 `role=dialog + aria-modal`（drawer 新增 `label` prop 提供可访问名），modal 标题经 `aria-labelledby` 关联；showToast info 为 `role=status`、error 为 `role=alert`；nuxConfirm（alertdialog）/nuxPrompt 打开时 Tab 焦点锁定在弹层内、关闭后焦点归还触发元素。业务自建浮层应复用 `NexusUtils.overlayBehavior`（焦点陷阱+Esc+关还焦）与 `trapTabIn` 同款语义。
+- **表单可访问性契约（v2.47.0+）**：nux-input/nux-textarea/nux-select 传 `label` 时自动生成 fieldId 并 `label[for]` 关联控件，error/hint 经 `aria-describedby` 关联、出错控件带 `aria-invalid`；宿主自建表单字段请保持同款关联。
 - **组件取值域**：语义色 prop 新组件统一 `variant`（存量 nux-tag/nux-badge 的 `type` 保留兼容）；nux-button `size` 接受 `sm/md/lg` 及 `small/medium/large` 别名（自动归一）；nux-select 无论选项 value 是 string/number/boolean，emit 回业务时保持原类型（原生 select 的字符串化在组件内消化）。
 
 ### NexusStore
@@ -317,10 +320,11 @@ if (reason !== null) { /* 确认提交（含空字符串，required:false 时可
 | nux-radio-group | `<nux-radio-group v-model="val" :options="[{label,value}]" label block></nux-radio-group>`（胶囊单选组，block 纵排） |
 | nux-input-number | `<nux-input-number v-model="n" :min="0" :max="100" :step="1" unit="个" label></nux-input-number>`（步进器，键盘可用） |
 | nux-swipe-actions | `<nux-swipe-actions :left-actions="[{key,label,icon,tone}]" :right-actions="[]" @action="fn(key)"><div>内容</div></nux-swipe-actions>`（滑动单元格：右滑露左操作、左滑露右操作；tone: accent/danger/success/warning/neutral；触摸+鼠标拖拽，touch-action:pan-y 不影响纵向滚动；同页互斥自动收起；暴露 close()） |
-| nux-switch | `<nux-switch v-model="on" label="开启" description="说明文字"></nux-switch>` |
+| nux-switch | `<nux-switch v-model="on" label="开启" description="说明文字"></nux-switch>`（无可见 label 时用 aria-label 提供可访问名） |
 | nux-checkbox | `<nux-checkbox v-model="on" label="同意"></nux-checkbox>` |
 | nux-search-box | `<nux-search-box v-model="kw" :delay="300" @search="fn"></nux-search-box>`（防抖search+回车确认） |
-| nux-segmented | `<nux-segmented v-model="tab" :options="[{label,value}]"></nux-segmented>`（滑动指示器） |
+| nux-segmented | `<nux-segmented v-model="tab" :options="[{label,value}]" aria-label="视图切换"></nux-segmented>`（滑动指示器；radiogroup 语义，方向键可选） |
+| nux-tab-group | `<nux-tab-group v-model="tab" :tabs="[{key,label,icon}]" aria-label="内容分区"></nux-tab-group>`（tablist 语义，左右方向键/Home/End 切换） |
 | nux-chip-group | `<nux-chip-group v-model="sel" :options="[{label,value}]" :multiple="true" :removable="true" @remove="fn"></nux-chip-group>` |
 | nux-tag | `<nux-tag type="success|warning|danger|info|primary" size="sm|md" :plain="true">文案</nux-tag>`（状态标签，plain 描边款；type 缺省为中性灰） |
 | nux-progress | `<nux-progress :value="66" label="标题"></nux-progress>` 或 `<nux-progress type="circle" :value="66" status="success"></nux-progress>` |

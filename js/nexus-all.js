@@ -702,6 +702,22 @@
         });
     };
 
+    // 方向键在列表索引间移动（左右/上下/Home/End，首尾环绕）；非导航键返回 -1
+    utils.rovingIndex = function (e, count, current) {
+        if (!count || count <= 0) return -1;
+        let idx = (current === undefined || current < 0 || current >= count) ? 0 : current;
+        switch (e.key) {
+            case 'ArrowRight': case 'ArrowDown': idx += 1; break;
+            case 'ArrowLeft': case 'ArrowUp': idx -= 1; break;
+            case 'Home': idx = 0; break;
+            case 'End': idx = count - 1; break;
+            default: return -1;
+        }
+        if (idx < 0) idx = count - 1;
+        if (idx >= count) idx = 0;
+        return idx;
+    };
+
     utils.overlayStack = function () {
         const stack = [];
         return {
@@ -905,8 +921,13 @@
             : ensureHost('nux-toast-host', 'nux-toast-container');
         const item = document.createElement('div');
         item.className = 'nux-toast-item nux-toast-' + kind;
-        item.setAttribute('role', 'status');
-        item.setAttribute('aria-live', 'polite');
+        if (kind === 'error') {
+            item.setAttribute('role', 'alert');
+            item.setAttribute('aria-live', 'assertive');
+        } else {
+            item.setAttribute('role', 'status');
+            item.setAttribute('aria-live', 'polite');
+        }
 
         const icon = document.createElement('span');
         icon.className = 'nux-toast-icon';
@@ -958,11 +979,51 @@
     const confirmQueue = [];
     let confirmNode = null;
 
+    // 模态内 Tab 焦点陷阱（原生 DOM 浮层用；Vue 组件走 NexusUtils.overlayBehavior）
+    function trapTabIn(dialog) {
+        if (dialog.__nxTrap) return;
+        const handler = function (e) {
+            if (e.key !== 'Tab' || !window.NexusUtils) return;
+            const list = window.NexusUtils.focusables(dialog);
+            if (!list.length) return;
+            const first = list[0];
+            const last = list[list.length - 1];
+            if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
+        };
+        document.addEventListener('keydown', handler, true);
+        dialog.__nxTrap = handler;
+    }
+
+    function untrapTabIn(dialog) {
+        if (dialog && dialog.__nxTrap) {
+            document.removeEventListener('keydown', dialog.__nxTrap, true);
+            delete dialog.__nxTrap;
+        }
+    }
+
+    function rememberTrigger(node) {
+        node.restoreEl = (document.activeElement && document.activeElement !== document.body)
+            ? document.activeElement : null;
+    }
+
+    function restoreTrigger(node) {
+        if (node.restoreEl && node.restoreEl.focus) {
+            try { node.restoreEl.focus(); } catch (e) { }
+        }
+        node.restoreEl = null;
+    }
+
     function buildConfirm() {
         const overlay = document.createElement('div');
         overlay.className = 'nx-modal-overlay nux-confirm-overlay';
         overlay.innerHTML = '<div class="nx-modal" style="max-width:400px" role="alertdialog" aria-modal="true">' +
-            '<div class="nx-modal-title"></div><p class="nux-confirm-msg"></p>' +
+            '<div class="nx-modal-title" id="nux-confirm-title"></div><p class="nux-confirm-msg" id="nux-confirm-msg"></p>' +
             '<div class="nux-modal-footer">' +
             '<button class="nux-btn nux-btn--ghost" type="button" data-role="cancel"></button>' +
             '<button class="nux-btn nux-btn--primary" type="button" data-role="confirm"></button>' +
@@ -1021,7 +1082,9 @@
         confirmNode = null;
         const resolve = node.resolve;
         node.resolve = null;
+        untrapTabIn(node.dialog);
         leave(node.overlay);
+        restoreTrigger(node);
         if (resolve) resolve(value);
         const next = confirmQueue.shift();
         if (next) showConfirm(next);
@@ -1047,9 +1110,13 @@
 
     function showConfirm(item) {
         const node = buildConfirm();
+        node.dialog = node.overlay.firstElementChild;
         node.title.textContent = item.title;
         node.title.style.display = item.title ? '' : 'none';
         node.message.textContent = item.message;
+        node.dialog.setAttribute('aria-describedby', 'nux-confirm-msg');
+        if (item.title) node.dialog.setAttribute('aria-labelledby', 'nux-confirm-title');
+        else node.dialog.setAttribute('aria-label', '确认操作');
         node.confirmBtn.textContent = item.confirmText;
         node.confirmBtn.className = 'nux-btn ' + (item.confirmType === 'danger' ? 'nux-btn--danger' : 'nux-btn--primary');
         node.cancelBtn.textContent = item.cancelText;
@@ -1060,9 +1127,11 @@
         node.countdown = item.countdown;
         node.countdownTimer = null;
         node.busy = false;
+        rememberTrigger(node);
         document.body.appendChild(node.overlay);
         confirmNode = node;
         enter(node.overlay);
+        trapTabIn(node.dialog);
         if (node.countdown > 0) startCountdown(node);
         else node.confirmBtn.focus();
     }
@@ -1113,7 +1182,9 @@
         promptNode = null;
         const resolve = node.resolve;
         node.resolve = null;
+        untrapTabIn(node.dialog);
         leave(node.overlay);
+        restoreTrigger(node);
         if (resolve) resolve(value);
         const next = promptQueue.shift();
         if (next) showPrompt(next);
@@ -1122,9 +1193,9 @@
     function showPrompt(item) {
         const overlay = document.createElement('div');
         overlay.className = 'nx-modal-overlay nux-confirm-overlay';
-        overlay.innerHTML = '<div class="nx-modal nux-prompt-modal" role="dialog" aria-modal="true" aria-label="' + (item.title || '输入') + '">' +
-            '<div class="nx-modal-title"></div>' +
-            '<p class="nux-confirm-msg nux-prompt-msg"></p>' +
+        overlay.innerHTML = '<div class="nx-modal nux-prompt-modal" role="dialog" aria-modal="true">' +
+            '<div class="nx-modal-title" id="nux-prompt-title"></div>' +
+            '<p class="nux-confirm-msg nux-prompt-msg" id="nux-prompt-msg"></p>' +
             '<textarea class="nux-input nux-prompt-input" aria-describedby="nux-prompt-error"></textarea>' +
             '<p class="nux-prompt-error" id="nux-prompt-error" role="alert"></p>' +
             '<div class="nux-modal-footer">' +
@@ -1133,8 +1204,11 @@
             '</div></div>';
 
         const dialog = overlay.firstElementChild;
+        if (item.title) dialog.setAttribute('aria-labelledby', 'nux-prompt-title');
+        if (item.message) dialog.setAttribute('aria-describedby', 'nux-prompt-msg nux-prompt-error');
         const node = {
             overlay: overlay,
+            dialog: dialog,
             input: dialog.querySelector('.nux-prompt-input'),
             error: dialog.querySelector('.nux-prompt-error'),
             confirmBtn: dialog.querySelector('[data-role="confirm"]'),
@@ -1171,9 +1245,11 @@
             settlePrompt(true);
         });
 
+        rememberTrigger(node);
         document.body.appendChild(overlay);
         promptNode = node;
         enter(overlay);
+        trapTabIn(dialog);
         node.input.focus();
         node.input.select();
     }
@@ -3921,6 +3997,10 @@ class UserCenterSDK {
         if (email) data.email = email;
         if (phone) data.phone = phone;
         if (inviteCode) data.invite_code = inviteCode;
+        try {
+            const ref = new URLSearchParams(window.location.search).get('ref');
+            if (ref) data.ref_code = ref;
+        } catch (e) {}
         if (captcha) { data.captcha_id = captcha.captchaId; data.captcha_code = captcha.captchaCode; }
         const result = await this._request('POST', '/api/auth/register', data, false);
         if (result.success && result.data) { this._setTokens(result.data); }
@@ -4052,6 +4132,7 @@ class UserCenterSDK {
     async payCreditOrder(orderNo) { return this._request('POST', `/api/billing/orders/${orderNo}/pay`); }
 
     async getCreditTasks() { return this._request('GET', '/api/credits/tasks'); }
+    async getCreditsInvite() { return this._request('GET', '/api/credits/invite'); }
     async checkinCreditTask() { return this._request('POST', '/api/credits/tasks/checkin'); }
     async claimCreditTask(code) { return this._request('POST', `/api/credits/tasks/${encodeURIComponent(code)}/claim`); }
 

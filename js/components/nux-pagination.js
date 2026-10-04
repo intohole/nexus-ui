@@ -5,7 +5,8 @@
             page: { type: Number, default: 1 },
             totalPages: { type: Number, default: 1 },
             hasNext: { type: Boolean, default: null },
-            hasPrev: { type: Boolean, default: null }
+            hasPrev: { type: Boolean, default: null },
+            ariaLabel: { type: String, default: '分页' }
         },
         emits: ['prev', 'next'],
         computed: {
@@ -13,11 +14,11 @@
             canNext: function() { return this.hasNext === null ? this.page < this.totalPages : this.hasNext; }
         },
         template: `
-            <div class="nux-pagination">
-                <button class="nux-btn nux-btn--ghost nux-btn--sm" :disabled="!canPrev" @click="$emit('prev')">上一页</button>
-                <span class="nux-pagination-info">{{ page }} / {{ totalPages }}</span>
-                <button class="nux-btn nux-btn--ghost nux-btn--sm" :disabled="!canNext" @click="$emit('next')">下一页</button>
-            </div>
+            <nav class="nux-pagination" :aria-label="ariaLabel">
+                <button type="button" class="nux-btn nux-btn--ghost nux-btn--sm" :disabled="!canPrev" @click="$emit('prev')">上一页</button>
+                <span class="nux-pagination-info" aria-live="polite">{{ page }} / {{ totalPages }}</span>
+                <button type="button" class="nux-btn nux-btn--ghost nux-btn--sm" :disabled="!canNext" @click="$emit('next')">下一页</button>
+            </nav>
         `
     };
 
