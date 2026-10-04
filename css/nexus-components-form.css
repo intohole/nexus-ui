@@ -1010,3 +1010,10 @@
   white-space: nowrap;
 }
 .nux-wallet-task-ok { font-size: 12px; color: var(--nx-success, #16a34a); white-space: nowrap; }
+.nux-wallet-growth-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.nux-wallet-growth-row + .nux-wallet-sum { margin-top: 4px; }
+.nux-wallet-growth-bonus { font-size: 12px; color: #059669; font-weight: 600; }
+.nux-wallet-badge.growth { background: rgba(5, 150, 105, 0.12); color: #059669; }
+.nux-wallet-invite { display: flex; align-items: center; gap: 10px; margin: 8px 0 4px; }
+.nux-wallet-invite-code { font-family: var(--nx-font-mono, ui-monospace, monospace); font-size: 16px; font-weight: 700; letter-spacing: 2px; padding: 4px 10px; border-radius: 8px; background: var(--nx-bg-muted, #f1f5f9); }
+.nux-wallet-block .nux-wallet-sum { display: block; }

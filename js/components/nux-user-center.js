@@ -47,6 +47,8 @@
             const walletLoading = Vue.ref(false);
             const walletPageSize = 20;
             const creditTasks = Vue.ref([]);
+            const inviteInfo = Vue.ref(null);
+            const inviteCopied = Vue.ref(false);
             const claimingCode = Vue.ref('');
 
             const APP_NAMES = {
@@ -297,6 +299,33 @@
                 return window.NexusUtils ? NexusUtils.formatDateTimeHyphen(t) : '';
             }
 
+            function copyInviteLink() {
+                const info = inviteInfo.value;
+                if (!info || !info.code) return;
+                const link = window.location.origin + '/register.html?ref=' + info.code;
+                const done = function() {
+                    inviteCopied.value = true;
+                    toast('邀请链接已复制，好友注册双方都得积分');
+                    setTimeout(function() { inviteCopied.value = false; }, 2000);
+                };
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(link).then(done).catch(function() { fallbackCopy(link, done); });
+                } else {
+                    fallbackCopy(link, done);
+                }
+            }
+
+            function fallbackCopy(text, done) {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); done(); } catch (e) {}
+                document.body.removeChild(ta);
+            }
+
             function loadWallet() {
                 if (walletLoading.value) return;
                 walletLoading.value = true;
@@ -306,13 +335,15 @@
                     props.sdk.getPointsCatalog(window.ucConfig && window.ucConfig.app_key),
                     props.sdk.getMetersSummary(),
                     props.sdk.getBillingSummary(),
-                    (props.sdk.getCreditTasks ? props.sdk.getCreditTasks() : Promise.resolve(null)).catch(function() { return null; })
+                    (props.sdk.getCreditTasks ? props.sdk.getCreditTasks() : Promise.resolve(null)).catch(function() { return null; }),
+                    (props.sdk.getCreditsInvite ? props.sdk.getCreditsInvite() : Promise.resolve(null)).catch(function() { return null; })
                 ]).then(function(results) {
                     if (results[0] && results[0].success) wallet.value = results[0].data;
                     if (results[2] && results[2].success) catalog.value = results[2].data;
                     if (results[3] && results[3].success) meters.value = results[3].data;
                     if (results[4] && results[4].success) billing.value = results[4].data;
                     if (results[5] && results[5].success) creditTasks.value = (results[5].data && results[5].data.tasks) || [];
+                    if (results[6] && results[6].success) inviteInfo.value = results[6].data;
                     if (isFormal.value && !packages.value.length) loadPackages();
                 }).catch(function() {}).finally(function() {
                     walletLoading.value = false;
@@ -491,7 +522,8 @@
                 wallet, walletTxs, walletTotal, walletPage, walletDirection, catalog, meters, walletLoading,
                 billing, packages, recharging, claiming, lowBalance, canClaimDaily, isFormal,
                 vipBadge, overdraftInfo, monthSaved,
-                creditTasks, claimingCode,
+                creditTasks, claimingCode, inviteInfo, inviteCopied,
+                copyInviteLink,
                 taskMetricLabel, taskRewardLabel, doCheckin, doClaimTask,
                 toggleOpen, loadSessions, changePassword, revokeSession, revokeAll, doLogout, gotoDatacenter,
                 sendBindCode, submitBind, switchBindType, boundContact,
@@ -561,6 +593,18 @@
                                         本月 AI 调用 {{ meters.month.calls || 0 }} 次<span v-if="chargeModeLabel() === '体验期'">（体验期内平台承担）</span>
                                     </div>
                                 </div>
+                                <div v-if="wallet.growth" class="nux-wallet-block nux-wallet-growth">
+                                    <div class="nux-uc-sessions-head"><span>成长等级</span><span class="nux-wallet-sum">累计消费 {{ wallet.growth.growth_value }} 积分</span></div>
+                                    <div class="nux-wallet-growth-row">
+                                        <span class="nux-wallet-badge growth">{{ wallet.growth.level_code }} · {{ wallet.growth.level_name }}</span>
+                                        <span v-if="wallet.growth.daily_gift_bonus" class="nux-wallet-growth-bonus">每日赠送 +{{ wallet.growth.daily_gift_bonus }}</span>
+                                        <span v-else class="nux-wallet-sum">消费满 {{ wallet.growth.next_level ? wallet.growth.next_level.threshold : '—' }} 分升级</span>
+                                    </div>
+                                    <div class="nux-wallet-bar"><i :style="{ width: (wallet.growth.progress || 0) + '%' }"></i></div>
+                                    <div v-if="wallet.growth.next_level" class="nux-wallet-sum">
+                                        再消费 {{ Math.max(0, wallet.growth.next_level.threshold - wallet.growth.growth_value) }} 积分升 {{ wallet.growth.next_level.level_code }} · {{ wallet.growth.next_level.level_name }}<span v-if="wallet.growth.next_level.daily_gift_bonus">，每日赠送涨至 +{{ wallet.growth.next_level.daily_gift_bonus }}</span>
+                                    </div>
+                                </div>
                                 <template v-if="creditTasks.length">
                                     <div class="nux-wallet-block">
                                         <div class="nux-uc-sessions-head"><span>赚积分</span><span class="nux-wallet-sum">与每日保底赠送叠加</span></div>
@@ -588,6 +632,14 @@
                                         </div>
                                     </div>
                                 </template>
+                                <div v-if="inviteInfo && inviteInfo.code" class="nux-wallet-block">
+                                    <div class="nux-uc-sessions-head"><span>邀请好友</span><span class="nux-wallet-sum">双方都得积分</span></div>
+                                    <div class="nux-wallet-invite">
+                                        <span class="nux-wallet-invite-code">{{ inviteInfo.code }}</span>
+                                        <button type="button" class="nux-wallet-claim" @click="copyInviteLink">{{ inviteCopied ? '已复制 ✓' : '复制邀请链接' }}</button>
+                                    </div>
+                                    <div class="nux-wallet-sum">好友注册填你的邀请码：TA 得 {{ inviteInfo.invitee_points }} 分，TA 首次消费你再得 {{ inviteInfo.referrer_points }} 分（最多 {{ inviteInfo.max_invitees }} 人）。已邀请 {{ inviteInfo.invited_count }} 人<span v-if="inviteInfo.rewarded_count"> · {{ inviteInfo.rewarded_count }} 人已发奖</span></div>
+                                </div>
                                 <div v-if="billing && billing.by_app && billing.by_app.length" class="nux-wallet-block">
                                     <div class="nux-uc-sessions-head"><span>消费汇总</span><span class="nux-wallet-sum">本月 {{ billing.month_cost || 0 }} · 累计 {{ billing.total_cost || 0 }} 积分<span v-if="monthSaved" class="nux-wallet-saved"> · 已省 {{ monthSaved }}</span></span></div>
                                     <div class="nux-wallet-apps">
@@ -646,8 +698,8 @@
                                 <div class="nux-uc-divider"></div>
                                 <div class="nux-wallet-rules">
                                     <b>积分规则</b>
-                                    <p>获取：注册赠 {{ wallet.register_gift ? wallet.register_gift.amount : 1000 }} 分；每日自动赠 {{ wallet.daily_gift ? wallet.daily_gift.amount : 200 }} 分；签到与任务可再赚{{ isFormal ? '；也可充值补充' : '' }}。</p>
-                                    <p>消耗：调用 AI 能力按上方目录价扣积分，按应用记录在消费汇总。</p>
+                                    <p>获取：注册赠 {{ wallet.register_gift ? wallet.register_gift.amount : 1000 }} 分；每日自动赠 {{ wallet.daily_gift ? wallet.daily_gift.amount : 200 }} 分<span v-if="wallet.growth && wallet.growth.daily_gift_bonus">（含成长等级 +{{ wallet.growth.daily_gift_bonus }}）</span>；签到与任务可再赚{{ isFormal ? '；也可充值补充' : '' }}。</p>
+                                    <p>消耗：调用 AI 能力按上方目录价扣积分，旗舰模型 ×2、轻量模型 ×0.5、标准模型 ×1，按应用记录在消费汇总；消费累计越多成长等级越高。</p>
                                     <p v-if="!isFormal">当前为体验期：余额不足时由平台垫付（体验授信 {{ wallet.overdraft && wallet.overdraft.limit ? wallet.overdraft.limit + ' 分' : '有限额度' }}），授信用完后每日赠送积分仍可正常使用；正式计费开启前会提前通知。</p>
                                     <p v-else>当前为正式期：余额不足时将无法使用 AI 能力，请及时充值。</p>
                                 </div>

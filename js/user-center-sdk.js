@@ -330,6 +330,10 @@ class UserCenterSDK {
         if (email) data.email = email;
         if (phone) data.phone = phone;
         if (inviteCode) data.invite_code = inviteCode;
+        try {
+            const ref = new URLSearchParams(window.location.search).get('ref');
+            if (ref) data.ref_code = ref;
+        } catch (e) {}
         if (captcha) { data.captcha_id = captcha.captchaId; data.captcha_code = captcha.captchaCode; }
         const result = await this._request('POST', '/api/auth/register', data, false);
         if (result.success && result.data) { this._setTokens(result.data); }
@@ -461,6 +465,7 @@ class UserCenterSDK {
     async payCreditOrder(orderNo) { return this._request('POST', `/api/billing/orders/${orderNo}/pay`); }
 
     async getCreditTasks() { return this._request('GET', '/api/credits/tasks'); }
+    async getCreditsInvite() { return this._request('GET', '/api/credits/invite'); }
     async checkinCreditTask() { return this._request('POST', '/api/credits/tasks/checkin'); }
     async claimCreditTask(code) { return this._request('POST', `/api/credits/tasks/${encodeURIComponent(code)}/claim`); }
 
