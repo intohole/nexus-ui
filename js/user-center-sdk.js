@@ -331,17 +331,18 @@ class UserCenterSDK {
         return result;
     }
 
-    async register({ username, password, email = null, phone = null, inviteCode = null, captcha = null, age = null, guardianConsent = null }) {
+    async register({ username, password, email = null, phone = null, inviteCode = null, refCode = null, captcha = null, age = null, guardianConsent = null }) {
         const data = { password, app_key: this.appKey };
         if (username) data.username = username;
         if (email) data.email = email;
         if (phone) data.phone = phone;
         if (inviteCode) data.invite_code = inviteCode;
+        if (refCode) data.ref_code = refCode;
         if (age !== null && age !== undefined) data.age = age;
         if (guardianConsent !== null && guardianConsent !== undefined) data.guardian_consent = guardianConsent;
         try {
             const ref = new URLSearchParams(window.location.search).get('ref');
-            if (ref) data.ref_code = ref;
+            if (ref && !data.ref_code) data.ref_code = ref;
         } catch (e) {}
         if (captcha) { data.captcha_id = captcha.captchaId; data.captcha_code = captcha.captchaCode; }
         const result = await this._request('POST', '/api/auth/register', data, false);

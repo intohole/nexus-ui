@@ -22,6 +22,7 @@
             showEmailField: { type: Boolean, default: false },
             requireEmail: { type: Boolean, default: false },
             showInviteCode: { type: Boolean, default: false },
+            inviteCodeMode: { type: String, default: 'registration' },
             showSmsLogin: { type: Boolean, default: false },
             showRememberMe: { type: Boolean, default: false },
             showForgot: { type: Boolean, default: true },
@@ -310,12 +311,14 @@
                     return;
                 }
                 var captcha = captchaPayload();
+                var isReferral = props.inviteCodeMode === 'referral';
                 var payload = {
                     username: form.username || null,
                     password: form.password,
                     email: form.email || null,
                     phone: form.phone || null,
-                    inviteCode: form.inviteCode || null,
+                    inviteCode: isReferral ? null : (form.inviteCode || null),
+                    refCode: isReferral ? (form.inviteCode || null) : null,
                     code: smsCode.value || null,
                     captchaId: captcha ? captcha.captchaId : null,
                     captchaCode: captcha ? captcha.captchaCode : null,
@@ -339,6 +342,7 @@
                     var res = await sdk.register({
                         username: payload.username, password: payload.password,
                         email: payload.email, phone: payload.phone, inviteCode: payload.inviteCode,
+                        refCode: payload.refCode,
                         captcha: captcha,
                         age: payload.age, guardianConsent: payload.guardianConsent
                     });
