@@ -21,6 +21,7 @@
   max-width: 520px;
   width: calc(100% - 2rem);
   max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem);
   overflow-y: auto;
   box-shadow: var(--nx-shadow-lg);
 }

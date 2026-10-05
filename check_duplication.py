@@ -43,7 +43,7 @@ RULES = [
     ("sse-reader", "fail", r"\.getReader\(\)",
      "自实现 SSE 流分块解析 → NexusStream.post / read / consume"),
     ("intersection-observer", "fail", r"new\s+IntersectionObserver",
-     "自实现滚动加载观察器 → nux-infinite-scroll"),
+     "自实现滚动加载观察器 → 优先复用库内能力，无则用原生 IntersectionObserver 封装（勿散落页面）"),
     ("local-format-util", "warn",
      r"function\s+(formatDate|formatTime|formatMoney|formatCurrency|debounce|throttle|escapeHtml|formatBytes)\s*\(",
      "自实现通用工具函数 → 确认 NexusUtils 是否已有等价实现（formatDate/debounce/formatCurrency/escapeHtml…）"),

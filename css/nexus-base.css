@@ -13,6 +13,7 @@ body {
   color: var(--nx-text-body);
   background: var(--nx-bg-base);
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 a { color: var(--app-accent); text-decoration: none; transition: color var(--nx-transition-fast); }
@@ -51,6 +52,7 @@ a:hover { color: var(--app-accent-hover); }
 .nx-sidebar {
   width: 240px;
   min-height: calc(100vh - 56px);
+  min-height: calc(100dvh - 56px);
   background: var(--nx-bg-surface);
   border-right: 1px solid var(--nx-border);
   padding: var(--nx-space-4) 0;

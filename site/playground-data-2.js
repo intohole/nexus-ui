@@ -1086,7 +1086,7 @@ NuxAppSwitcher.refresh();
       },
       {
         id: 'portal-combo',
-        tag: 'nux-app-card / nux-pagination / nux-portal-footer',
+        tag: 'nux-app-card / nux-pagination',
         title: '门户组合页',
         desc: '应用卡片（收藏/徽标/主题色）+ 极简分页 + 门户页脚，一个页面串起门户站的三个标准件',
         tpl: `
@@ -1100,12 +1100,10 @@ NuxAppSwitcher.refresh();
   <div style="display: flex; justify-content: center; margin-top: 16px">
     <nux-pagination :page="page" :total-pages="4" @prev="page--" @next="page++"></nux-pagination>
   </div>
-  <nux-portal-footer name="松果氪" slogan="把想做的事，交给 AI"></nux-portal-footer>
 </div>`,
         code: `<nux-app-card :app="app" accent="#0ea5e9" :badge="{label:'新上线'}"
   :show-fav="true" :faved="faved" @fav="toggleFav" @open="open"></nux-app-card>
-<nux-pagination :page="page" :total-pages="4" @prev="page--" @next="page++"></nux-pagination>
-<nux-portal-footer name="松果氪" slogan="把想做的事，交给 AI"></nux-portal-footer>`,
+<nux-pagination :page="page" :total-pages="4" @prev="page--" @next="page++"></nux-pagination>`,
         data() {
           return {
             page: 2,

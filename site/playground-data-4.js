@@ -35,73 +35,7 @@
     data() { return { name: '', intro: '', city: 'sh' }; }
   });
 
-  push('controls', {
-    id: 'sortable',
-    tag: 'nux-sortable',
-    title: '拖拽排序',
-    desc: 'Pointer Events 统一鼠标/触摸拖拽，手柄也可用键盘方向键/Home/End 排序',
-    tpl: `
-<div>
-  <div style="max-width: 360px">
-    <nux-sortable v-model="list" item-key="id" @change="onChange" @sort-end="onEnd">
-      <template #default="{ item }">
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--nx-border);border-radius:10px;background:var(--nx-bg-surface);font-size:14px">
-          <span style="font-size:12px;color:var(--nx-text-muted);width:18px;text-align:center">{{ item.id }}</span>
-          <span>{{ item.title }}</span>
-        </div>
-      </template>
-    </nux-sortable>
-  </div>
-  <p class="demo-note">当前顺序：{{ list.map(i => i.title).join(' → ') }}</p>
-</div>`,
-    code: `<nux-sortable v-model="list" item-key="id" @change="onSave">
-  <template #default="{ item }"><div>{{ item.title }}</div></template>
-</nux-sortable>
-// 键盘：聚焦手柄后方向键移动，Home/End 移到头`,
-    data() {
-      return {
-        list: [
-          { id: 1, title: '梳理大纲' },
-          { id: 2, title: '汇总素材' },
-          { id: 3, title: '成文渲染' }
-        ]
-      };
-    },
-    methods: {
-      onChange(next, info) {
-        window.showToast('已从第 ' + (info.from + 1) + ' 项移到第 ' + (info.to + 1) + ' 项', 'success');
-      },
-      onEnd() { window.showToast('顺序已保存（演示存于内存）', 'info'); }
-    }
-  });
 
-  push('controls', {
-    id: 'infinite-scroll',
-    tag: 'nux-infinite-scroll',
-    title: '无限滚动',
-    desc: 'IntersectionObserver 哨兵触发，自动识别最近的可滚动容器；加载三页后 finished 收口',
-    tpl: `
-<div style="max-height: 280px; overflow-y: auto; border: 1px solid var(--nx-border); border-radius: 12px; padding: 4px 14px" class="nis-demo-box">
-  <nux-infinite-scroll :loading="loading" :finished="finished" :offset="80" @load="loadMore">
-    <div v-for="i in items" :key="i" style="padding:10px 2px;border-bottom:1px dashed var(--nx-border);font-size:14px">第 {{ i }} 条记录</div>
-  </nux-infinite-scroll>
-</div>
-<p class="demo-note">在上方容器里滚到底，自动加载下一页；共 3 页。</p>`,
-    code: `<nux-infinite-scroll :loading="loading" :finished="finished"
-  :offset="200" finished-text="没有更多了" @load="loadMore">列表内容</nux-infinite-scroll>`,
-    data() { return { items: 8, loading: false, finished: false }; },
-    methods: {
-      loadMore() {
-        if (this.loading || this.finished) return;
-        this.loading = true;
-        setTimeout(() => {
-          this.items += 6;
-          this.loading = false;
-          if (this.items >= 26) this.finished = true;
-        }, 600);
-      }
-    }
-  });
 
   push('feedback', {
     id: 'error-state',

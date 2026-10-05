@@ -175,35 +175,6 @@ const name = await nuxPrompt({ title: '重命名', required: true }); // 取消�
 showUnlock({ icon: '🏆', title: '新成就', desc: '连续打卡 7 天' });
 ```
 
-### nux-radar-chart 雷达图组件
-
-Canvas绘制，支持多数据集对比，自适应高DPI屏幕，ResizeObserver响应式。依赖 `nux-radar-chart-util.js`（提供 `window.NuxRadarDraw` 绘制引擎）。
-
-```html
-<nux-radar-chart
-  :labels="['风险纪律','护城河价值','成长分类','趋势时机','宏观反射']"
-  :datasets="[{label:'贵州茅台', values:[100,96.8,80,83.3,71.4], color:'#3b82f6'}]"
-  :max-value="100"
-  :show-labels="true"
-  :show-legend="true"
-  :grid-levels="4">
-</nux-radar-chart>
-```
-
-Props: labels(Array), datasets(Array[{label,values,color}]), maxValue(Number=100), size(Number=320), showLabels(Boolean=true), showLegend(Boolean=true), gridLevels(Number=4)
-
-### NuxRadarDraw 静态绘制函数
-
-独立的Canvas雷达图绘制工具，无需Vue环境，适用于v-html渲染场景。
-
-```javascript
-NuxRadarDraw.draw(canvas, {
-  labels: ['风险纪律','护城河价值','成长分类','趋势时机','宏观反射'],
-  datasets: [{label:'贵州茅台', values:[100,96.8,80,83.3,71.4], color:'#3b82f6'}],
-  maxValue: 100, showLabels: true, showLegend: true, gridLevels: 4
-});
-```
-
 ### nux-login-page 登录页组件
 
 统一登录/注册页，双栏布局（表单+品牌区）。支持账号密码/手机验证码双登录、两步注册、记住我、忘记密码、用户协议勾选、第三方登录。挂载 `window.NuxLoginPage`，全部为新特性时可集成 `promptManager/verseCraft/aiPet/goldenStock/oneNote/WisePath/moutain/chroma/userFeedback/financialKG` 等项目。
@@ -249,22 +220,22 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 
 用户协议页面唯一事实源：本仓库 `agreement.html`（协议条款/隐私政策文案直接维护在该页）。
 
-### 全部组件索引（75 个，以 `NexusComponents.list()` 为准）
+### 全部组件索引（66 个，以 `NexusComponents.list()` 为准）
 
 | 分类 | 组件 |
 |------|------|
 | 布局骨架 | nux-layout-sidebar / nux-layout-topnav / nux-bottom-nav / nux-side-panel / nux-section / nux-backtop |
-| 站点级 | nux-footer / nux-portal-footer / nux-about-page / nux-menu-about / nux-login-page / nux-forgot-password / nux-menu-user / nux-user-center / nux-settings-drawer |
+| 站点级 | nux-footer / nux-about-page / nux-menu-about / nux-login-page / nux-forgot-password / nux-menu-user / nux-user-center / nux-settings-drawer |
 | 反馈 | nux-undo-toast / nux-modal / nux-drawer / nux-notification-bell / nux-notification-panel / nux-loading / nux-skeleton / nux-empty-state / nux-error-state / nux-ai-task-progress |
-| 数据展示 | nux-stat-card / nux-badge / nux-tag / nux-avatar / nux-progress / nux-breadcrumb / nux-calendar / nux-checkin / nux-radar-chart / nux-result-view / nux-selection-bar / nux-pagination / nux-poster / nux-conversation-list / nux-icon |
+| 数据展示 | nux-stat-card / nux-badge / nux-tag / nux-avatar / nux-progress / nux-calendar / nux-checkin / nux-result-view / nux-selection-bar / nux-pagination / nux-poster / nux-conversation-list / nux-icon |
 | 表单控件 | nux-form-group / nux-button / nux-input / nux-textarea / nux-select / nux-switch / nux-checkbox / nux-radio-group / nux-input-number / nux-search-box / nux-segmented / nux-chip-group / nux-accordion / nux-tab-group |
-| 交互增强 | nux-file-upload / nux-infinite-scroll / nux-slider / nux-date-picker / nux-qrcode / nux-sortable / nux-swipe-actions / nux-theme-toggle / nux-camera-recognize / nux-voice-input |
+| 交互增强 | nux-file-upload / nux-swipe-actions / nux-theme-toggle / nux-camera-recognize / nux-voice-input |
 | AI 能力 | nux-ai-badge / nux-ai-chat / nux-ai-indicator / nux-ai-notice / nux-ai-widgets / nux-clarify-card |
 | 应用与引导 | nux-app-card / nux-app-switcher / nux-automation / nux-onboarding / nux-onboarding-strip |
 
-### 零引用组件（2026-10-06 全工作区实测，生产应用 0 处使用；货架保留但选型前知悉）
+### 零引用组件处置记录（2026-10-06 全工作区实测）
 
-nux-about-page / nux-breadcrumb / nux-date-picker / nux-infinite-scroll / nux-portal-footer / nux-qrcode / nux-slider / nux-sortable——8 个组件当前无任何生产消费方。注意 nux-user-center 应用侧 0 引用但是 nux-menu-user 的内部依赖，不可视为零引用。
+原 8 个零消费组件中 7 个（nux-breadcrumb / nux-date-picker / nux-infinite-scroll / nux-portal-footer / nux-qrcode / nux-slider / nux-sortable + nux-radar-chart）已删除下架（业务侧决策：死代码移除，无兼容期）；nux-about-page 保留（nexus-ui 站点 about.html 自用）。注意 nux-user-center 应用侧 0 引用但是 nux-menu-user 的内部依赖，不可视为零引用。
 
 ### 工具脚本（非组件，按需引 script）
 
@@ -347,11 +318,6 @@ if (reason !== null) { /* 确认提交（含空字符串，required:false 时可
 | nux-section | `<nux-section title="标题" description="描述"><template #actions>操作</template>内容</nux-section>`（flat属性去卡片） |
 | nux-backtop | `<nux-backtop :threshold="300"></nux-backtop>` |
 | nux-file-upload | `<nux-file-upload v-model="files" multiple accept="image/*,.pdf" :max-size-mb="10" :max-count="5" label="附件" hint="支持 jpg/png/pdf" @error="onErr" @remove="onRemove"></nux-file-upload>`（点击或拖拽；图片自动缩略图；超限走 error 事件；加 `compress` 先走 NexusUtils.compressImage 再校验大小，移动端拍照场景建议开启） |
-| nux-infinite-scroll | `<nux-infinite-scroll :loading="loading" :finished="finished" :offset="200" :error-text="errText" @load="loadMore">列表内容</nux-infinite-scroll>`（IntersectionObserver 哨兵触发，自动识别最近滚动容器） |
-| nux-slider | `<nux-slider v-model="score" :min="0" :max="100" :step="5" label="评分" unit="分" @change="fn"></nux-slider>`（原生 range，移动端原生体验+键盘可用） |
-| nux-date-picker | `<nux-date-picker v-model="day" type="date|datetime-local|month|time" :min="'2026-01-01'" :max="'2026-12-31'" label="日期" clearable></nux-date-picker>`（原生选择器，移动端调起系统面板） |
-| nux-qrcode | `<nux-qrcode value="https://songguokr.com/x" :size="180" level="M" label="扫码打开" alt="分享二维码" @ready="fn" @error="fn"></nux-qrcode>`（qrcodejs 未加载时自动按 deps.json 版本从 CDN 拉取，失败降级文案） |
-| nux-sortable | `<nux-sortable v-model="list" item-key="id" @change="save"><template #default="{ item, index }"><div>{{ item.name }}</div></template></nux-sortable>`（Pointer Events 统一鼠标/触摸拖拽，键盘方向键/Home/End 可排序） |
 | nux-login-page | 登录/注册一体化组件。**加载顺序**：`nux-login-page-helpers.js` → `nux-login-page-template.js` → `nux-login-page.js`（与 nux-ai-chat 系同模式），再 `NexusComponents.register(app)`。Props 见文末 nux-login-page 段落；支持账号/手机号/验证码登录、注册、忘记密码动态加载（nux-forgot-password.js）、图形验证码、协议勾选、主题色注入 |
 | nux-ai-widgets | AI 对话消息内组件渲染器（后端 SSE `widget` / `widget_update` 事件驱动，nux-ai-chat 自动路由到 `msg.widgets` 并渲染）。**加载顺序**：`nux-ai-chat-helpers.js` → `nux-ai-chat-template.js` → `nux-ai-widgets.js` →（可选增强）`nux-ai-widgets-rich.js` → `nux-ai-chat.js`。基础类型：table / cards / steps / related / choice / feedback；`nux-ai-widgets-rich.js` 追加：form（表单收集）/ chart（图表，echarts 按需 CDN 加载）/ confirm（危险操作二次确认）。steps 支持 `percent` + `status`（running/done/failed）呈现任务进度，可经 `widget_update` 流式更新。交互统一经 `@widget-action` 透传 `{id,type,action,payload}`，action ∈ send/submit/confirm/cancel/feedback/open |
 | nux-camera-recognize | `<nux-camera-recognize upload-url="/api/vision/recognize" prompt="识别图片内容" :json-mode="false" :auto-recognize="true" :stages="['上传图片','AI 识别中','整理结果']" @capture @success @error @cancel></nux-camera-recognize>`（拍照/相册 → 识别 → 结果展示一条龙；自动降级系统相机；结果默认 Markdown 或 JSON 键值表，`#result` 插槽可覆盖） |

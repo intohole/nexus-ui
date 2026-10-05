@@ -131,47 +131,6 @@
         beforeUnmount() { clearInterval(this.timer); }
       },
       {
-        id: 'sortable',
-        tag: 'nux-sortable',
-        title: '拖拽排序',
-        desc: 'Pointer 拖拽 + 键盘方向键/Home/End，松手即提交新顺序并抛出 change',
-        tpl: `
-<div class="demo-col">
-  <nux-sortable v-model="list" item-key="id" @change="onChange">
-    <template #item="{ item, index }">
-      <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;padding:10px 12px;border:1px solid var(--nx-border);border-radius:10px;background:var(--nx-bg-surface)">
-        <span style="font-size:16px">{{ item.icon }}</span>
-        <span style="font-weight:600;font-size:14px">{{ item.name }}</span>
-        <span class="demo-note" style="margin:0 0 0 auto">第 {{ index + 1 }} 位</span>
-      </div>
-    </template>
-  </nux-sortable>
-  <p class="demo-note" style="margin:0">按住左侧圆点拖动；聚焦手柄后也可用方向键 / Home / End 调整。</p>
-</div>`,
-        code: `<nux-sortable v-model="list" item-key="id" @change="onChange">
-  <template #item="{ item, index }">
-    <div class="row">{{ item.name }}（第 {{ index + 1 }} 位）</div>
-  </template>
-</nux-sortable>
-// @change(next, { from, to })：next 为新数组，落地后持久化即可`,
-        data() {
-          return {
-            list: [
-              { id: 'a', icon: '🌅', name: '晨间写作' },
-              { id: 'b', icon: '📚', name: '主题阅读' },
-              { id: 'c', icon: '🏃', name: '三公里慢跑' },
-              { id: 'd', icon: '🧘', name: '睡前复盘' }
-            ]
-          };
-        },
-        methods: {
-          onChange(next, pos) {
-            this.list = next;
-            window.showToast('第 ' + (pos.from + 1) + ' 项移到第 ' + (pos.to + 1) + ' 位', 'success');
-          }
-        }
-      },
-      {
         id: 'backtop',
         tag: 'nux-backtop',
         title: '回到顶部',
@@ -186,42 +145,6 @@
         code: `<nux-backtop :threshold="300" bottom="32px" right="24px"
   @click="onBack"></nux-backtop>`,
         methods: { onBack() { window.showToast('正在回到顶部', 'info'); } }
-      },
-      {
-        id: 'infinite-scroll',
-        tag: 'nux-infinite-scroll',
-        title: '无限滚动',
-        desc: '滚动触底自动派发 load，loading / finished 状态内置展示，容器内滚动即可',
-        tpl: `
-<div>
-  <div style="height: 300px; overflow-y: auto; border: 1px solid var(--nx-border); border-radius: 12px; padding: 4px">
-    <nux-infinite-scroll :loading="loading" :finished="finished" :offset="60" @load="onLoad">
-      <div v-for="n in items" :key="n"
-           style="padding: 12px 14px; margin: 6px; border-radius: 10px; background: var(--nx-bg-muted); font-size: 14px">
-        模拟记录 #{{ String(n).padStart(2, '0') }}
-      </div>
-    </nux-infinite-scroll>
-  </div>
-  <p class="demo-note" style="margin-top: 10px">已加载 {{ items.length }} / 30 条{{ finished ? '，全部加载完毕' : '，继续滚动加载' }}</p>
-</div>`,
-        code: `<nux-infinite-scroll :loading="loading" :finished="finished"
-  :offset="200" @load="onLoad">
-  <div v-for="item in items" :key="item.id">{{ item.title }}</div>
-</nux-infinite-scroll>`,
-        data() { return { items: [1, 2, 3, 4, 5], loading: false, finished: false, seq: 5 }; },
-        methods: {
-          onLoad() {
-            if (this.loading || this.finished) return;
-            this.loading = true;
-            setTimeout(() => {
-              const add = [];
-              for (let i = 0; i < 5 && this.items.length < 30; i++) add.push(++this.seq);
-              this.items = this.items.concat(add);
-              this.loading = false;
-              if (this.items.length >= 30) this.finished = true;
-            }, 700);
-          }
-        }
       },
       {
         id: 'selection-bar',

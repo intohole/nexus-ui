@@ -32,8 +32,7 @@
             '.nxw-cf-items{list-style:none;margin:8px 0 0;padding:8px 10px;background:var(--nx-bg-muted,#f1f5f9);border-radius:var(--nx-radius-sm,8px);font-size:12px;color:var(--nx-text-body,#334155);display:flex;flex-direction:column;gap:4px;max-height:170px;overflow:auto;font-variant-numeric:tabular-nums}',
             '.nxw-cf-warn{margin-top:8px;font-size:11px;color:var(--nx-danger,#ef4444);background:rgba(var(--nx-danger-rgb,239,68,68),.08);border-radius:var(--nx-radius-sm,8px);padding:6px 10px;line-height:1.5}',
             '.nxw-field-input:focus-visible,.nxw-switch:focus-visible,.nxw-ghost:focus-visible,.nxw-danger:focus-visible{outline:none;border-color:var(--app-accent,#6366f1);box-shadow:0 0 0 3px rgba(var(--app-accent-rgb,99,102,241),.18)}',
-            '@media(hover:none) and (pointer:coarse){.nxw-field-input{min-height:44px}.nxw-primary{min-height:44px}.nxw-ghost{min-height:44px}.nxw-danger{min-height:44px}}',
-            '@media(prefers-reduced-motion:reduce){.nxw-list *{transition:none!important}}'
+            '@media(hover:none) and (pointer:coarse){.nxw-field-input{min-height:44px}.nxw-ghost{min-height:44px}.nxw-danger{min-height:44px}}'
         ]);
     }
     ensureStyle();

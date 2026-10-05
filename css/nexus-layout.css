@@ -3,6 +3,7 @@
 .nux-layout-topnav {
     min-height: 100vh;
     min-height: 100dvh;
+    min-height: 100dvh;
 }
 
 /* ========== Header ========== */
@@ -75,6 +76,7 @@
     margin-top: calc(var(--nxs-header-h, 56px) + var(--nx-safe-top, 0px));
     padding: var(--nx-space-6);
     min-height: calc(100vh - var(--nxs-header-h, 56px) - var(--nx-safe-top, 0px));
+    min-height: calc(100dvh - var(--nxs-header-h, 56px) - var(--nx-safe-top, 0px));
     min-height: calc(100dvh - var(--nxs-header-h, 56px) - var(--nx-safe-top, 0px));
 }
 
@@ -251,6 +253,7 @@
 .nux-layout-sidebar.headerless .nux-layout-main {
     margin-top: 0;
     min-height: 100vh;
+    min-height: 100dvh;
     min-height: 100dvh;
 }
 
