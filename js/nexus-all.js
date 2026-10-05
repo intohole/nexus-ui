@@ -3933,12 +3933,14 @@ class UserCenterSDK {
         return result;
     }
 
-    async register({ username, password, email = null, phone = null, inviteCode = null, captcha = null }) {
+    async register({ username, password, email = null, phone = null, inviteCode = null, captcha = null, age = null, guardianConsent = null }) {
         const data = { password, app_key: this.appKey };
         if (username) data.username = username;
         if (email) data.email = email;
         if (phone) data.phone = phone;
         if (inviteCode) data.invite_code = inviteCode;
+        if (age !== null && age !== undefined) data.age = age;
+        if (guardianConsent !== null && guardianConsent !== undefined) data.guardian_consent = guardianConsent;
         try {
             const ref = new URLSearchParams(window.location.search).get('ref');
             if (ref) data.ref_code = ref;

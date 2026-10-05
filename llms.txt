@@ -261,6 +261,10 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 | AI 能力 | nux-ai-badge / nux-ai-chat / nux-ai-indicator / nux-ai-notice / nux-ai-widgets / nux-clarify-card |
 | 应用与引导 | nux-app-card / nux-app-switcher / nux-automation / nux-onboarding / nux-onboarding-strip |
 
+### 零引用组件（2026-10-06 全工作区实测，生产应用 0 处使用；货架保留但选型前知悉）
+
+nux-about-page / nux-breadcrumb / nux-date-picker / nux-infinite-scroll / nux-portal-footer / nux-qrcode / nux-slider / nux-sortable——8 个组件当前无任何生产消费方。注意 nux-user-center 应用侧 0 引用但是 nux-menu-user 的内部依赖，不可视为零引用。
+
 ### 工具脚本（非组件，按需引 script）
 
 - `js/nexus-stream.js`：SSE v2 流式消费器 `NexusStream.consume(fetchImpl, { onEvent, onDone, onError })`，替代手写分帧；配合 nexus-backend `sse_chat_stream_v2` 协议（type 事件投递+心跳）。v2.35.0 起已纳入 nexus-all.js 装配（历史独立 script 引用继续有效）。

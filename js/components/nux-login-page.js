@@ -318,7 +318,9 @@
                     inviteCode: form.inviteCode || null,
                     code: smsCode.value || null,
                     captchaId: captcha ? captcha.captchaId : null,
-                    captchaCode: captcha ? captcha.captchaCode : null
+                    captchaCode: captcha ? captcha.captchaCode : null,
+                    age: props.ageGate ? age.value : null,
+                    guardianConsent: props.ageGate ? guardianAgreed.value : null
                 };
                 if (props.useCustomRegister) {
                     emit('register', payload);
@@ -337,7 +339,8 @@
                     var res = await sdk.register({
                         username: payload.username, password: payload.password,
                         email: payload.email, phone: payload.phone, inviteCode: payload.inviteCode,
-                        captcha: captcha
+                        captcha: captcha,
+                        age: payload.age, guardianConsent: payload.guardianConsent
                     });
                     if (!res || !res.success) { localError.value = (res && res.message) || '注册失败，请重试'; return; }
                     emit('registered', res);

@@ -26,6 +26,8 @@ SKIP_DIRS = {
     ".know", "drawio", "tests", "test", "e2e", ".mypy_cache", ".pytest_cache",
 }
 SKIP_NAME_PARTS = ("e2e", "audit", "verify_", "_test", "test_", ".min.")
+# nexus-ui 自身发布产物在 miniDeploy 的 rsync 镜像：规则命中=库实现非应用侧重复（v* 快照同语义）
+SKIP_PATH_PREFIXES = ("miniDeploy/static/nexus-ui",)
 MAX_FILE_BYTES = 800_000
 MAX_LINE_LEN = 3000
 
@@ -67,6 +69,9 @@ def iter_files(root: Path):
         if any(part.startswith("venv") for part in parts):
             continue
         if any(part in path.name for part in SKIP_NAME_PARTS):
+            continue
+        rel = path.relative_to(root).as_posix()
+        if any(rel.startswith(prefix) for prefix in SKIP_PATH_PREFIXES):
             continue
         if path.stat().st_size > MAX_FILE_BYTES:
             continue

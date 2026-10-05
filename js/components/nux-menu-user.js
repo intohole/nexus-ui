@@ -122,6 +122,7 @@
         },
         emits: ['logout'],
         setup: function (props, ctx) {
+            var ownVnode = Vue.getCurrentInstance().vnode;
             var appInstance = Vue.getCurrentInstance().appContext.app;
             var authed = Vue.ref(false);
             var ready = Vue.ref(false);
@@ -174,7 +175,13 @@
                 if (loginUrl) window.location.href = loginUrl;
             }
 
-            function onLogout() { ctx.emit('logout'); }
+            function onLogout() {
+                ctx.emit('logout');
+                // 应用未绑 @logout 时兜底：token 已被内层 nux-user-center 的 sdk.logout 清掉，
+                // 重载让应用级界面（昵称/登录态 v-if/路由）同步回到登出态
+                var bound = !!(ownVnode && ownVnode.props && ownVnode.props.onLogout);
+                if (!bound) setTimeout(function () { window.location.reload(); }, 0);
+            }
 
             Vue.onMounted(function () {
                 sync();
