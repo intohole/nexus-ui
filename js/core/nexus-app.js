@@ -82,7 +82,6 @@
         clearStaleAuth() {
             const keys = ['uc_access_token', 'uc_refresh_token', 'uc_token_expires_at', 'uc_token', 'access_token', 'refresh_token', 'user'];
             keys.forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
-            if (window.NexusStore) { try { NexusStore.prototype.logout && new NexusStore().logout(); } catch (e) {} }
         },
 
         bindSsoGuard() {

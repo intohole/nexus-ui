@@ -3,7 +3,6 @@
 
     const TOAST_ICONS = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' };
     const TOAST_MS = 3000;
-    const UNLOCK_MS = 4000;
     const LEAVE_MS = 220;
 
     function pickDuration(value, fallback) {
@@ -76,31 +75,6 @@
         });
     }
 
-    function showUnlock(options) {
-        const opts = options || {};
-        const host = ensureHost('nux-unlock-host', 'nux-unlock-container');
-        const card = document.createElement('div');
-        card.className = 'nux-unlock-card';
-        card.innerHTML = '<span class="nux-unlock-burst" aria-hidden="true"></span>' +
-            '<span class="nux-unlock-icon" aria-hidden="true"></span>' +
-            '<div class="nux-unlock-body"><p class="nux-unlock-label">成就解锁</p>' +
-            '<p class="nux-unlock-title"></p><p class="nux-unlock-desc"></p></div>';
-
-        card.querySelector('.nux-unlock-icon').textContent = opts.icon || '🏆';
-        card.querySelector('.nux-unlock-title').textContent = opts.title || '新成就';
-        const desc = card.querySelector('.nux-unlock-desc');
-        if (opts.desc) desc.textContent = opts.desc;
-        else desc.remove();
-
-        host.appendChild(card);
-        enter(card);
-
-        const timer = setTimeout(function () { leave(card); }, pickDuration(opts.duration, UNLOCK_MS));
-        card.addEventListener('click', function () {
-            clearTimeout(timer);
-            leave(card);
-        });
-    }
 
     const confirmQueue = [];
     let confirmNode = null;
@@ -406,7 +380,6 @@
     }
 
     window.showToast = showToast;
-    window.showUnlock = showUnlock;
     window.nuxConfirm = confirm;
     window.nuxPrompt = prompt;
 })();

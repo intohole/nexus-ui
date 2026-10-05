@@ -166,6 +166,18 @@
 
         async _tryRefresh() {
             if (this._refreshPromise) return this._refreshPromise;
+            // 全局刷新单飞（与 UserCenterSDK.refreshAccessToken 互认）：UC 的 refresh token
+            // 轮换+重用检测会把并发的第二次刷新判为盗用并吊销整个 token 家族（用户被随机登出）。
+            // 共享方落定后直接读存储（_getToken 每次现读），SDK 写入的新 token 自动可见。
+            const inflight = window.__ucTokenRefresh;
+            if (inflight && inflight.then) {
+                this._refreshPromise = Promise.resolve(inflight).then(() => {
+                    const token = this._getToken();
+                    if (!token) throw new Error('shared refresh produced no token');
+                    return token;
+                });
+                try { return await this._refreshPromise; } finally { this._refreshPromise = null; }
+            }
             const refreshToken = this._getRefreshToken();
             if (!this.refreshUrl || !refreshToken) return Promise.reject(new Error('no refresh config'));
             const body = this.refreshBodyBuilder ? this.refreshBodyBuilder(refreshToken) : { refresh_token: refreshToken };
@@ -189,6 +201,9 @@
             }).catch((err) => {
                 throw err.name === 'AbortError' ? new Error('refresh timeout') : err;
             }).finally(() => { clearTimeout(refreshTimeoutId); this._refreshPromise = null; });
+            const gateGuard = this._refreshPromise.catch(() => false);
+            window.__ucTokenRefresh = gateGuard;
+            gateGuard.then(() => { if (window.__ucTokenRefresh === gateGuard) window.__ucTokenRefresh = null; });
             return this._refreshPromise;
         }
 
@@ -238,8 +253,18 @@
                                         return retryResult.data;
                                     } catch (refreshErr) {
                                         if (refreshErr && refreshErr.status) throw refreshErr;
-                                        this._handleSessionExpired();
-                                        throw new ApiError('登录已过期，请重新登录', 401, null);
+                                        // 网络瞬断/超时 ≠ 会话失效：保留 token 下次再试，只有服务端
+                                        // 明确拒绝（refresh failed / no token / no config）才清会话登出
+                                        const rmsg = (refreshErr && refreshErr.message) || '';
+                                        const definiteReject = rmsg === 'refresh failed'
+                                            || rmsg === 'no token in refresh response'
+                                            || rmsg === 'no refresh config'
+                                            || rmsg === 'shared refresh produced no token';
+                                        if (definiteReject) {
+                                            this._handleSessionExpired();
+                                            throw new ApiError('登录已过期，请重新登录', 401, null);
+                                        }
+                                        throw new ApiError('登录状态刷新失败，请检查网络后重试', 401, null);
                                     }
                                 }
                                 if (response.status === 401) {
@@ -408,8 +433,11 @@
 
         cancel(url) {
             const keysToDelete = [];
+            // requestId 形如 `${url}_${uuid}`：按 url 前缀+分隔符精确匹配同 URL 的在途请求，
+            // 避免纯子串匹配把 /api/chat-history 误伤进 cancel('/api/chat')
+            const prefix = String(url) + '_';
             for (const [id, ctrl] of this.abortControllers) {
-                if (id.includes(url)) { ctrl.abort(); keysToDelete.push(id); }
+                if (id === url || id.startsWith(prefix)) { ctrl.abort(); keysToDelete.push(id); }
             }
             keysToDelete.forEach(id => this.abortControllers.delete(id));
         }

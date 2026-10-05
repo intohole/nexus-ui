@@ -15,29 +15,51 @@
                 total: 0,
                 loading: false,
                 error: '',
-                timer: null
+                timer: null,
+                token: ''
             };
         },
         computed: {
-            token: function() {
-                try {
-                    return NexusUtils.createDualStorage('uc_access_token').getItem('uc_access_token') || '';
-                } catch (e) { return ''; }
-            },
             authed: function() { return !!this.token; },
             hiddenCount: function() { return Math.max(0, this.total - this.items.length); }
         },
+        watch: {
+            authed: function (val) {
+                // 登录后启动轮询 / 登出后停轮询（token 由 uc:authchange 与 storage 事件驱动更新）
+                if (val) this.startPolling();
+                else this.stopPolling();
+            }
+        },
         mounted: function() {
-            if (!this.authed) return;
-            this.refresh();
-            this.timer = setInterval(this.refresh, this.pollInterval);
+            this.readToken();
+            this._onAuthChange = this.readToken.bind(this);
+            window.addEventListener('uc:authchange', this._onAuthChange);
+            window.addEventListener('storage', this._onAuthChange);
+            if (this.authed) this.startPolling();
             document.addEventListener('click', this.onDocClick);
         },
         beforeUnmount: function() {
-            if (this.timer) clearInterval(this.timer);
+            this.stopPolling();
+            window.removeEventListener('uc:authchange', this._onAuthChange);
+            window.removeEventListener('storage', this._onAuthChange);
             document.removeEventListener('click', this.onDocClick);
         },
         methods: {
+            readToken: function() {
+                try {
+                    var v = NexusUtils.createDualStorage('uc_access_token').getItem('uc_access_token') || '';
+                    if (v !== this.token) this.token = v;
+                } catch (e) {}
+            },
+            startPolling: function() {
+                if (this.timer) return;
+                this.refresh();
+                var self = this;
+                this.timer = setInterval(function() { self.refresh(); }, this.pollInterval);
+            },
+            stopPolling: function() {
+                if (this.timer) { clearInterval(this.timer); this.timer = null; }
+            },
             fetchJson: function(url, options) {
                 var self = this;
                 var opts = options || {};

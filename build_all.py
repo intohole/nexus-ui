@@ -22,7 +22,6 @@ FILES: list[str] = [
     "nexus-markdown.js",
     "nexus-chat.js",
     "nexus-structured.js",
-    "nexus-store.js",
     "nexus-crud.js",
     "nexus-mobile.js",
     "nexus-components.js",

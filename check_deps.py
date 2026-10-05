@@ -112,8 +112,10 @@ def main() -> int:
 
     total, bad = 0, 0
     warns = []
+    import re as _re
     for dirpath, dirnames, filenames in os.walk(root):
-        dirnames[:] = [d for d in dirnames if d not in skip_dirs]
+        # v* 版本快照是 immutable 冻结产物，引用自身版本号是设计语义，不参与一致性检查
+        dirnames[:] = [d for d in dirnames if d not in skip_dirs and not _re.match(r"^v\d+(?:\.\d+)+$", d)]
         if any(p in dirpath.lower() for p in ("/node_modules/", "/.git/", "/vendor/")):
             continue
         for fn in filenames:

@@ -236,6 +236,13 @@ class UserCenterSDK {
         } catch (e) {}
     }
 
+    // 只清内存态，不动存储/cookie 桥（供他页登出的 storage 事件同步用；登出方自己清存储）
+    forgetTokens() {
+        this._accessToken = null;
+        this._refreshToken = null;
+        this._tokenExpiresAt = null;
+    }
+
     getToken() { this.syncFromStorage(); return this._accessToken; }
     getRefreshToken() { this.syncFromStorage(); return this._refreshToken; }
     isAuthenticated() { this.syncFromStorage(); return !!this._accessToken; }
@@ -343,6 +350,22 @@ class UserCenterSDK {
     async refreshAccessToken() {
         if (!this._refreshToken) return false;
         if (this._refreshPromise) return this._refreshPromise;
+        var self = this;
+        // 全局刷新单飞：与 NexusApi._tryRefresh 共享在途请求。UC 的 refresh token
+        // 轮换+重用检测会把并发的第二次刷新判为盗用并吊销整个 token 家族
+        // （用户被随机登出），两条刷新链必须互认；复用方在落定后重读存储同步新 token。
+        var inflight = window.__ucTokenRefresh;
+        if (inflight && inflight.then) {
+            this._refreshPromise = Promise.resolve(inflight).catch(function () {}).then(function () {
+                self.syncFromStorage();
+                return !!self._accessToken;
+            });
+            try {
+                return await this._refreshPromise;
+            } finally {
+                this._refreshPromise = null;
+            }
+        }
         this._refreshPromise = (async () => {
             try {
                 const result = await this._request('POST', '/api/auth/refresh', {
@@ -352,11 +375,22 @@ class UserCenterSDK {
                     this._setTokens(result.data, persistedIn() !== 'session');
                     return true;
                 }
+                return false;
             } catch (e) {
-                this.clearTokens();
+                // 网络瞬断/超时 ≠ 会话失效：保留 refresh token 下次再试，
+                // 只有服务端明确拒绝（这里不抛异常的 4xx 路径）才清会话
+                var msg = String((e && e.message) || '');
+                var transient = e && (e.name === 'AbortError' || e instanceof TypeError)
+                    || msg === '请求超时，请稍后重试' || msg === 'Failed to fetch' || msg === 'NetworkError when attempting to fetch resource.';
+                if (!transient) this.clearTokens();
+                return false;
             }
-            return false;
         })();
+        var guard = this._refreshPromise.catch(function () { return false; });
+        window.__ucTokenRefresh = guard;
+        guard.then(function () {
+            if (window.__ucTokenRefresh === guard) window.__ucTokenRefresh = null;
+        });
         try {
             return await this._refreshPromise;
         } finally {
@@ -556,7 +590,13 @@ try {
     window.addEventListener('storage', function (e) {
         if (!e || e.key !== TOKEN_KEY) return;
         var sdk = window.ucSDK || window.__UC_SDK__ || window.ucSdk || null;
-        if (sdk && typeof sdk.syncFromStorage === 'function') sdk.syncFromStorage();
+        if (sdk) {
+            if (e.newValue === null && typeof sdk.forgetTokens === 'function') {
+                sdk.forgetTokens();
+            } else if (typeof sdk.syncFromStorage === 'function') {
+                sdk.syncFromStorage();
+            }
+        }
         window.dispatchEvent(new CustomEvent('uc:authchange', { detail: { authenticated: !!e.newValue } }));
     });
 } catch (e) {}
