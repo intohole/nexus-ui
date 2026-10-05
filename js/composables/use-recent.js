@@ -50,12 +50,26 @@
         },
         recordVisit: function (name) {
             if (!name) return;
+            var prev = readArr(RECENT_KEY).filter(function (r) { return r.name === name; })[0];
             var list = readArr(RECENT_KEY).filter(function (r) { return r.name !== name; });
-            list.unshift({ name: name, at: Date.now() });
+            list.unshift({ name: name, at: Date.now(), count: ((prev && prev.count) || 0) + 1 });
             writeArr(RECENT_KEY, list.slice(0, MAX));
         },
         recents: function (limit) {
             return readArr(RECENT_KEY).slice(0, limit || MAX).map(function (r) { return r.name; });
+        },
+        stats: function () {
+            return readArr(RECENT_KEY).map(function (r) {
+                return { name: r.name, at: r.at || 0, count: r.count || 1 };
+            });
+        },
+        frequent: function (limit, minCount) {
+            var floor = minCount || 2;
+            return this.stats()
+                .filter(function (r) { return r.count >= floor; })
+                .sort(function (x, y) { return y.count - x.count || y.at - x.at; })
+                .slice(0, limit || 4)
+                .map(function (r) { return r.name; });
         },
         isRecent: function (name) {
             return readArr(RECENT_KEY).some(function (r) { return r.name === name; });
