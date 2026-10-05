@@ -25,6 +25,7 @@ CDN地址（全工作区统一，版本见 `nexus-ui/deps.json`）：`https://so
 <script src="https://songguokr.com/nexus-ui/v{version}/js/components/nux-login-page.js"></script>
 
 <!-- toast/confirm/prompt/unlock 不需要引脚本：nexus-all.js 已提供全局函数 window.showToast / window.nuxConfirm / window.nuxPrompt / window.showUnlock -->
+<!-- 积分浮标与反馈浮标随 nexus-all.js 自动激活（详见下方「全局件」一节），不需要任何接入代码 -->
 <!-- 以下 6 个组件已随 nexus-all.js 内置，无需再单引脚本：nux-result-view / nux-ai-badge / nux-skeleton / nux-empty-state / nux-error-state / nux-ai-indicator -->
 <!-- 图标依赖说明：nux-checkin / nux-app-card / nux-notification-bell / nux-about-page（含 about 数据）使用 font-awesome 6.x 图标类，宿主需自行引入 FA（deps.json 已纳管 CDN）；其余组件均为内联 SVG，无外部图标依赖 -->
 
@@ -269,6 +270,15 @@ nux-about-page / nux-breadcrumb / nux-date-picker / nux-infinite-scroll / nux-po
 
 - `js/nexus-stream.js`：SSE v2 流式消费器 `NexusStream.consume(fetchImpl, { onEvent, onDone, onError })`，替代手写分帧；配合 nexus-backend `sse_chat_stream_v2` 协议（type 事件投递+心跳）。v2.35.0 起已纳入 nexus-all.js 装配（历史独立 script 引用继续有效）。
 - `js/nexus-theme-init.js`：首帧防闪烁 IIFE（同步执行，无导出）。读 `nx-theme`，dark 用之，未设置跟随系统。业务仓如有历史存储 key，在引入前声明 `window.NEXUS_THEME_LEGACY_KEYS = ['旧key1','旧key2']`，首访自动迁移到 `nx-theme` 并清除旧 key；迁移只认 `dark/light` 合法值。
+
+### 全局件（随 nexus-all.js 自动装配，无需引脚本；均为 IIFE 自动激活）
+
+- `js/user-center-sdk.js`：`window.UserCenterSDK`——UC 统一登录 SDK（login/loginWithEmail/loginWithPhone/register/refreshAccessToken 全局单飞防家族吊销/logout/verifyToken/checkPermission），令牌读写走 dualStorage（`uc_access_token`/`uc_refresh_token`）+ SSO cookie 桥跨应用恢复。应用侧标准姿势：`new UserCenterSDK({baseUrl, appKey})` 后 `isAuthenticated()` 判态，登录页换 `nux-login-page`。加载后挂 `window.ucSDK`（nux-menu-user/nux-user-center 复用同一实例）。
+- `js/nexus-overlay-host.js`：浮层宿主，定义全局 `window.showToast / window.nuxConfirm / window.nuxPrompt / window.showUnlock`。不引 nexus-all 的仓必须单引本文件，否则全局函数不存在（散件加载约定）。
+- `js/nexus-api-error.js`：`window.NexusApiError` + `isNetworkError / isInsufficientCreditsError / mapHttpError`。**单文件引 API 必须三件同引：nexus-api-error.js + nexus-api.js + nexus-api-factory.js**（漏引=`NexusApi.create is not a function`）。
+- `js/nexus-credit-float.js`：积分感知浮标（30s 节流聚合展示余额/垫付进度），登录态才显示；`NexusCreditFloat.refresh()/stop()/start()`，关闭 `localStorage.nux_credit_float='off'`。
+- `js/nexus-feedback-float.js`：全局反馈浮标（右下角微表单+我的反馈回音，自动附带应用名/页面/console 最近报错环），提交走 userFeedback UC 轨，未注册应用服务端自动建档；`NexusFeedbackFloat.open()/close()/stop()`，关闭 `localStorage.nux_feedback_float='off'` 或 `<html data-nux-feedback="off">`；首页/登录注册页/门户/userfeedback 自身自动跳过。
+- `js/core/` 三件套：`NexusApp`（应用壳生命周期）/ `NexusUser`（用户态，`getDisplayName` 同时挂 NexusUtils）/ `NexusErrorText`（错误文案归一，`safeErrorText` 同时挂 NexusUtils）。nexus-agent/challengePlanet/oneNote 在用。
 
 ### nux-pagination 分页组件
 
