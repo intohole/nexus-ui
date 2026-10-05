@@ -102,6 +102,10 @@
               transform var(--nx-transition-base) var(--nx-ease-out);
 }
 .nux-toast-item.is-in { opacity: 1; transform: none; }
+.nux-toast-success { background: var(--nx-success); }
+.nux-toast-warning { background: var(--nx-warning); }
+.nux-toast-error { background: var(--nx-danger); }
+.nux-toast-info { background: var(--nx-info); }
 
 .nux-toast-icon { font-size: var(--nx-text-lg); line-height: 1; flex-shrink: 0; }
 .nux-toast-msg { flex: 1; word-break: break-word; }
