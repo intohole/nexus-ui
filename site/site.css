@@ -39,12 +39,13 @@ img { max-width: 100%; }
   position: sticky;
   top: 0;
   z-index: 50;
-  background: rgba(244, 247, 251, 0.88);
+  background: var(--nav-glass, rgba(244, 247, 251, 0.88));
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--line);
 }
 .site-nav .wrap { display: flex; align-items: center; gap: 28px; height: 60px; }
+.site-nav nav { display: flex; align-items: center; gap: 28px; }
 .wordmark {
   font-family: var(--mono);
   font-weight: 700;
@@ -82,7 +83,7 @@ img { max-width: 100%; }
   min-width: 0;
   min-height: 0;
   border-radius: 50%;
-  border: 2px solid #fff;
+  border: 2px solid var(--surface);
   box-shadow: 0 0 0 1px var(--line);
   cursor: pointer;
   padding: 0;
@@ -298,4 +299,19 @@ img { max-width: 100%; }
   .quick-grid { grid-template-columns: 1fr; gap: 32px; }
   .comp-row { grid-template-columns: 1fr; gap: 10px; }
   .h2 { font-size: 26px; }
+}
+
+/* ---- 暗色模式（html[data-theme="dark"]，与 nexus-tokens.css 暗色体系同源） ---- */
+[data-theme="dark"] {
+  --paper: #1e293b;
+  --surface: #243044;
+  --ink: #f1f5f9;
+  --muted: #94a3b8;
+  --line: rgba(255, 255, 255, 0.08);
+  --nav-glass: rgba(30, 41, 59, 0.82);
+  --accent-soft: rgba(var(--app-accent-rgb, 59, 130, 246), 0.18);
+}
+[data-theme="dark"] .codeblock {
+  background: #16202f;
+  box-shadow: 0 24px 60px -32px rgba(0, 0, 0, 0.6);
 }
