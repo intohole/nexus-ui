@@ -131,7 +131,7 @@
 .nx-auto-modal-mask { position: fixed; inset: 0; z-index: var(--nx-z-settings); background: var(--nx-overlay-bg, rgba(15, 32, 50, 0.42)); }
 .nx-auto-modal {
   position: fixed; z-index: var(--nx-z-settings-panel); left: 50%; top: 50%; transform: translate(-50%, -50%);
-  width: min(460px, calc(100vw - 30px)); max-height: min(620px, 88vh); display: flex; flex-direction: column;
+  width: min(460px, calc(100vw - 30px)); max-height: min(620px, 88vh); max-height: min(620px, 88dvh); display: flex; flex-direction: column;
   background: var(--nx-bg-surface, #fff); border-radius: 16px; box-shadow: 0 24px 60px rgba(15, 32, 50, 0.25);
 }
 .nx-auto-modal-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px 0; }

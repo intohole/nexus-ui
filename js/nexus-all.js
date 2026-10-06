@@ -3639,7 +3639,6 @@
         'nux-ai-widgets-rich.js': 'AI 消息内增强组件（form/chart/confirm），仅向 NuxAiWidgetsRegistry 注册类型并注入样式，无独立全局导出',
         'NuxLoginHelpers': '登录页工具集（验证码/SMS 状态机、协议勾选、忘记密码动态加载）',
         'NuxLoginPageTemplate': '登录页模板字符串',
-        'NuxRadarDraw': '雷达图 Canvas 绘制引擎（静态方法）',
         'PosterRender': '海报渲染引擎（px/elementStyle/buildInner/capture/download）'
     };
 
@@ -4322,7 +4321,7 @@ try {
     function injectStyles() {
         if (document.getElementById('nux-credit-float-style')) return;
         var css = ''
-            + '#' + ROOT_ID + '{position:fixed;left:16px;bottom:16px;z-index:1500;font-family:inherit;user-select:none;}'
+            + '#' + ROOT_ID + '{position:fixed;left:16px;bottom:16px;z-index:var(--nx-z-float,1500);font-family:inherit;user-select:none;}'
             + '#' + ROOT_ID + ' .nxcf-badge{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;'
             + 'background:rgba(15,23,42,0.78);color:#fff;font-size:13px;font-variant-numeric:tabular-nums;'
             + 'box-shadow:0 4px 16px rgba(15,23,42,0.25);cursor:pointer;border:1px solid rgba(255,255,255,0.14);'
@@ -4653,7 +4652,7 @@ try {
         var style = document.createElement('style');
         style.id = 'nux-feedback-style';
         style.textContent = ''
-            + '#' + ROOT_ID + '{position:fixed;right:16px;bottom:16px;z-index:1500;font-family:inherit;}'
+            + '#' + ROOT_ID + '{position:fixed;right:16px;bottom:16px;z-index:var(--nx-z-float,1500);font-family:inherit;}'
             + '#' + ROOT_ID + '.nxfb-raised{bottom:76px;}'
             + '.nxfb-btn{display:flex;align-items:center;gap:6px;height:38px;padding:0 14px;border-radius:999px;'
             + 'background:var(--nx-bg-elevated,#fff);color:var(--nx-text-body,#334155);'
@@ -4661,15 +4660,15 @@ try {
             + 'font-size:13px;cursor:pointer;transition:transform .15s,box-shadow .15s,opacity .2s;opacity:.88;}'
             + '.nxfb-btn:hover{opacity:1;transform:translateY(-1px);}'
             + '.nxfb-btn svg{flex:none;}'
-            + '@media (max-width:640px){.nxfb-btn span{display:none;}.nxfb-btn{padding:0 11px;}}'
-            + '.nxfb-mask{position:fixed;inset:0;z-index:' + PANEL_Z + ';background:rgba(15,23,42,.42);'
+            + '@media (max-width:768px){.nxfb-btn span{display:none;}.nxfb-btn{padding:0 11px;}}'
+            + '.nxfb-mask{position:fixed;inset:0;z-index:var(--nx-z-float-panel,' + PANEL_Z + ');background:rgba(15,23,42,.42);'
             + 'display:flex;align-items:flex-end;justify-content:center;'
             + 'backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);}'
-            + '@media (min-width:641px){.nxfb-mask{align-items:center;}}'
+            + '@media (min-width:769px){.nxfb-mask{align-items:center;}}'
             + '.nxfb-panel{background:var(--nx-bg-elevated,#fff);color:var(--nx-text-body,#334155);'
             + 'border:1px solid var(--nx-border,#e2e8f0);border-radius:var(--nx-radius-lg,16px);'
             + 'box-shadow:var(--nx-shadow-lg,0 8px 24px rgba(0,0,0,.18));width:380px;max-width:calc(100vw - 24px);'
-            + 'max-height:min(560px,calc(100vh - 32px));display:flex;flex-direction:column;'
+            + 'max-height:min(560px,calc(100vh - 32px));max-height:min(560px,calc(100dvh - 32px));display:flex;flex-direction:column;'
             + 'margin-bottom:max(8px,env(safe-area-inset-bottom));'
             + 'animation:nxfb-in .18s ease;}'
             + '@media (prefers-reduced-motion:reduce){.nxfb-panel{animation:none;}}'
@@ -4797,7 +4796,7 @@ try {
 
         var mask = el('div', 'nxfb-mask');
         mask.id = ROOT_ID + '-mask';
-        var panel = el('div', 'nxfb-panel');
+        var panel = el('div', 'nxfb-panel nx-sheet');
         panel.setAttribute('role', 'dialog');
         panel.setAttribute('aria-modal', 'true');
         panel.setAttribute('aria-label', '提交反馈');

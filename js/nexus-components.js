@@ -76,7 +76,6 @@
         'nux-ai-widgets-rich.js': 'AI 消息内增强组件（form/chart/confirm），仅向 NuxAiWidgetsRegistry 注册类型并注入样式，无独立全局导出',
         'NuxLoginHelpers': '登录页工具集（验证码/SMS 状态机、协议勾选、忘记密码动态加载）',
         'NuxLoginPageTemplate': '登录页模板字符串',
-        'NuxRadarDraw': '雷达图 Canvas 绘制引擎（静态方法）',
         'PosterRender': '海报渲染引擎（px/elementStyle/buildInner/capture/download）'
     };
 

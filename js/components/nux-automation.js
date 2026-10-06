@@ -175,7 +175,7 @@
                     <div v-if="showForm" class="nx-auto-modal-mask" @click.self="showForm = false"></div>
                 </transition>
                 <transition name="nx-auto-pop">
-                    <div v-if="showForm" class="nx-auto-modal" role="dialog" aria-modal="true">
+                    <div v-if="showForm" class="nx-auto-modal nx-sheet" role="dialog" aria-modal="true">
                         <div class="nx-auto-modal-head">
                             <h3>{{ editing ? '编辑规则' : '新建规则' }}</h3>
                             <button class="nx-auto-modal-close" @click="showForm = false">✕</button>

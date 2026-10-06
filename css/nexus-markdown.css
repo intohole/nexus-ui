@@ -256,7 +256,7 @@
 
 [data-theme="dark"] .nx-md,
 [data-theme="dark"] .nx-chat-content {
-    color: var(--nx-text-body-dark, rgb(226, 232, 240));
+    color: var(--nx-text-body);
 }
 
 [data-theme="dark"] .nx-md h1, [data-theme="dark"] .nx-md h2, [data-theme="dark"] .nx-md h3,
@@ -264,7 +264,7 @@
 [data-theme="dark"] .nx-chat-content h1, [data-theme="dark"] .nx-chat-content h2,
 [data-theme="dark"] .nx-chat-content h3, [data-theme="dark"] .nx-chat-content h4,
 [data-theme="dark"] .nx-chat-content h5, [data-theme="dark"] .nx-chat-content h6 {
-    color: var(--nx-text-heading-dark, rgb(248, 250, 252));
+    color: var(--nx-text-heading);
 }
 
 [data-theme="dark"] .nx-md code,
@@ -276,25 +276,29 @@
 [data-theme="dark"] .nx-md blockquote,
 [data-theme="dark"] .nx-chat-content blockquote {
     background: rgba(148, 163, 184, 0.1);
-    color: var(--nx-text-muted-dark, rgb(148, 163, 184));
+    color: var(--nx-text-muted);
     border-left-color: rgb(100, 116, 139);
 }
 
 [data-theme="dark"] .nx-md th,
 [data-theme="dark"] .nx-chat-content th {
     background: rgba(148, 163, 184, 0.15);
-    color: var(--nx-text-heading-dark, rgb(248, 250, 252));
+    color: var(--nx-text-heading);
 }
 
 [data-theme="dark"] .nx-md td,
 [data-theme="dark"] .nx-chat-content td {
-    color: var(--nx-text-body-dark, rgb(226, 232, 240));
+    color: var(--nx-text-body);
 }
 
 @media (prefers-color-scheme: dark) {
+    /* 无 data-theme（跟随系统）时令牌层仍是浅色值：作用域内补暗色覆盖，令下方标准令牌引用成立 */
     :root:not([data-theme="light"]) .nx-md,
     :root:not([data-theme="light"]) .nx-chat-content {
-        color: var(--nx-text-body-dark, rgb(226, 232, 240));
+        --nx-text-body: #cbd5e1;
+        --nx-text-heading: #f1f5f9;
+        --nx-text-muted: #7a8a9e;
+        color: var(--nx-text-body);
     }
     :root:not([data-theme="light"]) .nx-md h1,
     :root:not([data-theme="light"]) .nx-md h2,
@@ -308,7 +312,7 @@
     :root:not([data-theme="light"]) .nx-chat-content h4,
     :root:not([data-theme="light"]) .nx-chat-content h5,
     :root:not([data-theme="light"]) .nx-chat-content h6 {
-        color: var(--nx-text-heading-dark, rgb(248, 250, 252));
+        color: var(--nx-text-heading);
     }
     :root:not([data-theme="light"]) .nx-md code,
     :root:not([data-theme="light"]) .nx-chat-content code {

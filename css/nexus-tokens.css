@@ -147,6 +147,8 @@
   --nx-z-toast-host: 1100;
   --nx-z-unlock: 1150;
   --nx-z-topmost: 1200;
+  --nx-z-float: 1500;
+  --nx-z-float-panel: 1600;
   --nx-z-max: 2147483000;
   --nx-z-max-plus: 2147483001;
 }

@@ -44,7 +44,7 @@ app.mount('#app');
 ```
 
 `NexusComponents.register(app)` 返回已注册的标签数组；按需加载下「未加载的组件」属正常状态，默认静默跳过；需要排查缺失脚本时传 `NexusComponents.register(app, { warnMissing: true })` 输出缺失清单。
-`NexusComponents.list()` 返回全部可注册标签；`NexusComponents.components` 是 `标签 → window 全局名` 映射；`NexusComponents.helpers` 列出非组件导出（NuxAiChatHelpers / NuxAiChatTemplate / NuxAiWidgetsRegistry / nux-ai-widgets-rich.js 扩展 / NuxLoginHelpers / NuxLoginPageTemplate / NuxRadarDraw / PosterRender）。
+`NexusComponents.list()` 返回全部可注册标签；`NexusComponents.components` 是 `标签 → window 全局名` 映射；`NexusComponents.helpers` 列出非组件导出（NuxAiChatHelpers / NuxAiChatTemplate / NuxAiWidgetsRegistry / nux-ai-widgets-rich.js 扩展 / NuxLoginHelpers / NuxLoginPageTemplate / PosterRender）。
 
 ## 主题配置
 
@@ -143,11 +143,12 @@ NexusUtils.overlayStack();            // 弹层层级栈（配 overlayBehavior �
 - **断点**：JS 单一分界 `window.innerWidth <= 768` 为移动（统一用 `useMobile()` 或 `NexusMobile.isMobile()`，勿自写 `resize` 监听或 `< 768`）；CSS 允许档位 768/480/1024，其余游离值勿用。命中区扩大规则走 `@media (pointer: coarse)`，hover 行为回退走 `@media (hover: none)`，两者语义不同不可混用。
 - **弹层滚动锁定**：modal/drawer/settings/side-panel 已内置 `NexusUtils.scrollLock`，业务自建弹层必须复用它（计数器制，勿直接写 `document.body.style.overflow`）。
 - **safe-area / 视口高度**：CSS 变量 `--nx-safe-{bottom,top,left,right}`（safe-area env 别名，令牌单源 nexus-tokens.css）与 `--nx-vh`（dvh 降级，nexus-mobile.css 提供），固定底栏/抽屉高度一律 `calc(xx + var(--nx-safe-bottom))`，全屏高度用 `var(--nx-vh) * 100` 或 `100dvh`。
+- **底部动作面板原语**：JS 注入弹层或库外弹窗在 ≤768 想转贴底全宽形态，给弹层元素挂 `nx-sheet` 类即可（nexus-mobile.css 原语：解除居中定位、贴底全宽、90dvh、safe-bottom、顶部圆角）；居中定位型与 flex 遮罩子元素两种弹层都适用。`.nx-modal` 与设置抽屉自带移动形态，不依赖此原语。
 
 ### 布局骨架与层级契约（v2.33.0+，宿主必读）
 
 - **顶栏高度单源**：`--nxs-header-h`（默认 56px，nexus-tokens.css 定义）。nux-layout 的 header/aside/main、topnav-drawer、移动端通知面板全部引用它并自动叠加 `--nx-safe-top`；宿主改顶栏高度只需 `:root { --nxs-header-h: 64px }`，禁止在业务里写死 56px。
-- **z-index 只用令牌**：阶梯（低→高）nav 90 → header 100 → side-mask 110 → side-panel 120 → trigger/hamburger 150 → popover 180 → modal 200 → settings 400 → overlay 998 → drawer 999 → toast-host 1100 → unlock 1150 → topmost 1200。导航抽屉（drawer 999）刻意置顶于 modal/settings——抽屉打开期间二者的 header 触发器不可达，不会叠加；通知下拉用 popover（180），不再压住 modal。业务自建浮层必须消费 `--nx-z-*`，禁止裸数字。
+- **z-index 只用令牌**：阶梯（低→高）nav 90 → header 100 → side-mask 110 → side-panel 120 → trigger/hamburger 150 → popover 180 → modal 200 → settings 400 → overlay 998 → drawer 999 → toast-host 1100 → unlock 1150 → topmost 1200 → float 1500（反馈/积分浮标）→ float-panel 1600（浮标面板遮罩）。导航抽屉（drawer 999）刻意置顶于 modal/settings——抽屉打开期间二者的 header 触发器不可达，不会叠加；通知下拉用 popover（180），不再压住 modal。业务自建浮层必须消费 `--nx-z-*`，禁止裸数字。
 - **弹层关闭契约对称**：nux-modal 与 nux-drawer 均支持 `esc-close` / `close-on-overlay`（默认 true）。
 - **浮层可访问性契约（v2.47.0+）**：nux-modal/nux-drawer 渲染 `role=dialog + aria-modal`（drawer 新增 `label` prop 提供可访问名），modal 标题经 `aria-labelledby` 关联；showToast info 为 `role=status`、error 为 `role=alert`；nuxConfirm（alertdialog）/nuxPrompt 打开时 Tab 焦点锁定在弹层内、关闭后焦点归还触发元素。业务自建浮层应复用 `NexusUtils.overlayBehavior`（焦点陷阱+Esc+关还焦）与 `trapTabIn` 同款语义。
 - **表单可访问性契约（v2.47.0+）**：nux-input/nux-textarea/nux-select 传 `label` 时自动生成 fieldId 并 `label[for]` 关联控件，error/hint 经 `aria-describedby` 关联、出错控件带 `aria-invalid`；宿主自建表单字段请保持同款关联。
