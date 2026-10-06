@@ -220,7 +220,7 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 
 用户协议页面唯一事实源：本仓库 `agreement.html`（协议条款/隐私政策文案直接维护在该页）。
 
-### 全部组件索引（66 个，以 `NexusComponents.list()` 为准）
+### 全部组件索引（65 个，以 `NexusComponents.list()` 为准）
 
 | 分类 | 组件 |
 |------|------|
@@ -240,6 +240,7 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 ### 工具脚本（非组件，按需引 script）
 
 - `js/nexus-stream.js`：SSE v2 流式消费器 `NexusStream.consume(fetchImpl, { onEvent, onDone, onError })`，替代手写分帧；配合 nexus-backend `sse_chat_stream_v2` 协议（type 事件投递+心跳）。v2.35.0 起已纳入 nexus-all.js 装配（历史独立 script 引用继续有效）。
+- `NexusStream.subscribe(url, { headers, idleTimeout, maxRetries, backoffBase, backoffMax, terminalTypes, onEvent, onClose })`：长连接订阅编排（指数退避重连+抖动+空闲看门狗+终态收口），收编自 MiaoBi sse.js subscribePath 语义；相对 URL 自动应用 window.PATH_PREFIX。v2.51.0 起。
 - `js/nexus-theme-init.js`：首帧防闪烁 IIFE（同步执行，无导出）。读 `nx-theme`，dark 用之，未设置跟随系统。业务仓如有历史存储 key，在引入前声明 `window.NEXUS_THEME_LEGACY_KEYS = ['旧key1','旧key2']`，首访自动迁移到 `nx-theme` 并清除旧 key；迁移只认 `dark/light` 合法值。
 
 ### 全局件（随 nexus-all.js 自动装配，无需引脚本；均为 IIFE 自动激活）

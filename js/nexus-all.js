@@ -1764,7 +1764,95 @@
         }
     }
 
-    window.NexusStream = { post, read, consume };
+    // 长连接订阅编排：指数退避重连（含抖动）+空闲看门狗+终态收口。
+    // 语义参照 MiaoBi sse.js 的 subscribePath（工作区唯一自写重连实现）收编：
+    // onDone/onError/空闲超时 → 退避重试（>maxRetries 回落 {type:'disconnect'}）；
+    // data.type 命中 terminalTypes → 终态收口 onClose(data)；abort() → {type:'abort'}。
+    function subscribe(url, options = {}) {
+        const {
+            headers = null,
+            method = 'GET',
+            body = null,
+            idleTimeout = DEFAULT_IDLE_TIMEOUT,
+            maxRetries = 2,
+            backoffBase = 1000,
+            backoffMax = 30000,
+            terminalTypes = ['done', 'ready', 'failed', 'error'],
+            pathPrefix = true,
+            onEvent = null,
+            onClose = null,
+        } = options;
+        const fullUrl = (pathPrefix && url.charAt(0) === '/' && window.PATH_PREFIX)
+            ? window.PATH_PREFIX + url : url;
+
+        let closed = false;
+        let stopping = false;
+        let controller = null;
+        let retries = 0;
+        let idleTimer = null;
+        let backoffTimer = null;
+
+        function finish(evt) {
+            if (closed) return;
+            closed = true;
+            if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
+            if (backoffTimer) { clearTimeout(backoffTimer); backoffTimer = null; }
+            if (controller) { try { controller.abort(); } catch (e) { } controller = null; }
+            if (onClose) onClose(evt);
+        }
+        function armIdle() {
+            if (idleTimer) clearTimeout(idleTimer);
+            idleTimer = setTimeout(() => { if (!closed && !stopping) reconnect(); }, idleTimeout);
+        }
+        function reconnect() {
+            if (closed || stopping) return;
+            retries += 1;
+            if (retries > maxRetries) { finish({ type: 'disconnect' }); return; }
+            if (controller) { try { controller.abort(); } catch (e) { } }
+            const delay = Math.min(backoffMax, backoffBase * Math.pow(2, retries - 1)) * (0.8 + Math.random() * 0.4);
+            backoffTimer = setTimeout(start, delay);
+        }
+        function start() {
+            if (closed || stopping) return;
+            controller = new AbortController();
+            const ctrl = controller;
+            armIdle();
+            (async () => {
+                try {
+                    const resp = await fetch(fullUrl, { method, headers, body, signal: ctrl.signal });
+                    if (!resp.ok || !resp.body) {
+                        finish({ type: 'error', message: '连接失败(' + resp.status + ')' });
+                        return;
+                    }
+                    await read(resp, {
+                        onChunk: (data, event) => {
+                            if (!data || typeof data !== 'object') return;
+                            armIdle();
+                            if (onEvent) onEvent(data, event);
+                            if (data.type && terminalTypes.indexOf(data.type) >= 0) {
+                                retries = maxRetries + 1;
+                                finish(data);
+                            }
+                        },
+                        onDone: () => reconnect(),
+                        onError: () => { if (closed) return; reconnect(); },
+                    });
+                } catch (e) {
+                    if (closed) return;
+                    reconnect();
+                }
+            })();
+        }
+        start();
+        return {
+            abort: function () {
+                stopping = true;
+                finish({ type: 'abort' });
+            },
+        };
+    }
+
+    window.NexusStream = { post, read, consume, subscribe };
 })();
 
 /* ===== nexus-api.js ===== */
