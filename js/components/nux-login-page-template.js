@@ -68,7 +68,6 @@
                                         <input id="nux-login-password" v-model="form.password" :type="showPassword ? 'text' : 'password'" class="nux-input" placeholder="请输入密码" autocomplete="current-password" required>
                                         <button type="button" class="nux-password-toggle" :aria-label="showPassword ? '隐藏密码' : '显示密码'" @click="showPassword = !showPassword" v-html="showPassword ? eyeSlashSvg : eyeSvg"></button>
                                     </div>
-                                    <p class="nux-form-hint">请输入密码</p>
                                 </div>
                                 <div v-if="showRememberMe || showForgot" class="nux-login-options">
                                     <label v-if="showRememberMe" class="nux-checkbox">

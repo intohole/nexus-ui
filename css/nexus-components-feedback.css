@@ -398,6 +398,7 @@
   background: none; border: none;
   color: var(--nx-text-secondary, #64748b);
   font-size: 13px; cursor: pointer; padding: 6px 8px;
+  white-space: nowrap;
 }
 
 .nux-undo-enter-active, .nux-undo-leave-active { transition: opacity 0.2s ease, transform 0.2s ease; }
