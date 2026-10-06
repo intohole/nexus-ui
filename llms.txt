@@ -242,6 +242,7 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 
 - `js/nexus-stream.js`：SSE v2 流式消费器 `NexusStream.consume(fetchImpl, { onEvent, onDone, onError })`，替代手写分帧；配合 nexus-backend `sse_chat_stream_v2` 协议（type 事件投递+心跳）。v2.35.0 起已纳入 nexus-all.js 装配（历史独立 script 引用继续有效）。
 - `NexusStream.subscribe(url, { headers, idleTimeout, maxRetries, backoffBase, backoffMax, terminalTypes, onEvent, onClose })`：长连接订阅编排（指数退避重连+抖动+空闲看门狗+终态收口），收编自 MiaoBi sse.js subscribePath 语义；相对 URL 自动应用 window.PATH_PREFIX。v2.51.0 起。
+- `.nx-touch`（css/nexus-mobile.css，coarse-pointer 媒体块内）：业务自绘控件的通用触控地板——挂类即得 44px 地板+::after 隐形热区扩展，替代各仓自写 44px @media 规则；随 nexus-all.css 的 mobile @import 全量分发。v2.51.0 起。
 - `js/nexus-theme-init.js`：首帧防闪烁 IIFE（同步执行，无导出）。读 `nx-theme`，dark 用之，未设置跟随系统。业务仓如有历史存储 key，在引入前声明 `window.NEXUS_THEME_LEGACY_KEYS = ['旧key1','旧key2']`，首访自动迁移到 `nx-theme` 并清除旧 key；迁移只认 `dark/light` 合法值。
 
 ### 全局件（随 nexus-all.js 自动装配，无需引脚本；均为 IIFE 自动激活）
