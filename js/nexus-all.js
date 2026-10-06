@@ -3490,7 +3490,6 @@
         'nux-automation': 'NuxAutomation',
         'nux-avatar': 'NuxAvatar',
         'nux-backtop': 'NuxBacktop',
-        'nux-badge': 'NuxBadge',
         'nux-bottom-nav': 'NuxBottomNav',
         'nux-button': 'NuxButton',
         'nux-camera-recognize': 'NuxCameraRecognize',

@@ -299,3 +299,8 @@
   .nux-cal-heat-scroll { -webkit-overflow-scrolling: touch; }
   .nux-cal-legend { justify-content: center; }
 }
+
+@media (hover: none) and (pointer: coarse) {
+  .nux-cal-nav { width: 44px; height: 44px; }
+  .nux-cal-cell { min-height: 44px; }
+}

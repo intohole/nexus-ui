@@ -151,7 +151,7 @@ NexusUtils.overlayStack();            // 弹层层级栈（配 overlayBehavior �
 - **弹层关闭契约对称**：nux-modal 与 nux-drawer 均支持 `esc-close` / `close-on-overlay`（默认 true）。
 - **浮层可访问性契约（v2.47.0+）**：nux-modal/nux-drawer 渲染 `role=dialog + aria-modal`（drawer 新增 `label` prop 提供可访问名），modal 标题经 `aria-labelledby` 关联；showToast info 为 `role=status`、error 为 `role=alert`；nuxConfirm（alertdialog）/nuxPrompt 打开时 Tab 焦点锁定在弹层内、关闭后焦点归还触发元素。业务自建浮层应复用 `NexusUtils.overlayBehavior`（焦点陷阱+Esc+关还焦）与 `trapTabIn` 同款语义。
 - **表单可访问性契约（v2.47.0+）**：nux-input/nux-textarea/nux-select 传 `label` 时自动生成 fieldId 并 `label[for]` 关联控件，error/hint 经 `aria-describedby` 关联、出错控件带 `aria-invalid`；宿主自建表单字段请保持同款关联。
-- **组件取值域**：语义色 prop 新组件统一 `variant`（存量 nux-tag/nux-badge 的 `type` 保留兼容）；nux-button `size` 接受 `sm/md/lg` 及 `small/medium/large` 别名（自动归一）；nux-select 无论选项 value 是 string/number/boolean，emit 回业务时保持原类型（原生 select 的字符串化在组件内消化）。
+- **组件取值域**：语义色 prop 新组件统一 `variant`（存量 nux-tag 的 `type` 保留兼容）；nux-button `size` 接受 `sm/md/lg` 及 `small/medium/large` 别名（自动归一）；nux-select 无论选项 value 是 string/number/boolean，emit 回业务时保持原类型（原生 select 的字符串化在组件内消化）。
 
 ### NexusStore
 
@@ -227,7 +227,7 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 | 布局骨架 | nux-layout-sidebar / nux-layout-topnav / nux-bottom-nav / nux-side-panel / nux-section / nux-backtop |
 | 站点级 | nux-footer / nux-about-page / nux-menu-about / nux-login-page / nux-forgot-password / nux-menu-user / nux-user-center / nux-settings-drawer |
 | 反馈 | nux-undo-toast / nux-modal / nux-drawer / nux-notification-bell / nux-notification-panel / nux-loading / nux-skeleton / nux-empty-state / nux-error-state / nux-ai-task-progress |
-| 数据展示 | nux-stat-card / nux-badge / nux-tag / nux-avatar / nux-progress / nux-calendar / nux-checkin / nux-result-view / nux-selection-bar / nux-pagination / nux-poster / nux-conversation-list / nux-icon |
+| 数据展示 | nux-stat-card / nux-tag / nux-avatar / nux-progress / nux-calendar / nux-checkin / nux-result-view / nux-selection-bar / nux-pagination / nux-poster / nux-conversation-list / nux-icon |
 | 表单控件 | nux-form-group / nux-button / nux-input / nux-textarea / nux-select / nux-switch / nux-checkbox / nux-radio-group / nux-input-number / nux-search-box / nux-segmented / nux-chip-group / nux-accordion / nux-tab-group |
 | 交互增强 | nux-file-upload / nux-swipe-actions / nux-theme-toggle / nux-camera-recognize / nux-voice-input |
 | AI 能力 | nux-ai-badge / nux-ai-chat / nux-ai-indicator / nux-ai-notice / nux-ai-widgets / nux-clarify-card |

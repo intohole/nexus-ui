@@ -216,22 +216,17 @@ if (reason !== null) showToast('已驳回', 'success');`,
 <nux-stat-card icon="👥" value="1,024" label="活跃用户" :trend="6"></nux-stat-card>`
       },
       {
-        id: 'badge-avatar',
-        tag: 'nux-badge / nux-avatar',
-        title: '徽标与头像',
-        desc: '圆点 / 计数徽标，字母头像自动取首字符',
+        id: 'avatar',
+        tag: 'nux-avatar',
+        title: '头像',
+        desc: '字母头像自动取首字符',
         tpl: `
 <div class="demo-row" style="gap: 24px">
-  <nux-badge :count="8"><nux-button variant="ghost" size="sm">消息</nux-button></nux-badge>
-  <nux-badge :count="128"><nux-button variant="ghost" size="sm">通知</nux-button></nux-badge>
-  <nux-badge dot type="danger"><nux-button variant="ghost" size="sm">实时</nux-button></nux-badge>
   <nux-avatar name="林" size="md"></nux-avatar>
   <nux-avatar name="Nexus" size="md" shape="square"></nux-avatar>
   <nux-avatar size="md"></nux-avatar>
 </div>`,
-        code: `<nux-badge :count="8"><nux-button>消息</nux-button></nux-badge>
-<nux-badge dot type="danger"><nux-button>实时</nux-button></nux-badge>
-<nux-avatar name="林" size="md"></nux-avatar>`
+        code: `<nux-avatar name="林" size="md"></nux-avatar>`
       }
     ]
   });

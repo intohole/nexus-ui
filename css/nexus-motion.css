@@ -18,7 +18,6 @@
 .nx-card:hover {
   transform: translateY(-2px);
 }
-.nx-card:hover { box-shadow: var(--nx-shadow-md); }
 
 /* 列表项抬升（各应用通用 .nx-list-item / 卡片式 grid 项） */
 .nx-list-item { transition: transform var(--nx-transition-fast), box-shadow var(--nx-transition-fast), background var(--nx-transition-fast); }

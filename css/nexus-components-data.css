@@ -20,6 +20,8 @@
 }
 .nx-table tr:hover td { background: var(--nx-bg-hover); }
 
+/* .nux-badge 是类工具（非组件）：JS 组件 <nux-badge> v2.50.0 下架（零元素消费），
+   但 chroma 等应用以 class="nux-badge chip" 形式经 nexus-all.css 消费这些类。 */
 .nux-badge { position: relative; display: inline-flex; }
 .nux-badge-count {
   position: absolute;

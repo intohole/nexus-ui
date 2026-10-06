@@ -96,6 +96,9 @@
 
 .nx-table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }@media (max-width: 768px){
   .nx-table-scroll { margin: 0 calc(-1 * var(--nx-space-4)); padding: 0 var(--nx-space-4); }
+  /* 未包 wrapper 的裸 .nx-table 移动端地板：表级横滚兜底，防撑破页面；
+     语义保持（thead 不塌），首选仍是 .nx-table-scroll 包装（负边距满宽）。 */
+  .nx-table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 }@media (hover: none) and (pointer: coarse){
   .nux-btn { min-height: 44px; min-width: 44px; }
   .nx-sidebar-item { min-height: 44px; }
@@ -236,9 +239,6 @@
   .nx-card { padding: var(--nx-space-4); }
   .nx-app { flex-direction: column; }
   .nx-hide-mobile { display: none !important; }
-  .nx-show-mobile { display: flex !important; }
-}@media (min-width: 769px){
-  .nx-show-mobile { display: none !important; }
 }@media (max-width: 480px){
   .nx-card { padding: var(--nx-space-3); }
   .nx-modal { padding: var(--nx-space-4); }
