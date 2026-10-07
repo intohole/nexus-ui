@@ -6,12 +6,13 @@
             currentKey: { type: String, default: '' },
             themeClass: { type: String, default: '' },
             bottomNavLimit: { type: Number, default: 5 },
-            moreActive: { type: Boolean, default: false }
+            moreActive: { type: Boolean, default: false },
+            showMore: { type: Boolean, default: false }
         },
         emits: ['navigate', 'more'],
         setup(props, { emit }) {
             const shownItems = Vue.computed(() => props.items.slice(0, props.bottomNavLimit));
-            const hasMore = Vue.computed(() => props.items.length > props.bottomNavLimit || props.moreActive);
+            const hasMore = Vue.computed(() => props.showMore || props.moreActive || props.items.length > props.bottomNavLimit);
             return { shownItems, hasMore, emit };
         },
         template: `
