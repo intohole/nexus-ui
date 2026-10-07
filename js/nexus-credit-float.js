@@ -49,7 +49,14 @@
             + '#' + ROOT_ID + ' .nxcf-toast.show{opacity:1;transform:translateY(0);}'
             + '#' + ROOT_ID + ' .nxcf-toast.warn{background:rgba(234,88,12,0.95);}'
             + '@keyframes nxcf-pulse{0%{box-shadow:0 0 0 0 rgba(56,189,248,0.55);}100%{box-shadow:0 0 0 14px rgba(56,189,248,0);}}'
-            + '@media (max-width:640px){#' + ROOT_ID + '{left:10px;bottom:12px;}}';
+            + 'body:has(.nxs-trigger) #' + ROOT_ID + '{bottom:calc(74px + var(--nx-safe-bottom,0px));}'
+            + '@media (max-width:768px){'
+            + 'body:has(.nux-layout-bottom-nav):not(:has(.nxs-trigger)) #' + ROOT_ID + ','
+            + 'body:has(.nx-mobile-tabbar):not(:has(.nxs-trigger)) #' + ROOT_ID + '{bottom:calc(74px + var(--nx-safe-bottom,0px));}'
+            + 'body:has(.nux-layout-bottom-nav):has(.nxs-trigger) #' + ROOT_ID + ','
+            + 'body:has(.nx-mobile-tabbar):has(.nxs-trigger) #' + ROOT_ID + '{bottom:calc(128px + var(--nx-safe-bottom,0px));}'
+            + '}'
+            + '@media (max-width:640px){#' + ROOT_ID + '{left:10px;}}';
         var style = document.createElement('style');
         style.id = 'nux-credit-float-style';
         style.textContent = css;
