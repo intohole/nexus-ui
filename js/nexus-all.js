@@ -1899,6 +1899,9 @@
             this.serviceHeaders = config.serviceHeaders || null;
             this.headerBuilder = config.headers || null;
             this.cacheTtl = (config.cache && config.cache.ttl) || 0;
+            this.authEndpoints = Array.isArray(config.authEndpoints) ? config.authEndpoints : null;
+            this.silentEndpoints = Array.isArray(config.silentEndpoints) ? config.silentEndpoints : null;
+            this.errorToast = config.errorToast === true;
             this._cache = new Map();
             this._pendingGet = new Map();
             this.storage = config.dualStorage && window.NexusUtils && typeof window.NexusUtils.createDualStorage === 'function'
@@ -1951,7 +1954,17 @@
 
         _isAuthEntry(url) {
             const path = String(url || '').split('?')[0].split('#')[0];
-            return /(\/login|\/register|\/sms-login|\/refresh)$/.test(path);
+            if (/(\/login|\/register|\/sms-login|\/refresh)$/.test(path)) return true;
+            if (this.authEndpoints) {
+                return this.authEndpoints.some((ep) => path.indexOf(ep) >= 0);
+            }
+            return false;
+        }
+
+        _isSilentEntry(url) {
+            if (!this.silentEndpoints) return false;
+            const path = String(url || '').split('?')[0].split('#')[0];
+            return this.silentEndpoints.some((ep) => path.indexOf(ep) >= 0);
         }
 
         _handleSessionExpired() {
@@ -2127,14 +2140,22 @@
                                 }
                                 if (response.status === 401) {
                                     const authEntry = this._isAuthEntry(url);
-                                    if (!skipUnauthorized && !authEntry) {
+                                    const silentEntry = this._isSilentEntry(url);
+                                    if (!skipUnauthorized && !authEntry && !silentEntry) {
                                         this._handleSessionExpired();
                                     }
                                     const keepServerMsg = skipUnauthorized || skipAuthRefresh || authEntry;
                                     const msg401 = keepServerMsg ? (errorMsg || '认证失败') : '登录已过期，请重新登录';
                                     throw new ApiError(msg401, 401, data, errorCode);
                                 }
-                                if (this.onError) this.onError(response.status, errorMsg);
+                                if (this._isSilentEntry(url)) {
+                                    throw new ApiError(errorMsg, response.status, data, errorCode);
+                                }
+                                if (this.onError) {
+                                    this.onError(response.status, errorMsg, url);
+                                } else if (this.errorToast && window.NexusUtils && typeof NexusUtils.showToast === 'function') {
+                                    try { NexusUtils.showToast(errorMsg, 'error'); } catch (e) {}
+                                }
                                 throw new ApiError(errorMsg, response.status, data, errorCode);
                             }
 
@@ -2405,8 +2426,20 @@
             }
             return (data && typeof data === 'object' && 'data' in data) ? data.data : data;
         },
+        code0or200: function(data, response) {
+            if (response && !response.ok) return data;
+            if (data && typeof data === 'object' && 'code' in data) {
+                if (data.code === 0 || data.code === 200) return data.data;
+                throw new ApiError(data.message || data.detail || data.error || '操作失败', (response && response.status) || null, data, String(data.code));
+            }
+            return (data && typeof data === 'object' && 'data' in data) ? data.data : data;
+        },
         dataOrRes: function(data) {
             return (data && typeof data === 'object' && 'data' in data) ? data.data : data;
+        },
+        dataEnvelope: function(data, response) {
+            if (response && !response.ok) return data;
+            return { data: data };
         }
     };
 
