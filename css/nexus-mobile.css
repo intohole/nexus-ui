@@ -318,6 +318,14 @@ html {
   text-size-adjust: 100%;
 }
 
+/* iOS 聚焦缩放防护：触屏设备输入字号不得低于 16px（任意类名的输入框，业务仓无需再各自手写） */
+@media (hover: none) and (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea, select {
+    font-size: 16px !important;
+  }
+}
+
 html, body {
   overscroll-behavior-y: contain;
 }
