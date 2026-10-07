@@ -34,14 +34,16 @@ MAX_LINE_LEN = 3000
 # 已知例外：key 为 "<仓库相对路径>#<规则名>"，必须写清原因与收归条件。
 # 仅豁免已明确记录的单条命中，不豁免整个文件，避免掩盖后续新增违规。
 KNOWN_EXCEPTIONS: dict[str, str] = {
-    "resumeAI/static/styles/mobile-base.css#mobile-base-copy": "96行本地 tabbar 实现（nux-bottom-nav 迁移专项轮收编）",
-    "oneNote/static/css/mobile-base.css#mobile-base-copy": "42行变体含应用专属规则，待 oneNote 专项轮改名/并入 app.css",
-    "financialKG/frontend/css/mobile-base.css#mobile-base-copy": "19行变体（44px+图谱面板），待 financialKG 专项轮并入",
-    "LifeCompass/static/mobile-base.css#mobile-base-copy": "11行变体，待 LifeCompass 专项轮并入",
-    "adSmart/frontend/css/mobile-base.css#mobile-base-copy": "11行应用专属差异（公共地板已迁 nexus-mobile.css），改名即可摘牌",
-    "userFeedback/static/css/mobile-base.css#mobile-base-copy": "7行变体，待 userFeedback 专项轮并入",
-    "WisePath/static/css/mobile-base.css#mobile-base-copy": "4行变体，待 WisePath 专项轮并入",
-    "geniusStudent/static/css/mobile-base.css#mobile-base-copy": "3行变体，待 geniusStudent 专项轮并入",
+    "LifeCompass/static/index.html#mobile-base-copy": "11行变体文件引用，待 LifeCompass 专项轮改名/并入",
+    "WisePath/static/index.html#mobile-base-copy": "4行变体文件引用，待 WisePath 专项轮并入",
+    "adSmart/frontend/index.html#mobile-base-copy": "11行应用专属差异引用（公共地板已迁 nexus-mobile.css），改名即可摘牌",
+    "financialKG/frontend/index.html#mobile-base-copy": "19行变体文件引用，待 financialKG 专项轮并入",
+    "geniusStudent/static/index.html#mobile-base-copy": "3行变体文件引用，待 geniusStudent 专项轮并入",
+    "oneNote/static/index.html#mobile-base-copy": "42行变体文件引用，待 oneNote 专项轮改名/并入 app.css",
+    "oneNote/static/admin.html#mobile-base-copy": "42行变体文件引用（admin 页），随 oneNote 专项轮一并",
+    "resumeAI/static/index.html#mobile-base-copy": "96行本地 tabbar 实现，nux-bottom-nav 迁移专项轮收编",
+    "userFeedback/static/index.html#mobile-base-copy": "7行变体文件引用，待 userFeedback 专项轮并入",
+    "userFeedback/static/admin.html#mobile-base-copy": "7行变体文件引用（admin 页），随 userFeedback 专项轮一并",
 }
 
 RULES = [
