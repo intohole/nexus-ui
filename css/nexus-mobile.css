@@ -104,6 +104,7 @@
      替代各仓自写 44px @media 规则（oneNote/MiaoBi 存量 ~23 条的收编出口）。 */
   .nx-touch { min-height: 44px; min-width: 44px; position: relative; }
   .nx-touch::after { content: ""; position: absolute; inset: -10px; }
+  a, button, [role="button"], .nx-touch { touch-action: manipulation; }
   .nux-btn { min-height: 44px; min-width: 44px; }
   .nx-sidebar-item { min-height: 44px; }
   .nx-input, .nx-select, .nux-input { min-height: 44px; font-size: 16px; }

@@ -52,9 +52,11 @@
             + 'body:has(.nxs-trigger) #' + ROOT_ID + '{bottom:calc(74px + var(--nx-safe-bottom,0px));}'
             + '@media (max-width:768px){'
             + 'body:has(.nux-layout-bottom-nav):not(:has(.nxs-trigger)) #' + ROOT_ID + ','
-            + 'body:has(.nx-mobile-tabbar):not(:has(.nxs-trigger)) #' + ROOT_ID + '{bottom:calc(74px + var(--nx-safe-bottom,0px));}'
+            + 'body:has(.nx-mobile-tabbar):not(:has(.nxs-trigger)) #' + ROOT_ID + ','
+            + 'body:has(.nux-bottom-nav):not(:has(.nxs-trigger)) #' + ROOT_ID + '{bottom:calc(74px + var(--nx-safe-bottom,0px));}'
             + 'body:has(.nux-layout-bottom-nav):has(.nxs-trigger) #' + ROOT_ID + ','
-            + 'body:has(.nx-mobile-tabbar):has(.nxs-trigger) #' + ROOT_ID + '{bottom:calc(128px + var(--nx-safe-bottom,0px));}'
+            + 'body:has(.nx-mobile-tabbar):has(.nxs-trigger) #' + ROOT_ID + ','
+            + 'body:has(.nux-bottom-nav):has(.nxs-trigger) #' + ROOT_ID + '{bottom:calc(128px + var(--nx-safe-bottom,0px));}'
             + '}'
             + '@media (max-width:640px){#' + ROOT_ID + '{left:10px;}}';
         var style = document.createElement('style');

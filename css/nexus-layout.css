@@ -485,3 +485,11 @@
 @media (max-width: 768px) {
     .nux-bottom-nav { display: flex; }
 }
+
+/* 独立底栏内容避让：nux-layout 体系自动生效，自绘主容器挂 .nx-bottom-nav-safe 显式生效 */
+@media (max-width: 768px) {
+    body:has(.nux-bottom-nav) .nux-layout-main,
+    body:has(.nux-bottom-nav) .nx-bottom-nav-safe {
+        padding-bottom: calc(64px + var(--nx-safe-bottom));
+    }
+}
