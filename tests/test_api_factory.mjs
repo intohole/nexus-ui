@@ -241,6 +241,62 @@ catch (e) { check('unknown preset throws', String(e.message).includes('nope')); 
     check('refresh endpoint 401 no loop', rErr && rErr.message === 'refresh 无效' && localStorage.getItem('lg2_tok') === 'sess-2');
 }
 
+
+// 16. r54 新能力：code0or200 / dataEnvelope / authEndpoints / silentEndpoints / errorToast
+{
+    // 16a. code0or200：code 0 与 200 都解包，其余抛
+    global.__respond = () => ({ ok: true, status: 200, headers: { get: () => 'application/json' }, json: async () => ({ code: 0, data: { a: 1 } }) });
+    const apiC = NexusApi.create({ baseUrl: '', tokenKey: '__nt__', unwrap: 'code0or200' });
+    check('code0or200 unwraps code 0', (await apiC.get('/x')).a === 1);
+    global.__respond = () => ({ ok: true, status: 200, headers: { get: () => 'application/json' }, json: async () => ({ code: 200, data: { b: 2 } }) });
+    check('code0or200 unwraps code 200', (await apiC.get('/x')).b === 2);
+    global.__respond = () => ({ ok: true, status: 200, headers: { get: () => 'application/json' }, json: async () => ({ code: 500, message: '业务失败' }) });
+    let cErr; try { await apiC.get('/x'); } catch (e) { cErr = e; }
+    check('code0or200 throws on other code', cErr && cErr.message === '业务失败' && cErr.code === '500');
+
+    // 16b. dataEnvelope：成功回 {data:d} 信封，错误路径保持原始（供 _extractError）
+    global.__respond = () => ({ ok: true, status: 200, headers: { get: () => 'application/json' }, json: async () => ({ plain: 3 }) });
+    const apiD = NexusApi.create({ baseUrl: '', tokenKey: '__nt__', unwrap: 'dataEnvelope' });
+    const wrapped = await apiD.get('/x');
+    check('dataEnvelope wraps success', wrapped && wrapped.data && wrapped.data.plain === 3);
+    global.__respond = () => ({ ok: false, status: 500, headers: { get: () => 'application/json' }, json: async () => ({ detail: '炸了' }) });
+    let dErr; try { await apiD.get('/x'); } catch (e) { dErr = e; }
+    check('dataEnvelope error path message kept', dErr && dErr.message === '炸了');
+
+    // 16c. authEndpoints：声明式认证端点（401 保服务端消息、不清 token）
+    localStorage.setItem('ae_tok', 'live');
+    global.__respond = () => ({ ok: false, status: 401, headers: { get: () => 'application/json' }, json: async () => ({ detail: '密码错误' }) });
+    const apiE = NexusApi.create({ baseUrl: '', tokenKey: 'ae_tok', authEndpoints: ['/auth/login', '/auth/change-password'] });
+    let aeErr; try { await apiE.post('/auth/login', {}); } catch (e) { aeErr = e; }
+    check('authEndpoints keeps server msg & token', aeErr && aeErr.message === '密码错误' && localStorage.getItem('ae_tok') === 'live');
+
+    // 16d. silentEndpoints：401 不触发会话过期；非 401 错误不触发 onError
+    localStorage.setItem('se_tok', 'live2');
+    let onErrHits = 0;
+    const apiS = NexusApi.create({ baseUrl: '', tokenKey: 'se_tok', silentEndpoints: ['/alerts/notifications'], onError() { onErrHits++; } });
+    let sErr; try { await apiS.get('/alerts/notifications'); } catch (e) { sErr = e; }
+    check('silent 401 no session expire', sErr && sErr.status === 401 && localStorage.getItem('se_tok') === 'live2');
+    global.__respond = () => ({ ok: false, status: 500, headers: { get: () => 'application/json' }, json: async () => ({ detail: 'x' }) });
+    let s2Err; try { await apiS.get('/alerts/notifications'); } catch (e) { s2Err = e; }
+    let s3Err; try { await apiS.get('/normal'); } catch (e) { s3Err = e; }
+    check('silent 500 skips onError, normal fires', s2Err && s3Err && onErrHits === 1);
+
+    // 16e. onError 第三参收到 url
+    let gotUrl = null;
+    const apiU = NexusApi.create({ baseUrl: '', tokenKey: '__nt__', onError(status, msg, url) { gotUrl = url; } });
+    try { await apiU.get('/normal'); } catch (e) {}
+    check('onError receives url', gotUrl === '/normal');
+
+    // 16f. errorToast：无 onError 时自动 toast（silent 端点跳过）
+    let toastCalls = [];
+    window.NexusUtils.showToast = (m, t) => { toastCalls.push([m, t]); };
+    const apiT = NexusApi.create({ baseUrl: '', tokenKey: '__nt__', errorToast: true, silentEndpoints: ['/quiet'] });
+    try { await apiT.get('/loud'); } catch (e) {}
+    try { await apiT.get('/quiet'); } catch (e) {}
+    check('errorToast fires except silent', toastCalls.length === 1 && toastCalls[0][0] === 'x' && toastCalls[0][1] === 'error');
+    window.NexusUtils.showToast = () => {};
+}
+
 let fail = 0;
 for (const [name, ok] of results) { if (!ok) fail++; console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}`); }
 console.log(`\n${results.length - fail}/${results.length} passed`);

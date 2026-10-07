@@ -12,8 +12,20 @@
             }
             return (data && typeof data === 'object' && 'data' in data) ? data.data : data;
         },
+        code0or200: function(data, response) {
+            if (response && !response.ok) return data;
+            if (data && typeof data === 'object' && 'code' in data) {
+                if (data.code === 0 || data.code === 200) return data.data;
+                throw new ApiError(data.message || data.detail || data.error || '操作失败', (response && response.status) || null, data, String(data.code));
+            }
+            return (data && typeof data === 'object' && 'data' in data) ? data.data : data;
+        },
         dataOrRes: function(data) {
             return (data && typeof data === 'object' && 'data' in data) ? data.data : data;
+        },
+        dataEnvelope: function(data, response) {
+            if (response && !response.ok) return data;
+            return { data: data };
         }
     };
 
