@@ -33,7 +33,16 @@ MAX_LINE_LEN = 3000
 
 # 已知例外：key 为 "<仓库相对路径>#<规则名>"，必须写清原因与收归条件。
 # 仅豁免已明确记录的单条命中，不豁免整个文件，避免掩盖后续新增违规。
-KNOWN_EXCEPTIONS: dict[str, str] = {}
+KNOWN_EXCEPTIONS: dict[str, str] = {
+    "resumeAI/static/styles/mobile-base.css#mobile-base-copy": "96行本地 tabbar 实现（nux-bottom-nav 迁移专项轮收编）",
+    "oneNote/static/css/mobile-base.css#mobile-base-copy": "42行变体含应用专属规则，待 oneNote 专项轮改名/并入 app.css",
+    "financialKG/frontend/css/mobile-base.css#mobile-base-copy": "19行变体（44px+图谱面板），待 financialKG 专项轮并入",
+    "LifeCompass/static/mobile-base.css#mobile-base-copy": "11行变体，待 LifeCompass 专项轮并入",
+    "adSmart/frontend/css/mobile-base.css#mobile-base-copy": "11行应用专属差异（公共地板已迁 nexus-mobile.css），改名即可摘牌",
+    "userFeedback/static/css/mobile-base.css#mobile-base-copy": "7行变体，待 userFeedback 专项轮并入",
+    "WisePath/static/css/mobile-base.css#mobile-base-copy": "4行变体，待 WisePath 专项轮并入",
+    "geniusStudent/static/css/mobile-base.css#mobile-base-copy": "3行变体，待 geniusStudent 专项轮并入",
+}
 
 RULES = [
     ("clipboard", "fail", r"navigator\.clipboard\s*&&\s*navigator\.clipboard\.writeText|navigator\.clipboard\.writeText",
@@ -49,6 +58,8 @@ RULES = [
      "自实现通用工具函数 → 确认 NexusUtils 是否已有等价实现（formatDate/debounce/formatCurrency/escapeHtml…）"),
     ("local-toast", "warn", r"function\s+showToast\s*\([^)]*\)\s*\{",
      "自实现 toast → window.showToast（nexus-overlay-host 统一宿主）"),
+    ("mobile-base-copy", "fail", r"mobile-base\.css",
+     "mobile-base.css 拷贝 → nexus-mobile.css 已内联基础重置（r56 收归）：字节级拷贝直接删文件删引用；应用专属差异改名 <app>-mobile.css 或并入主 css"),
 ]
 
 

@@ -3661,7 +3661,6 @@
         'nux-textarea': 'NuxTextarea',
         'nux-theme-toggle': 'NuxThemeToggle',
         'nux-undo-toast': 'NuxUndoToast',
-        'nux-user-center': 'NuxUserCenter',
         'nux-voice-input': 'NuxVoiceInput'
     };
 
