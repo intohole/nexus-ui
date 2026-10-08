@@ -21,7 +21,7 @@
   --nx-text-body: #334155;
   --nx-text-secondary: #64748b;
   --nx-text-muted: #94a3b8;
-  --nx-text-accent: var(--app-accent);
+  --nx-text-accent: var(--app-accent-strong, var(--app-accent));
   --nx-text-on-accent: var(--app-accent-contrast, #ffffff);
 
   --nx-primary: var(--app-accent, #6366f1);
@@ -208,7 +208,7 @@
   --nx-text-primary: var(--nx-text-heading);
   --nx-text-strong: #f8fafc;
   --nx-text-tertiary: var(--nx-text-secondary);
-  --nx-text-accent: var(--app-accent);
+  --nx-text-accent: var(--app-accent-strong, var(--app-accent));
   --nx-warning-soft: rgba(251, 191, 36, 0.15);
   --nx-warning-text: var(--nx-warning);
   --nx-chat-kb: var(--nx-bg-elevated);
@@ -231,7 +231,7 @@
   --nx-accent-hover: var(--app-accent-hover);
   --nx-accent-soft: rgba(var(--app-accent-rgb), 0.12);
   --nx-primary-soft: rgba(var(--app-accent-rgb), 0.12);
-  --nx-text-accent: var(--app-accent);
+  --nx-text-accent: var(--app-accent-strong, var(--app-accent));
   --nx-text-on-accent: var(--app-accent-contrast, #ffffff);
   --nx-border-accent: rgba(var(--app-accent-rgb), 0.3);
   --nx-shadow-glow: 0 0 20px rgba(var(--app-accent-rgb), 0.15);

@@ -466,3 +466,63 @@ img, video, canvas {
     padding-bottom: calc(var(--nx-space-6, 1.5rem) + var(--nx-safe-bottom, 0px));
   }
 }
+
+/* ===== 下拉刷新原语 NexusPullRefresh（触屏，nexus-pull-refresh.js）===== */
+.nx-pull-refresh {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    margin-left: -52px;
+    width: 104px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-radius: 18px;
+    background: var(--nx-bg-elevated, #fff);
+    border: 1px solid var(--nx-border, #e2e8f0);
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12);
+    color: var(--nx-text-accent, var(--app-accent, #4f46e5));
+    font-size: 12px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-28px);
+    transition: opacity 0.2s ease, transform 0.25s ease, visibility 0.25s;
+    z-index: var(--nx-z-float, 1500);
+    pointer-events: none;
+}
+[data-theme="dark"] .nx-pull-refresh {
+    background: var(--nx-bg-elevated, #2a3848);
+    border-color: var(--nx-border, #334155);
+}
+.nx-pull-refresh-spinner {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    transition: transform 0.1s linear;
+}
+.nx-pull-refresh-spinner.is-spinning {
+    animation: nx-pull-spin 0.7s linear infinite;
+}
+.nx-pull-refresh-spinner.is-spinning svg {
+    display: none;
+}
+.nx-pull-refresh-spinner.is-spinning::after {
+    content: '';
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--nx-accent-soft, rgba(99, 102, 241, 0.25));
+    border-top-color: currentColor;
+    border-radius: 50%;
+}
+@keyframes nx-pull-spin {
+    to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .nx-pull-refresh { transition: opacity 0.1s ease; }
+    .nx-pull-refresh-spinner { transition: none; }
+    .nx-pull-refresh-spinner.is-spinning { animation-duration: 1.4s; }
+}

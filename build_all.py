@@ -24,6 +24,7 @@ FILES: list[str] = [
     "nexus-structured.js",
     "nexus-crud.js",
     "nexus-mobile.js",
+    "nexus-pull-refresh.js",
     "nexus-components.js",
     "components/nux-icon-data.js",
     "user-center-sdk.js",

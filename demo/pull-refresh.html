@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>NexusPullRefresh 下拉刷新演示</title>
+<script src="../js/nexus-theme-init.js"></script>
+<link rel="stylesheet" href="../css/nexus-all.css">
+<script src="https://registry.npmmirror.com/vue/3.4.21/files/dist/vue.global.prod.js"></script>
+<script src="../js/nexus-all.js"></script>
+<style>
+  body{margin:0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+  body.app-demo{--app-accent:#4f46e5;--app-accent-rgb:79,70,229;--app-accent-hover:#6366f1;--app-accent-strong:#4338ca}
+  [data-theme="dark"] body.app-demo{--app-accent:#8192fa;--app-accent-rgb:129,146,250;--app-accent-hover:#a5b4fc;--app-accent-strong:#a5b4fc}
+  .demo-top{height:56px;background:var(--nx-bg-elevated);border-bottom:1px solid var(--nx-border);display:flex;align-items:center;padding:0 20px;gap:10px;position:sticky;top:0;z-index:10}
+  .demo-brand{width:26px;height:26px;border-radius:8px;background:var(--app-accent);color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center}
+  .demo-title{font-weight:600;color:var(--nx-text-heading)}
+  .demo-wrap{max-width:680px;margin:0 auto;padding:20px 20px 80px}
+  .demo-h1{font-size:22px;font-weight:700;color:var(--nx-text-heading);margin:16px 0 8px}
+  .demo-p{color:var(--nx-text-secondary);font-size:14px;line-height:1.7;margin:0 0 16px}
+  .demo-card{background:var(--nx-bg-surface);border:1px solid var(--nx-border);border-radius:var(--nx-radius-lg);padding:16px;margin-bottom:12px}
+  .demo-card b{color:var(--nx-text-heading)}
+  .demo-card small{color:var(--nx-text-secondary);display:block;margin-top:4px}
+  .demo-item{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--nx-border)}
+  .demo-item:last-child{border-bottom:none}
+  .demo-time{color:var(--nx-text-accent);font-size:13px;font-variant-numeric:tabular-nums}
+  .tip{position:fixed;right:18px;bottom:18px;z-index:5;background:var(--nx-bg-elevated);border:1px solid var(--nx-border);border-radius:12px;padding:10px 14px;font-size:13px;color:var(--nx-text-secondary);box-shadow:0 6px 18px rgba(15,23,42,.1)}
+  .tip b{color:var(--nx-text-accent)}
+  .demo-count{font-size:13px;color:var(--nx-text-secondary)}
+</style>
+</head>
+<body class="app-demo">
+<div id="app">
+  <div class="demo-top">
+    <span class="demo-brand">N</span>
+    <span class="demo-title">NexusPullRefresh 演示</span>
+    <span style="margin-left:auto" class="demo-count">已刷新 {{ times }} 次</span>
+  </div>
+  <div class="demo-wrap">
+    <div class="demo-h1">下拉刷新</div>
+    <div class="demo-p">触屏设备在页面顶部下拉即可触发；模拟器请切手机模式拖拽。桌面无 touch 时不激活（零副作用）。</div>
+    <div class="demo-card">
+      <b>接入方式（一行）</b>
+      <small>NexusPullRefresh.attach(el, { onRefresh: () => load() }) — onRefresh 返回 Promise，resolve 后指示器显示「已更新」并收起</small>
+    </div>
+    <div class="demo-card">
+      <div v-for="it in items" :key="it.id" class="demo-item">
+        <span>{{ it.text }}</span>
+        <span class="demo-time">{{ it.time }}</span>
+      </div>
+    </div>
+  </div>
+  <div class="tip">阈值 <b>64px</b> · 阻尼过载 · <b>reduced-motion</b> 降级</div>
+</div>
+<script>
+const { createApp, ref } = Vue;
+const app = createApp({
+  setup() {
+    const items = ref([]);
+    const times = ref(0);
+    const stamp = () => new Date().toTimeString().slice(0, 8);
+    const seed = () => {
+      items.value = [1, 2, 3, 4, 5].map(i => ({ id: Date.now() + '-' + i + Math.random(), text: '条目 ' + i, time: stamp() }));
+    };
+    const load = () => new Promise(resolve => setTimeout(() => { times.value++; seed(); resolve(); }, 900));
+    seed();
+    if (window.NexusPullRefresh) NexusPullRefresh.attach(null, { onRefresh: load });
+    return { items, times };
+  }
+});
+if (window.NexusComponents) NexusComponents.register(app);
+app.mount('#app');
+</script>
+</body>
+</html>

@@ -56,7 +56,9 @@ app.mount('#app');
 <body class="app-lion">      <!-- 深海蓝 #0369a1 -->
 ```
 
-可用主题：app-prompt, app-prompt-manager, app-lion, app-golden-fish, app-code-block, app-one-note, app-ai-pet, app-verse-craft, app-financial-kg, app-resume-ai, app-bee-memory, app-chroma, app-mini-deploy, app-usercenter, app-wisepath, app-golden, app-ad-smart, app-genius-student, app-spider, app-user-feedback, app-nexus-ui, app-admin, app-docs
+可用主题：app-prompt, app-prompt-manager, app-lion, app-golden-fish, app-code-block, app-one-note, app-ai-pet, app-verse-craft, app-financial-kg, app-resume-ai, app-bee-memory, app-chroma, app-mini-deploy, app-usercenter, app-wisepath, app-golden, app-ad-smart, app-genius-student, app-spider, app-user-feedback, app-nexus-ui, app-admin, app-docs, app-truemirror, app-travel-mate, app-miaobi, app-gezhi
+
+主题令牌四件套（亮色行）：`--app-accent`（600 档，按钮底/大字）/ `--app-accent-hover` / `--app-accent-strong`（700 档，白底文字 AA≥4.5，文字级强调统一走 `--nx-text-accent` 自动消费）/ `--app-accent-rgb`；暗色行同构（400 档 accent + 300 档 hover/strong + `--app-accent-contrast` 深字）。全 27 套 WCAG 实测达标（2026-10）。
 
 ## 暗色模式
 
@@ -140,6 +142,7 @@ NexusUtils.overlayStack();            // 弹层层级栈（配 overlayBehavior �
 ### 多端适配约定（宿主必读）
 
 - **viewport**：加载 nexus-all.js（或 nexus-mobile.js）后自动补齐标准 viewport meta（`width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover, interactive-widget=resizes-content`），宿主无需手写；已有 meta 只补缺失键、不覆盖既有值。手动触发用 `NexusMobile.ensureViewport()`（nexus-mobile.js 暴露 `window.NexusMobile`，另含 `isMobile()` 与 `MOBILE_BREAKPOINT`）。
+- **下拉刷新**：`js/nexus-pull-refresh.js` 暴露 `window.NexusPullRefresh`（随 nexus-all.js 自动装配）。触屏设备列表页一行接入：`NexusPullRefresh.attach(容器或null, { onRefresh: () => load() })`——`onRefresh` 返回 Promise 则 resolve 后指示器显「已更新」收起；阈值 64px 带阻尼，桌面无 touch 零激活，尊重 `prefers-reduced-motion`；指示器悬浮式不 translate 页面内容（不与 sticky/fixed 冲突），样式类 `.nx-pull-refresh`（nexus-mobile.css）。
 - **断点**：JS 单一分界 `window.innerWidth <= 768` 为移动（统一用 `useMobile()` 或 `NexusMobile.isMobile()`，勿自写 `resize` 监听或 `< 768`）；CSS 允许档位 768/480/1024，其余游离值勿用。命中区扩大规则走 `@media (pointer: coarse)`，hover 行为回退走 `@media (hover: none)`，两者语义不同不可混用。
 - **弹层滚动锁定**：modal/drawer/settings/side-panel 已内置 `NexusUtils.scrollLock`，业务自建弹层必须复用它（计数器制，勿直接写 `document.body.style.overflow`）。
 - **safe-area / 视口高度**：CSS 变量 `--nx-safe-{bottom,top,left,right}`（safe-area env 别名，令牌单源 nexus-tokens.css）与 `--nx-vh`（dvh 降级，nexus-mobile.css 提供），固定底栏/抽屉高度一律 `calc(xx + var(--nx-safe-bottom))`，全屏高度用 `var(--nx-vh) * 100` 或 `100dvh`。
@@ -221,13 +224,13 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 
 用户协议页面唯一事实源：本仓库 `agreement.html`（协议条款/隐私政策文案直接维护在该页）。
 
-### 全部组件索引（65 个，以 `NexusComponents.list()` 为准）
+### 全部组件索引（64 个，以 `NexusComponents.list()` 为准）
 
 | 分类 | 组件 |
 |------|------|
 | 布局骨架 | nux-layout-sidebar / nux-layout-topnav / nux-bottom-nav / nux-side-panel / nux-section / nux-backtop |
-| 站点级 | nux-footer / nux-about-page / nux-menu-about / nux-login-page / nux-forgot-password / nux-menu-user / nux-user-center / nux-settings-drawer |
-| 反馈 | nux-undo-toast / nux-modal / nux-drawer / nux-notification-bell / nux-notification-panel / nux-loading / nux-skeleton / nux-empty-state / nux-error-state / nux-ai-task-progress |
+| 站点级 | nux-footer / nux-about-page / nux-menu-about / nux-login-page / nux-forgot-password / nux-menu-user / nux-settings-drawer |
+| 反馈 | nux-undo-toast / nux-modal / nux-drawer / nux-notification-bell / nux-notification-panel† / nux-loading / nux-skeleton / nux-empty-state / nux-error-state / nux-ai-task-progress |
 | 数据展示 | nux-stat-card / nux-tag / nux-avatar / nux-progress / nux-calendar / nux-checkin / nux-result-view / nux-selection-bar / nux-pagination / nux-poster / nux-conversation-list / nux-icon |
 | 表单控件 | nux-form-group / nux-button / nux-input / nux-textarea / nux-select / nux-switch / nux-checkbox / nux-radio-group / nux-input-number / nux-search-box / nux-segmented / nux-chip-group / nux-accordion / nux-tab-group |
 | 交互增强 | nux-file-upload / nux-swipe-actions / nux-theme-toggle / nux-camera-recognize / nux-voice-input |
@@ -235,6 +238,8 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 | 应用与引导 | nux-app-card / nux-app-switcher / nux-automation / nux-onboarding / nux-onboarding-strip |
 
 ### 零引用组件处置记录（2026-10-06 全工作区实测）
+
+† nux-notification-panel 是 vanilla 构造函数（`new NuxNotificationPanel(options)`，nux-notification-bell 内部依赖），不在 NexusComponents 注册表——嵌入页用法直接 new，不走 Vue 注册。
 
 原 8 个零消费组件中 7 个（nux-breadcrumb / nux-date-picker / nux-infinite-scroll / nux-portal-footer / nux-qrcode / nux-slider / nux-sortable + nux-radar-chart）已删除下架（业务侧决策：死代码移除，无兼容期）；nux-about-page 保留（nexus-ui 站点 about.html 自用）。注意 nux-user-center 应用侧 0 引用但是 nux-menu-user 的内部依赖，不可视为零引用。
 
@@ -247,7 +252,7 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 
 ### 全局件（随 nexus-all.js 自动装配，无需引脚本；均为 IIFE 自动激活）
 
-- `js/user-center-sdk.js`：`window.UserCenterSDK`——UC 统一登录 SDK（login/loginWithEmail/loginWithPhone/register/refreshAccessToken 全局单飞防家族吊销/logout/verifyToken/checkPermission），令牌读写走 dualStorage（`uc_access_token`/`uc_refresh_token`）+ SSO cookie 桥跨应用恢复。应用侧标准姿势：`new UserCenterSDK({baseUrl, appKey})` 后 `isAuthenticated()` 判态，登录页换 `nux-login-page`。加载后挂 `window.ucSDK`（nux-menu-user/nux-user-center 复用同一实例）。
+- `js/user-center-sdk.js`：`window.UserCenterSDK`——UC 统一登录 SDK（login/loginWithEmail/loginWithPhone/register/refreshAccessToken 全局单飞防家族吊销/logout/verifyToken/checkPermission），令牌读写走 dualStorage（`uc_access_token`/`uc_refresh_token`）+ SSO cookie 桥跨应用恢复。应用侧标准姿势：`new UserCenterSDK({baseUrl, appKey})` 后 `isAuthenticated()` 判态，登录页换 `nux-login-page`。加载后挂 `window.ucSDK`（nux-menu-user 复用同一实例）。
 - `js/nexus-overlay-host.js`：浮层宿主，定义全局 `window.showToast / window.nuxConfirm / window.nuxPrompt / window.showUnlock`。不引 nexus-all 的仓必须单引本文件，否则全局函数不存在（散件加载约定）。
 - `js/nexus-api-error.js`：`window.NexusApiError` + `isNetworkError / isInsufficientCreditsError / mapHttpError`。**单文件引 API 必须三件同引：nexus-api-error.js + nexus-api.js + nexus-api-factory.js**（漏引=`NexusApi.create is not a function`）。
 - `js/nexus-credit-float.js`：积分感知浮标（30s 节流聚合展示余额/垫付进度），登录态才显示；`NexusCreditFloat.refresh()/stop()/start()`，关闭 `localStorage.nux_credit_float='off'`。
