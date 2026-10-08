@@ -2,7 +2,7 @@
     if (window.NuxIcon) return;
     if (!window.Vue) return;
 
-    var ICONS = {
+    var FALLBACK_ICONS = {
         'deck': ['M3.5 5h17v10.5h-17z', 'M12 15.5V21', 'M8.5 21h7', 'M7 9h10'],
         'doc': ['M6 3h7.5L18 7.5V21H6z', 'M13.5 3v4.5H18', 'M9 12h6', 'M9 16h4'],
         'sheet': ['M4 4.5h16v15H4z', 'M4 9.5h16', 'M4 14.5h16', 'M10 4.5v15', 'M15 4.5v15'],
@@ -53,6 +53,14 @@
 
     var FALLBACK = 'empty-box';
 
+    function resolve(name) {
+        var data = window.NuxIconData;
+        if (data && data[name]) return data[name];
+        if (FALLBACK_ICONS[name]) return FALLBACK_ICONS[name];
+        if (data && data[FALLBACK]) return data[FALLBACK];
+        return FALLBACK_ICONS[FALLBACK];
+    }
+
     var NuxIcon = {
         name: 'NuxIcon',
         props: {
@@ -65,10 +73,18 @@
         emits: [],
         computed: {
             paths: function () {
-                return ICONS[this.name] || ICONS[FALLBACK];
+                return resolve(this.name);
             },
             stroke: function () {
                 return this.color || 'currentColor';
+            }
+        },
+        methods: {
+            d: function (p) {
+                return Array.isArray(p) ? p[0] : p;
+            },
+            fill: function (p) {
+                return Array.isArray(p) && p[1] ? 'currentColor' : 'none';
             }
         },
         template: `
@@ -76,9 +92,14 @@
                 fill="none" :stroke="stroke" :stroke-width="strokeWidth"
                 stroke-linecap="round" stroke-linejoin="round" focusable="false"
                 :aria-hidden="label ? null : 'true'" :role="label ? 'img' : null" :aria-label="label || null">
-                <path v-for="(d, i) in paths" :key="i" :d="d"></path>
+                <path v-for="(p, i) in paths" :key="i" :d="d(p)" :fill="fill(p)"></path>
             </svg>
         `
+    };
+
+    NuxIcon.has = function (name) {
+        var data = window.NuxIconData;
+        return !!(data && data[name]) || !!FALLBACK_ICONS[name];
     };
 
     if (window.Vue && Vue.component) {

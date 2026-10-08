@@ -25,6 +25,7 @@ FILES: list[str] = [
     "nexus-crud.js",
     "nexus-mobile.js",
     "nexus-components.js",
+    "components/nux-icon-data.js",
     "user-center-sdk.js",
     "nexus-credit-float.js",
     "nexus-feedback-float.js",
