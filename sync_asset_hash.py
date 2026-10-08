@@ -23,6 +23,7 @@ HASH_VALUE_RE = re.compile(r'h=[0-9a-zA-Z]+')
 VERSION_PARAM_RE = re.compile(r'[?&][a-z_]+=')
 HTML_TARGET_RE = re.compile(r'\.html?$', re.I)
 SKIP_DIRS = (".git", "node_modules", "vendor", "__pycache__", "dist", ".venv", "venv", "logs", "data")
+SNAPSHOT_RE = re.compile(r"^v\d+(?:\.\d+)+$")
 SKIP_URL_PREFIX = ("http://", "https://", "//", "data:", "#", "mailto:")
 
 
@@ -117,7 +118,7 @@ def sync_css(path: str, base_dir: str, fix: bool):
 def scan_once(target: str, root: str, ignore: tuple, fix: bool, add: bool = False):
     scanned, changed, issues = 0, 0, 0
     for dirpath, dirnames, filenames in os.walk(target):
-        dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
+        dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS and not SNAPSHOT_RE.match(d)]
         for fn in filenames:
             if not fn.endswith((".html", ".css")):
                 continue

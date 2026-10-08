@@ -363,7 +363,8 @@
 .nux-swipe--disabled .nux-swipe__content { pointer-events: auto; }
 .nux-swipe__action { width: 76px; min-height: 44px; border: 0; padding: 0 var(--nx-space-2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #fff; font-size: var(--nx-text-xs); font-weight: 600; font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .nux-swipe__action:active { filter: brightness(0.92); }
-.nux-swipe__action-icon { font-size: 18px; line-height: 1; }
+.nux-swipe__action-icon { font-size: 18px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
+.nux-swipe__action-icon svg { width: 18px; height: 18px; }
 .nux-swipe__action--accent { background: var(--app-accent, var(--nx-info)); }
 .nux-swipe__action--danger { background: var(--nx-danger); }
 .nux-swipe__action--success { background: var(--nx-success); }

@@ -14,6 +14,12 @@
         watch: {
             modelValue() {
                 this.$nextTick(() => this.updateIndicator());
+            },
+            options: {
+                deep: true,
+                handler() {
+                    this.$nextTick(() => this.updateIndicator());
+                }
             }
         },
         computed: {
@@ -58,19 +64,27 @@
                 const idx = this.options.findIndex(o => o.value === this.modelValue);
                 const el = btns[idx];
                 if (!el) {
-                    this.indicator = { left: '0px', width: '0px' };
+                    if (this.indicator.left !== '0px' || this.indicator.width !== '0px') this.indicator = { left: '0px', width: '0px' };
                     return;
                 }
-                this.indicator = { left: el.offsetLeft + 'px', width: el.offsetWidth + 'px' };
+                const left = el.offsetLeft + 'px';
+                const width = el.offsetWidth + 'px';
+                if (this.indicator.left === left && this.indicator.width === width) return;
+                this.indicator = { left: left, width: width };
             }
         },
         mounted() {
             this.$nextTick(() => this.updateIndicator());
             this._onResize = () => this.updateIndicator();
             window.addEventListener('resize', this._onResize);
+            if (window.ResizeObserver) {
+                this._ro = new ResizeObserver(() => this.updateIndicator());
+                this._ro.observe(this.$el);
+            }
         },
         beforeUnmount() {
             window.removeEventListener('resize', this._onResize);
+            if (this._ro) this._ro.disconnect();
         },
         template: `
             <div class="nux-segmented" :class="{ 'nux-segmented--disabled': disabled }" role="radiogroup" :aria-label="ariaLabel || undefined" @keydown="onKeydown">

@@ -54,7 +54,7 @@
         '.nxs-empty{margin:26px 0;text-align:center;color:var(--nx-text-secondary,#64748b);font-size:14px}',
         '@keyframes nxsFade{from{opacity:0}to{opacity:1}}',
         '@keyframes nxsPop{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}',
-        '@media(max-width:768px){body:has(.nux-layout-bottom-nav) .nxs-trigger,body:has(.nx-mobile-tabbar) .nxs-trigger{bottom:calc(74px + var(--nx-safe-bottom))}}',
+        '@media(max-width:768px){body:has(.nux-layout-bottom-nav) .nxs-trigger,body:has(.nx-mobile-tabbar) .nxs-trigger,body:has(.nux-bottom-nav) .nxs-trigger{bottom:calc(74px + var(--nx-safe-bottom))}}',
         '@media(max-width:768px){',
         '.nxs-overlay{align-items:flex-end}',
         '.nxs-panel{width:100%;max-height:92dvh;border-radius:var(--nx-radius-xl,22px) var(--nx-radius-xl,22px) 0 0;padding-bottom:var(--nx-safe-bottom);animation:nxsUp .25s cubic-bezier(.34,1.2,.5,1)}',

@@ -102,13 +102,13 @@
             <div class="nux-swipe" :class="{ 'nux-swipe--disabled': disabled }" role="group">
                 <div v-if="leftActions.length" class="nux-swipe__side nux-swipe__side--left" :style="{ width: leftWidth + 'px' }" aria-hidden="true">
                     <button v-for="a in leftActions" :key="a.key" type="button" class="nux-swipe__action" :class="'nux-swipe__action--' + (a.tone || 'neutral')" :aria-label="a.label" tabindex="-1" @click="tapAction(a)">
-                        <span v-if="a.icon" class="nux-swipe__action-icon">{{ a.icon }}</span>
+                        <span v-if="a.icon" class="nux-swipe__action-icon" v-html="a.icon"></span>
                         <span>{{ a.label }}</span>
                     </button>
                 </div>
                 <div v-if="rightActions.length" class="nux-swipe__side nux-swipe__side--right" :style="{ width: rightWidth + 'px' }" aria-hidden="true">
                     <button v-for="a in rightActions" :key="a.key" type="button" class="nux-swipe__action" :class="'nux-swipe__action--' + (a.tone || 'neutral')" :aria-label="a.label" tabindex="-1" @click="tapAction(a)">
-                        <span v-if="a.icon" class="nux-swipe__action-icon">{{ a.icon }}</span>
+                        <span v-if="a.icon" class="nux-swipe__action-icon" v-html="a.icon"></span>
                         <span>{{ a.label }}</span>
                     </button>
                 </div>
