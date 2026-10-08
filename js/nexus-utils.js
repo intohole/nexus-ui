@@ -252,6 +252,7 @@
         setViewportHeight() {
             const vh = window.innerHeight * 0.01;
             document.documentElement.style.setProperty('--nx-vh', `${vh}px`);
+            document.documentElement.style.setProperty('--nx-vh-full', `${vh * 100}px`);
         },
 
         escapeHtml(text) {

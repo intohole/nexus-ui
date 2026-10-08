@@ -19,7 +19,7 @@ WORKSPACE = Path(__file__).resolve().parent.parent
 NEXUS_UI = "nexus-ui"
 REGISTRY = Path(__file__).resolve().parent / "js" / "nexus-components.js"
 
-SCAN_SUFFIXES = (".js", ".html", ".htm")
+SCAN_SUFFIXES = (".js", ".html", ".htm", ".css")
 SKIP_DIRS = {
     ".git", ".venv", "venv", "node_modules", "vendor", "__pycache__", "dist",
     "build", "logs", "data", ".trae", ".trae-html-share-packages", "handoff",
@@ -34,7 +34,10 @@ MAX_LINE_LEN = 3000
 # 已知例外：key 为 "<仓库相对路径>#<规则名>"，必须写清原因与收归条件。
 # 仅豁免已明确记录的单条命中，不豁免整个文件，避免掩盖后续新增违规。
 # r57：mobile-base 十条例外全部摘牌（8 仓改名/裁剪/迁移完成），现为空表占位。
-KNOWN_EXCEPTIONS: dict[str, str] = {}
+KNOWN_EXCEPTIONS: dict[str, str] = {
+    "miniDeploy/static/css/iframe.css#raw-vh-calc": "miniDeploy 管理台为桌面基建工具，不加载 nexus-ui 且无移动端动线，100vh 语义正确不直替（r64 定性）",
+    "miniDeploy/static/css/terminal.css#raw-vh-calc": "miniDeploy 管理台为桌面基建工具，不加载 nexus-ui 且无移动端动线，100vh 语义正确不直替（r64 定性）",
+}
 
 RULES = [
     ("clipboard", "fail", r"navigator\.clipboard\s*&&\s*navigator\.clipboard\.writeText|navigator\.clipboard\.writeText",
@@ -52,6 +55,8 @@ RULES = [
      "自实现 toast → window.showToast（nexus-overlay-host 统一宿主）"),
     ("mobile-base-copy", "fail", r"mobile-base\.css",
      "mobile-base.css 拷贝 → nexus-mobile.css 已内联基础重置（r56 收归）：字节级拷贝直接删文件删引用；应用专属差异改名 <app>-mobile.css 或并入主 css"),
+    ("raw-vh-calc", "warn", r"calc\(\(?\s*100vh",
+     "裸 100vh 视口计算 → calc(var(--nx-vh-full,100vh) - X) 动态视口原语（nexus-ui 2.60.0+，根治移动端 URL bar 遮挡；r64 直替批）"),
 ]
 
 
