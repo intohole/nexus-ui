@@ -37,6 +37,7 @@ MAX_LINE_LEN = 3000
 KNOWN_EXCEPTIONS: dict[str, str] = {
     "miniDeploy/static/css/iframe.css#raw-vh-calc": "miniDeploy 管理台为桌面基建工具，不加载 nexus-ui 且无移动端动线，100vh 语义正确不直替（r64 定性）",
     "miniDeploy/static/css/terminal.css#raw-vh-calc": "miniDeploy 管理台为桌面基建工具，不加载 nexus-ui 且无移动端动线，100vh 语义正确不直替（r64 定性）",
+    "jinnang-app/src/api/agent.js#sse-reader": "uniapp App 端运行时无标准 EventSource/SSE，手写 UTF8 流式解码是平台约束（jinnang R1 记忆在案），NexusStream 依赖浏览器 SSE 不可用于该端",
 }
 
 RULES = [

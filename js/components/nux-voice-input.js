@@ -54,7 +54,9 @@
             disabled: { type: Boolean, default: false },
             maxSeconds: { type: Number, default: 60 },
             fieldName: { type: String, default: 'file' },
-            size: { type: String, default: 'md' }
+            size: { type: String, default: 'md' },
+            target: { type: String, default: '' },
+            appendMode: { type: String, default: 'append' }
         },
         emits: ['result', 'error', 'state-change'],
         setup(props, ctx) {
@@ -108,6 +110,16 @@
                 setState('recording');
             }
 
+            function fillTarget(text) {
+                if (!props.target || !text) return;
+                const el = document.querySelector(props.target);
+                if (!el) { console.warn('[nux-voice-input] target not found:', props.target); return; }
+                const next = props.appendMode === 'replace' ? text : (el.value && !/\s$/.test(el.value) ? el.value + ' ' : el.value || '') + text;
+                el.value = next;
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+                el.focus();
+            }
+
             async function stop(auto) {
                 if (state.value !== 'recording') return;
                 cleanupAudio();
@@ -123,7 +135,9 @@
                     const blob = encodeWav(downsample(merged, rate, 16000), 16000);
                     const text = props.handler ? await props.handler(blob, {}) : await upload(blob);
                     setState('idle');
-                    ctx.emit('result', { text: String(text || '').trim(), duration: Math.round(merged.length / rate) });
+                    const payload = { text: String(text || '').trim(), duration: Math.round(merged.length / rate) };
+                    fillTarget(payload.text);
+                    ctx.emit('result', payload);
                 } catch (e) {
                     fail((e && e.message) || '语音识别失败，请重试');
                 }
@@ -190,10 +204,33 @@
             '@keyframes nvi-pulse{0%{transform:scale(1);opacity:1}100%{transform:scale(1.25);opacity:0}}',
             '@keyframes nvi-spin{to{transform:rotate(360deg)}}',
             '.nvi-btn--sm{height:28px;padding:0 8px;font-size:11px}',
+            '.nvi-mount{display:inline-flex;flex-shrink:0}',
             '@media(prefers-reduced-motion:reduce){.nvi-rec-dot,.nvi-pulse,.nvi-spinner{animation:none}}'
         ]);
     }
     ensureStyle();
+
+    NuxVoiceInput.mount = function (options) {
+        if (!window.Vue || !Vue.createApp) { console.warn('[nux-voice-input] Vue is required'); return null; }
+        const target = document.querySelector(options.target);
+        if (!target) { console.warn('[nux-voice-input] mount target not found:', options.target); return null; }
+        const host = document.createElement('span');
+        host.className = 'nvi-mount';
+        if (options.placement === 'before') target.parentNode.insertBefore(host, target);
+        else target.parentNode.insertBefore(host, target.nextSibling);
+        const app = Vue.createApp({
+            render: () => Vue.h(NuxVoiceInput, {
+                transcribeUrl: options.transcribeUrl || '',
+                target: options.target,
+                appendMode: options.appendMode || 'append',
+                size: options.size || 'md',
+                maxSeconds: options.maxSeconds || 60,
+                fieldName: options.fieldName || 'file'
+            })
+        });
+        app.mount(host);
+        return app;
+    };
 
     window.NuxVoiceInput = NuxVoiceInput;
 })();
