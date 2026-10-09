@@ -126,6 +126,7 @@
     }
   },
   "ignore_paths": [
-    "promptManager/readme.html"
+    "promptManager/readme.html",
+    "handoff"
   ]
 }
