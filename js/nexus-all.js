@@ -383,6 +383,13 @@
             document.documentElement.style.setProperty('--nx-vh-full', `${vh * 100}px`);
         },
 
+        syncKeyboardHeight() {
+            const vv = window.visualViewport;
+            const kb = vv ? Math.max(0, Math.round(window.innerHeight - vv.height)) : 0;
+            document.documentElement.style.setProperty('--nx-kb', `${kb}px`);
+            document.documentElement.toggleAttribute('data-kb-open', kb > 0);
+        },
+
         escapeHtml(text) {
             if (text === null || text === undefined) return '';
             return String(text)
@@ -494,6 +501,10 @@
     utils.setViewportHeight();
     utils._resizeHandler = utils.debounce(utils.setViewportHeight, 100);
     window.addEventListener('resize', utils._resizeHandler);
+    if (window.visualViewport) {
+        utils.syncKeyboardHeight();
+        window.visualViewport.addEventListener('resize', utils.syncKeyboardHeight);
+    }
 })();
 
 /* ===== utils/nexus-utils-interact.js ===== */

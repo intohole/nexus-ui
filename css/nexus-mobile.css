@@ -448,18 +448,19 @@ img, video, canvas {
 }
 
 /* 底部动作面板原语：≤768 时给弹层挂 .nx-sheet 即贴底全宽化（居中定位型自动解除居中）。
+ * 键盘弹起时随 --nx-kb（nexus-utils dom.syncKeyboardHeight 注入）抬离软件键盘，输入区不被遮挡。
  * 供 JS 注入弹层与库外弹窗消费；.nx-modal 的专用块与设置抽屉已自带移动形态，不依赖此原语。 */
 @media (max-width: 768px) {
   .nx-sheet {
     left: 0 !important;
     right: 0 !important;
-    bottom: 0 !important;
+    bottom: var(--nx-kb, 0px) !important;
     top: auto !important;
     transform: none !important;
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
-    max-height: 90dvh !important;
+    max-height: calc(90dvh - var(--nx-kb, 0px)) !important;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     border-radius: var(--nx-radius-xl, 1rem) var(--nx-radius-xl, 1rem) 0 0;
