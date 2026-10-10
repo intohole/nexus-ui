@@ -720,60 +720,6 @@
 [data-theme="dark"] .nux-login-page.nux-login--topbar .nux-login-card { box-shadow: 0 10px 32px rgba(0, 0, 0, .4); border: 1px solid var(--nx-border); }
 [data-theme="dark"] .nux-login-page.nux-login--minimal .nux-login-card { box-shadow: 0 8px 28px rgba(0, 0, 0, .35); border: 1px solid var(--nx-border); }
 
-/* ===== nux-radio-group ===== */
-.nux-radio-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--nx-space-2);
-}
-.nux-radio-group--block { flex-direction: column; align-items: stretch; }
-.nux-radio-group--disabled { opacity: 0.6; }
-.nux-radio-item {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--nx-space-2);
-  padding: var(--nx-space-2) var(--nx-space-4);
-  border: 1px solid var(--nx-border);
-  border-radius: var(--nx-radius-full, 9999px);
-  background: var(--nx-bg-surface);
-  color: var(--nx-text-body);
-  font-size: var(--nx-text-sm);
-  font-family: inherit;
-  line-height: 1.4;
-  cursor: pointer;
-  transition: border-color var(--nx-transition-fast), background var(--nx-transition-fast), color var(--nx-transition-fast);
-}
-.nux-radio-group--block .nux-radio-item { justify-content: flex-start; }
-.nux-radio-item:hover:not(:disabled) { border-color: var(--nx-border-hover); }
-.nux-radio-item:disabled { cursor: not-allowed; opacity: 0.55; }
-.nux-radio-item--on {
-  border-color: rgba(var(--app-accent-rgb), 0.5);
-  background: rgba(var(--app-accent-rgb), 0.08);
-  color: var(--nx-text-accent);
-  font-weight: 600;
-}
-.nux-radio-item:focus-visible { outline: 2px solid rgba(var(--app-accent-rgb), 0.55); outline-offset: 2px; }
-.nux-radio-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  border: 1.5px solid var(--nx-border-strong, rgba(0, 0, 0, 0.18));
-  flex-shrink: 0;
-  position: relative;
-  transition: border-color var(--nx-transition-fast);
-}
-.nux-radio-item--on .nux-radio-dot { border-color: var(--nx-primary); }
-.nux-radio-item--on .nux-radio-dot::after {
-  content: '';
-  position: absolute;
-  inset: 2.5px;
-  border-radius: 50%;
-  background: var(--nx-primary);
-}
-@media (max-width: 768px) {
-  .nux-radio-item { min-height: 40px; }
-}
-
 /* ===== nux-input-number ===== */
 .nux-input-number {
   display: inline-flex;
