@@ -4761,7 +4761,7 @@ try {
     function injectStyles() {
         if (document.getElementById('nux-credit-float-style')) return;
         var css = ''
-            + '#' + ROOT_ID + '{position:fixed;left:16px;bottom:16px;z-index:var(--nx-z-float,1500);font-family:inherit;user-select:none;}'
+            + '#' + ROOT_ID + '{position:fixed;left:16px;bottom:calc(16px + var(--nx-safe-bottom,0px));z-index:var(--nx-z-float,1500);font-family:inherit;user-select:none;}'
             + '#' + ROOT_ID + ' .nxcf-badge{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;'
             + 'background:rgba(15,23,42,0.78);color:#fff;font-size:13px;font-variant-numeric:tabular-nums;'
             + 'box-shadow:0 4px 16px rgba(15,23,42,0.25);cursor:pointer;border:1px solid rgba(255,255,255,0.14);'
@@ -5101,7 +5101,7 @@ try {
         var style = document.createElement('style');
         style.id = 'nux-feedback-style';
         style.textContent = ''
-            + '#' + ROOT_ID + '{position:fixed;right:16px;bottom:16px;z-index:var(--nx-z-float,1500);font-family:inherit;}'
+            + '#' + ROOT_ID + '{position:fixed;right:16px;bottom:calc(16px + var(--nx-safe-bottom,0px));z-index:var(--nx-z-float,1500);font-family:inherit;}'
             + '#' + ROOT_ID + '.nxfb-raised{bottom:76px;}'
             + '.nxfb-btn{display:flex;align-items:center;gap:6px;height:38px;padding:0 14px;border-radius:999px;'
             + 'background:var(--nx-bg-elevated,#fff);color:var(--nx-text-body,#334155);'

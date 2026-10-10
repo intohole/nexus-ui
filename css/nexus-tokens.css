@@ -69,7 +69,7 @@
   --nx-text-tertiary: var(--nx-text-secondary);
   --nx-warning-soft: rgba(245, 158, 11, 0.12);
   --nx-warning-text: var(--nx-warning);
-  --nx-chat-kb: var(--nx-bg-elevated);
+  --nx-chat-kb-bg: var(--nx-bg-elevated);
   --nx-switch-track: #d5dce6;
   --nx-undo-bg: #475569;
   --nx-undo-btn-bg: #ffffff;
@@ -211,7 +211,7 @@
   --nx-text-accent: var(--app-accent-strong, var(--app-accent));
   --nx-warning-soft: rgba(251, 191, 36, 0.15);
   --nx-warning-text: var(--nx-warning);
-  --nx-chat-kb: var(--nx-bg-elevated);
+  --nx-chat-kb-bg: var(--nx-bg-elevated);
   --nx-switch-track: #3b4a5f;
   --nx-undo-bg: #64748b;
   --nx-undo-btn-bg: #ffffff;

@@ -99,7 +99,7 @@
         var style = document.createElement('style');
         style.id = 'nux-feedback-style';
         style.textContent = ''
-            + '#' + ROOT_ID + '{position:fixed;right:16px;bottom:16px;z-index:var(--nx-z-float,1500);font-family:inherit;}'
+            + '#' + ROOT_ID + '{position:fixed;right:16px;bottom:calc(16px + var(--nx-safe-bottom,0px));z-index:var(--nx-z-float,1500);font-family:inherit;}'
             + '#' + ROOT_ID + '.nxfb-raised{bottom:76px;}'
             + '.nxfb-btn{display:flex;align-items:center;gap:6px;height:38px;padding:0 14px;border-radius:999px;'
             + 'background:var(--nx-bg-elevated,#fff);color:var(--nx-text-body,#334155);'

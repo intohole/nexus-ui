@@ -241,7 +241,7 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 
 † nux-notification-panel 是 vanilla 构造函数（`new NuxNotificationPanel(options)`，nux-notification-bell 内部依赖），不在 NexusComponents 注册表——嵌入页用法直接 new，不走 Vue 注册。
 
-原 8 个零消费组件中 7 个（nux-breadcrumb / nux-date-picker / nux-infinite-scroll / nux-portal-footer / nux-qrcode / nux-slider / nux-sortable + nux-radar-chart）已删除下架（业务侧决策：死代码移除，无兼容期）；nux-about-page 保留（nexus-ui 站点 about.html 自用）。注意 nux-user-center 应用侧 0 引用但是 nux-menu-user 的内部依赖，不可视为零引用。
+原 8 个零消费组件中 7 个（nux-breadcrumb / nux-date-picker / nux-infinite-scroll / nux-portal-footer / nux-qrcode / nux-slider / nux-sortable + nux-radar-chart）已删除下架（业务侧决策：死代码移除，无兼容期）；nux-about-page 保留（nexus-ui 站点 about.html 自用，且 MiaoBi/oneNote 生产环境经自家 /about.html 302 到站内 about.html 间接消费，不可判死）。nux-user-center 已随 v2.54.0 全链下架（nux-menu-user 一并退役），无残留依赖。
 
 ### 工具脚本（非组件，按需引 script）
 
