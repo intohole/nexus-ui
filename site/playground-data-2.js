@@ -510,75 +510,10 @@ async handler(text, cb) {
           onCancel() { window.showToast('已取消识别', 'info'); }
         }
       },
-      {
-        id: 'conversation-list',
-        tag: 'nux-conversation-list',
-        title: '会话列表',
-        desc: '搜索 / 新建 / 归档 / 删除全内置，挂载即拉取列表；本页用 mockApi 假数据演示，传 api 即接真实接口',
-        tpl: `
-<div style="height: 430px; max-width: 360px; border: 1px solid var(--nx-border); border-radius: 12px; overflow: hidden">
-  <nux-conversation-list :api="mockApi" :active-id="activeId"
-    @select="onSelect" @created="onCreated" @deleted="onDeleted"
-    @archive="onArchive" @error="onError"></nux-conversation-list>
-</div>`,
-        code: `<nux-conversation-list :api="api" :active-id="activeId"
-  new-title="新对话" @select="onSelect" @created="onCreated"
-  @deleted="onDeleted" @archive="onArchive" @error="onError"></nux-conversation-list>
-// api 需实现 get/post/patch/delete；listAdapter / itemAdapter 可适配返回结构`,
-        data() {
-          const wait = (ms) => new Promise(r => setTimeout(r, ms));
-          const ago = (h) => new Date(Date.now() - h * 3600e3).toISOString();
-          const store = [
             { id: 'c1', title: '九月的旅行路书', status: 'active', updated_at: ago(0.5) },
             { id: 'c2', title: '产品命名头脑风暴', status: 'active', updated_at: ago(5) },
             { id: 'c3', title: '周报草稿润色', status: 'active', updated_at: ago(26) },
             { id: 'c4', title: '上季度的复盘讨论', status: 'archived', updated_at: ago(72) },
-            { id: 'c5', title: '给新人的上手指南', status: 'active', updated_at: ago(120) }
-          ];
-          let seq = 100;
-          return {
-            activeId: 'c1',
-            mockApi: {
-              async get(url, params) {
-                await wait(420);
-                if (url.indexOf('/search') >= 0) {
-                  const kw = ((params && params.q) || '').toLowerCase();
-                  const hit = store.filter(c => c.title.toLowerCase().indexOf(kw) >= 0);
-                  return { data: { items: hit, total: hit.length } };
-                }
-                return { data: { items: store.slice(), total: store.length } };
-              },
-              async post(url, body) {
-                await wait(460);
-                const conv = { id: 'c' + (++seq), title: (body && body.title) || '新对话', status: 'active', updated_at: new Date().toISOString() };
-                store.unshift(conv);
-                return { data: conv };
-              },
-              async patch(url, body) {
-                await wait(360);
-                const conv = store.find(c => url.indexOf('/' + c.id) >= 0);
-                if (conv && body && body.status) conv.status = body.status;
-                return conv ? { data: { id: conv.id, status: conv.status } } : null;
-              },
-              async delete(url) {
-                await wait(360);
-                const idx = store.findIndex(c => url.indexOf('/' + c.id) >= 0);
-                if (idx >= 0) store.splice(idx, 1);
-              }
-            }
-          };
-        },
-        methods: {
-          onSelect(c) { this.activeId = c.id; window.showToast('已切换到「' + (c.title || '新对话') + '」', 'info'); },
-          onCreated(c) { this.activeId = c.id; window.showToast('已创建「' + c.title + '」', 'success'); },
-          onDeleted(id) {
-            if (this.activeId === id) this.activeId = '';
-            window.showToast('会话已删除', 'success');
-          },
-          onArchive(c, toArchive) { window.showToast('已' + (toArchive ? '归档' : '恢复') + '「' + (c.title || '会话') + '」', 'info'); },
-          onError() { window.showToast('接口异常（演示为本地 mock，不应出现）', 'error'); }
-        }
-      }
     ]
   });
 
@@ -918,7 +853,6 @@ NuxAppSwitcher.refresh();
         <nux-switch v-model="optAutosave" label="自动保存" description="编辑内容实时写入本地"></nux-switch>
       </div>
       <div v-else class="demo-col">
-        <nux-radio-group v-model="density" :options="densities" label="界面密度"></nux-radio-group>
         <p class="demo-note" style="margin:0">当前栏目：{{ section.label }} —— 这是插槽自定义的页面内容。</p>
       </div>
     </template>
@@ -936,11 +870,6 @@ NuxAppSwitcher.refresh();
             showSettings: false,
             optNotify: true,
             optAutosave: true,
-            density: 'cozy',
-            densities: [
-              { label: '宽松', value: 'cozy' },
-              { label: '紧凑', value: 'compact' }
-            ],
             sections: [
               { key: 'general', icon: '⚙️', label: '通用', desc: '通知与保存' },
               { key: 'appearance', icon: '🎨', label: '外观', desc: '密度与主题' }

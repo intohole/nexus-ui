@@ -6,36 +6,6 @@
     name: '基础控件',
     demos: [
       {
-        id: 'btn',
-        tag: 'nux-button',
-        title: '按钮',
-        desc: 'variant 变体 / size 尺寸 / loading 状态，触屏自动 44px 命中区',
-        tpl: `
-<div class="demo-row">
-  <nux-button @click="say('主要操作')">主要操作</nux-button>
-  <nux-button variant="ghost">次要操作</nux-button>
-  <nux-button variant="danger">危险操作</nux-button>
-  <nux-button variant="text">文字按钮</nux-button>
-  <nux-button size="sm">小按钮</nux-button>
-  <nux-button size="lg">大按钮</nux-button>
-  <nux-button :loading="busy" @click="save">点击保存</nux-button>
-  <nux-button disabled>禁用</nux-button>
-</div>`,
-        code: `<nux-button>主要操作</nux-button>
-<nux-button variant="ghost">次要操作</nux-button>
-<nux-button variant="danger">危险操作</nux-button>
-<nux-button size="sm">小按钮</nux-button>
-<nux-button :loading="busy" @click="save">点击保存</nux-button>`,
-        data() { return { busy: false }; },
-        methods: {
-          say(t) { window.showToast(t, 'info'); },
-          save() {
-            this.busy = true;
-            setTimeout(() => { this.busy = false; window.showToast('已保存', 'success'); }, 900);
-          }
-        }
-      },
-      {
         id: 'switch-check',
         tag: 'nux-switch / nux-checkbox',
         title: '开关与复选',
@@ -53,45 +23,16 @@
       },
       {
         id: 'radio-num',
-        tag: 'nux-radio-group / nux-input-number',
-        title: '单选组与数字步进',
-        desc: '胶囊单选与带步进按钮的数值输入，键盘可用',
+        tag: 'nux-input-number',
+        title: '数字步进',
+        desc: '带步进按钮的数值输入，键盘可用',
         tpl: `
 <div class="demo-col">
-  <nux-radio-group v-model="plan" :options="plans" label="选择方案"></nux-radio-group>
   <nux-input-number v-model="count" :min="1" :max="99" label="数量" unit="个"></nux-input-number>
 </div>`,
-        code: `<nux-radio-group v-model="plan"
-  :options="[{label:'基础版',value:'basic'},{label:'专业版',value:'pro'}]"
-  label="选择方案"></nux-radio-group>
-<nux-input-number v-model="count" :min="1" :max="99"
+        code: `<nux-input-number v-model="count" :min="1" :max="99"
   label="数量" unit="个"></nux-input-number>`,
-        data() { return { plan: 'pro', count: 3, plans: [{label:'基础版',value:'basic'},{label:'专业版',value:'pro'},{label:'旗舰版',value:'max', disabled:true}] }; }
-      },
-      {
-        id: 'swipe',
-        tag: 'nux-swipe-actions',
-        title: '滑动操作',
-        desc: '右滑露左操作、左滑露右操作，触摸与鼠标拖拽，同页互斥',
-        tpl: `
-<nux-swipe-actions :left-actions="leftOps" :right-actions="rightOps" @action="onAction">
-  <div class="demo-swipe-cell">👈 左滑标红 / 右滑标蓝 👉</div>
-</nux-swipe-actions>
-<p class="demo-note" v-if="last">触发：{{ last }}</p>`,
-        code: `<nux-swipe-actions
-  :left-actions="[{key:'open',label:'查看',icon:'👀',tone:'accent'}]"
-  :right-actions="[{key:'delete',label:'删除',icon:'🗑',tone:'danger'}]"
-  @action="onAction(key)">
-  <div>任意卡片内容</div>
-</nux-swipe-actions>`,
-        data() {
-          return {
-            last: '',
-            leftOps: [{ key: 'open', label: '查看', icon: '👀', tone: 'accent' }],
-            rightOps: [{ key: 'archive', label: '归档', icon: '📦', tone: 'neutral' }, { key: 'delete', label: '删除', icon: '🗑', tone: 'danger' }]
-          };
-        },
-        methods: { onAction(k) { this.last = k; } }
+        data() { return { count: 3 }; }
       },
       {
         id: 'search',

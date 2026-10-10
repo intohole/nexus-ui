@@ -3792,15 +3792,12 @@
         'nux-avatar': 'NuxAvatar',
         'nux-backtop': 'NuxBacktop',
         'nux-bottom-nav': 'NuxBottomNav',
-        'nux-button': 'NuxButton',
         'nux-camera-recognize': 'NuxCameraRecognize',
         'nux-calendar': 'NuxCalendar',
         'nux-checkbox': 'NuxCheckbox',
-        'nux-radio-group': 'NuxRadioGroup',
         'nux-checkin': 'NuxCheckin',
         'nux-chip-group': 'NuxChipGroup',
         'nux-clarify-card': 'NuxClarifyCard',
-        'nux-conversation-list': 'NuxConversationList',
                 'nux-drawer': 'NuxDrawer',
         'nux-empty-state': 'NuxEmptyState',
         'nux-error-state': 'NuxErrorState',
@@ -3823,7 +3820,6 @@
         'nux-pagination': 'NuxPagination',
         'nux-poster': 'NuxPoster',
         'nux-progress': 'NuxProgress',
-                'nux-result-view': 'NuxResultView',
         'nux-search-box': 'NuxSearchBox',
         'nux-section': 'NuxSection',
         'nux-segmented': 'NuxSegmented',
@@ -3834,7 +3830,6 @@
         'nux-side-panel': 'NuxSidePanel',
         'nux-skeleton': 'NuxSkeleton',
                         'nux-stat-card': 'NuxStatCard',
-        'nux-swipe-actions': 'NuxSwipeActions',
         'nux-switch': 'NuxSwitch',
         'nux-tab-group': 'NuxTabGroup',
         'nux-tag': 'NuxTag',
@@ -5567,54 +5562,6 @@ try {
             ensureButton();
         }
     }
-})();
-
-/* ===== components/nux-result-view.js ===== */
-(function () {
-    'use strict';
-
-    window.NexusUtils && NexusUtils.injectStyle('nrv-css', [
-            '.nrv { margin-top: 4px; }',
-            '.nrv-summary { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }',
-            '.nrv-summary-item { font-size: 11px; padding: 2px 8px; background: rgba(var(--app-accent-rgb,99,102,241),.08); color: var(--app-accent,#6366f1); border-radius: var(--nx-radius-sm,6px); }',
-            '.nrv-table-wrap { overflow-x: auto; max-height: 220px; overflow-y: auto; background: var(--nx-bg-surface,#fff); border-radius: var(--nx-radius-sm,6px); }',
-            '.nrv-table { width: 100%; border-collapse: collapse; font-size: 11px; }',
-            '.nrv-table th, .nrv-table td { padding: 5px 8px; border: 1px solid var(--nx-border,rgba(0,0,0,.08)); text-align: left; white-space: nowrap; max-width: 240px; overflow: hidden; text-overflow: ellipsis; }',
-            '.nrv-table th { background: var(--nx-bg-muted,#f1f5f9); color: var(--app-accent,#6366f1); font-weight: 600; position: sticky; top: 0; }',
-            '.nrv-table tr:nth-child(even) td { background: var(--nx-bg-muted,#f1f5f9); }',
-            '.nrv-kv-item { display: flex; gap: 8px; padding: 3px 0; font-size: 11px; border-bottom: 1px dashed var(--nx-border,rgba(0,0,0,.08)); }',
-            '.nrv-kv-key { color: var(--nx-text-muted,#94a3b8); flex: 0 0 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
-            '.nrv-kv-val { color: var(--nx-text-body,#334155); word-break: break-word; }'
-        ].join(''));
-
-    const NuxResultView = {
-        name: 'NuxResultView',
-        props: { struct: { type: Object, default: null } },
-        template: `
-            <div v-if="struct" class="nrv">
-                <div v-if="struct.kind === 'table'" class="nrv-table-wrap">
-                    <div v-if="struct.summary" class="nrv-summary">
-                        <span v-for="(v, k) in struct.summary" :key="k" class="nrv-summary-item">{{ k }}: {{ v }}</span>
-                    </div>
-                    <table class="nrv-table">
-                        <thead><tr><th v-for="c in struct.columns" :key="c">{{ c }}</th></tr></thead>
-                        <tbody>
-                            <tr v-for="(r, ri) in struct.rows" :key="ri">
-                                <td v-for="c in struct.columns" :key="c">{{ r[c] }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div v-else-if="struct.kind === 'kv'" class="nrv-kv">
-                    <div v-for="p in struct.pairs" :key="p.k" class="nrv-kv-item">
-                        <span class="nrv-kv-key">{{ p.k }}</span><span class="nrv-kv-val">{{ p.v }}</span>
-                    </div>
-                </div>
-            </div>
-        `
-    };
-
-    window.NuxResultView = NuxResultView;
 })();
 
 /* ===== core/nexus-user.js ===== */
