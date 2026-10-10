@@ -41,6 +41,8 @@ KNOWN_EXCEPTIONS: dict[str, str] = {
 }
 
 RULES = [
+    ("css-token-syntax", "fail", r"--[A-Za-z][\w-]*\s*:\s*--[A-Za-z][\w-]*\s*:\s*#[0-9a-fA-F]{3,8}",
+     "CSS 自定义属性行损坏（v2.59.0 themes dark 行腐蚀形态：--a: --b: #hex）——属性名丢失的 token 会静默失效整条声明，修复=按亮色行结构重建该行（r83 教训#31）"),
     ("clipboard", "fail", r"navigator\.clipboard\s*&&\s*navigator\.clipboard\.writeText|navigator\.clipboard\.writeText",
      "自实现剪贴板写入 → NexusUtils.copyText / NexusUtils.copyToClipboard（内置 execCommand 回退）"),
     ("exec-command-copy", "fail", r"execCommand\(\s*['\"]copy['\"]",
