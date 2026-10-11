@@ -925,6 +925,32 @@
                     url: (typeof j.url === 'string' && j.url) ? normalize(j.url) : ''
                 }));
         }
-        return { resolve, normalize, appLabel, isToday, jobEntries };
+        const TYPE_TONES = {
+            message: 'info', comment: 'info', task: 'success',
+            order: 'warning', trade: 'warning', alert: 'danger',
+            approval: 'accent', follow: 'accent', like: 'accent',
+            job_subscription: 'accent', system: 'neutral'
+        };
+        const TYPE_ICONS = {
+            message: 'fa-regular fa-comment', comment: 'fa-regular fa-comment',
+            order: 'fa-solid fa-cart-shopping', trade: 'fa-solid fa-cart-shopping',
+            system: 'fa-solid fa-circle-info', alert: 'fa-solid fa-triangle-exclamation',
+            follow: 'fa-solid fa-user-plus', like: 'fa-solid fa-heart',
+            task: 'fa-solid fa-list-check', approval: 'fa-solid fa-file-signature',
+            job_subscription: 'fa-solid fa-briefcase'
+        };
+        const TYPE_LABELS = {
+            message: '消息', comment: '评论', task: '任务', order: '订单',
+            trade: '交易', alert: '告警', approval: '审批', follow: '关注',
+            like: '点赞', job_subscription: '职位订阅', system: '系统'
+        };
+        function typeTone(type) { return TYPE_TONES[type] || 'neutral'; }
+        function typeIcon(type) { return TYPE_ICONS[type] || 'fa-regular fa-bell'; }
+        function typeLabel(type) { return TYPE_LABELS[type] || String(type || ''); }
+        function clip(text, max) {
+            const s = String(text == null ? '' : text);
+            return s.length > max ? s.substring(0, max) + '...' : s;
+        }
+        return { resolve, normalize, appLabel, isToday, jobEntries, typeTone, typeIcon, typeLabel, clip };
     })();
 })();

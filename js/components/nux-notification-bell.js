@@ -1,22 +1,4 @@
 (function() {
-    var TYPE_TONES = {
-        message: 'info', comment: 'info',
-        task: 'success',
-        order: 'warning', trade: 'warning',
-        alert: 'danger',
-        approval: 'accent', follow: 'accent', like: 'accent',
-        job_subscription: 'accent',
-        system: 'neutral'
-    };
-    var TYPE_ICONS = {
-        message: 'fa-regular fa-comment', comment: 'fa-regular fa-comment',
-        order: 'fa-solid fa-cart-shopping', trade: 'fa-solid fa-cart-shopping',
-        system: 'fa-solid fa-circle-info', alert: 'fa-solid fa-triangle-exclamation',
-        follow: 'fa-solid fa-user-plus', like: 'fa-solid fa-heart',
-        task: 'fa-solid fa-list-check', approval: 'fa-solid fa-file-signature',
-        job_subscription: 'fa-solid fa-briefcase'
-    };
-
     const NuxNotificationBell = {
         name: 'nux-notification-bell',
         props: {
@@ -43,6 +25,7 @@
         computed: {
             authed: function() { return !!this.token; },
             hiddenCount: function() { return Math.max(0, this.total - this.items.length); },
+            hasUnreadItems: function() { return this.items.some(function(i) { return !i.is_read; }); },
             groups: function() {
                 var today = [], earlier = [];
                 this.items.forEach(function(n) {
@@ -113,8 +96,8 @@
                     if (bell) bell.focus();
                 }
             },
-            tone: function(item) { return TYPE_TONES[item.type] || 'neutral'; },
-            icon: function(item) { return TYPE_ICONS[item.type] || 'fa-regular fa-bell'; },
+            tone: function(item) { return NexusUtils.notify.typeTone(item.type); },
+            icon: function(item) { return NexusUtils.notify.typeIcon(item.type); },
             fetchJson: function(url, options) {
                 var self = this;
                 var opts = options || {};
@@ -131,10 +114,14 @@
             refresh: function() {
                 var self = this;
                 if (!self.authed) return;
+                self.refreshBadge();
+                if (self.open) self.loadList();
+            },
+            refreshBadge: function() {
+                var self = this;
                 self.fetchJson('/api/notify/unread-count').then(function(d) {
                     self.unread = (d && typeof d.count === 'number') ? d.count : 0;
                 }).catch(function() {});
-                if (self.open) self.loadList();
             },
             onOpen: function() {
                 this.open = !this.open;
@@ -178,13 +165,14 @@
                 self.unread = 0;
             },
             activate: function(item) {
+                var self = this;
                 if (!item.is_read) {
-                    this.fetchJson('/api/notify/' + item.id + '/read', { method: 'PUT' }).catch(function() {});
+                    self.fetchJson('/api/notify/' + item.id + '/read', { method: 'PUT' }).catch(function() {});
                     item.is_read = true;
-                    this.unread = Math.max(0, this.unread - 1);
-                    if (this.filter === 'unread') {
-                        this.items = this.items.filter(function(n) { return n.id !== item.id; });
-                        this.total = Math.max(0, this.total - 1);
+                    self.refreshBadge();
+                    if (self.filter === 'unread') {
+                        self.items = self.items.filter(function(n) { return n.id !== item.id; });
+                        self.total = Math.max(0, self.total - 1);
                     }
                 }
                 var url = this.resolveLink(item);
@@ -203,8 +191,7 @@
                 return window.NexusUtils ? NexusUtils.formatRelativeTime(iso) : String(iso);
             },
             summary: function(content) {
-                if (!content) return '';
-                return content.length > 80 ? content.substring(0, 80) + '...' : content;
+                return NexusUtils.notify ? NexusUtils.notify.clip(content, 80) : '';
             },
             onDocClick: function(e) {
                 if (this.$el && !this.$el.contains(e.target)) this.open = false;
@@ -212,19 +199,19 @@
         },
         template: `
             <div class="nux-notify" :class="{open: open}">
-                <button type="button" class="nux-notify-bell" aria-haspopup="dialog" :aria-expanded="open ? 'true' : 'false'" aria-controls="nux-notify-panel" :aria-label="unread > 0 ? (title + '，' + unread + ' 条未读') : title" @click.stop="onOpen">
+                <button type="button" class="nux-notify-bell" aria-haspopup="dialog" :aria-expanded="open ? 'true' : 'false'" aria-controls="nux-notify-panel" :aria-label="unread > 0 ? (title + '，' + unread + ' 条新通知') : title" @click.stop="onOpen">
                     <i class="fa-regular fa-bell" aria-hidden="true"></i>
                     <span v-if="unread > 0" class="nux-notify-dot">{{ unread > 99 ? '99+' : unread }}</span>
                 </button>
-                <span class="nux-notify-live" role="status" aria-live="polite">{{ unread > 0 ? (unread + ' 条未读通知') : '' }}</span>
+                <span class="nux-notify-live" role="status" aria-live="polite">{{ unread > 0 ? (unread + ' 条新通知') : '' }}</span>
                 <div v-if="open" id="nux-notify-panel" class="nux-notify-panel" role="dialog" :aria-label="title" @click.stop>
                     <div class="nux-notify-head">
                         <span class="nux-notify-title">{{ title }}</span>
-                        <button type="button" class="nux-notify-allread" v-if="unread > 0" @click.stop="markAllRead">全部已读</button>
+                        <button type="button" class="nux-notify-allread" v-if="hasUnreadItems" @click.stop="markAllRead">全部已读</button>
                     </div>
                     <div class="nux-notify-toolbar" v-if="!loading && !error">
                         <div class="nux-notify-seg" role="tablist" :aria-label="title + '筛选'">
-                            <button type="button" role="tab" :aria-selected="filter === 'unread' ? 'true' : 'false'" :class="['nux-notify-seg-btn', {active: filter === 'unread'}]" @click.stop="setFilter('unread')">未读{{ unread > 0 ? ' ' + unread : '' }}</button>
+                            <button type="button" role="tab" :aria-selected="filter === 'unread' ? 'true' : 'false'" :class="['nux-notify-seg-btn', {active: filter === 'unread'}]" @click.stop="setFilter('unread')">未读</button>
                             <button type="button" role="tab" :aria-selected="filter === 'all' ? 'true' : 'false'" :class="['nux-notify-seg-btn', {active: filter === 'all'}]" @click.stop="setFilter('all')">全部</button>
                         </div>
                     </div>
