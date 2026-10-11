@@ -60,6 +60,8 @@ RULES = [
      "mobile-base.css 拷贝 → nexus-mobile.css 已内联基础重置（r56 收归）：字节级拷贝直接删文件删引用；应用专属差异改名 <app>-mobile.css 或并入主 css"),
     ("raw-vh-calc", "warn", r"calc\(\(?\s*100vh",
      "裸 100vh 视口计算 → calc(var(--nx-vh-full,100vh) - X) 动态视口原语（nexus-ui 2.60.0+，根治移动端 URL bar 遮挡；r64 直替批）"),
+    ("raw-100vh", "warn", r":\s*100vh\b",
+     "值位裸 100vh（非 calc/fallback 形态）→ 移动端视口考虑 min-height:100dvh 双声明或 calc(var(--nx-vh-full,100vh)-X)；r65 判例：存量选择器不强制直替，此规则仅提供可见性"),
 ]
 
 

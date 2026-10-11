@@ -127,6 +127,7 @@
   },
   "ignore_paths": [
     "promptManager/readme.html",
-    "handoff"
+    "handoff",
+    "jinnang_archive"
   ]
 }
