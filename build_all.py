@@ -34,6 +34,7 @@ FILES: list[str] = [
     "components/nux-icon-data.js",
     "user-center-sdk.js",
     "nexus-credit-float.js",
+    "nexus-credit-panel.js",
     "nexus-feedback-float.js",
     "core/nexus-user.js",
     "core/nexus-error-text.js",

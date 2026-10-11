@@ -91,7 +91,13 @@
             + '<span class="nxcf-num">…</span></button>'
             + '<div class="nxcf-toast" role="status"></div>';
         document.body.appendChild(root);
-        root.querySelector('.nxcf-badge').addEventListener('click', openWallet);
+        root.querySelector('.nxcf-badge').addEventListener('click', function() {
+            if (window.NexusCreditPanel && typeof window.NexusCreditPanel.open === 'function') {
+                window.NexusCreditPanel.open();
+                return;
+            }
+            openWallet();
+        });
         return root;
     }
 
@@ -122,7 +128,8 @@
         if (!badge) return;
         var onCredit = state.overdraftUsed > 0;
         badge.classList.toggle('credit', onCredit);
-        badge.title = onCredit ? '积分余额（体验授信垫付中，点击查看钱包）' : '积分余额（点击查看钱包）';
+        var hasPanel = !!(window.NexusCreditPanel && window.NexusCreditPanel.open);
+        badge.title = (onCredit ? '积分余额（体验授信垫付中' : '积分余额') + (hasPanel ? '，点击查看' : '，点击查看钱包') + '）';
     }
 
     function pulse() {

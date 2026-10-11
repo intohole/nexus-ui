@@ -72,6 +72,7 @@
     }
 
     function mapHttpError(err, context = {}) {
+        emitInsufficientCredits(err);
         if (!err) return '未知错误';
         if (err.errorCode && ERROR_CODE_TEXT_MAP[err.errorCode]) {
             return ERROR_CODE_TEXT_MAP[err.errorCode];
@@ -111,6 +112,26 @@
         if (code === 'INSUFFICIENT_CREDITS') return true;
         const msg = err.message || String(err);
         return msg.indexOf('余额不足') !== -1;
+    }
+
+    function emitInsufficientCredits(err) {
+        try {
+            if (!isInsufficientCreditsError(err)) return;
+            const body = (err && err.response) || {};
+            const payload = body.detail || body;
+            const details = payload.details || payload || {};
+            window.dispatchEvent(new CustomEvent('nexus:insufficient-credits', {
+                detail: {
+                    message: (err && err.message) || payload.message || '',
+                    code: details.code || '',
+                    balance: typeof details.balance === 'number' ? details.balance : null,
+                    cost: typeof details.cost === 'number' ? details.cost : null,
+                    overdraft: details.overdraft || null,
+                    charge_mode: details.charge_mode || '',
+                    wallet_url: details.wallet_url || '/user-center.html#wallet'
+                }
+            }));
+        } catch (e) { /* 引导卡事件绝不影响错误处理主流程 */ }
     }
 
     window.NexusApiError = NexusApiError;

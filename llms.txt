@@ -256,6 +256,7 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 - `js/nexus-overlay-host.js`：浮层宿主，定义全局 `window.showToast / window.nuxConfirm / window.nuxPrompt / window.showUnlock`。不引 nexus-all 的仓必须单引本文件，否则全局函数不存在（散件加载约定）。
 - `js/nexus-api-error.js`：`window.NexusApiError` + `isNetworkError / isInsufficientCreditsError / mapHttpError`。**单文件引 API 必须三件同引：nexus-api-error.js + nexus-api.js + nexus-api-factory.js**（漏引=`NexusApi.create is not a function`）。
 - `js/nexus-credit-float.js`：积分感知浮标（30s 节流聚合展示余额/垫付进度），登录态才显示；`NexusCreditFloat.refresh()/stop()/start()`，关闭 `localStorage.nux_credit_float='off'`。
+- `js/nexus-credit-panel.js`：积分面板 + 402 余额不足引导卡（随 nexus-all 聚合包分发）。浮标点击展开面板（余额/模式/每日签到/任务进度/去钱包，真实调 `/api/credits/tasks/*`）；全局监听 `nexus:insufficient-credits` 事件（nexus-api-error.js 在 mapHttpError 时自动派发，detail 含 code/balance/cost/overdraft/wallet_url）弹引导卡，动作=去赚积分（开面板）/去钱包；`NexusCreditPanel.open()/close()/show402(detail)`。
 - `js/nexus-feedback-float.js`：全局反馈浮标（右下角微表单+我的反馈回音，自动附带应用名/页面/console 最近报错环），提交走 userFeedback UC 轨，未注册应用服务端自动建档；`NexusFeedbackFloat.open()/close()/stop()`，关闭 `localStorage.nux_feedback_float='off'` 或 `<html data-nux-feedback="off">`；首页/登录注册页/门户/userfeedback 自身自动跳过。
 - `js/core/` 三件套：`NexusApp`（应用壳生命周期）/ `NexusUser`（用户态，`getDisplayName` 同时挂 NexusUtils）/ `NexusErrorText`（错误文案归一，`safeErrorText` 同时挂 NexusUtils）。nexus-agent/challengePlanet/oneNote 在用。
 
