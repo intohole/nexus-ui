@@ -35,6 +35,16 @@
             return utils.formatDate(dateString, { hour: undefined, minute: undefined });
         },
 
+        formatPeriod(start, end) {
+            const s = String(start || '').trim();
+            const e = String(end || '').trim();
+            if (s && e) return s + ' - ' + e;
+            if (s) return s + ' - 至今';
+            if (e === '至今') return '';
+            if (e) return '至 ' + e;
+            return '';
+        },
+
         formatCurrency(amount) {
             if (amount === undefined || amount === null || isNaN(amount)) return '¥0';
             return '¥' + Number(amount).toLocaleString('zh-CN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
