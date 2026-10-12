@@ -93,6 +93,7 @@ def iter_files(root: Path):
 
 DELEGATING_RULES = {"local-format-util", "local-toast"}
 DELEGATE_MARKERS = ("NexusUtils.", "window.showToast", "window.nuxConfirm", "NexusApi.")
+DVH_PAIRED_RULES = {"raw-100vh"}
 
 
 def is_delegating(lines: list[str], index: int) -> bool:
@@ -104,6 +105,16 @@ def is_delegating(lines: list[str], index: int) -> bool:
         if any(marker in line for marker in DELEGATE_MARKERS):
             return True
         if "}" in line and line.strip() in ("}", "};"):
+            return False
+    return False
+
+
+def is_dvh_paired(lines: list[str], index: int) -> bool:
+    """100vh 命中处若同声明块内已跟 100dvh 双声明（渐进增强修复形态），视为已收敛不再报警。"""
+    for line in lines[index:index + 6]:
+        if "100dvh" in line:
+            return True
+        if "}" in line:
             return False
     return False
 
@@ -122,6 +133,8 @@ def scan_file(path: Path, root: Path, tags: set[str]) -> list[tuple[str, str, in
             if not re.search(pattern, line):
                 continue
             if rule_id in DELEGATING_RULES and is_delegating(lines, no - 1):
+                continue
+            if rule_id in DVH_PAIRED_RULES and is_dvh_paired(lines, no - 1):
                 continue
             hits.append((rule_id, level, no, message))
         for tag in re.findall(r"app\.component\(\s*['\"]([a-z0-9-]+)['\"]", line):

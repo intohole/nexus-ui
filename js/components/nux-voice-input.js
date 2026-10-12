@@ -95,6 +95,7 @@
                     fail('需要麦克风权限才能使用语音输入'); return;
                 }
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') { try { await audioCtx.resume(); } catch (e) {} }
                 captureRate = audioCtx.sampleRate;
                 sourceNode = audioCtx.createMediaStreamSource(mediaStream);
                 processor = audioCtx.createScriptProcessor(4096, 1, 1);
