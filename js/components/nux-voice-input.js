@@ -146,7 +146,10 @@
             async function upload(blob) {
                 const api = props.apiInstance || (window.NexusApi ? new NexusApi() : null);
                 if (!api || !props.transcribeUrl) throw new Error('未配置语音转写接口');
-                const res = await api.uploadFile(props.transcribeUrl, blob, { fieldName: props.fieldName, filename: 'voice.wav' });
+                const base = api.baseUrl || '';
+                const url = props.transcribeUrl;
+                const path = base && url.indexOf(base) === 0 ? url.slice(base.length) || '/' : url;
+                const res = await api.uploadFile(path, blob, { fieldName: props.fieldName, filename: 'voice.wav' });
                 const data = res && res.code === 200 && res.data ? res.data : (res || {});
                 if (data.success === false) throw new Error(data.detail || '语音识别失败');
                 return data.text || '';
