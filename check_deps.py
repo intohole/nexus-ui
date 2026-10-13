@@ -110,22 +110,27 @@ def main() -> int:
     ignore = load_ignore(root)
     skip_dirs = (".git", "node_modules", "vendor", "__pycache__", "dist", ".venv", "venv")
 
-    total, bad = 0, 0
+    total, bad, skipped = 0, 0, 0
     warns = []
     import re as _re
     for dirpath, dirnames, filenames in os.walk(root):
         # v* 版本快照是 immutable 冻结产物，引用自身版本号是设计语义，不参与一致性检查
-        dirnames[:] = [d for d in dirnames if d not in skip_dirs and not _re.match(r"^v\d+(?:\.\d+)+$", d)]
+        dirnames[:] = sorted(d for d in dirnames if d not in skip_dirs and not _re.match(r"^v\d+(?:\.\d+)+$", d))
         if any(p in dirpath.lower() for p in ("/node_modules/", "/.git/", "/vendor/")):
             continue
-        for fn in filenames:
+        for fn in sorted(filenames):
             if not fn.endswith(".html"):
                 continue
             path = os.path.join(dirpath, fn)
             if path.lower().startswith(ignore):
                 continue
             rel = os.path.relpath(path, root)
-            content = open(path, encoding="utf-8").read()
+            try:
+                content = open(path, encoding="utf-8").read()
+            except (UnicodeDecodeError, OSError):
+                skipped += 1
+                print("[跳过非文本] %s" % rel)
+                continue
             if not any(h in content for h in CDN_HOSTS) and "nexus-ui/v" not in content:
                 continue
             problems, file_warns = check_file_content(content, deps, pkg2dep, nx_version)
@@ -140,7 +145,7 @@ def main() -> int:
 
     for w in warns:
         print("[警告] %s" % w)
-    print("\n扫描完成: 含 CDN 引用的 HTML %d 个,一致 %d 个,异常文件 %d 个" % (total, total - bad, bad))
+    print("\n扫描完成: 含 CDN 引用的 HTML %d 个,一致 %d 个,异常文件 %d 个,跳过非文本 %d 个" % (total, total - bad, bad, skipped))
     return 1 if bad else 0
 
 

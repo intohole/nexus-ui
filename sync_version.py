@@ -38,16 +38,22 @@ def main() -> int:
     target = _load_spec(root)
     ignore = _load_ignore(root)
     skip_dirs = (".git", "node_modules", "vendor", "__pycache__", "dist", ".venv", "venv", "data", "logs")
-    changed, total = 0, 0
+    changed, total, skipped = 0, 0, 0
     for dirpath, dirnames, filenames in os.walk(root):
-        dirnames[:] = [d for d in dirnames if d not in skip_dirs and not SNAPSHOT_RE.match(d)]
-        for fn in filenames:
+        dirnames[:] = sorted(d for d in dirnames if d not in skip_dirs and not SNAPSHOT_RE.match(d))
+        for fn in sorted(filenames):
             if not (fn.endswith(".html") or fn.endswith(".js") or fn.endswith(".md") or fn.endswith(".json")):
                 continue
             path = os.path.join(dirpath, fn)
             if path.lower().startswith(ignore):
                 continue
-            text = open(path, encoding="utf-8").read()
+            try:
+                with open(path, "rb") as f:
+                    text = f.read().decode("utf-8")
+            except (UnicodeDecodeError, OSError):
+                skipped += 1
+                print("[跳过非文本] %s" % os.path.relpath(path, root))
+                continue
             if "nexus-ui/v" not in text:
                 continue
             new_text = _fix_content(text, target)
@@ -57,7 +63,7 @@ def main() -> int:
                 changed += 1
                 print("[同步] %s -> v%s" % (os.path.relpath(path, root), target))
             total += 1
-    print(f"\n同步完成: 扫描 {total} 个文件, 变更 {changed} 个, 目标版本 v{target}")
+    print(f"\n同步完成: 扫描 {total} 个文件, 变更 {changed} 个, 跳过非文本 {skipped} 个, 目标版本 v{target}")
     return 0
 
 

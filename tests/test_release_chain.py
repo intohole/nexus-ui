@@ -99,3 +99,62 @@ def test_ref_re_versions() -> None:
     assert rc.REF_RE.search("https://songguokr.com/nexus-ui/v2.67.0/js/x.js").group(1) == "2.67.0"
     assert rc.REF_RE.search("nexus-ui/v10.20.30/css") is not None
     assert rc.REF_RE.search("nexus-ui/v2/not-a-version") is None
+
+
+def test_plan_distribution_never_self_copies(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """r105 事故不变量：任何打印配方都不得出现「目标目录在源树内」的自拷贝形态。"""
+    lines = rc.plan_distribution("2.70.0")
+    text = "\n".join(lines)
+    for _, _, apps_root in rc.NODE_MAP:
+        assert f"rsync -a --delete {apps_root}/ {apps_root}/v" not in text
+        assert f"mkdir -p {apps_root}/v" not in text
+    for name, ssh_alias, apps_root in rc.NODE_MAP:
+        assert f"ssh {ssh_alias} 'cd {apps_root} && git pull --ff-only'" in text
+        assert f"rsync -a --delete ./v2.70.0/ {ssh_alias}:{apps_root}/v2.70.0/" in text
+
+
+def test_c6_fails_on_body_anomaly(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """教训#45/#49：exit=0 但 body 异常非 0 必须判 FAIL（r105 C6 假绿形态）。"""
+    repo = _fake_repo(tmp_path, "2.69.0", "2.69.0")
+    monkeypatch.setattr(rc, "REPO", repo)
+
+    def fake_sh(cmd, cwd):
+        if "check_deps" in cmd[1]:
+            return 0, "扫描完成: 含 CDN 引用的 HTML 107 个,一致 89 个,异常文件 18 个,跳过非文本 0 个"
+        return 0, "ok"
+
+    monkeypatch.setattr(rc, "sh", fake_sh)
+    c = rc.c6_external_gates()
+    assert c.ok is False
+    assert "18" in c.detail
+
+
+def test_c7_closure_pass_and_fail(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    repo = _fake_repo(tmp_path, "2.69.0", "2.69.0")
+    monkeypatch.setattr(rc, "REPO", repo)
+
+    def ok_sh(cmd, cwd):
+        if "sync_version" in cmd[1]:
+            return 0, "同步完成: 扫描 100 个文件, 变更 0 个, 跳过非文本 0 个, 目标版本 v2.69.0"
+        return 0, "扫描完成: 含 CDN 引用的 HTML 107 个,一致 107 个,异常文件 0 个,跳过非文本 0 个"
+
+    monkeypatch.setattr(rc, "sh", ok_sh)
+    assert rc.c7_closure().ok is True
+
+    def drift_sh(cmd, cwd):
+        if "sync_version" in cmd[1]:
+            return 0, "同步完成: 扫描 100 个文件, 变更 18 个, 跳过非文本 0 个, 目标版本 v2.69.0"
+        return ok_sh(cmd, cwd)
+
+    monkeypatch.setattr(rc, "sh", drift_sh)
+    c = rc.c7_closure()
+    assert c.ok is False
+    assert "18" in c.detail
+
+
+def test_node_map_apps_roots_are_git_bodies() -> None:
+    """四节点 live 真身统一为 apps git 仓（r106 实证；rsync 型 legacy 根不在分发路径）。"""
+    assert len(rc.NODE_MAP) == 4
+    for name, ssh_alias, apps_root in rc.NODE_MAP:
+        assert apps_root.endswith("miniDeploy/apps/nexus-ui")
+        assert ssh_alias
