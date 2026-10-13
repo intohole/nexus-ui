@@ -51,7 +51,8 @@ def tree_files(root: Path) -> dict[str, Path]:
             out: dict[str, Path] = {}
             for rel_text in names:
                 parts = Path(rel_text).parts
-                if any(part in EXCLUDE_DIRS or SNAPSHOT_RE.match(part) for part in parts):
+                hit = any(part in EXCLUDE_DIRS or SNAPSHOT_RE.match(part) for part in parts)
+                if hit and not (len(parts) >= 2 and parts[0] == "js" and parts[1] == "data"):
                     continue
                 p = root / rel_text
                 if p.is_file():

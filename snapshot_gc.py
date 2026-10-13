@@ -7,7 +7,7 @@
 
 口径：
 - 伺服根 = 各节点 ~/workspace/miniDeploy/apps/nexus-ui/v*/（nginx alias 即此目录，r106 实证）；
-- 本地仓内 v*/ 为 git 跟踪的冻结副本：--apply --local 用 git rm 摘除（提交留给调用者）；
+- 本地仓内 v*/ 为 gitignored 工件副本（.gitignore v[0-9]*/，r110 实测）：--apply --local 直接删除，无需提交；
   节点侧用 `command rm -rf`（lessons#48：节点 rm 多为 trash 别名，rm 只移位不释放）；
 - 删除前回读全工作区钉版（check_deps 语义）：老版本若仍被引用则该版跳过不删；
 - god/edge-03 的 ~/workspace/nexus-ui legacy rsync 根角色未实证，不在本工具范围内。
@@ -16,7 +16,7 @@
     python3 nexus-ui/snapshot_gc.py                       # 报告：本地+四节点快照清单与回收候选
     python3 nexus-ui/snapshot_gc.py --apply               # 执行节点侧回收（保留最近 3 版）
     python3 nexus-ui/snapshot_gc.py --apply --keep 3 --node edge-03
-    python3 nexus-ui/snapshot_gc.py --apply --local       # 本地旧快照 git rm（不自动提交）
+    python3 nexus-ui/snapshot_gc.py --apply --local       # 本地旧快照一并删除（gitignored 工件）
 """
 from __future__ import annotations
 
@@ -65,12 +65,14 @@ def referenced_versions() -> set[str]:
     """被工作区源码钉版引用的版本集合（这些版本不删）。"""
     refs: set[str] = set()
     for p in REPO.parent.rglob("*"):
-        if not p.is_file() or p.suffix not in (".html", ".js", ".md", ".json"):
+        if not p.is_file() or p.suffix not in (".html", ".js", ".md", ".json", ".py"):
             continue
         rel = p.relative_to(REPO.parent)
         if rel.parts[0] in (".git", "node_modules", "handoff", "jinnang_archive"):
             continue
-        if rel.parts[0] == "nexus-ui" and VER_RE.match(rel.parts[1] if len(rel.parts) > 1 else ""):
+        if rel.parts[0] == "nexus-ui" and len(rel.parts) > 1 and (
+            VER_RE.match(rel.parts[1]) or rel.parts[1] in ("tests", "out", "logs")
+        ):
             continue
         try:
             text = p.read_text(encoding="utf-8", errors="ignore")
@@ -93,7 +95,7 @@ def gc_target(snapshots: list[str], keep: int, refs: set[str]) -> tuple[list[str
 def main() -> int:
     ap = argparse.ArgumentParser(description="nexus-ui 节点快照保留策略（默认只报告）")
     ap.add_argument("--apply", action="store_true", help="执行节点侧删除")
-    ap.add_argument("--local", action="store_true", help="附带本地旧快照 git rm（不自动提交）")
+    ap.add_argument("--local", action="store_true", help="附带本地旧快照删除（gitignored 工件，无需提交）")
     ap.add_argument("--keep", type=int, default=3)
     ap.add_argument("--node", help="只处理指定节点")
     args = ap.parse_args()
@@ -106,11 +108,15 @@ def main() -> int:
     print(f"\n[本地] {REPO.name}: {len(local_snaps)} 版, 保留 {local_snaps[-args.keep:]}, "
           f"回收候选 {len(d)} 个{', 引用中豁免 ' + ','.join(s) if s else ''}")
     if args.apply and args.local and d:
+        import shutil
         for name in d:
-            code, out = sh(["git", "rm", "-r", "-q", "--", name], REPO)
-            print(f"  git rm {name}: {'ok' if code == 0 else out[:80]}")
-            failed += 0 if code == 0 else 1
-        print("  （本地删除已入暂存区，提交由调用者执行）")
+            try:
+                shutil.rmtree(REPO / name)
+                print(f"  删除本地 {name}: ok")
+            except OSError as e:
+                print(f"  删除本地 {name}: {e}")
+                failed += 1
+        print("  （本地快照为 gitignored 工件，删除即终局，无需提交）")
 
     for name, ssh_alias, apps_root in NODE_MAP:
         if args.node and name != args.node:

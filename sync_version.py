@@ -7,6 +7,8 @@
 仅替换 nexus-ui/vX.Y.Z/ -> nexus-ui/v{spec}/；跳过 deps.json ignore_paths。
 库自身目录同样纳入同步（README.md/index.html/about.html/site 等），
 避免发版后自引用版本漂移。
+r110 起扩 .py（业务仓 302 跳转/测试脚本的钉版 URL 同样收编；
+nexus-ui/tests 夹具走 ignore_paths 豁免）。
 """
 import json
 import os
@@ -42,7 +44,7 @@ def main() -> int:
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames[:] = sorted(d for d in dirnames if d not in skip_dirs and not SNAPSHOT_RE.match(d))
         for fn in sorted(filenames):
-            if not (fn.endswith(".html") or fn.endswith(".js") or fn.endswith(".md") or fn.endswith(".json")):
+            if not fn.endswith((".html", ".js", ".md", ".json", ".py")):
                 continue
             path = os.path.join(dirpath, fn)
             if path.lower().startswith(ignore):
