@@ -20,7 +20,7 @@
       "cdn": "https://registry.npmmirror.com/axios/{version}/files/dist/axios.min.js"
     },
     "nexus-ui": {
-      "version": "2.69.0",
+      "version": "2.70.0",
       "pkg": null,
       "cdn": "https://songguokr.com/nexus-ui/v{version}/"
     },
@@ -128,6 +128,7 @@
   "ignore_paths": [
     "promptManager/readme.html",
     "handoff",
-    "jinnang_archive"
+    "jinnang_archive",
+    "nexus-ui/tests"
   ]
 }

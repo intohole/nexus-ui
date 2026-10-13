@@ -10,7 +10,9 @@
 - 教训#49 链外变异不可见 → C7 链尾闭合（--verify：sync_version 复跑变更 0 + check_deps 异常 0）。
 
 链序（--apply 实际执行本地步骤）:
-    bump(人工) → build_all → sync_asset_hash → publish_version → sync_version → C1~C7
+    bump(人工) → build_all → sync_version → sync_asset_hash → publish_version → C1~C7
+    （sync_version 先于 hash：钉版改写含 nexus-ui URL 的资产文件内容，hash 必须落在终态内容上，
+     否则 C3 假红+快照冻结带陈旧指纹；r110 链序修正）
     → --ship 分发四节点（live=git pull --ff-only；快照=本地直传，禁止节点自拷贝）
     → 随版 sweep/外科提交 → **release_chain.py --verify 收尾闭合**（lessons#49 防线固化）
 
@@ -298,9 +300,9 @@ def run_apply() -> list[str]:
     steps: list[str] = []
     for name, cmd in [
         ("build_all", [sys.executable, "build_all.py"]),
+        ("sync_version", [sys.executable, "sync_version.py"]),
         ("sync_asset_hash", [sys.executable, "sync_asset_hash.py", "--fix"]),
         ("publish_version", [sys.executable, "publish_version.py"]),
-        ("sync_version", [sys.executable, "sync_version.py"]),
     ]:
         code, out = sh(cmd, REPO)
         steps.append(f"{name}: exit={code} {'ok' if code == 0 else out.splitlines()[-1] if out else 'FAILED'}")
