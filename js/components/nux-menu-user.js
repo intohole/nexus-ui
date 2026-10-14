@@ -4,21 +4,21 @@
 
     var STYLE_ID = 'nux-menu-user-style';
     var CSS = [
-        '.nux-menu-user{display:inline-flex;align-items:center;height:100%;margin-left:2px}',
-        '.nux-menu-user .nux-uc-trigger{width:38px;height:38px}',
-        '.nux-menu-user .nux-uc-floating{position:static;top:auto;right:auto;width:38px;height:38px;border:none;box-shadow:none;background:transparent}',
-        '.nux-menu-user .nux-uc-floating:hover{transform:none;box-shadow:none}',
-        '.nux-menu-user .nux-uc-floating .nux-avatar{width:32px;height:32px;font-size:13px}',
-        '.nux-menu-user--labeled .nux-uc-trigger{width:auto;height:38px}',
-        '.nux-menu-user-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;width:38px;height:38px;padding:0;border:none;border-radius:var(--nx-radius-full,9999px);background:transparent;color:var(--nx-text-secondary,#64748b);cursor:pointer;transition:background .2s,color .2s;-webkit-tap-highlight-color:transparent}',
+        '.nux-menu-user{position:relative;display:inline-flex;align-items:center;height:100%;margin-left:2px}',
+        '.nux-menu-user .nux-avatar{width:32px;height:32px;font-size:13px}',
+        '.nux-menu-user-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:38px;padding:0 4px;border:none;border-radius:var(--nx-radius-full,9999px);background:transparent;color:var(--nx-text-secondary,#64748b);cursor:pointer;transition:background .2s,color .2s;-webkit-tap-highlight-color:transparent}',
         '.nux-menu-user-btn:hover{background:var(--nx-bg-hover,#f1f5f9);color:var(--app-accent,var(--nx-primary))}',
         '.nux-menu-user-btn:focus-visible{outline:2px solid var(--app-accent,var(--nx-primary));outline-offset:2px}',
         '.nux-menu-user-btn svg{width:19px;height:19px}',
-        '.nux-menu-user--labeled .nux-menu-user-btn{width:auto;height:38px;padding:0 12px 0 8px}',
+        '.nux-menu-user--labeled .nux-menu-user-btn{height:38px;padding:0 12px 0 6px}',
         '.nux-menu-user-label{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
         '.nux-menu-user-skel{width:32px;height:32px;border-radius:50%;background:linear-gradient(90deg,var(--nx-bg-muted,#f1f5f9) 25%,var(--nx-bg-hover,#e2e8f0) 50%,var(--nx-bg-muted,#f1f5f9) 75%);background-size:200% 100%;animation:nux-menu-user-shimmer 1.2s infinite}',
         '@keyframes nux-menu-user-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}',
-        '@media(max-width:768px){.nux-menu-user .nux-uc-trigger,.nux-menu-user-btn{width:44px;height:44px}.nux-menu-user--labeled .nux-uc-trigger,.nux-menu-user--labeled .nux-menu-user-btn{width:auto;height:44px}}'
+        '.nux-menu-user-panel{position:absolute;top:calc(100% + 8px);right:0;min-width:184px;padding:8px;border-radius:12px;background:var(--nx-bg-card,#fff);border:1px solid var(--nx-border,#e2e8f0);box-shadow:0 12px 32px rgba(15,23,42,.14);z-index:1200}',
+        '.nux-menu-user-name{padding:8px 10px;font-size:14px;font-weight:600;color:var(--nx-text-primary,#0f172a);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1px solid var(--nx-border,#e2e8f0);margin-bottom:4px}',
+        '.nux-menu-user-logout{display:block;width:100%;padding:8px 10px;border:none;border-radius:8px;background:transparent;color:var(--nx-text-secondary,#64748b);font-size:13px;cursor:pointer;text-align:left;transition:background .2s,color .2s}',
+        '.nux-menu-user-logout:hover{background:var(--nx-bg-hover,#f1f5f9);color:#dc2626}',
+        '@media(max-width:768px){.nux-menu-user-btn{height:44px}.nux-menu-user--labeled .nux-menu-user-btn{height:44px}}'
     ].join('');
 
     function injectCss() {
@@ -26,10 +26,7 @@
     }
 
     var DEPS = [
-        { file: 'nux-avatar.js', sentinel: 'NuxAvatar' },
-        { file: 'nux-drawer.js', sentinel: 'NuxDrawer' },
-        { file: 'nux-user-center.js', sentinel: 'NuxUserCenter' },
-        { file: '../nexus-overlay-host.js', sentinel: 'showToast' }
+        { file: 'nux-avatar.js', sentinel: 'NuxAvatar' }
     ];
 
     var _base = (function () {
@@ -127,6 +124,8 @@
             var authed = Vue.ref(false);
             var ready = Vue.ref(false);
             var sdk = Vue.ref(null);
+            var panel = Vue.ref(false);
+            var displayName = Vue.ref('');
             var loginUrl = props.loginUrl || (window.ucConfig && window.ucConfig.login_url) || '';
 
             function onStorage(e) {
@@ -151,10 +150,12 @@
                 return createSdk();
             }
 
-            function registerComponents() {
-                [['nux-avatar', 'NuxAvatar'], ['nux-drawer', 'NuxDrawer'], ['nux-user-center', 'NuxUserCenter']].forEach(function (pair) {
-                    if (window[pair[1]]) appInstance.component(pair[0], window[pair[1]]);
-                });
+            function loadProfile(sdkObj) {
+                if (displayName.value || !sdkObj || typeof sdkObj.getCurrentUser !== 'function') return;
+                sdkObj.getCurrentUser().then(function (r) {
+                    var u = (r && r.data) || r || {};
+                    displayName.value = u.display_name || u.nickname || u.username || '';
+                }).catch(function () {});
             }
 
             function sync() {
@@ -162,12 +163,29 @@
                 var authedNow = !!(sdkObj && isAuthed(sdkObj));
                 if (authedNow && !authed.value) {
                     ensureDeps().then(function () {
-                        registerComponents();
+                        if (window.NuxAvatar) appInstance.component('nux-avatar', window.NuxAvatar);
                         ready.value = true;
+                        loadProfile(sdkObj);
                     });
                 }
-                authed.value = authedNow;
+                if (!authedNow) {
+                    authed.value = false;
+                    ready.value = false;
+                    panel.value = false;
+                    displayName.value = '';
+                } else {
+                    authed.value = true;
+                    loadProfile(sdkObj);
+                }
                 if (sdkObj) sdk.value = sdkObj;
+            }
+
+            function togglePanel() {
+                panel.value = !panel.value;
+            }
+
+            function onDocClick(e) {
+                if (panel.value && ownVnode.el && !ownVnode.el.contains(e.target)) panel.value = false;
             }
 
             function goLogin() {
@@ -177,10 +195,18 @@
 
             function onLogout() {
                 ctx.emit('logout');
-                // 应用未绑 @logout 时兜底：token 已被内层 nux-user-center 的 sdk.logout 清掉，
-                // 重载让应用级界面（昵称/登录态 v-if/路由）同步回到登出态
                 var bound = !!(ownVnode && ownVnode.props && ownVnode.props.onLogout);
                 if (!bound) setTimeout(function () { window.location.reload(); }, 0);
+            }
+
+            function goLogout() {
+                panel.value = false;
+                var sdkObj = resolveSdk();
+                if (sdkObj && typeof sdkObj.logout === 'function') {
+                    Promise.resolve(sdkObj.logout()).catch(function () {}).then(onLogout);
+                } else {
+                    onLogout();
+                }
             }
 
             Vue.onMounted(function () {
@@ -188,11 +214,13 @@
                 window.addEventListener('uc:authchange', sync);
                 window.addEventListener('storage', onStorage);
                 document.addEventListener('visibilitychange', onVisible);
+                document.addEventListener('click', onDocClick);
             });
             Vue.onUnmounted(function () {
                 window.removeEventListener('uc:authchange', sync);
                 window.removeEventListener('storage', onStorage);
                 document.removeEventListener('visibilitychange', onVisible);
+                document.removeEventListener('click', onDocClick);
             });
 
             fetchConfig().then(sync);
@@ -200,10 +228,19 @@
             var icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>';
             var labelText = props.label === true ? '用户中心' : (props.label || '');
             var loginLabel = props.label ? '登录' : '';
-            return { authed: authed, ready: ready, sdk: sdk, icon: icon, goLogin: goLogin, onLogout: onLogout, appName: props.appName, labelText: labelText, loginLabel: loginLabel };
+            return { authed: authed, ready: ready, sdk: sdk, panel: panel, displayName: displayName, icon: icon, togglePanel: togglePanel, goLogin: goLogin, goLogout: goLogout, labelText: labelText, loginLabel: loginLabel };
         },
         template: '<span class="nux-menu-user" :class="{ \'nux-menu-user--labeled\': !!labelText || !!loginLabel }">' +
-            '<nux-user-center v-if="authed && ready" :sdk="sdk" :app-name="appName" :label="labelText" @logout="onLogout"></nux-user-center>' +
+            '<template v-if="authed && ready">' +
+            '<button type="button" class="nux-menu-user-btn" :title="labelText || \'用户中心\'" @click="togglePanel">' +
+            '<nux-avatar :name="displayName || labelText || \'用户\'"></nux-avatar>' +
+            '<span v-if="labelText" class="nux-menu-user-label">{{ labelText }}</span>' +
+            '</button>' +
+            '<div v-if="panel" class="nux-menu-user-panel">' +
+            '<div class="nux-menu-user-name">{{ displayName || labelText || \'用户中心\' }}</div>' +
+            '<button type="button" class="nux-menu-user-logout" @click="goLogout">退出登录</button>' +
+            '</div>' +
+            '</template>' +
             '<span v-else-if="authed" class="nux-menu-user-skel" aria-hidden="true"></span>' +
             '<button v-else type="button" class="nux-menu-user-btn" :title="loginLabel || \'登录\'" :aria-label="loginLabel || \'登录\'" @click="goLogin"><span v-html="icon"></span><span v-if="loginLabel" class="nux-menu-user-label">{{ loginLabel }}</span></button>' +
             '</span>'
