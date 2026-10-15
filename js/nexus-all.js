@@ -56,6 +56,15 @@
     const CN_TZ = 'Asia/Shanghai';
     const utils = window.NexusUtils = window.NexusUtils || {};
     Object.assign(utils, {
+        /**
+         * 平台时间解析单源（S12 时间口径契约）：
+         * - 带 Z/+00:00/+08:00 等后缀的串：按后缀直接解析（后端 iso_utc 出口族，全舰队清零裸串后主形态）。
+         * - 无后缀裸串：视为 +08:00 北京时间（舰队 naive-CST 主流：moutain/challengePlanet/notifyCenter/
+         *   goldenFish/userFeedback/adSmart/geniusStudent 等仓存储轨）。
+         * - naive UTC 后端的字段必须先在后端序列化出口补 Z（教训#81/#120），前端局部救底用
+         *   `parseUtc(s)=parseDate(s+'Z')` 形态（portalHome 判例），禁止改本默认。
+         * 改默认前必读 offpeak/rounds/2026-10-15-s12-timezone-unification.md §平台定案。
+         */
         parseDate(value) {
             if (!value) return null;
             if (value instanceof Date) return isNaN(value.getTime()) ? null : value;
