@@ -35,6 +35,7 @@
         var css = ''
             + '#' + ROOT_ID + '{position:fixed;left:16px;bottom:calc(16px + var(--nx-safe-bottom,0px));z-index:var(--nx-z-float,1500);font-family:inherit;user-select:none;}'
             + '#' + ROOT_ID + ' .nxcf-badge{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;'
+            + 'position:relative;'
             + 'background:rgba(15,23,42,0.78);color:#fff;font-size:13px;font-variant-numeric:tabular-nums;'
             + 'box-shadow:0 4px 16px rgba(15,23,42,0.25);cursor:pointer;border:1px solid rgba(255,255,255,0.14);'
             + 'transition:opacity .3s,transform .3s;opacity:.72;}'
@@ -42,6 +43,9 @@
             + '#' + ROOT_ID + ' .nxcf-badge.pulse{animation:nxcf-pulse .9s ease;}'
             + '#' + ROOT_ID + ' .nxcf-badge.credit{border-color:rgba(251,191,36,0.65);}'
             + '#' + ROOT_ID + ' .nxcf-badge svg{flex:none;}'
+            + '#' + ROOT_ID + ' .nxcf-dot{display:none;position:absolute;top:-4px;right:-4px;width:10px;height:10px;'
+            + 'border-radius:50%;background:#f87171;border:2px solid rgba(15,23,42,0.92);}'
+            + '#' + ROOT_ID + ' .nxcf-badge.checkin .nxcf-dot{display:block;}'
             + '#' + ROOT_ID + ' .nxcf-toast{position:absolute;left:0;bottom:44px;white-space:nowrap;padding:8px 14px;'
             + 'border-radius:10px;background:rgba(15,23,42,0.92);color:#fff;font-size:13px;'
             + 'box-shadow:0 6px 20px rgba(15,23,42,0.3);opacity:0;transform:translateY(6px);'
@@ -70,6 +74,7 @@
         overdraftUsed: 0,
         overdraftLimit: null,
         overdraftExhausted: false,
+        checkinDone: null,
         failures: 0,
         timer: null,
         lastToastAt: 0,
@@ -77,6 +82,23 @@
         lowWarned: false,
         toastTimer: null
     };
+
+    function localToday() {
+        var d = new Date();
+        return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+    }
+
+    function maybeCheckinToast() {
+        if (state.checkinDone !== false) return;
+        var key = 'nux_cf_ck_' + localToday();
+        try {
+            if (localStorage.getItem(key)) return;
+            localStorage.setItem(key, '1');
+        } catch (e) {
+            return;
+        }
+        showToast('今日签到可领积分 · 点击浮标领取');
+    }
 
     function ensureDom() {
         var root = document.getElementById(ROOT_ID);
@@ -88,7 +110,7 @@
             + '<button type="button" class="nxcf-badge" title="积分余额（点击查看钱包）">'
             + '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fbbf24" stroke-width="2">'
             + '<circle cx="12" cy="12" r="9"></circle><path d="M8.5 9.5h7M8.5 14h7M12 7v10"></path></svg>'
-            + '<span class="nxcf-num">…</span></button>'
+            + '<span class="nxcf-num">…</span><i class="nxcf-dot"></i></button>'
             + '<div class="nxcf-toast" role="status"></div>';
         document.body.appendChild(root);
         root.querySelector('.nxcf-badge').addEventListener('click', function() {
@@ -128,8 +150,11 @@
         if (!badge) return;
         var onCredit = state.overdraftUsed > 0;
         badge.classList.toggle('credit', onCredit);
+        badge.classList.toggle('checkin', state.checkinDone === false);
+        var checkinTip = state.checkinDone === false ? '，今日可签到' : '';
         var hasPanel = !!(window.NexusCreditPanel && window.NexusCreditPanel.open);
-        badge.title = (onCredit ? '积分余额（体验授信垫付中' : '积分余额') + (hasPanel ? '，点击查看' : '，点击查看钱包') + '）';
+        badge.title = (onCredit ? '积分余额（体验授信垫付中' : '积分余额') + checkinTip
+            + (hasPanel ? '，点击查看' : '，点击查看钱包') + '）';
     }
 
     function pulse() {
@@ -191,7 +216,10 @@
         if (typeof od.limit === 'number') state.overdraftLimit = od.limit;
         else if ('limit' in od && od.limit === null) state.overdraftLimit = null;
         state.overdraftExhausted = !!od.exhausted;
+        var ck = data.checkin;
+        state.checkinDone = (ck && typeof ck.done_today === 'boolean') ? ck.done_today : null;
         renderBalance();
+        maybeCheckinToast();
         if (prev !== null && state.balance !== null && state.balance < prev) {
             state.pendingCost += prev - state.balance;
             pulse();
