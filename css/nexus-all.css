@@ -5033,6 +5033,49 @@ img, video, canvas {
     }
 }
 
+/* ========== Mobile topbar overflow containment (S9) ==========
+   375 视口顶栏溢出收敛（gezhi 前3 判例平台化）：actions 溢出会让汉堡钮
+   被推出视口（移动端导航断链）。契约：brand/label/应用钮依次让位，
+   汉堡永不收缩。label 标签让位在 nux-menu-user 组件内。 */
+@media (max-width: 480px) {
+    .nux-layout-header {
+        padding-left: 8px;
+        padding-right: 5px;
+        gap: var(--nx-space-1);
+    }
+
+    .nux-layout-header-actions {
+        gap: 2px;
+        min-width: 0;
+        flex-shrink: 1;
+    }
+
+    .nux-layout-header-actions > * {
+        min-width: 0;
+        flex-shrink: 1;
+    }
+
+    .nux-layout-brand {
+        min-width: 0;
+        flex-shrink: 1;
+    }
+
+    .nux-layout-brand-name {
+        max-width: 4em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .nux-layout-header-actions .nux-btn {
+        white-space: nowrap;
+    }
+
+    .nux-layout-header > .nx-hamburger {
+        flex-shrink: 0;
+    }
+}
+
 /* ========== Utility Classes ========== */
 /* nx-show-mobile 移动端强制 flex 是有意设计：.nx-hamburger 基础态 display:none，
    依赖此 !important 翻转显示并让其 align/justify 居中生效（全工作区消费者均为汉堡钮）。 */

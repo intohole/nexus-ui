@@ -18,7 +18,8 @@
         '.nux-menu-user-name{padding:8px 10px;font-size:14px;font-weight:600;color:var(--nx-text-primary,#0f172a);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1px solid var(--nx-border,#e2e8f0);margin-bottom:4px}',
         '.nux-menu-user-logout{display:block;width:100%;padding:8px 10px;border:none;border-radius:8px;background:transparent;color:var(--nx-text-secondary,#64748b);font-size:13px;cursor:pointer;text-align:left;transition:background .2s,color .2s}',
         '.nux-menu-user-logout:hover{background:var(--nx-bg-hover,#f1f5f9);color:#dc2626}',
-        '@media(max-width:768px){.nux-menu-user-btn{height:44px}.nux-menu-user--labeled .nux-menu-user-btn{height:44px}}'
+        '@media(max-width:768px){.nux-menu-user-btn{height:44px}.nux-menu-user--labeled .nux-menu-user-btn{height:44px}}',
+        '@media(max-width:480px){.nux-menu-user--labeled .nux-menu-user-btn{padding:0 4px}.nux-menu-user--labeled .nux-menu-user-label{display:none}}'
     ].join('');
 
     function injectCss() {
