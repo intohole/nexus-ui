@@ -9,6 +9,7 @@
         this._onNotificationClick = options.onNotificationClick || null;
         this._mutedApps = []; this._muteOpen = false; this._mutedLoaded = false;
         this._filter = 'all'; this._box = 'inbox'; this._typeFilter = '';
+        this._inboxBox = 'action'; this._boxSummary = null;
         this._typeItems = []; this._unreadReal = null;
         this._confirmId = null; this._confirmTimer = null;
     }
@@ -23,7 +24,13 @@
     };
     NuxNotificationPanel.prototype._fetchSummary = function () {
         var self = this;
-        self._getApi().get(self._baseUrl + '/type-summary').then(function (d) {
+        self._getApi().get(self._baseUrl + '/notifications/box-summary').then(function (d) {
+            self._boxSummary = d || null;
+            self._renderInboxSeg();
+        }).catch(function () { self._boxSummary = null; });
+        var url = self._baseUrl + '/type-summary';
+        if (self._inboxBox) url += '?box=' + self._inboxBox;
+        self._getApi().get(url).then(function (d) {
             self._typeItems = (d && Array.isArray(d.items)) ? d.items : [];
             var unread = 0;
             self._typeItems.forEach(function (t) { unread += (t.unread || 0); });
@@ -32,6 +39,30 @@
             self._syncPanels();
             self._renderUnreadPill();
         }).catch(function () {});
+    };
+    NuxNotificationPanel.prototype._inboxBoxCount = function (boxKey, field) {
+        var s = this._boxSummary;
+        if (!s || !Array.isArray(s.boxes)) return null;
+        for (var i = 0; i < s.boxes.length; i++) {
+            if (s.boxes[i].box === boxKey) return s.boxes[i][field || 'unread'];
+        }
+        return null;
+    };
+    NuxNotificationPanel.prototype._renderInboxSeg = function () {
+        if (!this._container) return;
+        var host = this._container.querySelector('.nux-notif-inboxseg');
+        if (!host) return;
+        var self = this;
+        host.innerHTML = [
+            { key: 'action', label: '与你相关' },
+            { key: 'insight', label: '资讯动态' }
+        ].map(function (b) {
+            var unread = self._inboxBoxCount(b.key, 'unread');
+            var active = self._box === 'inbox' && self._inboxBox === b.key;
+            return '<button type="button" class="nux-notif-inboxbox-btn' + (active ? ' active' : '') +
+                '" data-inbox-box="' + b.key + '" aria-pressed="' + active + '">' + b.label +
+                '<span class="nux-notif-inboxbox-count">' + (unread > 0 ? unread : '') + '</span></button>';
+        }).join('');
     };
     NuxNotificationPanel.prototype._renderUnreadPill = function () {
         if (!this._container) return;
@@ -59,7 +90,10 @@
         if (list) list.innerHTML = '<div class="nux-notif-panel-loading"><span class="nx-spinner"></span></div>';
         var params = { page: self._page, page_size: self._pageSize };
         if (self._box === 'archive') params.archived = 'true';
-        if (self._box === 'inbox' && self._filter === 'unread') params.is_read = 'false';
+        if (self._box === 'inbox') {
+            params.box = self._inboxBox;
+            if (self._filter === 'unread') params.is_read = 'false';
+        }
         if (self._typeFilter) params.type = self._typeFilter;
         return self._getApi().get(self._baseUrl + '/notifications', params).then(function (resp) {
             self._list = resp.items || [];
@@ -79,7 +113,17 @@
         this._typeFilter = '';
         this._syncTabs();
         this._syncPanels();
+        this._renderInboxSeg();
         this.load(1);
+    };
+    NuxNotificationPanel.prototype.setInboxBox = function (b) {
+        if (this._inboxBox === b) return;
+        this._inboxBox = b;
+        this._typeFilter = '';
+        this._renderInboxSeg();
+        this._syncSegButtons();
+        this.load(1);
+        if (this._box === 'inbox') this._fetchSummary();
     };
     NuxNotificationPanel.prototype.setFilter = function (f) {
         if (this._filter === f) return;
@@ -116,6 +160,8 @@
         var inbox = this._box === 'inbox';
         var toolbar = c.querySelector('.nux-notif-panel-toolbar');
         if (toolbar) toolbar.style.display = inbox ? '' : 'none';
+        var inboxseg = c.querySelector('.nux-notif-inboxseg');
+        if (inboxseg) inboxseg.style.display = inbox ? '' : 'none';
         var chips = c.querySelector('.nux-notif-chips');
         if (chips) chips.style.display = (inbox && this._typeItems.length) ? '' : 'none';
         var mute = c.querySelector('.nux-notif-mute');
@@ -147,9 +193,12 @@
             } else if (self._filter === 'unread') {
                 icon = 'fa-regular fa-circle-check';
                 body = '<span>没有未读通知，都处理完了</span>';
+            } else if (self._inboxBox === 'action') {
+                icon = 'fa-regular fa-bell';
+                body = '<span class="nux-notif-empty-title">没有需要你处理的通知</span><span class="nux-notif-empty-sub">任务、匹配、回执会出现在这里</span>';
             } else {
-                icon = 'fa-regular fa-bell-slash';
-                body = '<span>还没有通知</span>';
+                icon = 'fa-regular fa-newspaper';
+                body = '<span class="nux-notif-empty-title">暂无资讯动态</span><span class="nux-notif-empty-sub">日报、周报、行情播报会出现在这里</span>';
             }
             list.innerHTML = '<div class="nux-notif-panel-empty"><i class="' + icon + '"></i>' + body + '</div>';
         } else {
@@ -205,6 +254,8 @@
     NuxNotificationPanel.prototype._onRootClick = function (e) {
         var boxBtn = e.target.closest('[data-box]');
         if (boxBtn) return this.setBox(boxBtn.getAttribute('data-box'));
+        var inboxBoxBtn = e.target.closest('[data-inbox-box]');
+        if (inboxBoxBtn) return this.setInboxBox(inboxBoxBtn.getAttribute('data-inbox-box'));
         var seg = e.target.closest('.nux-notif-seg-btn');
         if (seg) return this.setFilter(seg.getAttribute('data-filter'));
         var chip = e.target.closest('.nux-notif-chip');
@@ -379,6 +430,7 @@
             '<div class="nux-notif-panel-boxes" role="tablist" aria-label="通知箱">' +
             '<button type="button" class="nux-notif-box-btn active" role="tab" aria-selected="true" data-box="inbox">收件箱</button>' +
             '<button type="button" class="nux-notif-box-btn" role="tab" aria-selected="false" data-box="archive">归档箱</button></div>' +
+            '<div class="nux-notif-inboxseg" role="tablist" aria-label="按价值分箱"></div>' +
             '<div class="nux-notif-panel-toolbar"><div class="nux-notif-seg" role="tablist" aria-label="通知筛选">' +
             '<button type="button" class="nux-notif-seg-btn" role="tab" aria-selected="false" data-filter="unread">未读</button>' +
             '<button type="button" class="nux-notif-seg-btn active" role="tab" aria-selected="true" data-filter="all">全部</button>' +
