@@ -27,7 +27,10 @@
         self._getApi().get(self._baseUrl + '/notifications/box-summary').then(function (d) {
             self._boxSummary = d || null;
             self._renderInboxSeg();
-        }).catch(function () { self._boxSummary = null; });
+        }).catch(function () {
+            self._boxSummary = null;
+            self._renderInboxSeg();
+        });
         var url = self._baseUrl + '/type-summary';
         if (self._inboxBox) url += '?box=' + self._inboxBox;
         self._getApi().get(url).then(function (d) {
@@ -59,9 +62,11 @@
         ].map(function (b) {
             var unread = self._inboxBoxCount(b.key, 'unread');
             var active = self._box === 'inbox' && self._inboxBox === b.key;
+            var label = unread > 0 ? b.label + '，' + unread + ' 条未读' : b.label;
             return '<button type="button" class="nux-notif-inboxbox-btn' + (active ? ' active' : '') +
-                '" data-inbox-box="' + b.key + '" aria-pressed="' + active + '">' + b.label +
-                '<span class="nux-notif-inboxbox-count">' + (unread > 0 ? unread : '') + '</span></button>';
+                '" data-inbox-box="' + b.key + '" aria-pressed="' + active + '" aria-label="' + label + '">' + b.label +
+                (unread > 0 ? '<span class="nux-notif-inboxbox-count" aria-hidden="true">' + unread + '</span>' : '') +
+                '</button>';
         }).join('');
     };
     NuxNotificationPanel.prototype._renderUnreadPill = function () {
@@ -338,7 +343,8 @@
     NuxNotificationPanel.prototype._markAllRead = function () {
         var self = this;
         if (!self._manager) return;
-        self._manager.markAllRead().then(function () {
+        var box = self._box === 'inbox' ? self._inboxBox : '';
+        self._manager.markAllRead(box).then(function () {
             if (window.showToast) window.showToast('已全部标记为已读', 'success');
             self.load(1);
         }).catch(function () {
@@ -430,8 +436,9 @@
             '<div class="nux-notif-panel-boxes" role="tablist" aria-label="通知箱">' +
             '<button type="button" class="nux-notif-box-btn active" role="tab" aria-selected="true" data-box="inbox">收件箱</button>' +
             '<button type="button" class="nux-notif-box-btn" role="tab" aria-selected="false" data-box="archive">归档箱</button></div>' +
-            '<div class="nux-notif-inboxseg" role="tablist" aria-label="按价值分箱"></div>' +
-            '<div class="nux-notif-panel-toolbar"><div class="nux-notif-seg" role="tablist" aria-label="通知筛选">' +
+            '<div class="nux-notif-panel-toolbar">' +
+            '<div class="nux-notif-inboxseg" role="group" aria-label="按价值分箱"></div>' +
+            '<div class="nux-notif-seg" role="tablist" aria-label="通知筛选">' +
             '<button type="button" class="nux-notif-seg-btn" role="tab" aria-selected="false" data-filter="unread">未读</button>' +
             '<button type="button" class="nux-notif-seg-btn active" role="tab" aria-selected="true" data-filter="all">全部</button>' +
             '</div></div>' +

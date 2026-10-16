@@ -287,8 +287,31 @@
 }
 .nux-notif-box-btn:focus-visible { outline: 2px solid rgba(var(--app-accent-rgb), 0.7); outline-offset: -2px; }
 .nux-notif-panel-toolbar {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px;
   margin-bottom: var(--nx-space-4);
+}
+.nux-notif-inboxseg {
+  display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px;
+}
+.nux-notif-inboxbox-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--nx-border); background: var(--nx-bg-surface);
+  color: var(--nx-text-secondary); font-size: var(--nx-text-sm); line-height: 1;
+  padding: 8px 14px; min-height: 36px; border-radius: 999px; cursor: pointer;
+  transition: background var(--nx-transition-fast), color var(--nx-transition-fast), border-color var(--nx-transition-fast);
+}
+.nux-notif-inboxbox-btn:hover { border-color: rgba(var(--app-accent-rgb), 0.45); color: var(--nx-text-strong); }
+.nux-notif-inboxbox-btn.active {
+  background: rgba(var(--app-accent-rgb), 0.1);
+  border-color: rgba(var(--app-accent-rgb), 0.45);
+  color: var(--nx-text-accent); font-weight: 600;
+}
+.nux-notif-inboxbox-btn:focus-visible { outline: 2px solid rgba(var(--app-accent-rgb), 0.7); outline-offset: 1px; }
+.nux-notif-inboxbox-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: 999px; background: rgb(var(--app-accent-rgb));
+  color: var(--nx-text-on-accent); font-size: 11px; font-weight: 600; line-height: 1;
 }
 .nux-notif-seg {
   display: inline-flex; gap: 2px; padding: 2px;
@@ -335,6 +358,10 @@
 @media (hover: none) and (pointer: coarse) {
   .nux-notif-box-btn { padding: 14px 14px 16px; }
   .nux-notif-chip { min-height: 44px; }
+  .nux-notif-inboxbox-btn { min-height: 44px; padding: 10px 16px; }
+}
+@media (max-width: 768px) {
+  .nux-notif-inboxbox-btn { min-height: 40px; }
 }
 .nux-notif-panel-item.is-archived .nux-notif-panel-item-icon { opacity: 0.55; }
 .nux-notif-panel-item.is-archived .nux-notif-panel-item-title { font-weight: 400; color: var(--nx-text-secondary); }

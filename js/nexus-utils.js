@@ -938,7 +938,15 @@
             message: 'info', comment: 'info', task: 'success',
             order: 'warning', trade: 'warning', alert: 'danger',
             approval: 'accent', follow: 'accent', like: 'accent',
-            job_subscription: 'accent', system: 'neutral'
+            job_subscription: 'accent', system: 'neutral',
+            truemirror: 'accent', credits: 'warning', daily_quest: 'success',
+            winback: 'success', w1_day1: 'success', w1_day3: 'success',
+            reminder: 'info', business: 'accent', routine: 'accent',
+            remind: 'info', serial: 'accent', feedback: 'success',
+            alert_triggered: 'warning', roadmap_ready: 'success', info: 'neutral',
+            daily_close: 'info', knowledge: 'info', report: 'info',
+            weekly_report: 'info', weekly_pulse: 'info', insight: 'info',
+            e2e_email_probe: 'neutral'
         };
         const TYPE_ICONS = {
             message: 'fa-regular fa-comment', comment: 'fa-regular fa-comment',
@@ -946,12 +954,31 @@
             system: 'fa-solid fa-circle-info', alert: 'fa-solid fa-triangle-exclamation',
             follow: 'fa-solid fa-user-plus', like: 'fa-solid fa-heart',
             task: 'fa-solid fa-list-check', approval: 'fa-solid fa-file-signature',
-            job_subscription: 'fa-solid fa-briefcase'
+            job_subscription: 'fa-solid fa-briefcase',
+            truemirror: 'fa-solid fa-magnifying-glass-chart', credits: 'fa-solid fa-coins',
+            daily_quest: 'fa-solid fa-bullseye', winback: 'fa-solid fa-hand-holding-heart',
+            w1_day1: 'fa-solid fa-seedling', w1_day3: 'fa-solid fa-seedling',
+            reminder: 'fa-regular fa-clock', business: 'fa-solid fa-chart-line',
+            routine: 'fa-solid fa-robot', remind: 'fa-solid fa-graduation-cap',
+            serial: 'fa-solid fa-book-open', feedback: 'fa-solid fa-comments',
+            alert_triggered: 'fa-solid fa-shield-halved', roadmap_ready: 'fa-solid fa-route',
+            info: 'fa-regular fa-bell', daily_close: 'fa-solid fa-chart-simple',
+            knowledge: 'fa-regular fa-lightbulb', report: 'fa-regular fa-file-lines',
+            weekly_report: 'fa-regular fa-calendar-check', weekly_pulse: 'fa-solid fa-heart-pulse',
+            insight: 'fa-regular fa-compass', e2e_email_probe: 'fa-solid fa-flask'
         };
         const TYPE_LABELS = {
             message: '消息', comment: '评论', task: '任务', order: '订单',
             trade: '交易', alert: '告警', approval: '审批', follow: '关注',
-            like: '点赞', job_subscription: '职位订阅', system: '系统'
+            like: '点赞', job_subscription: '职位订阅', system: '系统',
+            truemirror: '评测出分', credits: '积分变动', daily_quest: '每日任务',
+            winback: '召回关怀', w1_day1: '成长旅程', w1_day3: '成长旅程',
+            reminder: '提醒', business: '业务动态', routine: '分身简报',
+            remind: '报考提醒', serial: '连载更新', feedback: '回音回复',
+            alert_triggered: '防线触发', roadmap_ready: '路线图就绪', info: '通知',
+            daily_close: '收盘播报', knowledge: '知识脉搏', report: '报告',
+            weekly_report: '周报', weekly_pulse: '每周脉搏', insight: '洞察',
+            e2e_email_probe: '测试探针'
         };
         function typeTone(type) { return TYPE_TONES[type] || 'neutral'; }
         function typeIcon(type) { return TYPE_ICONS[type] || 'fa-regular fa-bell'; }

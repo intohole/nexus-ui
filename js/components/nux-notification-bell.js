@@ -27,14 +27,27 @@
             hiddenCount: function() { return Math.max(0, this.total - this.items.length); },
             hasUnreadItems: function() { return this.items.some(function(i) { return !i.is_read; }); },
             groups: function() {
+                var boxed = this.items.length > 0 && this.items.every(function(n) {
+                    return n.box === 'action' || n.box === 'insight';
+                });
+                if (boxed) {
+                    var act = [], ins = [];
+                    this.items.forEach(function(n) {
+                        (n.box === 'action' ? act : ins).push(n);
+                    });
+                    var g = [];
+                    if (act.length) g.push({ label: '与你相关', items: act, unread: act.filter(function(n) { return !n.is_read; }).length });
+                    if (ins.length) g.push({ label: '资讯动态', items: ins, unread: ins.filter(function(n) { return !n.is_read; }).length });
+                    return g;
+                }
                 var today = [], earlier = [];
                 this.items.forEach(function(n) {
                     (window.NexusUtils && NexusUtils.notify && NexusUtils.notify.isToday(n.created_at) ? today : earlier).push(n);
                 });
-                var g = [];
-                if (today.length) g.push({ label: '今天', items: today });
-                if (earlier.length) g.push({ label: '更早', items: earlier });
-                return g;
+                var gg = [];
+                if (today.length) gg.push({ label: '今天', items: today });
+                if (earlier.length) gg.push({ label: '更早', items: earlier });
+                return gg;
             },
             emptyText: function() {
                 if (this.filter === 'unread') return '没有未读通知，都处理完了';
@@ -158,9 +171,11 @@
                     if (seq === self.listSeq) self.loading = false;
                 });
             },
-            markAllRead: function() {
+            markAllRead: function(box) {
                 var self = this;
-                self.fetchJson('/api/notify/read-all', { method: 'PUT' }).catch(function() {});
+                var url = '/api/notify/read-all';
+                if (box) url += '?box=' + encodeURIComponent(box);
+                self.fetchJson(url, { method: 'PUT' }).catch(function() {});
                 self.items.forEach(function(i) { i.is_read = true; });
                 self.unread = 0;
             },
@@ -227,7 +242,7 @@
                     </div>
                     <div v-else class="nux-notify-scroll">
                         <div v-for="g in groups" :key="g.label" class="nux-notify-group">
-                            <div class="nux-notify-group-label">{{ g.label }}</div>
+                            <div class="nux-notify-group-label">{{ g.label }}<span v-if="g.unread" class="nux-notify-group-unread">{{ g.unread }} 条未读</span></div>
                             <ul class="nux-notify-list">
                                 <li v-for="item in g.items" :key="item.id" :class="['nux-notify-item', 'tone-' + tone(item), { 'nux-notify-item-unread': !item.is_read }]" role="button" tabindex="0" :aria-label="item.title" @click="activate(item)" @keydown.enter.prevent="activate(item)" @keydown.space.prevent="activate(item)">
                                     <span class="nux-notify-item-ic" aria-hidden="true"><i :class="icon(item)"></i></span>
