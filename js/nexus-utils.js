@@ -521,6 +521,19 @@
         motionDuration(ms) {
             return utils.prefersReducedMotion() ? 0 : ms;
         },
+
+        installDockYield(opts = {}) {
+            const bodyClass = opts.bodyClass || 'nx-dock-yield';
+            const idleMs = opts.idleMs || 1100;
+            if (utils.__dockYieldInstalled) return;
+            utils.__dockYieldInstalled = true;
+            let timer = null;
+            document.addEventListener('scroll', () => {
+                document.body.classList.add(bodyClass);
+                clearTimeout(timer);
+                timer = setTimeout(() => document.body.classList.remove(bodyClass), idleMs);
+            }, { passive: true, capture: true });
+        },
     });
     utils.setViewportHeight();
     utils._resizeHandler = utils.debounce(utils.setViewportHeight, 100);
