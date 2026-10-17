@@ -152,13 +152,15 @@
             });
             let data;
             const contentType = response.headers.get('content-type') || '';
-            if (contentType.includes('application/json')) {
+            if (response.status === 204 || response.status === 304) {
+                data = null;
+            } else if (contentType.includes('application/json')) {
                 data = await response.json();
             } else {
                 const text = await response.text();
                 try { data = JSON.parse(text); } catch { data = { detail: text }; }
             }
-            if (this.responseAdapter) data = this.responseAdapter(data, response);
+            if (this.responseAdapter && data !== null && data !== undefined) data = this.responseAdapter(data, response);
             return { response, data };
         }
 
