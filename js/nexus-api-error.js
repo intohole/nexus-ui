@@ -128,7 +128,9 @@
                     cost: typeof details.cost === 'number' ? details.cost : null,
                     overdraft: details.overdraft || null,
                     charge_mode: details.charge_mode || '',
-                    wallet_url: details.wallet_url || '/user-center.html#wallet'
+                    lite_grace: details.lite_grace === true,
+                    recovery: details.recovery || null,
+                    wallet_url: details.wallet_url || (details.recovery && details.recovery.wallet_url) || '/user-center.html#wallet'
                 }
             }));
         } catch (e) { /* 引导卡事件绝不影响错误处理主流程 */ }

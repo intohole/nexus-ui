@@ -95,6 +95,10 @@
             + '#nux-credit-402-root .nxcp-402{padding:14px 16px;}'
             + '#nux-credit-402-root .nxcp-402 h4{margin:0 0 6px;font-size:14px;display:flex;align-items:center;gap:8px;}'
             + '#nux-credit-402-root .nxcp-402 p{margin:0 0 12px;font-size:12.5px;line-height:1.6;color:var(--nx-text-secondary,#475569);}'
+            + '#nux-credit-402-root .nxcp-402-recovery{list-style:none;margin:0 0 12px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;'
+            + 'background:var(--nx-bg-subtle,#f1f5f9);border-radius:10px;font-size:12px;line-height:1.5;color:var(--nx-text-primary,#0f172a);}'
+            + '#nux-credit-402-root .nxcp-402-recovery li{margin:0;}'
+            + '.nxcp-lite{font-size:11px;color:#059669;background:rgba(16,185,129,0.12);border-radius:999px;padding:2px 8px;}'
             + '#nux-credit-402-root .nxcp-actions{display:flex;gap:8px;justify-content:flex-end;}'
             + '@media (max-width:640px){#' + ROOT_ID + '{left:10px;}}';
         var style = document.createElement('style');
@@ -116,7 +120,7 @@
             + '<div class="nxcp-head"><b>我的积分</b>'
             + '<span style="display:flex;align-items:center;gap:8px"><span class="nxcp-mode">…</span>'
             + '<button type="button" class="nxcp-close" aria-label="关闭">✕</button></span></div>'
-            + '<div class="nxcp-balance"><b class="nxcp-num">…</b><span>分</span><span class="nxcp-od" style="display:none"></span></div>'
+            + '<div class="nxcp-balance"><b class="nxcp-num">…</b><span>分</span><span class="nxcp-lite" style="display:none">轻量免费保障中</span><span class="nxcp-od" style="display:none"></span></div>'
             + '<div class="nxcp-body">'
             + '<div class="nxcp-checkin"><span class="nxcp-streak">每日签到</span><span style="display:flex;align-items:center;gap:8px">'
             + '<b class="nxcp-streak-num"></b><button type="button" class="nxcp-btn nxcp-checkin-btn">签到</button></span></div>'
@@ -146,6 +150,14 @@
         var mode = s.charge_mode || '';
         modeChip.textContent = { trial: '体验期', formal: '正式期', off: '免费期' }[mode] || '积分';
         root.querySelector('.nxcp-num').textContent = fmt(s.balance);
+        var lg = s.lite_grace || {};
+        var liteEl = root.querySelector('.nxcp-lite');
+        if (lg.enabled) {
+            liteEl.style.display = '';
+            liteEl.title = '低档模型调用免费保障中（余额不足也不中断）';
+        } else {
+            liteEl.style.display = 'none';
+        }
         var od = s.overdraft || {};
         var odEl = root.querySelector('.nxcp-od');
         if (od.used > 0) {
@@ -261,6 +273,7 @@
         root.innerHTML = '<div class="nxcp-card nxcp-402" role="alertdialog" aria-label="积分不足引导">'
             + '<h4><span aria-hidden="true">⚠️</span>积分余额不足</h4>'
             + '<p class="nxcp-402-msg"></p>'
+            + '<ul class="nxcp-402-recovery"></ul>'
             + '<div class="nxcp-actions"><button type="button" class="nxcp-btn ghost nxcp-402-earn">去赚积分</button>'
             + '<button type="button" class="nxcp-btn nxcp-402-wallet">去钱包</button></div></div>';
         document.body.appendChild(root);
@@ -275,6 +288,29 @@
         return root;
     }
 
+    function recoveryLines(recovery, liteGrace, code) {
+        var lines = [];
+        if (recovery) {
+            var ck = recovery.checkin;
+            if (ck && ck.available && ck.next_reward > 0) {
+                lines.push('✅ 现在签到可得 ' + ck.next_reward + ' 分'
+                    + (ck.streak > 0 ? '（已连签 ' + ck.streak + ' 天）' : ''));
+            }
+            var ct = recovery.claimable_tasks;
+            if (ct && ct.count > 0) {
+                lines.push('✅ 有 ' + ct.count + ' 个任务已完成，可领 ' + ct.points + ' 分');
+            }
+            var gift = recovery.next_daily_gift;
+            if (gift && gift.amount > 0) {
+                lines.push('🕗 每日赠送 ' + gift.amount + ' 分' + (gift.note ? ' · ' + gift.note : ''));
+            }
+        }
+        if (liteGrace && code === 'overdraft_limit') {
+            lines.push('🪫 轻量模型仍可继续免费使用，高峰任务不受影响');
+        }
+        return lines;
+    }
+
     function show402(detail) {
         var now = Date.now();
         if (now - last402At < CARD_402_THROTTLE_MS) return;
@@ -285,13 +321,17 @@
             ? '（体验授信 ' + fmt(detail.overdraft.used) + '/' + fmt(detail.overdraft.limit) + '）' : '';
         var msg;
         if (code === 'overdraft_limit') {
-            msg = '今日免费体验额度已用完' + odText + '，每日赠送积分到账后可继续使用；也可以现在签到、做任务赚积分。';
+            msg = '今日免费体验额度已用完' + odText + '，赚积分或等每日赠送到账后可继续。';
         } else {
             msg = '当前余额 ' + fmt(typeof detail.balance === 'number' ? detail.balance : null) + ' 分'
                 + (typeof detail.cost === 'number' ? '，本次需要 ' + detail.cost + ' 分' : '')
-                + '。可以先签到、做任务赚积分，或前往钱包了解积分规则。';
+                + '。可以通过下面的方式马上补足：';
         }
         root.querySelector('.nxcp-402-msg').textContent = msg;
+        var lines = recoveryLines(detail.recovery, detail.lite_grace === true, code);
+        var ul = root.querySelector('.nxcp-402-recovery');
+        ul.innerHTML = lines.map(function(t) { return '<li>' + esc(t) + '</li>'; }).join('');
+        ul.style.display = lines.length ? '' : 'none';
         root.setAttribute('data-wallet', detail.wallet_url || '/user-center.html#wallet');
         root.style.display = '';
     }
