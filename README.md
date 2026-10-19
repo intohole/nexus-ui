@@ -38,15 +38,15 @@ Nexus UI（Nexus Design System）是一套基于 Vue 3 CDN 全局模式的前端
 > 分发主源为 `https://songguokr.com/nexus-ui/v<版本>/`（版本化 URL 是前缀重写，始终指向当前最新版）。下方以 jsDelivr 镜像为例，镜像依赖 GitHub tag，若 tag 缺失请改用主源。
 
 ```html
-<link rel="stylesheet" href="https://songguokr.com/nexus-ui/v2.70.9/css/nexus-all.css">
+<link rel="stylesheet" href="https://songguokr.com/nexus-ui/v2.70.10/css/nexus-all.css">
 ```
 
 ### JS 引入（Vue 3 之后，基础工具最先引入）
 
 ```html
-<script src="https://songguokr.com/nexus-ui/v2.70.9/js/nexus-utils.js"></script>
-<script src="https://songguokr.com/nexus-ui/v2.70.9/js/nexus-api.js"></script>
-<script src="https://songguokr.com/nexus-ui/v2.70.9/js/nexus-crud.js"></script>
+<script src="https://songguokr.com/nexus-ui/v2.70.10/js/nexus-utils.js"></script>
+<script src="https://songguokr.com/nexus-ui/v2.70.10/js/nexus-api.js"></script>
+<script src="https://songguokr.com/nexus-ui/v2.70.10/js/nexus-crud.js"></script>
 ```
 
 ### 主题切换
@@ -83,7 +83,7 @@ python3 nexus-ui/check_deps.py [工作区根目录]
 ## 空状态引导组件
 
 ```html
-<script src="https://songguokr.com/nexus-ui/v2.70.9/js/components/nux-empty-state.js"></script>
+<script src="https://songguokr.com/nexus-ui/v2.70.10/js/components/nux-empty-state.js"></script>
 ```
 
 ```javascript
@@ -114,8 +114,8 @@ await NexusUtils.copyText(text, { success: '已复制', fail: '复制失败' });
 统一「AI/接口返回结构化数据 → 表格/键值对展示」，自动探测 `{data:[...]}` 数组为表格（带 summary）、纯键值对象为 KV 列表、其余回退原始 `pre`。替代过去各项目在工具调用结果里手写同一套 table/kv 渲染模板。
 
 ```html
-<script src="https://songguokr.com/nexus-ui/v2.70.9/js/nexus-structured.js"></script>
-<script src="https://songguokr.com/nexus-ui/v2.70.9/js/components/nux-result-view.js"></script>
+<script src="https://songguokr.com/nexus-ui/v2.70.10/js/nexus-structured.js"></script>
+<script src="https://songguokr.com/nexus-ui/v2.70.10/js/components/nux-result-view.js"></script>
 ```
 
 ```javascript

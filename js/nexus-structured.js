@@ -110,60 +110,33 @@
             if (!this.url) { this.onError('未配置请求URL'); return; }
             this.itemCount = 0;
             this.controller = new AbortController();
-            let timedOut = false;
-            let idleTimer = null;
-            const resetIdle = () => {
-                if (idleTimer) clearTimeout(idleTimer);
-                idleTimer = setTimeout(() => {
-                    timedOut = true;
-                    try { this.controller.abort(); } catch (e) {}
-                }, this.timeout);
-            };
-            resetIdle();
             try {
-                const response = await fetch(this.url, {
-                    method: 'POST',
-                    headers: Object.assign({ 'Accept': 'text/event-stream', 'Content-Type': 'application/json' }, this.headers),
+                for await (const evt of NexusStream.post(this.url, {
                     body: JSON.stringify(this.body),
-                    signal: this.controller.signal
-                });
-                if (!response.ok) {
-                    let errData;
-                    try { errData = await response.json(); } catch (e) { errData = {}; }
-                    this.onError((errData && errData.message) ? errData.message : ('请求失败 ' + response.status));
-                    return;
-                }
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let buffer = '';
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    resetIdle();
-                    buffer += decoder.decode(value, { stream: true });
-                    let idx;
-                    while ((idx = buffer.indexOf('\n')) !== -1) {
-                        const line = buffer.slice(0, idx).replace(/\r$/, '');
-                        buffer = buffer.slice(idx + 1);
-                        if (line.startsWith('data:')) {
-                            const payload = line.slice(5).trim();
-                            if (payload) {
-                                try { this._handleData(JSON.parse(payload)); }
-                                catch (e) {}
-                            }
-                        }
-                    }
+                    headers: this.headers,
+                    signal: this.controller.signal,
+                    idleTimeout: this.timeout,
+                })) {
+                    const d = evt.data;
+                    if (d && typeof d === 'object') this._handleData(d);
+                    else if (typeof d === 'string') { try { this._handleData(JSON.parse(d)); } catch (e) {} }
                 }
                 this.onDone(this.itemCount);
             } catch (error) {
-                if (error.name === 'AbortError') {
-                    if (timedOut) { this.onError('响应超时，请重试'); }
-                    else { this.onDone(this.itemCount); }
+                if (error && error.name === 'AbortError') {
+                    this.onDone(this.itemCount);
                 } else {
-                    this.onError(error.message || '网络错误');
+                    let msg = (error && error.message) || '网络错误';
+                    const m = /^HTTP \d+ (.*)$/s.exec(msg);
+                    if (m) {
+                        try {
+                            const d = JSON.parse(m[1]);
+                            if (d && (d.message || d.detail)) msg = d.message || d.detail;
+                        } catch (e) {}
+                    }
+                    this.onError(msg);
                 }
             } finally {
-                if (idleTimer) clearTimeout(idleTimer);
                 this.controller = null;
             }
         }
