@@ -70,9 +70,10 @@
         resetWatchdog();
 
         try {
+            const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
             const resp = await fetch(url, {
                 method,
-                headers: auth ? authHeaders(headers) : headers,
+                headers: auth ? authHeaders(headers, isFormData) : headers,
                 body,
                 signal: ctrl.signal,
             });
@@ -171,6 +172,7 @@
             headers = null,
             method = 'GET',
             body = null,
+            auth = false,
             idleTimeout = DEFAULT_IDLE_TIMEOUT,
             maxRetries = 2,
             backoffBase = 1000,
@@ -182,6 +184,8 @@
         } = options;
         const fullUrl = (pathPrefix && url.charAt(0) === '/' && window.PATH_PREFIX)
             ? window.PATH_PREFIX + url : url;
+        const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+        const reqHeaders = auth ? authHeaders(headers, isFormData) : headers;
 
         let closed = false;
         let stopping = false;
@@ -217,7 +221,7 @@
             armIdle();
             (async () => {
                 try {
-                    const resp = await fetch(fullUrl, { method, headers, body, signal: ctrl.signal });
+                    const resp = await fetch(fullUrl, { method, headers: reqHeaders, body, signal: ctrl.signal });
                     if (!resp.ok || !resp.body) {
                         finish({ type: 'error', message: '连接失败(' + resp.status + ')' });
                         return;
@@ -250,13 +254,18 @@
         };
     }
 
-    // 认证头单源（r114 收归）：post/consume 传 auth:true 即自动取双介质 token 拼 Bearer，业务侧不再手拼。
+    // 认证头单源（r114 收归）：post/consume/subscribe 传 auth:true 即自动取双介质 token 拼 Bearer，业务侧不再手拼。
     // 只合并头，不改变 401 语义——onUnauthorized/clearAuth 仍由调用方按需传入。
-    function authHeaders(headers) {
+    // skipContentType=true 时省去 Content-Type 基础头：FormData/multipart 体必须让浏览器
+    // 自带 boundary，强设 application/json 会破坏请求体（S17 判据）。
+    function authHeaders(headers, skipContentType) {
         const token = (window.NexusUtils && typeof window.NexusUtils.authToken === 'function')
             ? window.NexusUtils.authToken() : '';
+        const base = skipContentType
+            ? { 'Accept': 'text/event-stream' }
+            : { 'Content-Type': 'application/json', 'Accept': 'text/event-stream' };
         return Object.assign(
-            { 'Content-Type': 'application/json', 'Accept': 'text/event-stream' },
+            base,
             token ? { Authorization: 'Bearer ' + token } : null,
             headers || null
         );

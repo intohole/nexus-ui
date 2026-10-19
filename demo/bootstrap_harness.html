@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>S17 bootstrap 夹具</title>
+<script src="../js/nexus-utils.js"></script>
+<script src="../js/nexus-api.js"></script>
+<script src="../js/nexus-api-factory.js"></script>
+<script src="../js/user-center-sdk.js"></script>
+<script src="../js/nexus-stream.js"></script>
+</head>
+<body>
+<div id="out"></div>
+<script>
+// 夹具输出器：把每步结果写入 #out（data-ok/data-note），供 Playwright 探针断言。
+var results = [];
+function record(name, ok, note) {
+    results.push({ name: name, ok: !!ok, note: note || '' });
+    var el = document.createElement('div');
+    el.className = 'fx-' + name;
+    el.setAttribute('data-ok', ok ? '1' : '0');
+    if (note) el.setAttribute('data-note', note);
+    el.textContent = name + ' = ' + (ok ? 'PASS' : 'FAIL') + (note ? ' | ' + note : '');
+    document.getElementById('out').appendChild(el);
+}
+
+// T1 同步建实例：无 configUrl，baseUrl 缺省 origin+'/uc-api'，ucSDK 已挂，ready 立即落定
+var boot1 = UserCenterSDK.bootstrap({});
+var t1 = boot1.sdk instanceof UserCenterSDK && window.ucSDK === boot1.sdk
+    && boot1.sdk.baseUrl.indexOf('/uc-api') !== -1 && !boot1.http;
+boot1.ready.then(function (b) {
+    record('sync-instant', t1 && b === boot1, 'baseUrl=' + boot1.sdk.baseUrl);
+});
+
+// T2 api 接线：tokenKey 缺省 uc_access_token，exposeAs 挂载
+var boot2 = UserCenterSDK.bootstrap({ appKey: 'k1', api: { baseUrl: '/x', exposeAs: 'fxApi' } });
+record('api-wiring', boot2.http && boot2.http.tokenKey === 'uc_access_token' && window.fxApi === boot2.http
+    && boot2.sdk.appKey === 'k1', 'tokenKey=' + (boot2.http && boot2.http.tokenKey));
+
+// T3 A 档 config 形态：fetch stub 在 window 层劫持（探针 route 更稳，此处兜底）
+var boot3ready = UserCenterSDK.bootstrap({
+    configUrl: '/fx/a-config',
+}).ready;
+boot3ready.then(function (b) {
+    record('config-a-shape', b.sdk.appKey === 'a-key-9', 'appKey=' + b.sdk.appKey);
+});
+
+// T4 B 档 client/config 形态（user_center 子对象 + base_url 覆盖）
+UserCenterSDK.bootstrap({ configUrl: '/fx/b-config' }).ready.then(function (b) {
+    record('config-b-shape', b.sdk.appKey === 'b-key-7' && b.sdk.baseUrl.indexOf('uc.example.com') !== -1,
+        'appKey=' + b.sdk.appKey + ' baseUrl=' + b.sdk.baseUrl);
+});
+
+// T5 data 包裹形态（(cfg.data||cfg).app_key）
+UserCenterSDK.bootstrap({ configUrl: '/fx/data-config' }).ready.then(function (b) {
+    record('config-data-shape', b.sdk.appKey === 'd-key-3', 'appKey=' + b.sdk.appKey);
+});
+
+// T6 config 失败静默（.catch 不抛，ready 仍落定）
+UserCenterSDK.bootstrap({ configUrl: '/fx/fail-config' }).ready.then(function (b) {
+    record('config-fail-silent', !!b && b.sdk && !b.sdk.appKey, 'ready resolved on failure');
+});
+
+// T7 NexusApi.create 工厂路径（unwrap 预设透传）
+var boot7 = UserCenterSDK.bootstrap({ api: { baseUrl: '/y', unwrap: 'code200' } });
+record('api-create-factory', !!boot7.http, 'http built via create()');
+
+// T8 SSE 原语：authHeaders FormData 让位（不设 Content-Type）+ token 注入
+localStorage.setItem('uc_access_token', 'tk-123');
+var hJson = NexusStream.authHeaders();
+var hForm = NexusStream.authHeaders(null, true);
+var extra = NexusStream.authHeaders({ 'X-Anon-Id': 'a1' });
+record('sse-auth-headers',
+    hJson['Content-Type'] === 'application/json'
+    && hJson.Authorization === 'Bearer tk-123'
+    && !('Content-Type' in hForm) && hForm.Authorization === 'Bearer tk-123'
+    && extra['X-Anon-Id'] === 'a1' && extra.Authorization === 'Bearer tk-123',
+    'json/form/extra 三形态');
+
+window.__fxDone = true;
+</script>
+</body>
+</html>

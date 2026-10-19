@@ -1836,9 +1836,10 @@
         resetWatchdog();
 
         try {
+            const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
             const resp = await fetch(url, {
                 method,
-                headers: auth ? authHeaders(headers) : headers,
+                headers: auth ? authHeaders(headers, isFormData) : headers,
                 body,
                 signal: ctrl.signal,
             });
@@ -1937,6 +1938,7 @@
             headers = null,
             method = 'GET',
             body = null,
+            auth = false,
             idleTimeout = DEFAULT_IDLE_TIMEOUT,
             maxRetries = 2,
             backoffBase = 1000,
@@ -1948,6 +1950,8 @@
         } = options;
         const fullUrl = (pathPrefix && url.charAt(0) === '/' && window.PATH_PREFIX)
             ? window.PATH_PREFIX + url : url;
+        const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+        const reqHeaders = auth ? authHeaders(headers, isFormData) : headers;
 
         let closed = false;
         let stopping = false;
@@ -1983,7 +1987,7 @@
             armIdle();
             (async () => {
                 try {
-                    const resp = await fetch(fullUrl, { method, headers, body, signal: ctrl.signal });
+                    const resp = await fetch(fullUrl, { method, headers: reqHeaders, body, signal: ctrl.signal });
                     if (!resp.ok || !resp.body) {
                         finish({ type: 'error', message: '连接失败(' + resp.status + ')' });
                         return;
@@ -2016,13 +2020,18 @@
         };
     }
 
-    // 认证头单源（r114 收归）：post/consume 传 auth:true 即自动取双介质 token 拼 Bearer，业务侧不再手拼。
+    // 认证头单源（r114 收归）：post/consume/subscribe 传 auth:true 即自动取双介质 token 拼 Bearer，业务侧不再手拼。
     // 只合并头，不改变 401 语义——onUnauthorized/clearAuth 仍由调用方按需传入。
-    function authHeaders(headers) {
+    // skipContentType=true 时省去 Content-Type 基础头：FormData/multipart 体必须让浏览器
+    // 自带 boundary，强设 application/json 会破坏请求体（S17 判据）。
+    function authHeaders(headers, skipContentType) {
         const token = (window.NexusUtils && typeof window.NexusUtils.authToken === 'function')
             ? window.NexusUtils.authToken() : '';
+        const base = skipContentType
+            ? { 'Accept': 'text/event-stream' }
+            : { 'Content-Type': 'application/json', 'Accept': 'text/event-stream' };
         return Object.assign(
-            { 'Content-Type': 'application/json', 'Accept': 'text/event-stream' },
+            base,
             token ? { Authorization: 'Bearer ' + token } : null,
             headers || null
         );
@@ -4846,6 +4855,60 @@ class UserCenterSDK {
         const sdk = new UserCenterSDK({ baseUrl: cfg.baseUrl, appKey: cfg.appKey, silent: true });
         window.ucSDK = sdk;
         return sdk;
+    }
+
+    // UC 引导单源（S17 收归）：应用启动三件套一处完成——SDK 实例化（缺省
+    // origin+'/uc-api'）+ 可选后端 config 端点后台补 appKey/baseUrl + 可选
+    // NexusApi 认证实例接线。返回 { sdk, http, ready }：同步建好并挂
+    // window.ucSDK（构造器默认行为）；ready 在 config 拉取落定（成败皆可）
+    // 后 resolve 返回值本身，供 await 场景（client/config 形态）取终态。
+    // api 为配置对象时逐字段透传（仅 tokenKey 缺省 uc_access_token），
+    // exposeAs 指定挂载名（'NexusApi'/'nxApi'/'api' 等，不传不挂）。
+    static bootstrap(opts = {}) {
+        const sdk = new UserCenterSDK({
+            baseUrl: opts.baseUrl || (location.origin + '/uc-api'),
+            appKey: opts.appKey || '',
+        });
+        let http = null;
+        if (opts.api) {
+            const ApiClass = window.NexusApiClass || (typeof window.NexusApi === 'function' ? window.NexusApi : null);
+            if (ApiClass) {
+                const apiOpts = Object.assign({}, opts.api);
+                if (!apiOpts.tokenKey) apiOpts.tokenKey = TOKEN_KEY;
+                const exposeAs = apiOpts.exposeAs || null;
+                delete apiOpts.exposeAs;
+                http = (typeof ApiClass.create === 'function') ? ApiClass.create(apiOpts) : new ApiClass(apiOpts);
+                if (exposeAs) window[exposeAs] = http;
+            }
+        }
+        const boot = { sdk, http, ready: null };
+        if (opts.configUrl) {
+            boot.ready = fetch(opts.configUrl)
+                .then(r => r.json())
+                .then(cfg => {
+                    const picked = (typeof opts.configPick === 'function')
+                        ? opts.configPick(cfg)
+                        : UserCenterSDK._pickUcConfig(cfg);
+                    if (picked) {
+                        if (picked.baseUrl) sdk.baseUrl = picked.baseUrl.replace(/^https?:\/\//, '//').replace(/\/+$/, '');
+                        if (picked.appKey) sdk.appKey = picked.appKey;
+                    }
+                    return boot;
+                })
+                .catch(() => boot);
+        } else {
+            boot.ready = Promise.resolve(boot);
+        }
+        return boot;
+    }
+
+    static _pickUcConfig(cfg) {
+        if (!cfg) return null;
+        const uc = cfg.user_center || (cfg.data && (cfg.data.user_center || cfg.data)) || cfg;
+        const out = {};
+        if (uc.base_url) out.baseUrl = uc.base_url;
+        if (uc.app_key) out.appKey = uc.app_key;
+        return (out.baseUrl || out.appKey) ? out : null;
     }
 
     static getToken() {

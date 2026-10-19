@@ -576,6 +576,60 @@ class UserCenterSDK {
         return sdk;
     }
 
+    // UC 引导单源（S17 收归）：应用启动三件套一处完成——SDK 实例化（缺省
+    // origin+'/uc-api'）+ 可选后端 config 端点后台补 appKey/baseUrl + 可选
+    // NexusApi 认证实例接线。返回 { sdk, http, ready }：同步建好并挂
+    // window.ucSDK（构造器默认行为）；ready 在 config 拉取落定（成败皆可）
+    // 后 resolve 返回值本身，供 await 场景（client/config 形态）取终态。
+    // api 为配置对象时逐字段透传（仅 tokenKey 缺省 uc_access_token），
+    // exposeAs 指定挂载名（'NexusApi'/'nxApi'/'api' 等，不传不挂）。
+    static bootstrap(opts = {}) {
+        const sdk = new UserCenterSDK({
+            baseUrl: opts.baseUrl || (location.origin + '/uc-api'),
+            appKey: opts.appKey || '',
+        });
+        let http = null;
+        if (opts.api) {
+            const ApiClass = window.NexusApiClass || (typeof window.NexusApi === 'function' ? window.NexusApi : null);
+            if (ApiClass) {
+                const apiOpts = Object.assign({}, opts.api);
+                if (!apiOpts.tokenKey) apiOpts.tokenKey = TOKEN_KEY;
+                const exposeAs = apiOpts.exposeAs || null;
+                delete apiOpts.exposeAs;
+                http = (typeof ApiClass.create === 'function') ? ApiClass.create(apiOpts) : new ApiClass(apiOpts);
+                if (exposeAs) window[exposeAs] = http;
+            }
+        }
+        const boot = { sdk, http, ready: null };
+        if (opts.configUrl) {
+            boot.ready = fetch(opts.configUrl)
+                .then(r => r.json())
+                .then(cfg => {
+                    const picked = (typeof opts.configPick === 'function')
+                        ? opts.configPick(cfg)
+                        : UserCenterSDK._pickUcConfig(cfg);
+                    if (picked) {
+                        if (picked.baseUrl) sdk.baseUrl = picked.baseUrl.replace(/^https?:\/\//, '//').replace(/\/+$/, '');
+                        if (picked.appKey) sdk.appKey = picked.appKey;
+                    }
+                    return boot;
+                })
+                .catch(() => boot);
+        } else {
+            boot.ready = Promise.resolve(boot);
+        }
+        return boot;
+    }
+
+    static _pickUcConfig(cfg) {
+        if (!cfg) return null;
+        const uc = cfg.user_center || (cfg.data && (cfg.data.user_center || cfg.data)) || cfg;
+        const out = {};
+        if (uc.base_url) out.baseUrl = uc.base_url;
+        if (uc.app_key) out.appKey = uc.app_key;
+        return (out.baseUrl || out.appKey) ? out : null;
+    }
+
     static getToken() {
         return getStored(TOKEN_KEY);
     }
