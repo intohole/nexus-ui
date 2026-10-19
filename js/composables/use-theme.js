@@ -10,7 +10,6 @@
 
         const applyTheme = (dark) => {
             document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-            document.documentElement.classList.toggle('light-mode', !dark);
             isDark.value = dark;
         };
 

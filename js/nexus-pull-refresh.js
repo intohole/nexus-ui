@@ -6,7 +6,7 @@
     var SPIN_MS = 700;
 
     function prefersReducedMotion() {
-        return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        return !!(window.NexusUtils && window.NexusUtils.prefersReducedMotion && window.NexusUtils.prefersReducedMotion());
     }
 
     function isTouchEnv() {

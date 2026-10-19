@@ -177,13 +177,14 @@ def c5_current_ref_snapshot() -> tuple[Check, list[str]]:
 
 
 def c6_external_gates() -> Check:
-    c = Check("C6", "外部门禁 check_deps + check_duplication")
+    c = Check("C6", "外部门禁 check_deps + check_duplication + check_component_refs")
     code1, out1 = sh([sys.executable, "check_deps.py"], REPO)
     code2, out2 = sh([sys.executable, "check_duplication.py"], REPO)
+    code3, out3 = sh([sys.executable, "check_component_refs.py"], REPO)
     m = re.search(r"异常文件 (\d+) 个", out1)
     n_bad = int(m.group(1)) if m else -1
-    c.ok = code1 == 0 and code2 == 0 and n_bad == 0
-    c.detail = f"check_deps exit={code1} 异常 {n_bad}, check_duplication exit={code2}"
+    c.ok = code1 == 0 and code2 == 0 and code3 == 0 and n_bad == 0
+    c.detail = f"check_deps exit={code1} 异常 {n_bad}, check_duplication exit={code2}, component_refs exit={code3}"
     return c
 
 

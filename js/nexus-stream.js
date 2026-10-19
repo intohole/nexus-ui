@@ -46,6 +46,7 @@
         const {
             body,
             headers,
+            auth = false,
             signal = null,
             idleTimeout = DEFAULT_IDLE_TIMEOUT,
             onUnauthorized = null,
@@ -71,7 +72,7 @@
         try {
             const resp = await fetch(url, {
                 method,
-                headers,
+                headers: auth ? authHeaders(headers) : headers,
                 body,
                 signal: ctrl.signal,
             });
@@ -249,5 +250,17 @@
         };
     }
 
-    window.NexusStream = { post, read, consume, subscribe };
+    // 认证头单源（r114 收归）：post/consume 传 auth:true 即自动取双介质 token 拼 Bearer，业务侧不再手拼。
+    // 只合并头，不改变 401 语义——onUnauthorized/clearAuth 仍由调用方按需传入。
+    function authHeaders(headers) {
+        const token = (window.NexusUtils && typeof window.NexusUtils.authToken === 'function')
+            ? window.NexusUtils.authToken() : '';
+        return Object.assign(
+            { 'Content-Type': 'application/json', 'Accept': 'text/event-stream' },
+            token ? { Authorization: 'Bearer ' + token } : null,
+            headers || null
+        );
+    }
+
+    window.NexusStream = { post, read, consume, subscribe, authHeaders };
 })();

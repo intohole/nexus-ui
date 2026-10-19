@@ -159,12 +159,7 @@
 
         formatMsg(content) {
             if (!content) return '';
-            let html = String(content)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
+            let html = window.NexusUtils.escapeHtml(String(content));
             const codeBlocks = [];
             html = html.replace(/```([\s\S]*?)```/g, (m, code) => {
                 codeBlocks.push(code.replace(/^\n/, ''));

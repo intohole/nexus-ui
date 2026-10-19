@@ -52,6 +52,10 @@
             keys.forEach(key => delete result[key]);
             return result;
         },
+
+        sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        },
     });
 })();
 
@@ -217,12 +221,7 @@
 
         formatMsg(content) {
             if (!content) return '';
-            let html = String(content)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
+            let html = window.NexusUtils.escapeHtml(String(content));
             const codeBlocks = [];
             html = html.replace(/```([\s\S]*?)```/g, (m, code) => {
                 codeBlocks.push(code.replace(/^\n/, ''));
@@ -522,16 +521,29 @@
             return utils.prefersReducedMotion() ? 0 : ms;
         },
 
+        // 悬浮件滚动礼让单源：默认 body 类切换；target 指定则类挂在元素上（如平台浮标 .nxs-trigger），
+        // fadeTo 指定则改用透明度淡出（元素无礼让类可用时）。prefers-reduced-motion 用户跳过（r114 扩展）。
         installDockYield(opts = {}) {
             const bodyClass = opts.bodyClass || 'nx-dock-yield';
             const idleMs = opts.idleMs || 1100;
+            const targetSel = opts.target || null;
+            const fadeTo = opts.fadeTo;
             if (utils.__dockYieldInstalled) return;
+            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
             utils.__dockYieldInstalled = true;
             let timer = null;
             document.addEventListener('scroll', () => {
-                document.body.classList.add(bodyClass);
-                clearTimeout(timer);
-                timer = setTimeout(() => document.body.classList.remove(bodyClass), idleMs);
+                const node = targetSel ? document.querySelector(targetSel) : document.body;
+                if (!node) return;
+                if (fadeTo !== undefined) {
+                    node.style.opacity = String(fadeTo);
+                    clearTimeout(timer);
+                    timer = setTimeout(() => { node.style.opacity = '1'; }, idleMs);
+                } else {
+                    node.classList.add(bodyClass);
+                    clearTimeout(timer);
+                    timer = setTimeout(() => { node.classList.remove(bodyClass); }, idleMs);
+                }
             }, { passive: true, capture: true });
         },
     });

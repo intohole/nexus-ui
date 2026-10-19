@@ -14,7 +14,8 @@ import sys
 
 CORE = {
     "nexus-utils", "nexus-validators", "nexus-api-error", "nexus-api",
-    "nexus-markdown", "nexus-chat", "nexus-structured", "nexus-store", "nexus-crud",
+    "nexus-api-factory", "nexus-overlay-host", "nexus-stream",
+    "nexus-markdown", "nexus-chat", "nexus-structured", "nexus-crud",
     "nexus-mobile", "user-center-sdk",
 }
 _SKIP_DIRS = {".git", "node_modules", "vendor", "__pycache__", "data"}

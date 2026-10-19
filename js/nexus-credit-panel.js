@@ -3,7 +3,6 @@
     if (window.NexusCreditPanel) return;
 
     var ROOT_ID = 'nux-credit-panel-root';
-    var TOKEN_KEYS = ['uc_access_token', 'siwu_uc_access_token', 'uc_token'];
     var CARD_402_THROTTLE_MS = 4000;
     var last402At = 0;
 
@@ -12,13 +11,7 @@
     }
 
     function readToken() {
-        for (var i = 0; i < TOKEN_KEYS.length; i++) {
-            try {
-                var v = sessionStorage.getItem(TOKEN_KEYS[i]) || localStorage.getItem(TOKEN_KEYS[i]);
-                if (v) return v;
-            } catch (e) {}
-        }
-        return '';
+        return (window.NexusUtils && window.NexusUtils.authToken) ? window.NexusUtils.authToken() : '';
     }
 
     function api(method, path, body) {
@@ -48,9 +41,9 @@
     }
 
     function esc(s) {
-        return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
-            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-        });
+        return (window.NexusUtils && window.NexusUtils.escapeHtml)
+            ? window.NexusUtils.escapeHtml(s)
+            : String(s == null ? '' : s);
     }
 
     function fmt(n) {

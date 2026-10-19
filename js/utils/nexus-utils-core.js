@@ -46,5 +46,9 @@
             keys.forEach(key => delete result[key]);
             return result;
         },
+
+        sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        },
     });
 })();

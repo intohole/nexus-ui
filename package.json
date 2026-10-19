@@ -1,6 +1,6 @@
 {
   "name": "nexus-ui",
-  "version": "2.70.7",
+  "version": "2.70.8",
   "description": "Nexus Design System — 统一前端基础设施，Vue 3 CDN 全局模式",
   "main": "css/nexus-all.css",
   "files": [
@@ -22,10 +22,10 @@
     "url": "https://github.com/intohole/nexus-ui"
   },
   "structure": {
-    "css/": "nexus-all.css 为 @import 聚合入口（tokens/base/motion/themes/mobile/components-*/layout/side-panel/markdown/chat/ai-chat/conversation-list）",
+    "css/": "nexus-all.css 为 build_all.py 确定性单文件拼接（tokens/base/motion/themes/mobile/components-*/layout/side-panel/markdown/chat/ai-chat），单请求无瀑布",
     "js/": "nexus-all.js 为 build_all.py 确定性聚合产物（核心库 + 组件注册表 nexus-components.js），nux-* 组件与 composables 保持独立引用",
     "js/nexus-components.js": "NexusComponents.register(app) 统一注册入口：一次注册全部已加载的 nux-* 组件，替代各应用手写 app.component 注册块",
-    "js/components/": "69 个 nux-* 组件，完整清单与用法见 llms.txt（唯一事实源）",
+    "js/components/": "70 个 nux-* 组件，完整清单与用法见 llms.txt（唯一事实源）",
     "js/composables/": "use-mobile / use-theme / use-recent"
   },
   "usage": {

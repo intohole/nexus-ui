@@ -16,12 +16,14 @@
         'nux-avatar': 'NuxAvatar',
         'nux-backtop': 'NuxBacktop',
         'nux-bottom-nav': 'NuxBottomNav',
+        'nux-button': 'NuxButton',
         'nux-camera-recognize': 'NuxCameraRecognize',
         'nux-calendar': 'NuxCalendar',
         'nux-checkbox': 'NuxCheckbox',
         'nux-checkin': 'NuxCheckin',
         'nux-chip-group': 'NuxChipGroup',
         'nux-clarify-card': 'NuxClarifyCard',
+        'nux-conversation-list': 'NuxConversationList',
                 'nux-drawer': 'NuxDrawer',
         'nux-empty-state': 'NuxEmptyState',
         'nux-error-state': 'NuxErrorState',
@@ -39,11 +41,13 @@
         'nux-menu-user': 'NuxMenuUser',
         'nux-modal': 'NuxModal',
         'nux-notification-bell': 'NuxNotificationBell',
+        'nux-notification-panel': 'NuxNotificationPanel',
         'nux-onboarding': 'NuxOnboarding',
         'nux-onboarding-strip': 'NuxOnboardingStrip',
         'nux-pagination': 'NuxPagination',
         'nux-poster': 'NuxPoster',
         'nux-progress': 'NuxProgress',
+        'nux-result-view': 'NuxResultView',
         'nux-search-box': 'NuxSearchBox',
         'nux-section': 'NuxSection',
         'nux-segmented': 'NuxSegmented',
@@ -55,6 +59,7 @@
         'nux-skeleton': 'NuxSkeleton',
                         'nux-stat-card': 'NuxStatCard',
         'nux-switch': 'NuxSwitch',
+        'nux-swipe-actions': 'NuxSwipeActions',
         'nux-tab-group': 'NuxTabGroup',
         'nux-tag': 'NuxTag',
         'nux-textarea': 'NuxTextarea',
@@ -86,6 +91,7 @@
             return registered;
         }
         Object.keys(COMPONENTS).forEach(function (tag) {
+            if (app.component(tag)) { registered.push(tag); return; }
             var def = window[COMPONENTS[tag]];
             if (isComponent(def)) {
                 app.component(tag, def);

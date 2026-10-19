@@ -80,8 +80,12 @@
         },
 
         clearStaleAuth() {
-            const keys = ['uc_access_token', 'uc_refresh_token', 'uc_token_expires_at', 'uc_token', 'access_token', 'refresh_token', 'user'];
-            keys.forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
+            if (window.NexusUtils && typeof window.NexusUtils.clearAuthState === 'function') {
+                window.NexusUtils.clearAuthState();
+            }
+            ['uc_token', 'access_token', 'refresh_token', 'user'].forEach(function (k) {
+                try { localStorage.removeItem(k); } catch (e) {}
+            });
         },
 
         bindSsoGuard() {
@@ -102,19 +106,9 @@
 
         registerCoreComponents(app) {
             if (!app || !app.component) return;
-            const map = {
-                'nux-ai-badge': window.NuxAiBadge,
-                'nux-error-state': window.NuxErrorState,
-                'nux-skeleton': window.NuxSkeleton,
-                'nux-empty-state': window.NuxEmptyState,
-                'nux-ai-indicator': window.NuxAiIndicator
-            };
-            Object.keys(map).forEach(function (name) {
-                const comp = map[name];
-                if (comp && !app.component(name)) {
-                    try { app.component(name, comp); } catch (e) {}
-                }
-            });
+            if (window.NexusComponents && typeof window.NexusComponents.register === 'function') {
+                window.NexusComponents.register(app);
+            }
         },
 
         install(app) {

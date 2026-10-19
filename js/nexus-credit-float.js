@@ -9,20 +9,13 @@
     var MAX_FAILURES = 5;
     var REQUEST_TIMEOUT_MS = 8000;
     var ROOT_ID = 'nux-credit-float-root';
-    var TOKEN_KEYS = ['uc_access_token', 'siwu_uc_access_token', 'uc_token'];
 
     function ucBase() {
         return window.NEXUS_UC_BASE || '/uc-api';
     }
 
     function readToken() {
-        for (var i = 0; i < TOKEN_KEYS.length; i++) {
-            try {
-                var v = sessionStorage.getItem(TOKEN_KEYS[i]) || localStorage.getItem(TOKEN_KEYS[i]);
-                if (v) return v;
-            } catch (e) {}
-        }
-        return '';
+        return (window.NexusUtils && window.NexusUtils.authToken) ? window.NexusUtils.authToken() : '';
     }
 
     function shouldSkipPage() {

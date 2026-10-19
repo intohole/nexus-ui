@@ -35,6 +35,7 @@ MAX_LINE_LEN = 3000
 # 仅豁免已明确记录的单条命中，不豁免整个文件，避免掩盖后续新增违规。
 # r57：mobile-base 十条例外全部摘牌（8 仓改名/裁剪/迁移完成），现为空表占位。
 KNOWN_EXCEPTIONS: dict[str, str] = {
+    "truemirror/static/js/report-nav.js#intersection-observer": "多元素视口可见性追踪（tm-chart-inview body 类切换），非滚动加载观察器；含 observe 集合增删与 document.contains 剪枝的生命周期管理，共享包装层不会更简（r114 定性）。若后续出现第二处同形态需求，再收归 NexusUtils.onIntersect",
     "miniDeploy/static/css/iframe.css#raw-vh-calc": "miniDeploy 管理台为桌面基建工具，不加载 nexus-ui 且无移动端动线，100vh 语义正确不直替（r64 定性）",
     "miniDeploy/static/css/terminal.css#raw-vh-calc": "miniDeploy 管理台为桌面基建工具，不加载 nexus-ui 且无移动端动线，100vh 语义正确不直替（r64 定性）",
     "jinnang-app/src/api/agent.js#sse-reader": "uniapp App 端运行时无标准 EventSource/SSE，手写 UTF8 流式解码是平台约束（jinnang R1 记忆在案），NexusStream 依赖浏览器 SSE 不可用于该端",

@@ -14,9 +14,7 @@
         this._confirmId = null; this._confirmTimer = null;
     }
     NuxNotificationPanel.prototype._esc = function (v) {
-        var d = document.createElement('div');
-        d.textContent = String(v == null ? '' : v);
-        return d.innerHTML;
+        return window.NexusUtils ? window.NexusUtils.escapeHtml(v) : String(v == null ? '' : v);
     };
     NuxNotificationPanel.prototype._getApi = function () {
         if (!this._api) this._api = new NexusApi({ baseUrl: '', tokenKey: this._tokenKey });

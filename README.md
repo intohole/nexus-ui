@@ -38,16 +38,15 @@ Nexus UI（Nexus Design System）是一套基于 Vue 3 CDN 全局模式的前端
 > 分发主源为 `https://songguokr.com/nexus-ui/v<版本>/`（版本化 URL 是前缀重写，始终指向当前最新版）。下方以 jsDelivr 镜像为例，镜像依赖 GitHub tag，若 tag 缺失请改用主源。
 
 ```html
-<link rel="stylesheet" href="https://songguokr.com/nexus-ui/v2.70.7/css/nexus-all.css">
+<link rel="stylesheet" href="https://songguokr.com/nexus-ui/v2.70.8/css/nexus-all.css">
 ```
 
 ### JS 引入（Vue 3 之后，基础工具最先引入）
 
 ```html
-<script src="https://songguokr.com/nexus-ui/v2.70.7/js/nexus-utils.js"></script>
-<script src="https://songguokr.com/nexus-ui/v2.70.7/js/nexus-api.js"></script>
-<script src="https://songguokr.com/nexus-ui/v2.70.7/js/nexus-crud.js"></script>
-<script src="https://songguokr.com/nexus-ui/v2.70.7/js/nexus-store.js"></script>
+<script src="https://songguokr.com/nexus-ui/v2.70.8/js/nexus-utils.js"></script>
+<script src="https://songguokr.com/nexus-ui/v2.70.8/js/nexus-api.js"></script>
+<script src="https://songguokr.com/nexus-ui/v2.70.8/js/nexus-crud.js"></script>
 ```
 
 ### 主题切换
@@ -68,11 +67,9 @@ const api = new NexusApi({ baseUrl: '/api/v1', tokenKey: 'token' });
 await api.get('/notes');
 await api.createCrud('/notes'); // 返回 create/list/get/update/delete
 
-const store = new NexusStore({ notes: [] }, { persistKeys: ['token', 'user'] });
-
 // 组件注册（统一入口，禁止逐个 app.component）
 NexusComponents.register(app);
-// 非组件能力：nexus-all.js 已提供 window.showToast / window.nuxConfirm / window.showUnlock
+// 非组件能力：nexus-all.js 已提供 window.showToast / window.nuxConfirm / window.nuxPrompt
 ```
 
 ### 版本一致性校验
@@ -83,19 +80,14 @@ python3 nexus-ui/check_deps.py [工作区根目录]
 
 扫描全工作区，公共库版本与 deps.json 不一致即报错并返回非零退出码。
 
-## 成就解锁与空状态引导组件
-
-成就解锁由 `nexus-overlay-host.js` 内置提供（`nexus-all.js` 已聚合，无需单独引脚本、无需注册组件）：
+## 空状态引导组件
 
 ```html
-<script src="https://songguokr.com/nexus-ui/v2.70.7/js/nexus-overlay-host.js"></script>
-<script src="https://songguokr.com/nexus-ui/v2.70.7/js/components/nux-empty-state.js"></script>
+<script src="https://songguokr.com/nexus-ui/v2.70.8/js/components/nux-empty-state.js"></script>
 ```
 
 ```javascript
-window.showUnlock({ icon: '🏆', title: '首次点亮', desc: '完成第一个里程碑' }); // 成就解锁庆祝卡片
-
-app.component('nux-empty-state', window.NuxEmptyState); // 或直接用 NexusComponents.register(app)
+NexusComponents.register(app); // 一次注册全部已加载组件（含 nux-empty-state）
 ```
 
 ```html
@@ -122,8 +114,8 @@ await NexusUtils.copyText(text, { success: '已复制', fail: '复制失败' });
 统一「AI/接口返回结构化数据 → 表格/键值对展示」，自动探测 `{data:[...]}` 数组为表格（带 summary）、纯键值对象为 KV 列表、其余回退原始 `pre`。替代过去各项目在工具调用结果里手写同一套 table/kv 渲染模板。
 
 ```html
-<script src="https://songguokr.com/nexus-ui/v2.70.7/js/nexus-structured.js"></script>
-<script src="https://songguokr.com/nexus-ui/v2.70.7/js/components/nux-result-view.js"></script>
+<script src="https://songguokr.com/nexus-ui/v2.70.8/js/nexus-structured.js"></script>
+<script src="https://songguokr.com/nexus-ui/v2.70.8/js/components/nux-result-view.js"></script>
 ```
 
 ```javascript
@@ -155,7 +147,6 @@ nexus-ui/
 │   ├── nexus-crud.js           # 通用 CRUD 工厂与 useCrud
 │   ├── nexus-markdown.js       # Markdown 安全渲染
 │   ├── nexus-chat.js           # AI 对话工具集
-│   ├── nexus-store.js          # Vue 3 响应式持久化状态
 │   ├── nexus-mobile.js         # 移动端基础设施
 │   ├── nexus-validators.js     # 表单验证器
 │   ├── user-center-sdk.js      # 用户中心 SDK

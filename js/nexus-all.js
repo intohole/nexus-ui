@@ -47,6 +47,10 @@
             keys.forEach(key => delete result[key]);
             return result;
         },
+
+        sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        },
     });
 })();
 
@@ -212,12 +216,7 @@
 
         formatMsg(content) {
             if (!content) return '';
-            let html = String(content)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
+            let html = window.NexusUtils.escapeHtml(String(content));
             const codeBlocks = [];
             html = html.replace(/```([\s\S]*?)```/g, (m, code) => {
                 codeBlocks.push(code.replace(/^\n/, ''));
@@ -517,16 +516,29 @@
             return utils.prefersReducedMotion() ? 0 : ms;
         },
 
+        // 悬浮件滚动礼让单源：默认 body 类切换；target 指定则类挂在元素上（如平台浮标 .nxs-trigger），
+        // fadeTo 指定则改用透明度淡出（元素无礼让类可用时）。prefers-reduced-motion 用户跳过（r114 扩展）。
         installDockYield(opts = {}) {
             const bodyClass = opts.bodyClass || 'nx-dock-yield';
             const idleMs = opts.idleMs || 1100;
+            const targetSel = opts.target || null;
+            const fadeTo = opts.fadeTo;
             if (utils.__dockYieldInstalled) return;
+            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
             utils.__dockYieldInstalled = true;
             let timer = null;
             document.addEventListener('scroll', () => {
-                document.body.classList.add(bodyClass);
-                clearTimeout(timer);
-                timer = setTimeout(() => document.body.classList.remove(bodyClass), idleMs);
+                const node = targetSel ? document.querySelector(targetSel) : document.body;
+                if (!node) return;
+                if (fadeTo !== undefined) {
+                    node.style.opacity = String(fadeTo);
+                    clearTimeout(timer);
+                    timer = setTimeout(() => { node.style.opacity = '1'; }, idleMs);
+                } else {
+                    node.classList.add(bodyClass);
+                    clearTimeout(timer);
+                    timer = setTimeout(() => { node.classList.remove(bodyClass); }, idleMs);
+                }
             }, { passive: true, capture: true });
         },
     });
@@ -1800,6 +1812,7 @@
         const {
             body,
             headers,
+            auth = false,
             signal = null,
             idleTimeout = DEFAULT_IDLE_TIMEOUT,
             onUnauthorized = null,
@@ -1825,7 +1838,7 @@
         try {
             const resp = await fetch(url, {
                 method,
-                headers,
+                headers: auth ? authHeaders(headers) : headers,
                 body,
                 signal: ctrl.signal,
             });
@@ -2003,7 +2016,19 @@
         };
     }
 
-    window.NexusStream = { post, read, consume, subscribe };
+    // 认证头单源（r114 收归）：post/consume 传 auth:true 即自动取双介质 token 拼 Bearer，业务侧不再手拼。
+    // 只合并头，不改变 401 语义——onUnauthorized/clearAuth 仍由调用方按需传入。
+    function authHeaders(headers) {
+        const token = (window.NexusUtils && typeof window.NexusUtils.authToken === 'function')
+            ? window.NexusUtils.authToken() : '';
+        return Object.assign(
+            { 'Content-Type': 'application/json', 'Accept': 'text/event-stream' },
+            token ? { Authorization: 'Bearer ' + token } : null,
+            headers || null
+        );
+    }
+
+    window.NexusStream = { post, read, consume, subscribe, authHeaders };
 })();
 
 /* ===== nexus-api.js ===== */
@@ -3755,7 +3780,7 @@
     var SPIN_MS = 700;
 
     function prefersReducedMotion() {
-        return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        return !!(window.NexusUtils && window.NexusUtils.prefersReducedMotion && window.NexusUtils.prefersReducedMotion());
     }
 
     function isTouchEnv() {
@@ -3913,12 +3938,14 @@
         'nux-avatar': 'NuxAvatar',
         'nux-backtop': 'NuxBacktop',
         'nux-bottom-nav': 'NuxBottomNav',
+        'nux-button': 'NuxButton',
         'nux-camera-recognize': 'NuxCameraRecognize',
         'nux-calendar': 'NuxCalendar',
         'nux-checkbox': 'NuxCheckbox',
         'nux-checkin': 'NuxCheckin',
         'nux-chip-group': 'NuxChipGroup',
         'nux-clarify-card': 'NuxClarifyCard',
+        'nux-conversation-list': 'NuxConversationList',
                 'nux-drawer': 'NuxDrawer',
         'nux-empty-state': 'NuxEmptyState',
         'nux-error-state': 'NuxErrorState',
@@ -3936,11 +3963,13 @@
         'nux-menu-user': 'NuxMenuUser',
         'nux-modal': 'NuxModal',
         'nux-notification-bell': 'NuxNotificationBell',
+        'nux-notification-panel': 'NuxNotificationPanel',
         'nux-onboarding': 'NuxOnboarding',
         'nux-onboarding-strip': 'NuxOnboardingStrip',
         'nux-pagination': 'NuxPagination',
         'nux-poster': 'NuxPoster',
         'nux-progress': 'NuxProgress',
+        'nux-result-view': 'NuxResultView',
         'nux-search-box': 'NuxSearchBox',
         'nux-section': 'NuxSection',
         'nux-segmented': 'NuxSegmented',
@@ -3952,6 +3981,7 @@
         'nux-skeleton': 'NuxSkeleton',
                         'nux-stat-card': 'NuxStatCard',
         'nux-switch': 'NuxSwitch',
+        'nux-swipe-actions': 'NuxSwipeActions',
         'nux-tab-group': 'NuxTabGroup',
         'nux-tag': 'NuxTag',
         'nux-textarea': 'NuxTextarea',
@@ -3983,6 +4013,7 @@
             return registered;
         }
         Object.keys(COMPONENTS).forEach(function (tag) {
+            if (app.component(tag)) { registered.push(tag); return; }
             var def = window[COMPONENTS[tag]];
             if (isComponent(def)) {
                 app.component(tag, def);
@@ -4858,20 +4889,13 @@ try {
     var MAX_FAILURES = 5;
     var REQUEST_TIMEOUT_MS = 8000;
     var ROOT_ID = 'nux-credit-float-root';
-    var TOKEN_KEYS = ['uc_access_token', 'siwu_uc_access_token', 'uc_token'];
 
     function ucBase() {
         return window.NEXUS_UC_BASE || '/uc-api';
     }
 
     function readToken() {
-        for (var i = 0; i < TOKEN_KEYS.length; i++) {
-            try {
-                var v = sessionStorage.getItem(TOKEN_KEYS[i]) || localStorage.getItem(TOKEN_KEYS[i]);
-                if (v) return v;
-            } catch (e) {}
-        }
-        return '';
+        return (window.NexusUtils && window.NexusUtils.authToken) ? window.NexusUtils.authToken() : '';
     }
 
     function shouldSkipPage() {
@@ -5161,7 +5185,6 @@ try {
     if (window.NexusCreditPanel) return;
 
     var ROOT_ID = 'nux-credit-panel-root';
-    var TOKEN_KEYS = ['uc_access_token', 'siwu_uc_access_token', 'uc_token'];
     var CARD_402_THROTTLE_MS = 4000;
     var last402At = 0;
 
@@ -5170,13 +5193,7 @@ try {
     }
 
     function readToken() {
-        for (var i = 0; i < TOKEN_KEYS.length; i++) {
-            try {
-                var v = sessionStorage.getItem(TOKEN_KEYS[i]) || localStorage.getItem(TOKEN_KEYS[i]);
-                if (v) return v;
-            } catch (e) {}
-        }
-        return '';
+        return (window.NexusUtils && window.NexusUtils.authToken) ? window.NexusUtils.authToken() : '';
     }
 
     function api(method, path, body) {
@@ -5206,9 +5223,9 @@ try {
     }
 
     function esc(s) {
-        return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
-            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-        });
+        return (window.NexusUtils && window.NexusUtils.escapeHtml)
+            ? window.NexusUtils.escapeHtml(s)
+            : String(s == null ? '' : s);
     }
 
     function fmt(n) {
@@ -6070,6 +6087,54 @@ try {
     }
 })();
 
+/* ===== components/nux-result-view.js ===== */
+(function () {
+    'use strict';
+
+    window.NexusUtils && NexusUtils.injectStyle('nrv-css', [
+            '.nrv { margin-top: 4px; }',
+            '.nrv-summary { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }',
+            '.nrv-summary-item { font-size: 11px; padding: 2px 8px; background: rgba(var(--app-accent-rgb,99,102,241),.08); color: var(--app-accent,#6366f1); border-radius: var(--nx-radius-sm,6px); }',
+            '.nrv-table-wrap { overflow-x: auto; max-height: 220px; overflow-y: auto; background: var(--nx-bg-surface,#fff); border-radius: var(--nx-radius-sm,6px); }',
+            '.nrv-table { width: 100%; border-collapse: collapse; font-size: 11px; }',
+            '.nrv-table th, .nrv-table td { padding: 5px 8px; border: 1px solid var(--nx-border,rgba(0,0,0,.08)); text-align: left; white-space: nowrap; max-width: 240px; overflow: hidden; text-overflow: ellipsis; }',
+            '.nrv-table th { background: var(--nx-bg-muted,#f1f5f9); color: var(--app-accent,#6366f1); font-weight: 600; position: sticky; top: 0; }',
+            '.nrv-table tr:nth-child(even) td { background: var(--nx-bg-muted,#f1f5f9); }',
+            '.nrv-kv-item { display: flex; gap: 8px; padding: 3px 0; font-size: 11px; border-bottom: 1px dashed var(--nx-border,rgba(0,0,0,.08)); }',
+            '.nrv-kv-key { color: var(--nx-text-muted,#94a3b8); flex: 0 0 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
+            '.nrv-kv-val { color: var(--nx-text-body,#334155); word-break: break-word; }'
+        ].join(''));
+
+    const NuxResultView = {
+        name: 'NuxResultView',
+        props: { struct: { type: Object, default: null } },
+        template: `
+            <div v-if="struct" class="nrv">
+                <div v-if="struct.kind === 'table'" class="nrv-table-wrap">
+                    <div v-if="struct.summary" class="nrv-summary">
+                        <span v-for="(v, k) in struct.summary" :key="k" class="nrv-summary-item">{{ k }}: {{ v }}</span>
+                    </div>
+                    <table class="nrv-table">
+                        <thead><tr><th v-for="c in struct.columns" :key="c">{{ c }}</th></tr></thead>
+                        <tbody>
+                            <tr v-for="(r, ri) in struct.rows" :key="ri">
+                                <td v-for="c in struct.columns" :key="c">{{ r[c] }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div v-else-if="struct.kind === 'kv'" class="nrv-kv">
+                    <div v-for="p in struct.pairs" :key="p.k" class="nrv-kv-item">
+                        <span class="nrv-kv-key">{{ p.k }}</span><span class="nrv-kv-val">{{ p.v }}</span>
+                    </div>
+                </div>
+            </div>
+        `
+    };
+
+    window.NuxResultView = NuxResultView;
+})();
+
 /* ===== core/nexus-user.js ===== */
 (function () {
     'use strict';
@@ -6576,8 +6641,12 @@ try {
         },
 
         clearStaleAuth() {
-            const keys = ['uc_access_token', 'uc_refresh_token', 'uc_token_expires_at', 'uc_token', 'access_token', 'refresh_token', 'user'];
-            keys.forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
+            if (window.NexusUtils && typeof window.NexusUtils.clearAuthState === 'function') {
+                window.NexusUtils.clearAuthState();
+            }
+            ['uc_token', 'access_token', 'refresh_token', 'user'].forEach(function (k) {
+                try { localStorage.removeItem(k); } catch (e) {}
+            });
         },
 
         bindSsoGuard() {
@@ -6598,19 +6667,9 @@ try {
 
         registerCoreComponents(app) {
             if (!app || !app.component) return;
-            const map = {
-                'nux-ai-badge': window.NuxAiBadge,
-                'nux-error-state': window.NuxErrorState,
-                'nux-skeleton': window.NuxSkeleton,
-                'nux-empty-state': window.NuxEmptyState,
-                'nux-ai-indicator': window.NuxAiIndicator
-            };
-            Object.keys(map).forEach(function (name) {
-                const comp = map[name];
-                if (comp && !app.component(name)) {
-                    try { app.component(name, comp); } catch (e) {}
-                }
-            });
+            if (window.NexusComponents && typeof window.NexusComponents.register === 'function') {
+                window.NexusComponents.register(app);
+            }
         },
 
         install(app) {
