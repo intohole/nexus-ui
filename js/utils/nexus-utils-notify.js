@@ -11,7 +11,8 @@
             'aipet': '/aipet/', 'lifecompass': '/lifecompass/', 'truemirror': '/truemirror/',
             'suki': '/suki/', 'lyra': '/lyra/', 'codeblock': '/codeblock/',
             'promptgenius': '/promptgenius/', 'financialkg': '/financialkg/',
-            'goldenstock': '/golden/', 'beememory': '/beememory/', 'drawio': '/drawio/'
+            'goldenstock': '/golden/', 'beememory': '/beememory/', 'drawio': '/drawio/',
+            'moutain': '/mountain'
         };
         const APP_LABELS = {
             'resumeai': '跃职', 'challengeplanet': '星轨挑战', 'onenote': '拾光',
@@ -21,7 +22,7 @@
             'lyra': '灵弦', 'nexus-agent': '灵犀', 'promptgenius': '镕裁',
             'financialkg': '知识图谱', 'goldenfish': '金鱼助手',
             'goldenstock': '金股智投', 'golden': '金股智投', 'versecraft': '墨韵创作',
-            'beememory': '蜜蜂记忆', 'minideploy': '部署平台',
+            'beememory': '蜜蜂记忆', 'minideploy': '部署平台', 'moutain': '采薇',
             'userfeedback': '意见反馈', 'usercenter': '钱包',
             'notifycenter': '通知中心', 'system': '系统'
         };
