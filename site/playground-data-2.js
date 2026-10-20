@@ -1,13 +1,49 @@
 (function() {
   window.PG_CATS = window.PG_CATS || [];
 
+  function makeConvApi() {
+    const store = [
+      { id: 'c1', title: '九月的旅行路书', status: 'active', updated_at: new Date(Date.now() - 30 * 60000).toISOString() },
+      { id: 'c2', title: '产品命名头脑风暴', status: 'active', updated_at: new Date(Date.now() - 5 * 3600000).toISOString() },
+      { id: 'c3', title: '周报草稿润色', status: 'active', updated_at: new Date(Date.now() - 26 * 3600000).toISOString() },
+      { id: 'c4', title: '上季度的复盘讨论', status: 'archived', updated_at: new Date(Date.now() - 72 * 3600000).toISOString() }
+    ];
+    return {
+      get(url, params) {
+        if (url.indexOf('/search') >= 0) {
+          const q = String((params && params.q) || '');
+          const hit = store.filter(c => c.title.indexOf(q) >= 0);
+          return Promise.resolve({ data: hit, total: hit.length });
+        }
+        return Promise.resolve({ data: store.slice(), total: store.length });
+      },
+      post(url, body) {
+        const item = { id: 'c' + Date.now(), title: body.title, status: 'active', updated_at: new Date().toISOString() };
+        store.unshift(item);
+        return Promise.resolve({ data: item });
+      },
+      patch(url, body) {
+        const id = url.split('/').pop();
+        const item = store.find(c => c.id === id);
+        if (item) item.status = body.status;
+        return Promise.resolve({ data: item });
+      },
+      delete(url) {
+        const id = url.split('/').pop();
+        const i = store.findIndex(c => c.id === id);
+        if (i >= 0) store.splice(i, 1);
+        return Promise.resolve({ data: { ok: true } });
+      }
+    };
+  }
+
   window.PG_CATS.push({
     id: 'feedback',
     name: '反馈弹层',
     demos: [
       {
         id: 'toast',
-        tag: 'nux-toast',
+        tag: 'showToast',
         title: 'Toast 通知',
         desc: 'showToast 全局函数，四种语义类型',
         tpl: `
@@ -59,7 +95,7 @@
       },
       {
         id: 'confirm',
-        tag: 'nux-confirm',
+        tag: 'nuxConfirm',
         title: '确认对话框',
         desc: 'Promise 风格全局函数，await 得到布尔结果',
         tpl: `
@@ -82,7 +118,7 @@ if (ok) showToast('已删除', 'success');`,
       },
       {
         id: 'prompt',
-        tag: 'nux-prompt',
+        tag: 'nuxPrompt',
         title: '输入对话框',
         desc: 'Promise 风格全局函数，await 得到输入文本（取消为 null），必填校验错误驻留',
         tpl: `
@@ -118,7 +154,7 @@ if (reason !== null) showToast('已驳回', 'success');`,
       },
       {
         id: 'empty-skeleton',
-        tag: 'nux-empty / nux-skeleton',
+        tag: 'nux-empty-state / nux-skeleton',
         title: '空状态与骨架屏',
         desc: 'loading 期间展示骨架，数据为空展示引导',
         tpl: `
@@ -510,10 +546,31 @@ async handler(text, cb) {
           onCancel() { window.showToast('已取消识别', 'info'); }
         }
       },
-            { id: 'c1', title: '九月的旅行路书', status: 'active', updated_at: ago(0.5) },
-            { id: 'c2', title: '产品命名头脑风暴', status: 'active', updated_at: ago(5) },
-            { id: 'c3', title: '周报草稿润色', status: 'active', updated_at: ago(26) },
-            { id: 'c4', title: '上季度的复盘讨论', status: 'archived', updated_at: ago(72) },
+      {
+        id: 'conversation-list',
+        tag: 'nux-conversation-list',
+        title: '历史会话',
+        desc: 'AI 应用会话列表：搜索 / 新建 / 归档 / 删除全套动作，加载骨架与错误重试内置；传入 NexusApi 实例即接真实后端',
+        tpl: `
+<div style="max-width: 340px; border: 1px solid var(--nx-border); border-radius: 12px; overflow: hidden">
+  <nux-conversation-list :api="convApi" active-id="c1"
+    @select="onPick" @created="onCreated" @deleted="onDeleted"></nux-conversation-list>
+</div>`,
+        code: `<nux-conversation-list :api="api" :active-id="currentId"
+  conversation-url="/api/chat/conversations"
+  @select="openConversation" @created="onCreated" @deleted="onDeleted">
+</nux-conversation-list>
+// api: NexusApi 实例；后端约定 GET {url} 列表、POST {url} 新建、
+// PATCH {url}/{id} 归档、DELETE {url}/{id} 删除、GET {url}/search?q= 搜索`,
+        data() {
+          return { convApi: makeConvApi() };
+        },
+        methods: {
+          onPick(c) { window.showToast('打开会话「' + c.title + '」', 'info'); },
+          onCreated(c) { window.showToast('已新建「' + (c && c.title) + '」', 'success'); },
+          onDeleted(id) { window.showToast('已删除会话 ' + id, 'info'); }
+        }
+      }
     ]
   });
 
@@ -959,7 +1016,7 @@ NuxAppSwitcher.refresh();
         id: 'menu-user',
         tag: 'nux-menu-user',
         title: '用户中心菜单入口',
-        desc: '顶栏用户入口：未登录渲染登录按钮并派发 uc:login-required；已登录按需懒加载 nux-avatar → nux-drawer → nux-user-center，加载期间显示骨架',
+        desc: '顶栏用户入口：未登录渲染登录按钮并派发 uc:login-required；已登录按需懒加载 nux-avatar，加载期间显示骨架',
         tpl: `
 <div style="display: flex; align-items: center; gap: 16px; border: 1px solid var(--nx-border); border-radius: 12px; padding: 8px 14px; min-height: 56px">
   <nux-menu-user app-name="松果氪" label="用户中心" @logout="onLogout"></nux-menu-user>
@@ -967,7 +1024,7 @@ NuxAppSwitcher.refresh();
 </div>`,
         code: `<nux-menu-user app-name="松果氪" label="用户中心"
   login-url="/login.html" @logout="onLogout"></nux-menu-user>
-// 已登录时自动懒加载依赖链：nux-avatar / nux-drawer / nux-user-center / nexus-overlay-host`,
+// 已登录时按需懒加载 nux-avatar，未就绪期间显示骨架`,
         mounted() {
           this._onLoginRequired = (e) => window.showToast('uc:login-required 已派发（演示不跳转）', 'info');
           window.addEventListener('uc:login-required', this._onLoginRequired);
@@ -1289,6 +1346,8 @@ widgets: [
   <span style="font-size:13px;color:var(--nx-text-secondary,#6b7280);">当前：{{ d ? '深色' : '浅色' }}</span>
 </div>
 `,
+        code: `<nux-theme-toggle @change="onTheme"></nux-theme-toggle>
+// 明暗两态切换，持久化 localStorage nx-theme；未选择时跟随系统`,
         data() { return { d: document.documentElement.getAttribute('data-theme') === 'dark' }; }
       }
     ]

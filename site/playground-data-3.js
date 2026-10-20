@@ -189,6 +189,42 @@ struct = { kind: 'kv', pairs: [{ k: '作品状态', v: '连载中' }] }
     name: '数据展示进阶',
     demos: [
       {
+        id: 'swipe-actions',
+        tag: 'nux-swipe-actions',
+        title: '滑动单元格',
+        desc: '列表项的滑动操作：右滑露出左侧操作、左滑露出右侧操作；触摸与鼠标拖拽一致，同页自动互斥收起',
+        tpl: `
+<div class="demo-col" style="max-width: 420px; border: 1px solid var(--nx-border); border-radius: 12px; overflow: hidden">
+  <nux-swipe-actions v-for="t in tasks" :key="t.id"
+    :left-actions="leftActions" :right-actions="rightActions" @action="onAction">
+    <div style="padding: 14px 16px; background: var(--nx-bg-card); border-bottom: 1px solid var(--nx-border)">
+      <div style="font-size: 14px; font-weight: 600">{{ t.title }}</div>
+      <div class="demo-note" style="margin: 2px 0 0">右滑置顶 · 左滑归档/删除</div>
+    </div>
+  </nux-swipe-actions>
+</div>
+<p class="demo-note">按住单元格向左或向右拖动即可露出操作。</p>`,
+        code: `<nux-swipe-actions :left-actions="[{ key: 'pin', label: '置顶', tone: 'accent' }]"
+  :right-actions="[{ key: 'archive', label: '归档', tone: 'warning' },
+                   { key: 'delete', label: '删除', tone: 'danger' }]"
+  @action="onAction">
+  <div class="cell">内容</div>
+</nux-swipe-actions>
+// @action 回调参数为 (key, action)；tone: accent/danger/success/warning/neutral`,
+        data() {
+          return {
+            tasks: [
+              { id: 1, title: '周报草稿' },
+              { id: 2, title: '访谈纪要' },
+              { id: 3, title: '产品路标' }
+            ],
+            leftActions: [{ key: 'pin', label: '置顶', tone: 'accent' }],
+            rightActions: [{ key: 'archive', label: '归档', tone: 'warning' }, { key: 'delete', label: '删除', tone: 'danger' }]
+          };
+        },
+        methods: { onAction(key) { window.showToast('执行操作：' + key, 'info'); } }
+      },
+      {
         id: 'tag',
         tag: 'nux-tag',
         title: '状态标签',

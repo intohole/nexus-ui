@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Playground — Nexus UI 组件在线体验</title>
-<meta name="description" content="在浏览器里逐个试用 Nexus UI 的 66 个开源组件：基础控件、表单、反馈弹层、数据表格、AI 对话，全部真实渲染，附示例代码。">
+<meta name="description" content="在浏览器里逐个试用 Nexus UI 的开源组件：基础控件、表单、反馈弹层、数据表格、AI 对话，全部真实渲染，附示例代码。">
 <link rel="icon" href="icon.svg?h=f31d40e7e3" type="image/svg+xml">
 <link rel="stylesheet" href="css/nexus-all.css?h=bc446ce7eb">
 <link rel="stylesheet" href="https://registry.npmmirror.com/@fortawesome/fontawesome-free/6.5.1/files/css/all.min.css">
@@ -45,7 +45,7 @@
     <div class="pg-hero">
       <p class="eyebrow">Playground · 全部真实渲染</p>
       <h1>每个组件，摸过再决定</h1>
-      <p>下面的组件全部由 nexus-ui 当前版本实时渲染，没有任何静态截图。点「代码」看用法，右上角色点整页换肤。</p>
+      <p>下面的 {{ compTotal }} 个组件、{{ demoTotal }} 个演示全部由 nexus-ui 当前版本实时渲染，没有任何静态截图。点「代码」看用法，右上角色点整页换肤。</p>
     </div>
     <section class="pg-cat" v-for="c in cats" :key="c.id" :id="c.id">
       <div class="pg-cat-head">
@@ -102,6 +102,7 @@
 <script src="js/components/nux-checkin.js?h=9d294196a1"></script>
 <script src="js/components/nux-chip-group.js?h=4495987a19"></script>
 <script src="js/components/nux-clarify-card.js?h=635a28f240"></script>
+<script src="js/components/nux-conversation-list.js?h=4a7e7bfd7f"></script>
 <script src="js/components/nux-drawer.js?h=ffe78e1b7a"></script>
 <script src="js/components/nux-empty-state.js?h=e2abe0b543"></script>
 <script src="js/components/nux-error-state.js?h=3f2229f6f9"></script>
@@ -124,6 +125,7 @@
 <script src="js/components/nux-pagination.js?h=e561a89425"></script>
 <script src="js/components/nux-poster.js?h=66eb61a36d"></script>
 <script src="js/components/nux-progress.js?h=813ed49499"></script>
+<script src="js/components/nux-result-view.js?h=73989c0137"></script>
 <script src="js/components/nux-search-box.js?h=2f867c6f76"></script>
 <script src="js/components/nux-section.js?h=f2ec7368c1"></script>
 <script src="js/components/nux-segmented.js?h=0b269eee13"></script>
@@ -133,6 +135,7 @@
 <script src="js/components/nux-side-panel.js?h=cea3db31be"></script>
 <script src="js/components/nux-skeleton.js?h=b225069925"></script>
 <script src="js/components/nux-stat-card.js?h=2d9e234814"></script>
+<script src="js/components/nux-swipe-actions.js?h=a97524befc"></script>
 <script src="js/components/nux-switch.js?h=d52161e0ae"></script>
 <script src="js/components/nux-tag.js?h=aae1be337b"></script>
 <script src="js/components/nux-input-number.js?h=3800cb8a1a"></script>
@@ -145,9 +148,8 @@
 <script src="js/components/nux-login-page.js?h=24859eea9f"></script>
 <script src="site/site.js?h=24c5f76287"></script>
 <script src="site/playground-data.js?h=2099ed143d"></script>
-<script src="site/playground-data-2.js?h=443834b21a"></script>
-<script src="site/playground-data-3.js?h=c5240d0910"></script>
-<script src="site/playground-data-4.js?h=750eed5e05"></script>
-<script src="site/playground.js?h=eed770db45"></script>
+<script src="site/playground-data-2.js?h=482fc3a703"></script>
+<script src="site/playground-data-3.js?h=947b34d241"></script>
+<script src="site/playground.js?h=67d14cc8ee"></script>
 </body>
 </html>

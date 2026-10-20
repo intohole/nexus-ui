@@ -3,10 +3,13 @@
   const T = window.SiteTheme;
   const cats = window.PG_CATS;
   const seen = {};
+  const demoIds = {};
+  cats.forEach(cat => cat.demos.forEach(d => { demoIds[d.id] = true; }));
+  const compTotal = (window.NexusComponents && NexusComponents.list().length) || 0;
 
   const app = createApp({
     data() {
-      return { cats, themes: T.themes, current: T.current, open: {} };
+      return { cats, themes: T.themes, current: T.current, open: {}, compTotal, demoTotal: Object.keys(demoIds).length };
     },
     methods: {
       setTheme(cls) {
