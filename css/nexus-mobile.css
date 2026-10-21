@@ -106,6 +106,8 @@
   .nx-touch::after { content: ""; position: absolute; inset: -10px; }
   a, button, [role="button"], .nx-touch { touch-action: manipulation; }
   .nux-btn { min-height: 44px; min-width: 44px; }
+  .nux-btn.nux-btn--sm { min-height: 40px; min-width: 40px; }
+  .nux-login-tab, .nux-login-subtab { min-width: 44px; }
   .nx-sidebar-item { min-height: 44px; }
   .nx-input, .nx-select, .nux-input { min-height: 44px; font-size: 16px; }
   .nux-btn,

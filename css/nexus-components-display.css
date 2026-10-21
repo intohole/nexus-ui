@@ -158,7 +158,7 @@
   margin: 0 auto var(--nx-space-2);
   font-size: 12px;
   line-height: 1.6;
-  color: var(--nx-text-muted);
+  color: var(--nx-text-secondary);
 }
 .nux-footer-row {
   display: flex;
@@ -167,10 +167,10 @@
   justify-content: center;
   gap: var(--nx-space-1) var(--nx-space-3);
 }
-.nux-footer-copy { color: var(--nx-text-muted); }
-.nux-footer-sep { color: var(--nx-text-muted); opacity: .5; }
+.nux-footer-copy { color: var(--nx-text-secondary); }
+.nux-footer-sep { color: var(--nx-text-secondary); opacity: .7; }
 .nux-footer .nux-footer-link {
-  color: var(--nx-text-muted);
+  color: var(--nx-text-secondary);
   text-decoration: none;
   padding: 5px 2px;
   transition: color .2s;
