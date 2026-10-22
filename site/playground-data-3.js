@@ -40,12 +40,13 @@
         tpl: `
 <div class="demo-col">
   <nux-ai-task-progress title="正在生成周报" :stages="stages" :current="stages[idx].key"
-    :message="msgs[idx]" :cancellable="true" @cancel="onCancel"></nux-ai-task-progress>
+    :message="msgs[idx]" :findings="findings" :cancellable="true" @cancel="onCancel"></nux-ai-task-progress>
   <nux-ai-task-progress compact title="正在生成封面" :stages="stages" current="render"></nux-ai-task-progress>
 </div>`,
         code: `<nux-ai-task-progress title="正在生成周报"
   :stages="[{key:'outline',label:'梳理大纲'},{key:'data',label:'汇总数据'},{key:'render',label:'成文渲染'}]"
   current="data" message="正在汇总近 30 天数据"
+  :findings="[{text:'大纲已定：4 章',done:true},{text:'「本月收支」已写好',done:true},{text:'「下周计划」撰写中'}]"
   :cancellable="true" @cancel="stopTask"></nux-ai-task-progress>`,
         data() {
           return {
@@ -55,7 +56,12 @@
               { key: 'data', label: '汇总数据' },
               { key: 'render', label: '成文渲染' }
             ],
-            msgs: ['正在梳理本周要点…', '正在汇总近 30 天数据…', '正在排版输出…']
+            msgs: ['正在梳理本周要点…', '正在汇总近 30 天数据…', '正在排版输出…'],
+            findings: [
+              { text: '大纲已定：4 章', done: true },
+              { text: '「本月收支」已写好', done: true },
+              { text: '「下周计划」撰写中', done: false }
+            ]
           };
         },
         mounted() {

@@ -738,6 +738,13 @@
   transition: width var(--nx-transition-slow);
 }
 .nux-ai-task-msg { margin: 0; font-size: var(--nx-text-sm); color: var(--nx-text-secondary); line-height: 1.5; }
+.nux-ai-task-findings { margin: var(--nx-space-2) 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.nux-ai-task-finding { display: flex; align-items: baseline; gap: 6px; font-size: var(--nx-text-sm); color: var(--nx-text-secondary); line-height: 1.5; }
+.nux-ai-task-finding.is-done { color: var(--nx-text-primary); }
+.nux-ai-task-finding-mark { flex: none; color: var(--nx-success, #10b981); font-size: 12px; }
+.nux-ai-task-finding.is-done .nux-ai-task-finding-mark { color: var(--nx-success, #10b981); }
+.nux-ai-task-finding-text { min-width: 0; }
+
 .nux-ai-task-foot { display: flex; align-items: center; gap: var(--nx-space-2); }@media (prefers-reduced-motion: reduce){
   .nux-ai-task-spinner { animation: none; }
   .nux-ai-task-stage.is-active .nux-ai-task-dot { animation: none; }

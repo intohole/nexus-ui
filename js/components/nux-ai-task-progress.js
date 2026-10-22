@@ -11,7 +11,8 @@
             percent: { type: Number, default: null },
             message: { type: String, default: '' },
             cancellable: { type: Boolean, default: false },
-            compact: { type: Boolean, default: false }
+            compact: { type: Boolean, default: false },
+            findings: { type: Array, default: function () { return []; } }
         },
         emits: ['cancel'],
         computed: {
@@ -56,6 +57,19 @@
             },
             activeLabel: function () {
                 return this.currentIndex >= 0 ? this.normalized[this.currentIndex].label : '';
+            },
+            normalizedFindings: function () {
+                var list = [];
+                var source = Array.isArray(this.findings) ? this.findings : [];
+                for (var i = 0; i < source.length; i++) {
+                    var item = source[i];
+                    if (item && typeof item === 'object') {
+                        if (item.text) list.push({ text: String(item.text), done: !!item.done });
+                    } else if (item) {
+                        list.push({ text: String(item), done: false });
+                    }
+                }
+                return list;
             }
         },
         methods: {
@@ -84,6 +98,12 @@
                     <div class="nux-ai-task-bar-val" :style="{ width: pct + '%' }"></div>
                 </div>
                 <p v-if="message || activeLabel" class="nux-ai-task-msg">{{ message || activeLabel }}</p>
+                <ul v-if="normalizedFindings.length" class="nux-ai-task-findings" aria-label="已确认的中间结论">
+                    <li v-for="(f, i) in normalizedFindings" :key="i" class="nux-ai-task-finding" :class="{ 'is-done': f.done }">
+                        <span class="nux-ai-task-finding-mark" aria-hidden="true">{{ f.done ? '✓' : '○' }}</span>
+                        <span class="nux-ai-task-finding-text">{{ f.text }}</span>
+                    </li>
+                </ul>
                 <div v-if="cancellable || $slots.actions" class="nux-ai-task-foot">
                     <button v-if="cancellable" type="button" class="nux-btn nux-btn--ghost nux-ai-task-cancel" @click="$emit('cancel')">取消生成</button>
                     <slot name="actions"></slot>
