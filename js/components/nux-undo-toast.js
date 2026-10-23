@@ -37,7 +37,7 @@
         },
         template: `
             <transition name="nux-undo">
-                <div v-if="visible && text" :class="['nux-undo-toast', { raised }]">
+                <div v-if="visible && text" :class="['nux-undo-toast', { raised }]" role="status" aria-live="polite">
                     <span class="nux-undo-text">{{ text }}</span>
                     <button class="nux-undo-btn" @click="undo">{{ undoLabel }}</button>
                 </div>

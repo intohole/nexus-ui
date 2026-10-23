@@ -15,7 +15,7 @@
         template: `
             <transition name="nux-undo">
                 <div v-if="count > 0" class="nux-selection-bar">
-                    <span class="nux-selection-count">{{ countText }}</span>
+                    <span class="nux-selection-count" aria-live="polite">{{ countText }}</span>
                     <div class="nux-selection-actions"><slot></slot></div>
                     <button class="nux-selection-clear" @click="$emit('clear')">{{ clearLabel }}</button>
                 </div>

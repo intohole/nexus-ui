@@ -172,10 +172,10 @@
             </div>
             <div v-else class="nux-checkin-action">
               <div class="nux-checkin-entry" v-if="taskType==='counter'">
-                <div class="nux-checkin-picker"><button class="nux-checkin-step" @click="adjust(-1)">−1</button><div class="nux-checkin-display"><div class="num">{{ value }}</div><div class="tgt">/ {{ taskTarget || 1 }} {{ unit }}</div></div><button class="nux-checkin-step" @click="adjust(1)">+1</button></div>
+                <div class="nux-checkin-picker"><button class="nux-checkin-step" @click="adjust(-1)">−1</button><div class="nux-checkin-display" aria-live="polite"><div class="num">{{ value }}</div><div class="tgt">/ {{ taskTarget || 1 }} {{ unit }}</div></div><button class="nux-checkin-step" @click="adjust(1)">+1</button></div>
               </div>
               <div class="nux-checkin-entry" v-else-if="taskType==='timer'">
-                <div class="nux-checkin-picker"><button class="nux-checkin-step" @click="adjust(-5)">−5</button><div class="nux-checkin-display"><div class="num">{{ fmtVal }}</div><div class="tgt">/ {{ taskTarget || 10 }} {{ unit || '分钟' }}</div></div><button class="nux-checkin-step" @click="adjust(5)">+5</button></div>
+                <div class="nux-checkin-picker"><button class="nux-checkin-step" @click="adjust(-5)">−5</button><div class="nux-checkin-display" aria-live="polite"><div class="num">{{ fmtVal }}</div><div class="tgt">/ {{ taskTarget || 10 }} {{ unit || '分钟' }}</div></div><button class="nux-checkin-step" @click="adjust(5)">+5</button></div>
                 <div class="nux-checkin-presets"><button v-for="p in [5,10,15,20,30]" :key="p" class="nux-checkin-preset" :class="{active:value===p}" @click="value=p">{{ p }}分</button></div>
               </div>
               <div class="nux-checkin-entry" v-else-if="taskType==='text'">
