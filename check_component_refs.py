@@ -8,6 +8,8 @@ challengePlanet(8-22)/nexus-agent(9-06)/goldenFish(9-30)/WisePath 已在消费�
   C1 脚本引用存在性：业务仓引用的 /nexus-ui/vX.Y.Z/js/... 文件必须在 nexus-ui 盘上存在
   C2 标签可解析性：业务代码里的 <nux-*> 标签必须能被现有机制解析
      （在 NexusComponents 注册表内，或在 nexus-all.js 内置集内，或页面显式加载了对应组件脚本）
+  C3 平台侧命名避让：业务仓本地注册的 nux-* 名单（goldenStock/truemirror 判例）
+     不得被平台注册表新增占用（r115 反向防撞登记的机制化）
 
 用法:
     python3 nexus-ui/check_component_refs.py [工作区根目录] [--skip-c2]
@@ -35,6 +37,16 @@ SKIP_NAME_PARTS = ("e2e", ".min.", "audit", "verify_")
 SKIP_PATH_PREFIXES = ("miniDeploy/static/nexus-ui",)
 SCRIPT_REF_RE = re.compile(r"nexus-ui/v\d+\.\d+\.\d+/(js/[\w./-]+?\.(?:js|css))")
 TAG_RE = re.compile(r"<(nux-[a-z0-9-]+)")
+
+# 业务仓本地注册占用的 nux-* 名单（goldenStock 15 + truemirror 1，2026-10-24 实测）。
+# 平台新增组件必须避开；命中即在 C3 FAIL。名单扩充随各仓前端轮实测登记。
+RESERVED_NAMES = {
+    "nux-alert-page", "nux-analysis-page", "nux-battle-plan", "nux-daily-report",
+    "nux-discipline-card", "nux-entry-radar", "nux-follow-page", "nux-home-page",
+    "nux-journal-modal", "nux-journal-page", "nux-portfolio-advice",
+    "nux-portfolio-import-modal", "nux-portfolio-page", "nux-stock-input",
+    "nux-stockpicker-page", "nux-mcp-manager",
+}
 
 
 def iter_files(root: Path):
@@ -144,8 +156,14 @@ def main() -> int:
         print("[C2][FAIL] 页面使用了无法解析的 nux-* 标签（不在注册表/内置集，也未显式加载组件脚本）：")
         for tag, pages in sorted(unknown_tags.items()):
             print(f"  <{tag}>  <- {', '.join(sorted(pages)[:4])}")
+    reserved_hits = sorted(RESERVED_NAMES & registry)
+    if reserved_hits:
+        fail = True
+        print("[C3][FAIL] 平台注册表占用了业务仓本地注册的 nux-* 预留名（消费该仓会撞名）：")
+        for tag in reserved_hits:
+            print(f"  <{tag}>")
     if not fail:
-        print(f"check_component_refs: OK（{scanned} 文件扫描，C1/C2 零命中）")
+        print(f"check_component_refs: OK（{scanned} 文件扫描，C1/C2/C3 零命中）")
     return 1 if fail else 0
 
 

@@ -73,6 +73,7 @@ CSS_FILES: list[str] = [
     "nexus-components-checkin.css",
     "nexus-components-calendar.css",
     "nexus-components-data.css",
+    "nexus-components-insight.css",
     "nexus-components-form.css",
     "nexus-components-controls.css",
     "nexus-components-display.css",

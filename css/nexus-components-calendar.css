@@ -128,7 +128,7 @@
   box-shadow: 0 4px 12px color-mix(in srgb, var(--cal-accent) 35%, transparent);
 }
 
-.nux-cal-cell.selected .nux-cal-num { color: #fff; }
+.nux-cal-cell.selected .nux-cal-num { color: var(--nx-text-on-accent, #fff); }
 
 .nux-cal-count {
   position: absolute;
@@ -139,7 +139,7 @@
   padding: 0 3px;
   border-radius: var(--nx-radius-full);
   background: var(--cal-accent);
-  color: #fff;
+  color: var(--nx-text-on-accent, #fff);
   font-size: 9px;
   font-weight: 700;
   line-height: 14px;
