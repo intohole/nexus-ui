@@ -270,6 +270,13 @@
                 node.input.focus();
                 return;
             }
+            if (node.pattern && !node.pattern.test(text)) {
+                node.error.textContent = node.patternMessage;
+                node.error.style.display = 'block';
+                node.input.classList.add('is-invalid');
+                node.input.focus();
+                return;
+            }
             finishPrompt(text);
             return;
         }
@@ -314,7 +321,9 @@
             confirmBtn: dialog.querySelector('[data-role="confirm"]'),
             resolve: item.resolve,
             required: item.required,
-            requiredMessage: item.requiredMessage
+            requiredMessage: item.requiredMessage,
+            pattern: item.pattern,
+            patternMessage: item.patternMessage
         };
         node.error.style.display = 'none';
         dialog.querySelector('.nx-modal-title').textContent = item.title;
@@ -369,6 +378,8 @@
                 rows: opts.rows > 0 ? opts.rows : 3,
                 required: opts.required === true,
                 requiredMessage: opts.requiredMessage || '请输入内容',
+                pattern: opts.pattern instanceof RegExp ? opts.pattern : null,
+                patternMessage: opts.patternMessage || '输入格式不正确',
                 confirmText: opts.confirmText || '确定',
                 cancelText: opts.cancelText || '取消',
                 confirmType: ['danger', 'success'].indexOf(opts.confirmType) > -1 ? opts.confirmType : 'primary',
