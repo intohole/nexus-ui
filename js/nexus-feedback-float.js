@@ -29,7 +29,7 @@
         CLOSED: { label: '已关闭', cls: 'nxfb-tag--muted' }
     };
 
-    var state = { failures: 0, type: 'bug', ctx: true, tab: 'compose', open: false, lastFocus: null };
+    var state = { failures: 0, type: 'bug', ctx: true, tab: 'compose', open: false, lastFocus: null, unreadEcho: 0 };
 
     /* ---------- console 报错环（提交时随附，帮站长看到「现场」） ---------- */
     var ring = [];
@@ -181,7 +181,12 @@
             + '.nxfb-item-meta .nxfb-voice{color:var(--nx-primary,#6366f1);font-weight:600;}'
             + '.nxfb-empty{text-align:center;padding:26px 0;color:var(--nx-text-muted,#94a3b8);font-size:13px;}'
             + '.nxfb-list-loading{text-align:center;padding:20px 0;font-size:13px;'
-            + 'color:var(--nx-text-muted,#94a3b8);}';
+            + 'color:var(--nx-text-muted,#94a3b8);}'
+            + '.nxfb-badge{position:absolute;top:-4px;right:-4px;min-width:17px;height:17px;'
+            + 'padding:0 4px;border-radius:999px;background:var(--nx-danger,#ef4444);color:#fff;'
+            + 'font-size:11px;font-weight:700;line-height:17px;text-align:center;'
+            + 'box-shadow:0 0 0 2px var(--nx-bg-card,#fff);}'
+            + '.nxfb-newecho{color:var(--nx-primary,#6366f1);font-weight:700;}';
         document.head.appendChild(style);
     }
 
@@ -211,11 +216,52 @@
         var btn = el('button', 'nxfb-btn',
             chatIcon() + '<span>反馈</span>');
         btn.type = 'button';
+        btn.style.position = 'relative';
         btn.setAttribute('aria-label', '提交反馈');
         btn.addEventListener('click', openPanel);
         root.appendChild(btn);
         document.body.appendChild(root);
         avoidCollisions(root);
+        refreshEchoBadge();
+    }
+
+    /* ---------- 未读回音徽标（r5 挂账：unread-count 原语的首个浮标消费方） ---------- */
+    function echoBadgeEl() {
+        var btn = document.querySelector('#' + ROOT_ID + ' .nxfb-btn');
+        return btn ? btn.querySelector('.nxfb-badge') : null;
+    }
+
+    function renderEchoBadge() {
+        var btn = document.querySelector('#' + ROOT_ID + ' .nxfb-btn');
+        if (!btn) return;
+        var badge = echoBadgeEl();
+        if (state.unreadEcho > 0) {
+            if (!badge) {
+                badge = el('span', 'nxfb-badge');
+                btn.appendChild(badge);
+            }
+            badge.textContent = state.unreadEcho > 9 ? '9+' : String(state.unreadEcho);
+            btn.setAttribute('aria-label', '反馈（有 ' + state.unreadEcho + ' 条新回音）');
+        } else if (badge) {
+            badge.remove();
+            btn.setAttribute('aria-label', '提交反馈');
+        }
+    }
+
+    function refreshEchoBadge() {
+        if (!token() || window.NexusFeedbackFloatStopped) return;
+        fetch(API_BASE + '/api/v1/uc/echo/unread-count', {
+            headers: { 'Authorization': 'Bearer ' + token() }
+        }).then(function(resp) { return resp.ok ? resp.json() : null; }).then(function(wrapper) {
+            var data = wrapper && wrapper.data ? wrapper.data : {};
+            state.unreadEcho = Number(data.count || 0);
+            renderEchoBadge();
+        }).catch(function() {});
+    }
+
+    function clearEchoBadge() {
+        state.unreadEcho = 0;
+        renderEchoBadge();
     }
 
     function avoidCollisions(root) {
@@ -241,6 +287,7 @@
         state.lastFocus = document.activeElement;
         state.tab = 'compose';
         state.failures = 0;
+        if (state.unreadEcho > 0) clearEchoBadge();
 
         var mask = el('div', 'nxfb-mask');
         mask.id = ROOT_ID + '-mask';
@@ -290,6 +337,7 @@
         state.panel = null;
         document.removeEventListener('keydown', onKeydown);
         if (state.lastFocus && state.lastFocus.focus) state.lastFocus.focus();
+        refreshEchoBadge();
     }
 
     function switchTab(tab) {
@@ -452,7 +500,9 @@
         row.type = 'button';
         var title = String(item.title || '（无标题）');
         var metaBits = [fmtDate(item.created_at), appLabelOf(item)];
-        if (item.reply_count > 0) {
+        if (item.unread_echo) {
+            metaBits.push('<span class="nxfb-newecho">新回音</span>');
+        } else if (item.reply_count > 0) {
             metaBits.push('<span class="nxfb-voice">有回音</span>');
         }
         row.innerHTML = ''
