@@ -35,7 +35,8 @@
                                     </button>
                                     <div v-if="m.showReasoning" class="nx-ai-chat-reasoning-body">{{ m.thinking }}</div>
                                 </div>
-                                <div v-if="feat.richTools && m.tools && m.tools.length" class="nx-ai-chat-tools">
+                                <nux-tool-call v-if="feat.richTools && m.toolCalls && m.toolCalls.length" :items="m.toolCalls"></nux-tool-call>
+                                <div v-else-if="feat.richTools && m.tools && m.tools.length" class="nx-ai-chat-tools">
                                     <span v-for="(t, ti) in m.tools" :key="'t' + ti" class="nx-ai-chat-tool-chip">
                                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
                                         {{ t }}
@@ -52,8 +53,14 @@
                                     <span v-if="m.streaming" class="nx-ai-chat-cursor"></span>
                                 </template>
                                 <div v-if="feat.richReferences && m.references && m.references.length" class="nx-ai-chat-references">
-                                    <p class="nx-ai-chat-ref-title">引用来源</p>
-                                    <a v-for="(r, ri) in m.references" :key="'r' + ri" class="nx-ai-chat-ref-item" :href="typeof r === 'string' ? r : (r.url || r.link || '#')" target="_blank" rel="noopener">{{ typeof r === 'string' ? r : (r.title || r.url || r.link || '#') }}</a>
+                                    <nux-citations v-if="isCitedRefs(m.references)" :items="m.references" title="引用来源"></nux-citations>
+                                    <template v-else>
+                                        <p class="nx-ai-chat-ref-title">引用来源</p>
+                                        <a v-for="(r, ri) in m.references" :key="'r' + ri" class="nx-ai-chat-ref-item" :href="typeof r === 'string' ? r : (r.url || r.link || '#')" target="_blank" rel="noopener">{{ typeof r === 'string' ? r : (r.title || r.url || r.link || '#') }}</a>
+                                    </template>
+                                </div>
+                                <div v-if="m.credibility" class="nx-ai-chat-credibility">
+                                    <nux-confidence :level="m.credibility.level" :pct="m.credibility.pct" :note="m.credibility.content || m.credibility.note"></nux-confidence>
                                 </div>
                                 <div v-if="m.warnings && m.warnings.length" class="nx-ai-chat-warnings">
                                     <div v-for="(w, wi) in m.warnings" :key="'w' + wi" class="nx-ai-chat-warning">

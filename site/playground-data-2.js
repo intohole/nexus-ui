@@ -506,6 +506,29 @@ async handler(text, cb) {
         }
       },
       {
+        id: 'tool-call',
+        tag: 'nux-tool-call',
+        title: 'AI 工具调用卡',
+        desc: '后端 tool / tool_result 富事件驱动的三态卡：执行中转圈、完成折叠可展开入参与结果、失败亮红给原因；nux-ai-chat 自动路由',
+        tpl: `
+<nux-tool-call :items="items"></nux-tool-call>`,
+        code: `<!-- 单独引入 js/components/nux-tool-call.js（或经 nux-ai-chat 自动使用） -->
+<nux-tool-call :items="toolCalls"></nux-tool-call>
+
+<!-- 后端 SSE 富事件（nux-ai-chat 自动路由到消息） -->
+{type: 'tool', id: 't1', name: '查库存', status: 'running', args: {sku: 'A-102'}}
+{type: 'tool_result', id: 't1', status: 'done', result: '剩余 42 件', duration_ms: 820}`,
+        data() {
+          return {
+            items: [
+              { id: 'c1', name: '检索知识库', status: 'done', args: { query: '退货政策', top_k: 5 }, result: '命中 3 条，最高分 0.91', duration_ms: 640 },
+              { id: 'c2', name: '生成图片', status: 'running' },
+              { id: 'c3', name: '写入订单', status: 'error', error: '库存不足，未创建订单；请减少数量后重试', args: { sku: 'A-102', qty: 99 } }
+            ]
+          };
+        }
+      },
+      {
         id: 'camera-recognize',
         tag: 'nux-camera-recognize',
         title: '拍照识别',

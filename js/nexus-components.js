@@ -68,6 +68,7 @@
         'nux-tag': 'NuxTag',
         'nux-textarea': 'NuxTextarea',
         'nux-theme-toggle': 'NuxThemeToggle',
+        'nux-tool-call': 'NuxToolCall',
         'nux-timeline': 'NuxTimeline',
         'nux-undo-toast': 'NuxUndoToast',
         'nux-voice-input': 'NuxVoiceInput'

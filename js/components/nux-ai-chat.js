@@ -30,7 +30,10 @@
         emits: ['update:messages', 'send', 'chunk', 'done', 'error', 'stop', 'retry', 'clear', 'stream-start', 'stream-end', 'meta', 'widget-action', 'voice-result'],
         components: Object.assign(
             { NuxAiWidgets: window.NuxAiWidgets },
-            window.NuxVoiceInput ? { NuxVoiceInput: window.NuxVoiceInput } : {}
+            window.NuxVoiceInput ? { NuxVoiceInput: window.NuxVoiceInput } : {},
+            window.NuxToolCall ? { NuxToolCall: window.NuxToolCall } : {},
+            window.NuxCitations ? { NuxCitations: window.NuxCitations } : {},
+            window.NuxConfidence ? { NuxConfidence: window.NuxConfidence } : {}
         ),
         setup(props, ctx) {
             const feat = Object.assign({}, DEFAULT_FEATURES, props.features);
@@ -124,9 +127,14 @@
                 return reactive({
                     id: 'a_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
                     role: 'assistant', content: '', streaming: true, error: false,
-                    thinking: '', tools: [], references: [], warnings: [], widgets: [], meta: null,
+                    thinking: '', tools: [], toolCalls: [], references: [], warnings: [], widgets: [], meta: null,
+                    credibility: null,
                     showReasoning: false, created_at: new Date().toISOString()
                 });
+            }
+
+            function isCitedRefs(refs) {
+                return H.isCitedReferences(refs);
             }
 
             async function defaultSendHandler(content, callbacks) {
@@ -389,6 +397,7 @@
                 list, input, isStreaming, isError, errorMsg, showScrollBtn, newMsgCount,
                 elapsed, kbHeight, scrollEl, inputEl, listEl, feat, inputCfg, roleCfg,
                 renderMarkdown, send, stop, retry, clear, copyMessage, scrollToBottom,
+                isCitedRefs,
                 onScroll, onInput, onKeydown, onCompositionStart, onCompositionEnd,
                 clickQuickReply, smartScroll, onWidgetAction, onVoiceResult
             };
