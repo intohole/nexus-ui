@@ -49,7 +49,11 @@
                                     </div>
                                 </template>
                                 <template v-else>
-                                    <div class="nx-ai-chat-content nx-md" v-html="renderMarkdown(m.content)"></div>
+                                    <div v-if="feat.streamBlocks && m.streaming && m.activeHtml" class="nx-ai-chat-content nx-md">
+                                        <div class="nx-md-stream-stable" v-html="m.stableHtml"></div>
+                                        <div class="nx-md-stream-active" v-html="m.activeHtml"></div>
+                                    </div>
+                                    <div v-else class="nx-ai-chat-content nx-md" v-html="renderMarkdown(m.content)"></div>
                                     <span v-if="m.streaming" class="nx-ai-chat-cursor"></span>
                                 </template>
                                 <div v-if="feat.richReferences && m.references && m.references.length" class="nx-ai-chat-references">

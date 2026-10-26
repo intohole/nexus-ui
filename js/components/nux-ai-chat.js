@@ -115,18 +115,58 @@
                     .replace(/>/g, '&gt;').replace(/\n/g, '<br>');
             }
 
+            // 流式块级渲染（nexus-streamdown）：稳定区 html 仅块推进时变化（v-html 值
+            // 不变不重建 DOM），活跃尾块经 rAF 合帧每帧最多渲一次。watch 挂在消息
+            // content 上，helpers 的直写路径无需感知。
+            const streamers = new WeakMap();
+
+            function refreshStream(m) {
+                if (!feat.streamBlocks || !m.streaming) return;
+                if (!window.NexusStreamdown || !window.NexusMarkdown) return;
+                let s = streamers.get(m);
+                if (!s) {
+                    s = { raf: 0 };
+                    streamers.set(m, s);
+                }
+                if (s.raf) return;
+                s.raf = requestAnimationFrame(() => {
+                    s.raf = 0;
+                    if (!streamers.has(m) || !m.streaming) return;
+                    if (!list.includes(m)) { streamers.delete(m); return; }
+                    const out = NexusStreamdown.update(m.content, s);
+                    if (out) {
+                        m.stableHtml = out.stableHtml;
+                        m.activeHtml = out.activeHtml;
+                    }
+                });
+            }
+
+            function stopStreamers() {
+                list.forEach((m) => {
+                    const s = streamers.get(m);
+                    if (s && s.raf) cancelAnimationFrame(s.raf);
+                });
+                streamers.clear?.();
+            }
+
             function postProcessMd(el) {
                 if (window.NexusMarkdown && el) NexusMarkdown.postProcess(el);
             }
 
             function buildAssistantMsg() {
-                return reactive({
+                const m = reactive({
                     id: 'a_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
                     role: 'assistant', content: '', streaming: true, error: false,
                     thinking: '', tools: [], toolCalls: [], references: [], warnings: [], widgets: [], meta: null,
                     credibility: null,
+                    stableHtml: '', activeHtml: '',
                     showReasoning: false, created_at: new Date().toISOString()
                 });
+                if (feat.streamBlocks) {
+                    const stopWatch = watch(() => m.content, () => refreshStream(m));
+                    m._stopStreamWatch = stopWatch;
+                }
+                return m;
             }
 
             function isCitedRefs(refs) {
@@ -217,6 +257,8 @@
                 if (unmountKb) unmountKb();
                 actions.abort();
                 if (rafId) cancelAnimationFrame(rafId);
+                list.forEach((m) => { if (m._stopStreamWatch) m._stopStreamWatch(); });
+                stopStreamers();
                 stopElapsed();
             });
 

@@ -6044,6 +6044,12 @@ a.nx-citation-title:focus-visible { outline: 2px solid var(--nx-primary); outlin
     margin-bottom: 0;
 }
 
+/* 流式分块渲染（nexus-streamdown）接缝补偿：稳定区尾块被上方的
+   last-child 规则归零了下边距，恢复块间距使其与单容器渲染一致。 */
+.nx-md .nx-md-stream-stable:not(:empty) > :last-child {
+    margin-bottom: var(--nx-space-3, 0.75rem);
+}
+
 .nx-md h1, .nx-md h2, .nx-md h3, .nx-md h4, .nx-md h5, .nx-md h6,
 .nx-chat-content h1, .nx-chat-content h2, .nx-chat-content h3,
 .nx-chat-content h4, .nx-chat-content h5, .nx-chat-content h6 {

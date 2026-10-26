@@ -4,6 +4,7 @@
         defaultFeatures: {
             stopButton: true,
             streamFallback: true,
+            streamBlocks: true,
             scrollToBottomButton: true,
             smartScroll: true,
             typingIndicator: true,
