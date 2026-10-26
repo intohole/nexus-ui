@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>streamdown 流式渲染 e2e</title>
+    <script src="../vendor/vue.global.prod.js"></script>
+    <script src="../js/nexus-utils.js"></script>
+    <script src="../js/nexus-markdown.js"></script>
+    <script src="../js/nexus-streamdown.js"></script>
+    <link rel="stylesheet" href="../css/nexus-tokens.css">
+    <link rel="stylesheet" href="../css/nexus-base.css">
+    <link rel="stylesheet" href="../css/nexus-markdown.css">
+    <link rel="stylesheet" href="../css/nexus-ai-chat.css">
+</head>
+<body>
+<div id="app" style="max-width:720px;margin:0 auto;padding:16px;height:100vh;">
+    <nux-ai-chat ref="chat" :send-handler="fakeStream" :features="{ voice: false }"></nux-ai-chat>
+</div>
+<script src="../js/components/nux-ai-chat-helpers.js"></script>
+<script src="../js/components/nux-ai-chat-template.js"></script>
+<script src="../js/components/nux-ai-widget.js"></script>
+<script src="../js/components/nux-ai-widgets-rich.js"></script>
+<script src="../js/components/nux-tool-call.js"></script>
+<script src="../js/components/nux-citations.js"></script>
+<script src="../js/components/nux-confidence.js"></script>
+<script src="../js/components/nux-ai-chat.js"></script>
+<script>
+window.__E2E = { phase: 'init', stableCounts: [], errors: [] };
+window.addEventListener('error', function (e) { window.__E2E.errors.push(String(e.message)); });
+
+const REPLY = [
+    '## 流式渲染验证',
+    '',
+    '这是**第一段**普通文本，验证段落级稳定块推进是否按块缓存。',
+    '',
+    '- 列表项一',
+    '- 列表项二',
+    '',
+    '| 列A | 列B |',
+    '|-----|-----|',
+    '| 1   | 2   |',
+    '',
+    '```python',
+    'def hello():',
+    '    print("fence 未闭合期间不应闪烁")',
+    '```',
+    '',
+    '结尾段落，含行内 `code` 与数学 $E=mc^2$。'
+].join('\n');
+
+const vm = Vue.createApp({
+    setup() {
+        function fakeStream(text, callbacks) {
+            const tokens = [];
+            for (let i = 0; i < REPLY.length; i += 6) tokens.push(REPLY.slice(i, i + 6));
+            let full = '';
+            let i = 0;
+            const timer = setInterval(() => {
+                if (i >= tokens.length) {
+                    clearInterval(timer);
+                    callbacks.onDone(full);
+                    return;
+                }
+                full += tokens[i++];
+                callbacks.onChunk('', full);
+            }, 25);
+        }
+        return { fakeStream: fakeStream };
+    }
+});
+vm.component('NuxAiChat', window.NuxAiChat);
+vm.component('NuxAiWidgets', window.NuxAiWidgets);
+vm.component('NuxToolCall', window.NuxToolCall);
+vm.component('NuxCitations', window.NuxCitations);
+vm.component('NuxConfidence', window.NuxConfidence);
+vm.mount('#app');
+
+function snapshotStable() {
+    const stable = document.querySelector('.nx-md-stream-stable');
+    return stable ? stable.children.length : -1;
+}
+
+window.__E2E.phase = 'armed';
+const sampler = setInterval(() => {
+    if (window.__E2E.phase === 'armed') {
+        if (document.querySelector('.nx-ai-chat-msg.is-streaming')) window.__E2E.phase = 'streaming';
+        return;
+    }
+    const c = snapshotStable();
+    window.__E2E.stableCounts.push(c);
+    if (!document.querySelector('.nx-ai-chat-msg.is-streaming')) {
+        clearInterval(sampler);
+        window.__E2E.phase = 'done';
+        window.__E2E.stableCounts = window.__E2E.stableCounts.filter(v => v >= 0);
+        const content = document.querySelector('.nx-ai-chat-msg:last-child .nx-ai-chat-content');
+        window.__E2E.final = {
+            singleContainer: !document.querySelector('.nx-md-stream-active'),
+            blocks: content ? content.children.length : -1,
+            hasTable: !!document.querySelector('.nx-ai-chat-content table'),
+            hasCode: !!document.querySelector('.nx-ai-chat-content pre code'),
+            listItems: document.querySelectorAll('.nx-ai-chat-content ul li').length,
+            stablePeak: Math.max.apply(null, window.__E2E.stableCounts.concat([0]))
+        };
+    }
+}, 60);
+</script>
+</body>
+</html>
