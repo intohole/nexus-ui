@@ -39,28 +39,6 @@
             if (!el) return true;
             return el.scrollHeight - el.scrollTop - el.clientHeight < (threshold || 150);
         },
-        getKeyboardHeight: function () {
-            if (!window.visualViewport) return 0;
-            const diff = window.innerHeight - window.visualViewport.height;
-            return diff > 80 ? diff : 0;
-        },
-        mountKeyboard: function (enabled, kbRef, onOpen) {
-            const vv = window.visualViewport;
-            if (!enabled || !vv || !kbRef) return function () {};
-            const sync = function () {
-                const kb = window.NuxAiChatHelpers.getKeyboardHeight();
-                if (kb !== kbRef.value) {
-                    kbRef.value = kb;
-                    if (kb > 0 && onOpen) onOpen();
-                }
-            };
-            vv.addEventListener('resize', sync);
-            window.addEventListener('resize', sync);
-            return function () {
-                vv.removeEventListener('resize', sync);
-                window.removeEventListener('resize', sync);
-            };
-        },
         createStreamController: function (cfg, content, callbacks, onController) {
             if (!cfg.streamUrl) { callbacks.onError(new Error('未配置 apiConfig.streamUrl')); return null; }
             const api = cfg.apiInstance || (window.NexusApi ? new NexusApi() : null);
@@ -185,6 +163,190 @@
                 handled = false;
             }
             return handled;
+        },
+        // 对话动作状态机工厂（r137 自 nux-ai-chat setup 抽出，行为逐行守恒；
+        // env 依赖注入形态保持 Vue-free，tests/test_ai_chat_actions.mjs 直测）。
+        // settle 为终态收敛单源：收编原 send.finishStream 与 fallbackSync.onFinish 重复簇。
+        createActions: function (env) {
+            const list = env.list, input = env.input;
+            const isStreaming = env.isStreaming, isError = env.isError, errorMsg = env.errorMsg;
+            const lastSendTime = env.lastSendTime;
+            const listEl = env.listEl;
+            const props = env.props, feat = env.feat, inputCfg = env.inputCfg;
+            const emit = env.emit;
+            const emitMessages = env.emitMessages, smartScroll = env.smartScroll;
+            const autoResize = env.autoResize, postProcessMd = env.postProcessMd;
+            const startElapsed = env.startElapsed, stopElapsed = env.stopElapsed;
+            const nextTick = env.nextTick || (function (fn) { fn(); });
+            const buildAssistantMsg = env.buildAssistantMsg;
+            const routeRichEvent = env.routeRichEvent || window.NuxAiChatHelpers.routeRichEvent;
+            const createStreamController = env.createStreamController || window.NuxAiChatHelpers.createStreamController;
+            const fallbackRequest = env.fallbackRequest || window.NuxAiChatHelpers.fallbackRequest;
+
+            let controller = null;
+            let stopped = false;
+            let stopFn = null;
+
+            function settle(ok, msg, err) {
+                msg.streaming = false;
+                if (!ok) {
+                    msg.error = true;
+                    isError.value = true;
+                    errorMsg.value = err || '未知错误';
+                }
+                isStreaming.value = false;
+                stopElapsed();
+                emit('stream-end', ok);
+                if (ok) emit('done', msg.content, msg);
+                else emit('error', errorMsg.value, msg);
+                emitMessages();
+                nextTick(() => {
+                    if (msg.content && listEl.value) {
+                        const els = listEl.value.querySelectorAll('.nx-ai-chat-msg');
+                        const last = els[els.length - 1];
+                        if (last) postProcessMd(last.querySelector('.nx-ai-chat-bubble'));
+                    }
+                });
+            }
+
+            function defaultSend(content, callbacks) {
+                createStreamController(props.apiConfig || {}, content, callbacks, (ctrl) => { controller = ctrl; });
+            }
+
+            function fallbackSync(content, assistantMsg) {
+                fallbackRequest(props.apiConfig, content, assistantMsg, {
+                    onFinish: (ok, msg, err) => {
+                        if (ok) settle(true, msg);
+                        else settle(false, msg, err);
+                    }
+                });
+            }
+
+            async function send(content) {
+                if (content === undefined && env.inputEl.value) {
+                    const domVal = String(env.inputEl.value.value || '');
+                    if (domVal !== input.value) input.value = domVal;
+                }
+                const text = (content !== undefined ? content : input.value).trim();
+                if (!text || isStreaming.value || props.disabled) return;
+
+                if (inputCfg.rateLimit > 0) {
+                    const now = Date.now();
+                    if (now - lastSendTime.value < inputCfg.rateLimit) return;
+                    lastSendTime.value = now;
+                }
+
+                if (content === undefined) input.value = '';
+                autoResize();
+
+                const userMsg = {
+                    id: 'u_' + Date.now(),
+                    role: 'user',
+                    content: text,
+                    created_at: new Date().toISOString()
+                };
+                list.push(userMsg);
+
+                const assistantMsg = buildAssistantMsg();
+                list.push(assistantMsg);
+                emitMessages();
+
+                emit('send', text);
+                smartScroll(true);
+
+                isStreaming.value = true;
+                isError.value = false;
+                errorMsg.value = '';
+                emit('stream-start');
+                startElapsed();
+
+                stopped = false;
+                stopFn = null;
+                controller = null;
+
+                const callbacks = {
+                    onChunk: (chunk, full) => {
+                        assistantMsg.content = full;
+                        if (assistantMsg.thinking) assistantMsg.thinking = '';
+                        smartScroll(false);
+                        emit('chunk', chunk, full, assistantMsg);
+                    },
+                    onEvent: (ev, data) => {
+                        if (routeRichEvent(assistantMsg, ev, data) && (ev === 'meta' || (data && data.type === 'meta'))) emit('meta', data, assistantMsg);
+                    },
+                    onDone: (full) => {
+                        if (full && !assistantMsg.content) assistantMsg.content = full;
+                        settle(true, assistantMsg);
+                    },
+                    onError: (err) => {
+                        if (stopped) {
+                            settle(true, assistantMsg);
+                            return;
+                        }
+                        if (feat.streamFallback && props.apiConfig.fallbackUrl) {
+                            fallbackSync(text, assistantMsg);
+                        } else {
+                            settle(false, assistantMsg, err && err.message ? err.message : 'AI服务暂时不可用');
+                        }
+                    },
+                    currentMessage: assistantMsg,
+                    routeRich: (ev, data) => { routeRichEvent(assistantMsg, ev, data); },
+                    registerStop: (fn) => { stopFn = fn; }
+                };
+
+                try {
+                    const handler = props.sendHandler || defaultSend;
+                    await handler(text, callbacks);
+                } catch (e) {
+                    if (!stopped) settle(false, assistantMsg, e.message || '请求异常');
+                }
+            }
+
+            function stop() {
+                if (!isStreaming.value) return;
+                stopped = true;
+                if (stopFn) { try { stopFn(); } catch (e) {} }
+                else if (controller) { try { controller.stop(); } catch (e) {} }
+                isStreaming.value = false;
+                stopElapsed();
+                emit('stop');
+                emit('stream-end', true);
+                const last = list[list.length - 1];
+                if (last && last.streaming) {
+                    last.streaming = false;
+                    if (!last.content) last.content = '（已停止生成）';
+                }
+                emitMessages();
+            }
+
+            function retry(msg) {
+                const target = msg || (list.length >= 2 ? list[list.length - 2] : null);
+                if (!target) return;
+                if (list.length > 0) list.pop();
+                if (isError.value) {
+                    isError.value = false;
+                    errorMsg.value = '';
+                }
+                emit('retry', target);
+                send(target.content);
+            }
+
+            function clear() {
+                stop();
+                list.splice(0, list.length);
+                isError.value = false;
+                errorMsg.value = '';
+                if (env.clearUiState) env.clearUiState();
+                emit('clear');
+                emitMessages();
+            }
+
+            function abort() {
+                if (stopFn) { try { stopFn(); } catch (e) {} }
+                else if (controller) { try { controller.stop(); } catch (e) {} }
+            }
+
+            return { send: send, stop: stop, retry: retry, clear: clear, abort: abort };
         }
     };
 })();

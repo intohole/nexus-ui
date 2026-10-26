@@ -3,6 +3,14 @@
 
     var DESIGN_WIDTH = 1080;
 
+    // 蓝图字段进 HTML 属性位前的强制转义（属性逃逸封口：引号/尖括号/与符）。
+    // 合法数据（URL/颜色/数字/文案）经此恒等，仅畸形输入被中和。
+    function esc(val) {
+        return String(val == null ? '' : val)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
     function px(val, scale) {
         var n = parseFloat(val);
         if (isNaN(n)) return '0px';
@@ -67,15 +75,15 @@
         var base = bgStyle(bg, width / DESIGN_WIDTH);
         var isGrad = !base.backgroundImage && !base.background;
         var css = ['position:absolute', 'inset:0', 'width:100%', 'height:100%'];
-        Object.keys(base).forEach(function (k) { css.push(k + ':' + base[k]); });
+        Object.keys(base).forEach(function (k) { css.push(k + ':' + esc(base[k])); });
         var html = '<div style="' + css.join(';') + '"></div>';
         if (isGrad) {
             var pat = patternStyle((bg && bg.pattern) || '');
             var psz = patternSize((bg && bg.pattern) || '');
-            html += '<div style="position:absolute;inset:0;pointer-events:none;width:100%;height:100%;background-image:' + pat + ';background-size:' + psz + ';"></div>';
+            html += '<div style="position:absolute;inset:0;pointer-events:none;width:100%;height:100%;background-image:' + esc(pat) + ';background-size:' + esc(psz) + ';"></div>';
             (bg.glow || []).forEach(function (g) {
                 var c = hexToRgb(g.color) ? alpha(g.color, g.opacity == null ? 0.45 : g.opacity) : g.color;
-                html += '<div style="position:absolute;left:' + (g.x || 50) + '%;top:' + (g.y || 50) + '%;width:' + (g.size || 55) + '%;height:' + (g.size || 55) + '%;transform:translate(-50%,-50%);pointer-events:none;background:radial-gradient(circle,' + c + ' 0%,transparent 68%)"></div>';
+                html += '<div style="position:absolute;left:' + esc(g.x || 50) + '%;top:' + esc(g.y || 50) + '%;width:' + esc(g.size || 55) + '%;height:' + esc(g.size || 55) + '%;transform:translate(-50%,-50%);pointer-events:none;background:radial-gradient(circle,' + esc(c) + ' 0%,transparent 68%)"></div>';
             });
         }
         return html;
@@ -155,17 +163,17 @@
         var type = el.element_type;
         var content = String(el.content || '');
         var st = el.style || {};
-        var text = content.replace(/</g, '&lt;');
+        var text = esc(content);
         if (type === 'image' && (content.indexOf('http') === 0 || content.charAt(0) === '/')) {
             var src = content.charAt(0) === '/' ? (window.PATH_PREFIX || '') + content : content;
-            return '<img src="' + src + '" onerror="this.style.display=\'none\'" style="width:100%;height:100%;object-fit:cover;display:block">';
+            return '<img src="' + esc(src) + '" onerror="this.style.display=\'none\'" style="width:100%;height:100%;object-fit:cover;display:block">';
         }
         if (type === 'cta' || type === 'badge') {
             var pad = 'padding:' + (st.padding ? px(st.padding, scale) : px(12, scale)) + ' ' + px(24, scale) + ';width:auto;';
-            return '<span style="' + pad + 'border-radius:' + px(st.borderRadius || 40, scale) + ';background:' + (st.background || 'transparent') + ';font-size:' + px(st.fontSize || 16, scale) + ';font-weight:' + (st.fontWeight || 700) + ';">' + text + '</span>';
+            return '<span style="' + pad + 'border-radius:' + px(st.borderRadius || 40, scale) + ';background:' + esc(st.background || 'transparent') + ';font-size:' + px(st.fontSize || 16, scale) + ';font-weight:' + esc(st.fontWeight || 700) + ';">' + text + '</span>';
         }
         if (type === 'price') {
-            var sign = st.currency == null ? '' : '<span style="font-size:' + px((st.fontSize || 16) * 0.5, scale) + ';">' + st.currency + '</span>';
+            var sign = st.currency == null ? '' : '<span style="font-size:' + px((st.fontSize || 16) * 0.5, scale) + ';">' + esc(st.currency) + '</span>';
             return sign + text;
         }
         if (type === 'info-card') {
@@ -186,7 +194,7 @@
         (blueprint.elements || []).forEach(function (el) {
             var st = elementStyle(el, scale);
             var inline = [];
-            Object.keys(st).forEach(function (k) { inline.push(k + ':' + st[k]); });
+            Object.keys(st).forEach(function (k) { inline.push(k + ':' + esc(st[k])); });
             parts.push('<div style="' + inline.join(';') + '">' + renderContent(el, scale) + '</div>');
         });
         parts.push('</div>');

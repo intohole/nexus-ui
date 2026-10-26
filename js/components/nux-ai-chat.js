@@ -9,7 +9,6 @@
     const DEFAULT_ROLES = H.defaultRoles;
     const scrollToBottomEl = H.scrollToBottomEl;
     const isNearBottom = H.isNearBottom;
-    const routeRichEvent = H.routeRichEvent;
 
     const NuxAiChat = {
         name: 'NuxAiChat',
@@ -56,11 +55,8 @@
             const inputEl = ref(null);
             const listEl = ref(null);
             const kbHeight = ref(0);
-            let controller = null;
             let rafId = null;
             let unmountKb = null;
-            let stopped = false;
-            let stopFn = null;
 
             function emitMessages() {
                 ctx.emit('update:messages', list.slice());
@@ -137,183 +133,24 @@
                 return H.isCitedReferences(refs);
             }
 
-            async function defaultSendHandler(content, callbacks) {
-                H.createStreamController(props.apiConfig || {}, content, callbacks, (ctrl) => { controller = ctrl; });
-            }
-
-            async function send(content) {
-                if (content === undefined && inputEl.value) {
-                    const domVal = String(inputEl.value.value || '');
-                    if (domVal !== input.value) input.value = domVal;
-                }
-                const text = (content !== undefined ? content : input.value).trim();
-                if (!text || isStreaming.value || props.disabled) return;
-
-                if (inputCfg.rateLimit > 0) {
-                    const now = Date.now();
-                    if (now - lastSendTime.value < inputCfg.rateLimit) return;
-                    lastSendTime.value = now;
-                }
-
-                if (content === undefined) input.value = '';
-                autoResize();
-
-                const userMsg = reactive({
-                    id: 'u_' + Date.now(),
-                    role: 'user',
-                    content: text,
-                    created_at: new Date().toISOString()
-                });
-                list.push(userMsg);
-
-                const assistantMsg = buildAssistantMsg();
-                list.push(assistantMsg);
-                emitMessages();
-
-                ctx.emit('send', text);
-                smartScroll(true);
-
-                isStreaming.value = true;
-                isError.value = false;
-                errorMsg.value = '';
-                ctx.emit('stream-start');
-                startElapsed();
-
-                stopped = false;
-                stopFn = null;
-                controller = null;
-
-                const callbacks = {
-                    onChunk: (chunk, full) => {
-                        assistantMsg.content = full;
-                        if (assistantMsg.thinking) assistantMsg.thinking = '';
-                        smartScroll(false);
-                        ctx.emit('chunk', chunk, full, assistantMsg);
-                    },
-                    onEvent: (ev, data) => {
-                        if (routeRichEvent(assistantMsg, ev, data) && (ev === 'meta' || (data && data.type === 'meta'))) ctx.emit('meta', data, assistantMsg);
-                    },
-                    onDone: (full) => {
-                        if (full && !assistantMsg.content) assistantMsg.content = full;
-                        assistantMsg.streaming = false;
-                        finishStream(true, assistantMsg);
-                    },
-                    onError: (err) => {
-                        if (stopped) {
-                            assistantMsg.streaming = false;
-                            finishStream(true, assistantMsg);
-                            return;
-                        }
-                        if (feat.streamFallback && props.apiConfig.fallbackUrl) {
-                            fallbackSync(text, assistantMsg);
-                        } else {
-                            assistantMsg.streaming = false;
-                            assistantMsg.error = true;
-                            isError.value = true;
-                            errorMsg.value = err && err.message ? err.message : 'AI服务暂时不可用';
-                            finishStream(false, assistantMsg, errorMsg.value);
-                        }
-                    },
-                    currentMessage: assistantMsg,
-                    routeRich: (ev, data) => { routeRichEvent(assistantMsg, ev, data); },
-                    registerStop: (fn) => { stopFn = fn; }
-                };
-
-                function finishStream(ok, msg, err) {
-                    isStreaming.value = false;
-                    stopElapsed();
-                    ctx.emit('stream-end', ok);
-                    if (!ok) ctx.emit('error', err || '未知错误', msg);
-                    else ctx.emit('done', msg.content, msg);
-                    emitMessages();
-                    nextTick(() => {
-                        if (msg.content && listEl.value) {
-                            const els = listEl.value.querySelectorAll('.nx-ai-chat-msg');
-                            const last = els[els.length - 1];
-                            if (last) postProcessMd(last.querySelector('.nx-ai-chat-bubble'));
-                        }
-                    });
-                }
-
-                try {
-                    const handler = props.sendHandler || defaultSendHandler;
-                    await handler(text, callbacks);
-                } catch (e) {
-                    if (!stopped) {
-                        assistantMsg.streaming = false;
-                        assistantMsg.error = true;
-                        isError.value = true;
-                        errorMsg.value = e.message || '请求异常';
-                        finishStream(false, assistantMsg, errorMsg.value);
-                    }
-                }
-            }
-
-            function fallbackSync(content, assistantMsg) {
-                H.fallbackRequest(props.apiConfig, content, assistantMsg, {
-                    onFinish: (ok, msg, err) => {
-                        msg.streaming = false;
-                        if (!ok) {
-                            msg.error = true;
-                            isError.value = true;
-                            errorMsg.value = err;
-                        }
-                        isStreaming.value = false;
-                        stopElapsed();
-                        ctx.emit('stream-end', ok);
-                        if (ok) ctx.emit('done', msg.content, msg);
-                        else ctx.emit('error', err, msg);
-                        emitMessages();
-                        nextTick(() => {
-                            if (listEl.value) {
-                                const els = listEl.value.querySelectorAll('.nx-ai-chat-msg');
-                                const last = els[els.length - 1];
-                                if (last) postProcessMd(last.querySelector('.nx-ai-chat-bubble'));
-                            }
-                        });
-                    }
-                });
-            }
-
-            function stop() {
-                if (!isStreaming.value) return;
-                stopped = true;
-                if (stopFn) { try { stopFn(); } catch (e) {} }
-                else if (controller) { try { controller.stop(); } catch (e) {} }
-                isStreaming.value = false;
-                stopElapsed();
-                ctx.emit('stop');
-                ctx.emit('stream-end', true);
-                const last = list[list.length - 1];
-                if (last && last.streaming) {
-                    last.streaming = false;
-                    if (!last.content) last.content = '（已停止生成）';
-                }
-                emitMessages();
-            }
-
-            function retry(msg) {
-                const target = msg || (list.length >= 2 ? list[list.length - 2] : null);
-                if (!target) return;
-                if (list.length > 0) list.pop();
-                if (isError.value) {
-                    isError.value = false;
-                    errorMsg.value = '';
-                }
-                ctx.emit('retry', target);
-                send(target.content);
-            }
-
-            function clear() {
-                stop();
-                list.splice(0, list.length);
-                isError.value = false;
-                errorMsg.value = '';
-                newMsgCount.value = 0;
-                showScrollBtn.value = false;
-                ctx.emit('clear');
-                emitMessages();
-            }
+            const actions = H.createActions({
+                list: list, input: input,
+                isStreaming: isStreaming, isError: isError, errorMsg: errorMsg,
+                lastSendTime: lastSendTime,
+                scrollEl: scrollEl, inputEl: inputEl, listEl: listEl,
+                props: props, feat: feat, inputCfg: inputCfg,
+                emit: function () { ctx.emit.apply(ctx, arguments); },
+                nextTick: nextTick,
+                emitMessages: emitMessages, smartScroll: smartScroll,
+                autoResize: autoResize, postProcessMd: postProcessMd,
+                startElapsed: startElapsed, stopElapsed: stopElapsed,
+                buildAssistantMsg: buildAssistantMsg,
+                clearUiState: function () { newMsgCount.value = 0; showScrollBtn.value = false; }
+            });
+            const send = actions.send;
+            const stop = actions.stop;
+            const retry = actions.retry;
+            const clear = actions.clear;
 
             function copyMessage(msg) {
                 if (!msg || !msg.content) return;
@@ -371,13 +208,14 @@
                     if (list.length > 0) scrollToBottomEl(scrollEl.value, false);
                     if (window.NexusMarkdown) NexusMarkdown.injectLibs();
                 });
-                unmountKb = H.mountKeyboard(!!feat.keyboardAvoid, kbHeight, () => { if (scrollEl.value && list.length) scrollToBottomEl(scrollEl.value, false); });
+                unmountKb = (window.NexusMobile && NexusMobile.mountKeyboard)
+                    ? NexusMobile.mountKeyboard(!!feat.keyboardAvoid, kbHeight, () => { if (scrollEl.value && list.length) scrollToBottomEl(scrollEl.value, false); })
+                    : (function () { return function () {}; }());
             });
 
             onBeforeUnmount(() => {
                 if (unmountKb) unmountKb();
-                if (stopFn) { try { stopFn(); } catch (e) {} }
-                else if (controller) { try { controller.stop(); } catch (e) {} }
+                actions.abort();
                 if (rafId) cancelAnimationFrame(rafId);
                 stopElapsed();
             });

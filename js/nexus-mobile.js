@@ -156,6 +156,31 @@
         init();
     }
 
-    window.NexusMobile = { ensureViewport: ensureViewport, isMobile: isMobile, MOBILE_BREAKPOINT: MOBILE_BREAKPOINT };
+    // 键盘高度探测与挂载（原 nux-ai-chat-helpers，迁入移动端原语族；
+    // nux-ai-chat 经 NexusMobile.mountKeyboard 消费）。
+    function getKeyboardHeight() {
+        if (!window.visualViewport) return 0;
+        var diff = window.innerHeight - window.visualViewport.height;
+        return diff > 80 ? diff : 0;
+    }
+    function mountKeyboard(enabled, kbRef, onOpen) {
+        var vv = window.visualViewport;
+        if (!enabled || !vv || !kbRef) return function () {};
+        var sync = function () {
+            var kb = getKeyboardHeight();
+            if (kb !== kbRef.value) {
+                kbRef.value = kb;
+                if (kb > 0 && onOpen) onOpen();
+            }
+        };
+        vv.addEventListener('resize', sync);
+        window.addEventListener('resize', sync);
+        return function () {
+            vv.removeEventListener('resize', sync);
+            window.removeEventListener('resize', sync);
+        };
+    }
+
+    window.NexusMobile = { ensureViewport: ensureViewport, isMobile: isMobile, MOBILE_BREAKPOINT: MOBILE_BREAKPOINT, getKeyboardHeight: getKeyboardHeight, mountKeyboard: mountKeyboard };
     ensureViewport();
 })();
