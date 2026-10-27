@@ -438,6 +438,16 @@
   padding: 12px 16px 8px;
 }
 .nux-notify-title { font-size: 14px; font-weight: 600; color: var(--nx-text-strong); }
+.nux-notify-push {
+  display: inline-flex; align-items: center; gap: 5px;
+  border: 1px solid rgba(var(--app-accent-rgb), 0.35); border-radius: 999px;
+  background: var(--nx-bg-surface, transparent); color: var(--nx-text-accent);
+  font-size: 12px; font-weight: 600; cursor: pointer; padding: 4px 10px;
+}
+.nux-notify-push:hover { background: rgba(var(--app-accent-rgb), 0.08); }
+.nux-notify-push.is-on { background: rgba(var(--app-accent-rgb), 0.12); border-color: transparent; }
+.nux-notify-push.is-unsupported { border-color: var(--nx-border); color: var(--nx-text-tertiary, var(--nx-text-secondary)); cursor: default; }
+.nux-notify-push[disabled] { opacity: 0.6; cursor: wait; }
 .nux-notify-allread {
   border: none;
   background: transparent;

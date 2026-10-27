@@ -19,13 +19,23 @@
                 timer: null,
                 token: '',
                 filter: 'all',
-                listSeq: 0
+                listSeq: 0,
+                push: null,
+                pushBusy: false,
+                pushLoaded: false
             };
         },
         computed: {
             authed: function() { return !!this.token; },
             hiddenCount: function() { return Math.max(0, this.total - this.items.length); },
             hasUnreadItems: function() { return this.items.some(function(i) { return !i.is_read; }); },
+            pushApiBase: function() {
+                return (this.baseUrl || '').replace(/\/$/, '') + '/api/notify';
+            },
+            pushCapBlocked: function() {
+                var wp = (window.NexusUtils && NexusUtils.notify) ? NexusUtils.notify.webpush : null;
+                return !wp || !wp.capability().ok;
+            },
             groups: function() {
                 var boxed = this.items.length > 0 && this.items.every(function(n) {
                     return n.box === 'action' || n.box === 'insight';
@@ -141,7 +151,51 @@
                 if (this.open) {
                     this.filter = this.unread > 0 ? 'unread' : 'all';
                     this.loadList();
+                    this.refreshPush();
                 }
+            },
+            refreshPush: function() {
+                var self = this;
+                var wp = (window.NexusUtils && NexusUtils.notify) ? NexusUtils.notify.webpush : null;
+                if (!wp || self.pushBusy) return;
+                wp.status(self._pushApi(), self.pushApiBase).then(function(state) {
+                    self.push = state;
+                    self.pushLoaded = true;
+                }).catch(function() { self.pushLoaded = true; });
+            },
+            _pushApi: function() {
+                if (!this._pushApiInst) {
+                    this._pushApiInst = new NexusApi({ baseUrl: '', tokenKey: 'uc_access_token' });
+                }
+                return this._pushApiInst;
+            },
+            togglePush: function() {
+                var self = this;
+                var wp = (window.NexusUtils && NexusUtils.notify) ? NexusUtils.notify.webpush : null;
+                if (!wp || self.pushBusy || !self.push || !self.push.enabled) return;
+                if (!self.push.subscribed) {
+                    var cap = wp.capability();
+                    if (!cap.ok) {
+                        if (window.showToast) window.showToast(cap.reason, 'info');
+                        return;
+                    }
+                }
+                self.pushBusy = true;
+                var action = self.push.subscribed ? wp.disable(self._pushApi(), self.pushApiBase)
+                    : wp.enable(self._pushApi(), self.pushApiBase).then(function() {
+                        return wp.sendTest(self._pushApi(), self.pushApiBase).catch(function() {});
+                    });
+                action.then(function() {
+                    self.pushBusy = false;
+                    if (window.showToast) {
+                        window.showToast(self.push && self.push.subscribed ? '锁屏推送已关闭' : '已开启，测试推送已发出——请查看系统通知',
+                            self.push && self.push.subscribed ? 'info' : 'success');
+                    }
+                    self.refreshPush();
+                }).catch(function(err) {
+                    self.pushBusy = false;
+                    if (window.showToast) window.showToast((err && err.message) || '操作失败，请稍后重试', 'error');
+                });
             },
             setFilter: function(f) {
                 if (this.filter === f) return;
@@ -222,6 +276,9 @@
                 <div v-if="open" id="nux-notify-panel" class="nux-notify-panel" role="dialog" :aria-label="title" @click.stop>
                     <div class="nux-notify-head">
                         <span class="nux-notify-title">{{ title }}</span>
+                        <button v-if="push && push.enabled && pushLoaded" type="button" :class="['nux-notify-push', push.subscribed ? 'is-on' : '', pushCapBlocked ? 'is-unsupported' : '']" :disabled="pushBusy" :title="push.subscribed ? ('每日至多 ' + (push.dailyLimit || 12) + ' 条，点击关闭') : '开启后简报与提醒直达系统通知'" @click.stop="togglePush">
+                            <i :class="push.subscribed ? 'fa-solid fa-bell' : 'fa-regular fa-bell'" aria-hidden="true"></i>{{ push.subscribed ? '锁屏推送已开' : '开启锁屏推送' }}
+                        </button>
                         <button type="button" class="nux-notify-allread" v-if="hasUnreadItems" @click.stop="markAllRead">全部已读</button>
                     </div>
                     <div class="nux-notify-toolbar" v-if="!loading && !error">
