@@ -429,8 +429,10 @@
         el.innerHTML = '<div class="nux-notif-panel-page">' +
             '<div class="nux-notif-panel-header">' +
             '<h3 class="nux-notif-panel-title">通知中心</h3>' +
+            '<span class="nux-notif-push-slot"></span>' +
             '<span class="nux-notif-unread-pill" role="status"></span>' +
             '<button class="nux-notif-panel-mark-all" id="nux-notif-mark-all" style="display:none">全部已读</button></div>' +
+            '<div class="nux-notif-push-banner-slot"></div>' +
             '<div class="nux-notif-panel-boxes" role="tablist" aria-label="通知箱">' +
             '<button type="button" class="nux-notif-box-btn active" role="tab" aria-selected="true" data-box="inbox">收件箱</button>' +
             '<button type="button" class="nux-notif-box-btn" role="tab" aria-selected="false" data-box="archive">归档箱</button></div>' +
