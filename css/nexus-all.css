@@ -5047,6 +5047,257 @@ a.nx-citation-title:focus-visible { outline: 2px solid var(--nx-primary); outlin
 .nux-tag--plain.nux-tag--danger { border-color: rgba(var(--nx-danger-rgb), 0.4); }
 .nux-tag--plain.nux-tag--info { border-color: rgba(var(--nx-info-rgb), 0.4); }
 
+/* ===== nexus-components-conversation.css ===== */
+.nx-conv-list {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  font-size: var(--nx-text-sm, 0.875rem);
+}
+
+.nx-conv-list-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nx-space-2, 0.5rem);
+  padding: var(--nx-space-3, 0.75rem) var(--nx-space-3, 0.75rem) var(--nx-space-2, 0.5rem);
+}
+
+.nx-conv-list-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.nx-conv-list-search > svg {
+  position: absolute;
+  left: 10px;
+  color: var(--nx-text-muted, #94a3b8);
+  pointer-events: none;
+}
+
+.nx-conv-list-search-input {
+  width: 100%;
+  padding: 0.4375rem 0.75rem 0.4375rem 2rem;
+  font-size: inherit;
+  font-family: inherit;
+  color: var(--nx-text-body, #334155);
+  background: var(--nx-bg-muted, #f1f5f9);
+  border: 1px solid transparent;
+  border-radius: var(--nx-radius-md, 10px);
+  outline: none;
+  transition: background var(--nx-transition-fast), border-color var(--nx-transition-fast), box-shadow var(--nx-transition-fast);
+}
+
+.nx-conv-list-search-input::placeholder { color: var(--nx-text-muted, #94a3b8); }
+
+.nx-conv-list-search-input:focus {
+  background: var(--nx-bg-surface, #ffffff);
+  border-color: var(--nx-border-accent, rgba(99, 102, 241, 0.3));
+  box-shadow: 0 0 0 3px var(--nx-accent-soft, rgba(99, 102, 241, 0.12));
+}
+
+.nx-conv-list-new {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0.5rem 0.875rem;
+  font-size: var(--nx-text-sm, 0.875rem);
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--nx-text-on-accent, #ffffff);
+  background: var(--nx-accent, var(--nx-primary, #6366f1));
+  border: none;
+  border-radius: var(--nx-radius-md, 10px);
+  cursor: pointer;
+  transition: background var(--nx-transition-fast), transform var(--nx-transition-fast), opacity var(--nx-transition-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nx-conv-list-new:hover { background: var(--nx-accent-hover, var(--app-accent-hover, #818cf8)); }
+.nx-conv-list-new:active { transform: scale(0.98); }
+.nx-conv-list-new:disabled { opacity: 0.6; cursor: default; }
+.nx-conv-list-new:focus-visible { outline: 2px solid var(--nx-accent, var(--nx-primary, #6366f1)); outline-offset: 2px; }
+
+.nx-conv-list-error {
+  display: flex;
+  align-items: center;
+  gap: var(--nx-space-2, 0.5rem);
+  margin: 0 var(--nx-space-3, 0.75rem) var(--nx-space-2, 0.5rem);
+  padding: var(--nx-space-2, 0.5rem) var(--nx-space-3, 0.75rem);
+  font-size: var(--nx-text-xs, 0.75rem);
+  color: var(--nx-danger, #ef4444);
+  background: rgba(var(--nx-danger-rgb, 239, 68, 68), 0.08);
+  border: 1px solid rgba(var(--nx-danger-rgb, 239, 68, 68), 0.3);
+  border-radius: var(--nx-radius-sm, 6px);
+}
+
+.nx-conv-list-error span { flex: 1; word-break: break-word; }
+
+.nx-conv-list-error button {
+  flex-shrink: 0;
+  padding: 0.25rem 0.625rem;
+  font-size: var(--nx-text-xs, 0.75rem);
+  font-family: inherit;
+  color: var(--nx-danger, #ef4444);
+  background: rgba(var(--nx-danger-rgb, 239, 68, 68), 0.1);
+  border: 1px solid rgba(var(--nx-danger-rgb, 239, 68, 68), 0.35);
+  border-radius: var(--nx-radius-sm, 6px);
+  cursor: pointer;
+  transition: background var(--nx-transition-fast);
+}
+
+.nx-conv-list-error button:hover { background: rgba(var(--nx-danger-rgb, 239, 68, 68), 0.16); }
+
+.nx-conv-list-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--nx-space-1, 0.25rem) var(--nx-space-3, 0.75rem) var(--nx-space-3, 0.75rem);
+}
+
+.nx-conv-list-skeleton-item {
+  height: 52px;
+  border-radius: var(--nx-radius-md, 10px);
+  background: linear-gradient(90deg, var(--nx-bg-muted, #f1f5f9) 25%, var(--nx-bg-hover, #e2e8f0) 50%, var(--nx-bg-muted, #f1f5f9) 75%);
+  background-size: 200% 100%;
+  animation: nx-conv-shimmer 1.2s infinite;
+}
+
+@keyframes nx-conv-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.nx-conv-list-empty {
+  padding: var(--nx-space-8, 2rem) var(--nx-space-4, 1rem);
+  font-size: var(--nx-text-xs, 0.75rem);
+  text-align: center;
+  color: var(--nx-text-muted, #94a3b8);
+}
+
+.nx-conv-list-items {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0 var(--nx-space-2, 0.5rem) var(--nx-space-3, 0.75rem);
+  list-style: none;
+}
+
+.nx-conv-list-item {
+  position: relative;
+  padding: var(--nx-space-2, 0.5rem) var(--nx-space-2, 0.5rem) var(--nx-space-2, 0.5rem) var(--nx-space-3, 0.75rem);
+  border-radius: var(--nx-radius-md, 10px);
+  cursor: pointer;
+  transition: background var(--nx-transition-fast), opacity var(--nx-transition-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nx-conv-list-item + .nx-conv-list-item { margin-top: 2px; }
+.nx-conv-list-item:hover { background: var(--nx-bg-hover, #f1f5f9); }
+.nx-conv-list-item:focus-visible { outline: 2px solid var(--nx-accent, var(--nx-primary, #6366f1)); outline-offset: -2px; }
+
+.nx-conv-list-item.is-active { background: var(--nx-accent-soft, rgba(99, 102, 241, 0.12)); }
+
+.nx-conv-list-item.is-active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 3px;
+  height: 56%;
+  transform: translateY(-50%);
+  border-radius: var(--nx-radius-full, 9999px);
+  background: var(--nx-accent, var(--nx-primary, #6366f1));
+}
+
+.nx-conv-list-item.is-archived { opacity: 0.55; cursor: default; }
+
+.nx-conv-list-item-main {
+  display: flex;
+  align-items: center;
+  gap: var(--nx-space-2, 0.5rem);
+}
+
+.nx-conv-list-item-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+  color: var(--nx-text-heading, #0f172a);
+}
+
+.nx-conv-list-item.is-active .nx-conv-list-item-title { color: var(--nx-text-accent, var(--nx-primary, #6366f1)); }
+
+.nx-conv-list-item-badge {
+  flex-shrink: 0;
+  padding: 1px 6px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--nx-warning-text, var(--nx-warning, #f59e0b));
+  background: var(--nx-warning-soft, rgba(245, 158, 11, 0.12));
+  border-radius: var(--nx-radius-full, 9999px);
+}
+
+.nx-conv-list-item-sub {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nx-space-2, 0.5rem);
+  margin-top: 2px;
+}
+
+.nx-conv-list-item-time {
+  flex-shrink: 0;
+  font-size: var(--nx-text-xs, 0.75rem);
+  color: var(--nx-text-muted, #94a3b8);
+}
+
+.nx-conv-list-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity var(--nx-transition-fast);
+}
+
+.nx-conv-list-item:hover .nx-conv-list-item-actions,
+.nx-conv-list-item:focus-within .nx-conv-list-item-actions,
+.nx-conv-list-item.is-active .nx-conv-list-item-actions { opacity: 1; }
+
+@media (hover: none) {
+  .nx-conv-list-item-actions { opacity: 1; }
+}
+
+.nx-conv-list-item-btn {
+  padding: 0.1875rem 0.375rem;
+  font-size: var(--nx-text-xs, 0.75rem);
+  font-family: inherit;
+  color: var(--nx-text-secondary, #64748b);
+  background: transparent;
+  border: none;
+  border-radius: var(--nx-radius-sm, 6px);
+  cursor: pointer;
+  transition: background var(--nx-transition-fast), color var(--nx-transition-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nx-conv-list-item-btn:hover { color: var(--nx-text-heading, #0f172a); background: var(--nx-bg-subtle, rgba(0, 0, 0, 0.04)); }
+.nx-conv-list-item-btn:focus-visible { outline: 2px solid var(--nx-accent, var(--nx-primary, #6366f1)); outline-offset: 1px; }
+
+.nx-conv-list-item-btn.is-danger:hover {
+  color: var(--nx-danger, #ef4444);
+  background: rgba(var(--nx-danger-rgb, 239, 68, 68), 0.1);
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .nx-conv-list-search-input { font-size: 16px; }
+}
+
 /* ===== nexus-components-settings.css ===== */
 /* 设置中心（nux-settings-drawer）与自动化管理（nux-automation）共享样式 */
 .nx-settings-overlay {

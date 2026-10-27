@@ -5,8 +5,9 @@
     const store = [
       { id: 'c1', title: '九月的旅行路书', status: 'active', updated_at: new Date(Date.now() - 30 * 60000).toISOString() },
       { id: 'c2', title: '产品命名头脑风暴', status: 'active', updated_at: new Date(Date.now() - 5 * 3600000).toISOString() },
-      { id: 'c3', title: '周报草稿润色', status: 'active', updated_at: new Date(Date.now() - 26 * 3600000).toISOString() },
-      { id: 'c4', title: '上季度的复盘讨论', status: 'archived', updated_at: new Date(Date.now() - 72 * 3600000).toISOString() }
+      { id: 'c3', title: '这是一条特别长的会话标题用来验证超宽文本的单行截断省略号效果', status: 'active', updated_at: new Date(Date.now() - 12 * 3600000).toISOString() },
+      { id: 'c4', title: '周报草稿润色', status: 'active', updated_at: new Date(Date.now() - 26 * 3600000).toISOString() },
+      { id: 'c5', title: '上季度的复盘讨论', status: 'archived', updated_at: new Date(Date.now() - 72 * 3600000).toISOString() }
     ];
     return {
       get(url, params) {
@@ -573,9 +574,9 @@ async handler(text, cb) {
         id: 'conversation-list',
         tag: 'nux-conversation-list',
         title: '历史会话',
-        desc: 'AI 应用会话列表：搜索 / 新建 / 归档 / 删除全套动作，加载骨架与错误重试内置；传入 NexusApi 实例即接真实后端',
+        desc: 'AI 应用会话侧栏：搜索 / 新建 / 归档 / 删除全套动作，加载骨架与错误重试内置，悬停行内操作，当前会话高亮；传入 NexusApi 实例即接真实后端',
         tpl: `
-<div style="max-width: 340px; border: 1px solid var(--nx-border); border-radius: 12px; overflow: hidden">
+<div style="max-width: 340px; height: 420px; background: var(--nx-bg-surface); border: 1px solid var(--nx-border); border-radius: 14px; overflow: hidden">
   <nux-conversation-list :api="convApi" active-id="c1"
     @select="onPick" @created="onCreated" @deleted="onDeleted"></nux-conversation-list>
 </div>`,

@@ -78,6 +78,7 @@ CSS_FILES: list[str] = [
     "nexus-components-form.css",
     "nexus-components-controls.css",
     "nexus-components-display.css",
+    "nexus-components-conversation.css",
     "nexus-components-settings.css",
     "nexus-layout.css",
     "nexus-side-panel.css",

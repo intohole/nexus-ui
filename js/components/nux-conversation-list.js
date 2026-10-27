@@ -138,7 +138,10 @@
                 try {
                     const res = await api.patch(`${props.conversationUrl}/${conv.id}`, { status: archived ? 'archived' : 'active' });
                     const updated = props.itemAdapter(res);
-                    if (updated && updated.id) conv.status = updated.status;
+                    if (updated && updated.id) {
+                        const idx = list.value.findIndex((c) => c.id === updated.id);
+                        if (idx >= 0) list.value[idx] = { ...list.value[idx], ...updated };
+                    }
                     ctx.emit('archive', conv, archived);
                 } catch (e) {
                     error.value = e && e.message ? e.message : '归档失败';
@@ -153,7 +156,17 @@
 
             function fmtTime(iso) {
                 if (!iso) return '';
-                if (window.NexusUtils && NexusUtils.formatDate) return NexusUtils.formatDate(iso);
+                if (window.NexusUtils && NexusUtils.formatDate) {
+                    try {
+                        const d = NexusUtils.parseDate ? NexusUtils.parseDate(iso) : new Date(iso);
+                        if (!d || isNaN(d.getTime())) return '';
+                        const now = new Date();
+                        const sameDay = d.toDateString() === now.toDateString();
+                        if (sameDay) return NexusUtils.formatDate(iso, { year: undefined, month: undefined, day: undefined });
+                        if (d.getFullYear() === now.getFullYear()) return NexusUtils.formatDate(iso, { year: undefined });
+                        return NexusUtils.formatDateShort(iso);
+                    } catch (e) { return ''; }
+                }
                 try {
                     const d = new Date(iso);
                     const now = new Date();
@@ -196,7 +209,7 @@
                 </div>
 
                 <div v-if="loading && !list.length" class="nx-conv-list-skeleton">
-                    <div v-for="i in 5" :key="i" class="nx-conv-list-skeleton-item shimmer"></div>
+                    <div v-for="i in 5" :key="i" class="nx-conv-list-skeleton-item"></div>
                 </div>
 
                 <div v-else-if="!list.length" class="nx-conv-list-empty" role="status">
