@@ -7403,3 +7403,76 @@ a.nx-citation-title:focus-visible { outline: 2px solid var(--nx-primary); outlin
 .nx-ai-chat-assistant .nx-ai-chat-content a { color: var(--nx-accent, rgb(79, 70, 229)); }
 
 [data-theme="dark"] .nx-ai-chat-reasoning { background: var(--nx-bg-tertiary, rgba(0, 0, 0, 0.2)); border-color: var(--nx-border, rgb(51, 65, 85)); }
+
+/* ---- 对话控制面（feat.chatActions，S64）：编辑重发 + 失败条操作组 ---- */
+
+.nx-ai-chat-edit {
+    display: flex;
+    flex-direction: column;
+    gap: var(--nx-space-2, 0.5rem);
+    width: 100%;
+}
+
+.nx-ai-chat-edit-input {
+    width: 100%;
+    resize: vertical;
+    min-height: 2.5rem;
+    padding: 0.5rem 0.625rem;
+    font: inherit;
+    font-size: var(--nx-text-sm, 0.875rem);
+    line-height: 1.5;
+    color: var(--nx-text, rgb(30, 41, 59));
+    background: var(--nx-bg, rgb(255, 255, 255));
+    border: 1px solid var(--nx-accent, rgb(79, 70, 229));
+    border-radius: var(--nx-radius-md, 0.5rem);
+    box-sizing: border-box;
+}
+
+.nx-ai-chat-edit-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--nx-space-2, 0.5rem);
+}
+
+.nx-ai-chat-edit-cancel,
+.nx-ai-chat-edit-send {
+    padding: 0.25rem 0.75rem;
+    font-size: var(--nx-text-xs, 0.75rem);
+    border-radius: var(--nx-radius-sm, 0.25rem);
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+
+.nx-ai-chat-edit-cancel {
+    background: transparent;
+    border: 1px solid var(--nx-border, rgb(203, 213, 225));
+    color: var(--nx-text-muted, rgb(100, 116, 139));
+}
+
+.nx-ai-chat-edit-send {
+    background: var(--nx-accent, rgb(79, 70, 229));
+    border: 1px solid var(--nx-accent, rgb(79, 70, 229));
+    color: rgb(255, 255, 255);
+}
+
+.nx-ai-chat-edit-cancel:hover,
+.nx-ai-chat-edit-send:hover {
+    opacity: 0.85;
+}
+
+.nx-ai-chat-error-text {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.nx-ai-chat-error-ops {
+    display: flex;
+    flex: none;
+    gap: var(--nx-space-2, 0.5rem);
+}
+
+[data-theme="dark"] .nx-ai-chat-edit-input {
+    color: var(--nx-text, rgb(226, 232, 240));
+    background: var(--nx-bg-secondary, rgb(15, 23, 42));
+}

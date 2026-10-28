@@ -5,6 +5,7 @@
             stopButton: true,
             streamFallback: true,
             streamBlocks: true,
+            chatActions: false,
             scrollToBottomButton: true,
             smartScroll: true,
             typingIndicator: true,
@@ -192,6 +193,7 @@
                 msg.streaming = false;
                 if (!ok) {
                     msg.error = true;
+                    msg.errorMsg = err || '未知错误';
                     isError.value = true;
                     errorMsg.value = err || '未知错误';
                 }
@@ -223,36 +225,13 @@
                 });
             }
 
-            async function send(content) {
-                if (content === undefined && env.inputEl.value) {
-                    const domVal = String(env.inputEl.value.value || '');
-                    if (domVal !== input.value) input.value = domVal;
-                }
-                const text = (content !== undefined ? content : input.value).trim();
-                if (!text || isStreaming.value || props.disabled) return;
-
-                if (inputCfg.rateLimit > 0) {
-                    const now = Date.now();
-                    if (now - lastSendTime.value < inputCfg.rateLimit) return;
-                    lastSendTime.value = now;
-                }
-
-                if (content === undefined) input.value = '';
-                autoResize();
-
-                const userMsg = {
-                    id: 'u_' + Date.now(),
-                    role: 'user',
-                    content: text,
-                    created_at: new Date().toISOString()
-                };
-                list.push(userMsg);
-
+            // 单轮流式主体：send / regenerate / editResend 共用。opts.emitSend=是否补发
+            // 'send' 事件（send 路径语义守恒）；regenerate/editResend 改发各自语义事件。
+            async function startTurn(text, opts) {
                 const assistantMsg = buildAssistantMsg();
                 list.push(assistantMsg);
                 emitMessages();
-
-                emit('send', text);
+                if (opts && opts.emitSend) emit('send', text);
                 smartScroll(true);
 
                 isStreaming.value = true;
@@ -303,6 +282,75 @@
                 }
             }
 
+            async function send(content) {
+                if (content === undefined && env.inputEl.value) {
+                    const domVal = String(env.inputEl.value.value || '');
+                    if (domVal !== input.value) input.value = domVal;
+                }
+                const text = (content !== undefined ? content : input.value).trim();
+                if (!text || isStreaming.value || props.disabled) return;
+
+                if (inputCfg.rateLimit > 0) {
+                    const now = Date.now();
+                    if (now - lastSendTime.value < inputCfg.rateLimit) return;
+                    lastSendTime.value = now;
+                }
+
+                if (content === undefined) input.value = '';
+                autoResize();
+
+                const userMsg = {
+                    id: 'u_' + Date.now(),
+                    role: 'user',
+                    content: text,
+                    created_at: new Date().toISOString()
+                };
+                list.push(userMsg);
+
+                await startTurn(text, { emitSend: true });
+            }
+
+            // 重新生成：从任一成功 assistant 消息截断后续并重发其前最近的用户提问。
+            // 纯前端编排——用户消息保留在列表，不重复 push；消息变更经 emitMessages 灌出。
+            function regenerate(msg) {
+                if (!feat.chatActions || isStreaming.value || props.disabled) return;
+                let target = msg;
+                if (!target) {
+                    for (let i = list.length - 1; i >= 0; i--) {
+                        if (list[i].role === 'assistant') { target = list[i]; break; }
+                    }
+                }
+                if (!target || target.role !== 'assistant') return;
+                const idx = list.indexOf(target);
+                if (idx < 0) return;
+                let userIdx = -1;
+                for (let i = idx - 1; i >= 0; i--) {
+                    if (list[i].role === 'user') { userIdx = i; break; }
+                }
+                if (userIdx < 0) return;
+                const text = String(list[userIdx].content || '').trim();
+                if (!text) return;
+                list.splice(userIdx + 1);
+                emitMessages();
+                emit('regenerate', text);
+                startTurn(text, {});
+            }
+
+            // 编辑重发：改写既有用户消息并截断其后，以新文案重发该轮。
+            function editResend(msg, newContent) {
+                if (!feat.chatActions || isStreaming.value || props.disabled) return;
+                if (!msg || msg.role !== 'user') return;
+                const text = String(newContent != null ? newContent : msg.content).trim();
+                if (!text) return;
+                const idx = list.indexOf(msg);
+                if (idx < 0) return;
+                msg.content = text;
+                list.splice(idx + 1);
+                emitMessages();
+                emit('edit-resend', text);
+                startTurn(text, {});
+            }
+
             function stop() {
                 if (!isStreaming.value) return;
                 stopped = true;
@@ -347,7 +395,8 @@
                 else if (controller) { try { controller.stop(); } catch (e) {} }
             }
 
-            return { send: send, stop: stop, retry: retry, clear: clear, abort: abort };
+            return { send: send, stop: stop, retry: retry, clear: clear, abort: abort,
+                regenerate: regenerate, editResend: editResend };
         }
     };
 })();

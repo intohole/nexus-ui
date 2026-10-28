@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>对话控制面 e2e（S64：重新生成/编辑重发/失败态标准化）</title>
+    <script src="../vendor/vue.global.prod.js"></script>
+    <script src="../js/nexus-utils.js"></script>
+    <script src="../js/nexus-markdown.js"></script>
+    <script src="../js/nexus-streamdown.js"></script>
+    <link rel="stylesheet" href="../css/nexus-tokens.css">
+    <link rel="stylesheet" href="../css/nexus-base.css">
+    <link rel="stylesheet" href="../css/nexus-markdown.css">
+    <link rel="stylesheet" href="../css/nexus-ai-chat.css">
+    <style>
+        body { display: flex; gap: 16px; }
+        .e2e-col { flex: 1; min-width: 0; height: 100vh; display: flex; flex-direction: column; }
+        .e2e-col h2 { font-size: 13px; margin: 8px 0 4px; color: #475569; }
+        .e2e-chat { flex: 1; min-height: 0; }
+    </style>
+</head>
+<body>
+<div class="e2e-col" id="app-on">
+    <h2>feat.chatActions: true</h2>
+    <nux-ai-chat ref="chat" class="e2e-chat" :send-handler="fakeStream" :features="{ voice: false, chatActions: true }" @regenerate="onEvt('regenerate', $event)" @edit-resend="onEvt('edit-resend', $event)"></nux-ai-chat>
+</div>
+<div class="e2e-col" id="app-off">
+    <h2>feat.chatActions 默认关（对照）</h2>
+    <nux-ai-chat ref="chat" class="e2e-chat" :send-handler="fakeStream" :features="{ voice: false }"></nux-ai-chat>
+</div>
+<script src="../js/components/nux-ai-chat-helpers.js"></script>
+<script src="../js/components/nux-ai-chat-template.js"></script>
+<script src="../js/components/nux-ai-widgets.js"></script>
+<script src="../js/components/nux-ai-widgets-rich.js"></script>
+<script src="../js/components/nux-tool-call.js"></script>
+<script src="../js/components/nux-citations.js"></script>
+<script src="../js/components/nux-confidence.js"></script>
+<script src="../js/components/nux-ai-chat.js"></script>
+<script>
+window.__E2E = { phase: 'init', errors: [], events: [], result: null };
+window.addEventListener('error', function (e) { window.__E2E.errors.push(String(e.message)); });
+
+const REPLIES = {
+    '第一问': '这是对**第一问**的回答，段落一。',
+    '改后的第二问': '这是按编辑后文案重新生成的回答。',
+    '第三问': null
+};
+
+function fakeStream(text, callbacks) {
+    if (REPLIES[text] === null) {
+        setTimeout(function () { callbacks.onError(new Error('注入的失败：上游 500')); }, 120);
+        return;
+    }
+    const reply = REPLIES[text] || ('默认回答：' + text);
+    let full = '';
+    let i = 0;
+    const timer = setInterval(function () {
+        if (i >= reply.length) {
+            clearInterval(timer);
+            callbacks.onDone(full);
+            return;
+        }
+        full += reply.slice(i, i + 4);
+        i += 4;
+        callbacks.onChunk('', full);
+    }, 20);
+}
+
+function mountApp(sel) {
+    const app = Vue.createApp({
+        setup() {
+            function onEvt() {}
+            return { fakeStream: fakeStream, onEvt: onEvt };
+        }
+    });
+    ['NuxAiChat', 'NuxAiWidgets', 'NuxToolCall', 'NuxCitations', 'NuxConfidence'].forEach(function (n) {
+        if (window[n]) app.component(n, window[n]);
+    });
+    return app.mount(sel);
+}
+
+const onApp = mountApp('#app-on');
+const offApp = mountApp('#app-off');
+window.__E2E.onApp = onApp;
+window.__E2E.offApp = offApp;
+onApp.onEvt = function (name, payload) { window.__E2E.events.push([name, payload]); };
+
+function setInput(vm, text) {
+    const ta = vm.$refs.chat.$.setupState; // expose 面拿不到内部 input；走 DOM
+    const el = document.querySelector('#app-on .nx-ai-chat-input');
+    const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set;
+    setter.call(el, text);
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+}
+function pressEnter(vm) {
+    const el = document.querySelector('#app-on .nx-ai-chat-input');
+    el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+}
+function msgs(vm) {
+    return Array.from(document.querySelectorAll((vm === onApp ? '#app-on ' : '#app-off ') + '.nx-ai-chat-msg'));
+}
+function textOf(el) { return (el.querySelector('.nx-ai-chat-content') || {}).textContent || ''; }
+function waitIdle(vm, timeout) {
+    var scope = vm === onApp ? '#app-on ' : '#app-off ';
+    var t0 = Date.now();
+    var saw = false;
+    return new Promise(function (resolve) {
+        (function poll() {
+            var streaming = !!document.querySelector(scope + '.nx-ai-chat-msg.is-streaming');
+            if (streaming) {
+                saw = true;
+            } else if (saw) {
+                return resolve(true);
+            }
+            if (Date.now() - t0 > (timeout || 6000)) return resolve(false);
+            setTimeout(poll, 50);
+        })();
+    });
+}
+
+(async function run() {
+    const R = {};
+    await new Promise(function (r) { setTimeout(r, 100); });
+
+    // ① fill+Enter 真实动线发送
+    setInput(onApp, '第一问');
+    pressEnter(onApp);
+    await waitIdle(onApp);
+    R.sendDone = msgs(onApp).length === 2 && /第一问/.test(textOf(msgs(onApp)[1]));
+    R.sendViaEnter = /对.{0,3}第一问/.test(textOf(msgs(onApp)[1]));
+
+    // ② 重新生成：点 assistant 消息上的「重新生成」
+    const regenBtn = Array.from(msgs(onApp)[1].querySelectorAll('.nx-ai-chat-action-btn')).find(function (b) { return b.textContent === '重新生成'; });
+    R.regenBtnPresent = !!regenBtn;
+    if (regenBtn) regenBtn.click();
+    await waitIdle(onApp);
+    R.regenTruncate = msgs(onApp).length === 2;
+    R.regenEvt = window.__E2E.events.some(function (e) { return e[0] === 'regenerate' && e[1] === '第一问'; });
+
+    // ③ 编辑重发：点 user 消息上的「编辑」→ textarea 改文案 → 点「重发」
+    const editBtn = Array.from(msgs(onApp)[0].querySelectorAll('.nx-ai-chat-action-btn')).find(function (b) { return b.textContent === '编辑'; });
+    R.editBtnPresent = !!editBtn;
+    if (editBtn) editBtn.click();
+    await new Promise(function (r) { setTimeout(r, 50); });
+    const editTa = msgs(onApp)[0].querySelector('.nx-ai-chat-edit-input');
+    R.editTaAppear = !!editTa;
+    if (editTa) {
+        const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set;
+        setter.call(editTa, '改后的第二问');
+        editTa.dispatchEvent(new Event('input', { bubbles: true }));
+        const sendBtn = msgs(onApp)[0].querySelector('.nx-ai-chat-edit-send');
+        if (sendBtn) sendBtn.click();
+    }
+    await waitIdle(onApp);
+    R.editRewritten = /改后的第二问/.test(textOf(msgs(onApp)[0]));
+    R.editResendDone = msgs(onApp).length === 2 && /编辑后文案/.test(textOf(msgs(onApp)[1]));
+    R.editEvt = window.__E2E.events.some(function (e) { return e[0] === 'edit-resend' && e[1] === '改后的第二问'; });
+
+    // ④ 失败态标准化：第三问注入 onError（按注入模式推导：error-bar 在场+文案+复制详情+重试）
+    setInput(onApp, '第三问');
+    pressEnter(onApp);
+    await waitIdle(onApp);
+    const bar = document.querySelector('#app-on .nx-ai-chat-error-bar');
+    R.failBarRole = !!(bar && bar.getAttribute('role') === 'alert');
+    R.failTextMsgLevel = !!(bar && /注入的失败/.test(bar.textContent));
+    R.failCopyBtn = !!(bar && Array.from(bar.querySelectorAll('button')).some(function (b) { return b.textContent === '复制详情'; }));
+    R.failRetryBtn = !!(bar && Array.from(bar.querySelectorAll('button')).some(function (b) { return b.textContent === '重试'; }));
+
+    // ⑤ 对照实例：默认关零变化（无编辑/重新生成钮，error-bar 无复制详情）
+    setInput2(offApp, '第一问');
+    function setInput2(vm, text) {
+        const el = document.querySelector('#app-off .nx-ai-chat-input');
+        const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set;
+        setter.call(el, text);
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    }
+    await waitIdle(offApp);
+    const offBtns = Array.from(document.querySelectorAll('#app-off .nx-ai-chat-action-btn')).map(function (b) { return b.textContent; });
+    R.offNoNewButtons = offBtns.indexOf('编辑') < 0 && offBtns.indexOf('重新生成') < 0;
+    R.offCopyOnly = offBtns.every(function (t) { return t === '复制'; });
+
+    window.__E2E.result = R;
+    window.__E2E.phase = 'done';
+})();
+</script>
+</body>
+</html>

@@ -251,6 +251,92 @@ const flush = () => new Promise((r) => setImmediate(r));
     delete window.NexusChat;
 }
 
+// ---- S64 对话控制面：regenerate / editResend / 消息级失败文案 ----
+{
+    const env = makeEnv();
+    env.props.sendHandler = async () => {};
+    const a = H.createActions(env);
+    env.list.push({ id: 'u1', role: 'user', content: '第一问' }, { id: 'a1', role: 'assistant', content: '答一' });
+    a.regenerate();
+    check('regenerate: feat.chatActions 默认关时 no-op', env.list.length === 2 && !env.isStreaming.value);
+}
+{
+    const env = makeEnv();
+    env.feat.chatActions = true;
+    env.props.sendHandler = async (text, cb) => { cb.onDone('重新生成的答案'); };
+    const a = H.createActions(env);
+    env.list.push(
+        { id: 'u1', role: 'user', content: '第一问' },
+        { id: 'a1', role: 'assistant', content: '答一' },
+        { id: 'u2', role: 'user', content: '第二问' },
+        { id: 'a2', role: 'assistant', content: '答二' }
+    );
+    await a.regenerate(env.list[1]);
+    check('regenerate: 从中途 assistant 截断（目标消息及其后全删）', env.list.length === 2
+        && env.list[0].id === 'u1' && env.list[1].role === 'assistant');
+    check('regenerate: 用户消息不重复 push 且内容保留', env.list.filter((m) => m.role === 'user').length === 1
+        && env.list[0].content === '第一问');
+    check('regenerate: 新流推进完成', env.list[1].content === '重新生成的答案' && env.list[1].streaming === false);
+    check('regenerate: regenerate 事件带重发文本', env.events.some((e) => e[0] === 'regenerate' && e[1] === '第一问'));
+    check('regenerate: 不补发 send 事件', !env.events.some((e) => e[0] === 'send'));
+}
+{
+    const env = makeEnv();
+    env.feat.chatActions = true;
+    env.props.sendHandler = async () => {};
+    const a = H.createActions(env);
+    env.isStreaming.value = true;
+    env.list.push({ id: 'u1', role: 'user', content: 'q' }, { id: 'a1', role: 'assistant', content: 'a' });
+    a.regenerate();
+    check('regenerate: 流式中拒发', env.list.length === 2);
+}
+{
+    const env = makeEnv();
+    env.feat.chatActions = true;
+    env.props.sendHandler = async () => {};
+    const a = H.createActions(env);
+    env.list.push({ id: 'a1', role: 'assistant', content: '孤立的助手消息' });
+    a.regenerate();
+    check('regenerate: 无前置用户消息 no-op', env.list.length === 1 && !env.isStreaming.value);
+}
+{
+    const env = makeEnv();
+    env.feat.chatActions = true;
+    env.props.sendHandler = async (text, cb) => { cb.onDone('按新文案的回答'); };
+    const a = H.createActions(env);
+    env.list.push(
+        { id: 'u1', role: 'user', content: '旧文案' },
+        { id: 'a1', role: 'assistant', content: '旧回答' },
+        { id: 'u2', role: 'user', content: '另一问' }
+    );
+    await a.editResend(env.list[0], '新文案');
+    check('editResend: 用户消息就地改写', env.list[0].content === '新文案' && env.list[0].id === 'u1');
+    check('editResend: 该轮之后全部截断', env.list.length === 2 && env.list[1].role === 'assistant');
+    check('editResend: 新流完成', env.list[1].content === '按新文案的回答');
+    check('editResend: edit-resend 事件带新文案', env.events.some((e) => e[0] === 'edit-resend' && e[1] === '新文案'));
+}
+{
+    const env = makeEnv();
+    env.feat.chatActions = true;
+    env.props.sendHandler = async () => {};
+    const a = H.createActions(env);
+    env.list.push({ id: 'u1', role: 'user', content: 'q' }, { id: 'a1', role: 'assistant', content: 'a' });
+    a.editResend(env.list[1], 'x');
+    check('editResend: 非 user 消息拒发', env.list.length === 2 && !env.isStreaming.value);
+    a.editResend(env.list[0], '   ');
+    check('editResend: 空文本拒发', env.list.length === 2 && !env.isStreaming.value);
+}
+{
+    const env = makeEnv();
+    env.feat.streamFallback = false;
+    env.props.sendHandler = async (text, cb) => { cb.onError(new Error('这条会失败')); };
+    const a = H.createActions(env);
+    await a.send('q');
+    await a.send('q2');
+    check('settle: 失败文案落消息级 errorMsg（首条不被末条覆盖）',
+        env.list[1].errorMsg === '这条会失败' && env.list[3].errorMsg === '这条会失败');
+}
+
 let pass = 0;
 for (const [name, ok] of results) {
     console.log((ok ? 'PASS' : 'FAIL') + ' ' + name);

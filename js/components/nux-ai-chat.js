@@ -26,7 +26,7 @@
             scrollThreshold: { type: Number, default: 150 },
             streaming: { type: Boolean, default: false }
         },
-        emits: ['update:messages', 'send', 'chunk', 'done', 'error', 'stop', 'retry', 'clear', 'stream-start', 'stream-end', 'meta', 'widget-action', 'voice-result'],
+        emits: ['update:messages', 'send', 'chunk', 'done', 'error', 'stop', 'retry', 'clear', 'stream-start', 'stream-end', 'meta', 'widget-action', 'voice-result', 'regenerate', 'edit-resend'],
         components: Object.assign(
             { NuxAiWidgets: window.NuxAiWidgets },
             window.NuxVoiceInput ? { NuxVoiceInput: window.NuxVoiceInput } : {},
@@ -191,12 +191,43 @@
             const stop = actions.stop;
             const retry = actions.retry;
             const clear = actions.clear;
+            const regenerate = actions.regenerate;
+            const editResend = actions.editResend;
 
             function copyMessage(msg) {
                 if (!msg || !msg.content) return;
                 if (window.NexusUtils && NexusUtils.copyText) {
                     NexusUtils.copyText(msg.content, { success: '已复制' });
                 }
+            }
+
+            function copyMessageError(msg) {
+                const text = (msg && msg.errorMsg) || errorMsg.value || '生成失败';
+                if (window.NexusUtils && NexusUtils.copyText) {
+                    NexusUtils.copyText(text, { success: '已复制错误详情' });
+                }
+            }
+
+            function startEdit(m) {
+                if (!feat.chatActions || isStreaming.value || props.disabled) return;
+                if (!m || m.role !== 'user') return;
+                m._editDraft = m.content;
+                m._editing = true;
+            }
+
+            function cancelEdit(m) {
+                if (!m) return;
+                m._editing = false;
+                m._editDraft = '';
+            }
+
+            function confirmEdit(m) {
+                if (!m || !m._editing) return;
+                const text = String(m._editDraft || '').trim();
+                m._editing = false;
+                m._editDraft = '';
+                if (!text || text === m.content) return;
+                editResend(m, text);
             }
 
             function onWidgetAction(ev, msg) {
@@ -263,7 +294,7 @@
             });
 
             ctx.expose({
-                send, stop, clear, retry, copyMessage, scrollToBottom,
+                send, stop, clear, retry, regenerate, editResend, copyMessage, scrollToBottom,
                 getMessages: () => list.slice(),
                 setMessages: (arr) => {
                     list.splice(0, list.length, ...arr.map(m => reactive(Object.assign({}, m))));
@@ -276,7 +307,8 @@
             return {
                 list, input, isStreaming, isError, errorMsg, showScrollBtn, newMsgCount,
                 elapsed, kbHeight, scrollEl, inputEl, listEl, feat, inputCfg, roleCfg,
-                renderMarkdown, send, stop, retry, clear, copyMessage, scrollToBottom,
+                renderMarkdown, send, stop, retry, clear, regenerate, editResend,
+                copyMessage, copyMessageError, startEdit, cancelEdit, confirmEdit, scrollToBottom,
                 isCitedRefs,
                 onScroll, onInput, onKeydown, onCompositionStart, onCompositionEnd,
                 clickQuickReply, smartScroll, onWidgetAction, onVoiceResult
