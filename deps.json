@@ -123,6 +123,11 @@
       "version": "3.13.7",
       "pkg": "hotkeys-js",
       "cdn": "https://registry.npmmirror.com/hotkeys-js/{version}/files/dist/hotkeys.min.js"
+    },
+    "monaco-editor": {
+      "version": "0.52.2",
+      "pkg": "monaco-editor",
+      "cdn": "https://registry.npmmirror.com/monaco-editor/{version}/files/min/vs/loader.js"
     }
   },
   "ignore_paths": [
