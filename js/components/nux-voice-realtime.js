@@ -3,18 +3,46 @@
 
     var CAPTURE_WORKLET = [
         'class PCMCaptureProcessor extends AudioWorkletProcessor {',
-        '  constructor() { super(); this._buf = new Int16Array(3200); this._n = 0; }',
+        '  constructor(options) {',
+        '    super();',
+        '    const o = (options && options.processorOptions) || {};',
+        '    this._ratio = (o.srcRate || 16000) / (o.dstRate || 16000);',
+        '    this._dstBlock = 3200;',
+        '    this._out = new Int16Array(this._dstBlock);',
+        '    this._n = 0;',
+        '    this._frac = 0;',
+        '    this._prev = 0;',
+        '    this._cur = 0;',
+        '    this._hasCur = false;',
+        '    this._sum = 0;',
+        '  }',
+        '  _pushSample(s) {',
+        '    this._sum += s * s;',
+        '    if (this._n < this._dstBlock) this._out[this._n++] = s < -1 ? -32768 : (s > 1 ? 32767 : Math.round(s * 32767));',
+        '    if (this._n === this._dstBlock) {',
+        '      this.port.postMessage({ pcm: this._out.slice(0), rms: Math.sqrt(this._sum / this._dstBlock) });',
+        '      this._n = 0;',
+        '      this._sum = 0;',
+        '    }',
+        '  }',
         '  process(inputs) {',
         '    const ch = inputs[0] && inputs[0][0];',
         '    if (!ch) return true;',
-        '    let sum = 0;',
+        '    if (this._ratio <= 1.001) {',
+        '      for (let i = 0; i < ch.length; i++) {',
+        '        this._pushSample(Math.max(-1, Math.min(1, ch[i])));',
+        '      }',
+        '      return true;',
+        '    }',
         '    for (let i = 0; i < ch.length; i++) {',
-        '      const s = Math.max(-1, Math.min(1, ch[i]));',
-        '      sum += s * s;',
-        '      if (this._n < 3200) this._buf[this._n++] = s < 0 ? s * 0x8000 : s * 0x7fff;',
-        '      if (this._n === 3200) {',
-        '        this.port.postMessage({ pcm: this._buf.slice(0), rms: Math.sqrt(sum / ch.length) });',
-        '        this._n = 0;',
+        '      this._prev = this._hasCur ? this._cur : ch[i];',
+        '      this._cur = ch[i];',
+        '      this._hasCur = true;',
+        '      this._frac += 1 / this._ratio;',
+        '      while (this._frac >= 1) {',
+        '        this._frac -= 1;',
+        '        const t = this._frac;',
+        '        this._pushSample(this._prev + (this._cur - this._prev) * t);',
         '      }',
         '    }',
         '    return true;',
@@ -73,12 +101,23 @@
         ws.onclose = function () {
             self.emit('closed');
             self._teardownMedia();
+            if (self._onOpenReject) {
+                var rej = self._onOpenReject;
+                self._onOpenResolve = null;
+                self._onOpenReject = null;
+                rej(new Error('连接被关闭'));
+            }
             if (!self._closedByUser) self._setState('idle');
         };
         ws.onerror = function () { self.emit('error', { message: '连接服务器失败' }); };
         return new Promise(function (resolve, reject) {
-            var timer = setTimeout(function () { reject(new Error('连接超时')); }, 10000);
+            var timer = setTimeout(function () {
+                self._onOpenResolve = null;
+                self._onOpenReject = null;
+                reject(new Error('连接超时'));
+            }, 10000);
             self._onOpenResolve = function () { clearTimeout(timer); resolve(); };
+            self._onOpenReject = function (err) { clearTimeout(timer); reject(err); };
         });
     };
 
@@ -92,7 +131,11 @@
         if (type === 'asr_partial') { this.emit('asr_partial', msg); return; }
         if (type === 'asr_final') { this.emit('asr_final', msg); return; }
         if (type === 'thinking') { this.emit('thinking', msg); return; }
-        if (type === 'assistant_delta') { this._setState('thinking'); this.emit('assistant_delta', msg); return; }
+        if (type === 'assistant_delta') {
+            if (this.state !== 'speaking') this._setState('thinking');
+            this.emit('assistant_delta', msg);
+            return;
+        }
         if (type === 'tts_audio') { this._setState('speaking'); this._playChunk(msg.data); return; }
         if (type === 'turn_end') { this._setState('listening'); this.emit('turn_end', msg); return; }
         if (type === 'interrupted') { this._setState('listening'); this.emit('interrupted', msg); return; }
@@ -120,7 +163,9 @@
         var workletUrl = URL.createObjectURL(workletBlob);
         return this.micCtx.audioWorklet.addModule(workletUrl).then(function () {
             var src = self.micCtx.createMediaStreamSource(self.stream);
-            var node = new AudioWorkletNode(self.micCtx, 'pcm-capture');
+            var node = new AudioWorkletNode(self.micCtx, 'pcm-capture', {
+                processorOptions: { srcRate: self.micCtx.sampleRate, dstRate: 16000 }
+            });
             node.port.onmessage = function (ev) { self._handleBlock(ev.data); };
             src.connect(node);
             self.micCtx.resume();
