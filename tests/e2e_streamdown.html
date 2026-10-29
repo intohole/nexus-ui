@@ -4,27 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>streamdown 流式渲染 e2e</title>
-    <script src="../vendor/vue.global.prod.js"></script>
-    <script src="../js/nexus-utils.js"></script>
-    <script src="../js/nexus-markdown.js"></script>
-    <script src="../js/nexus-streamdown.js"></script>
-    <link rel="stylesheet" href="../css/nexus-tokens.css">
-    <link rel="stylesheet" href="../css/nexus-base.css">
-    <link rel="stylesheet" href="../css/nexus-markdown.css">
-    <link rel="stylesheet" href="../css/nexus-ai-chat.css">
+    <script src="../vendor/vue.global.prod.js?v=2.76.0"></script>
+    <script src="../js/nexus-utils.js?v=2.76.0"></script>
+    <script src="../js/nexus-markdown.js?v=2.76.0"></script>
+    <script src="../js/nexus-streamdown.js?v=2.76.0"></script>
+    <link rel="stylesheet" href="../css/nexus-tokens.css?v=2.76.0">
+    <link rel="stylesheet" href="../css/nexus-base.css?v=2.76.0">
+    <link rel="stylesheet" href="../css/nexus-markdown.css?v=2.76.0">
+    <link rel="stylesheet" href="../css/nexus-ai-chat.css?v=2.76.0">
 </head>
 <body>
 <div id="app" style="max-width:720px;margin:0 auto;padding:16px;height:100vh;">
     <nux-ai-chat ref="chat" :send-handler="fakeStream" :features="{ voice: false }"></nux-ai-chat>
 </div>
-<script src="../js/components/nux-ai-chat-helpers.js"></script>
-<script src="../js/components/nux-ai-chat-template.js"></script>
-<script src="../js/components/nux-ai-widgets.js"></script>
-<script src="../js/components/nux-ai-widgets-rich.js"></script>
-<script src="../js/components/nux-tool-call.js"></script>
-<script src="../js/components/nux-citations.js"></script>
-<script src="../js/components/nux-confidence.js"></script>
-<script src="../js/components/nux-ai-chat.js"></script>
+<script src="../js/components/nux-ai-chat-helpers.js?v=2.76.0"></script>
+<script src="../js/components/nux-ai-chat-template.js?v=2.76.0"></script>
+<script src="../js/components/nux-ai-widgets.js?v=2.76.0"></script>
+<script src="../js/components/nux-ai-widgets-rich.js?v=2.76.0"></script>
+<script src="../js/components/nux-tool-call.js?v=2.76.0"></script>
+<script src="../js/components/nux-citations.js?v=2.76.0"></script>
+<script src="../js/components/nux-confidence.js?v=2.76.0"></script>
+<script src="../js/components/nux-ai-chat.js?v=2.76.0"></script>
 <script>
 window.__E2E = { phase: 'init', stableCounts: [], errors: [] };
 window.addEventListener('error', function (e) { window.__E2E.errors.push(String(e.message)); });
