@@ -90,9 +90,11 @@
         this._setState('connecting');
         var proto = location.protocol === 'https:' ? 'wss://' : 'ws://';
         var base = this.opts.wsUrl.indexOf('ws') === 0 ? this.opts.wsUrl : proto + location.host + this.opts.wsUrl;
-        var url = base + (base.indexOf('?') >= 0 ? '&' : '?') + 'token=' + encodeURIComponent(this.opts.token || '');
-        var ws = new WebSocket(url);
+        var ws = new WebSocket(base);
         this.ws = ws;
+        ws.onopen = function () {
+            self.ws.send(JSON.stringify({ type: 'auth', token: self.opts.token || '' }));
+        };
         ws.onmessage = function (ev) {
             var msg;
             try { msg = JSON.parse(ev.data); } catch (e) { return; }
