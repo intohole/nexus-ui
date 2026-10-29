@@ -91,6 +91,7 @@
         if (type === 'ready') { this._onOpenReady(); this.emit('ready', msg); return; }
         if (type === 'asr_partial') { this.emit('asr_partial', msg); return; }
         if (type === 'asr_final') { this.emit('asr_final', msg); return; }
+        if (type === 'thinking') { this.emit('thinking', msg); return; }
         if (type === 'assistant_delta') { this._setState('thinking'); this.emit('assistant_delta', msg); return; }
         if (type === 'tts_audio') { this._setState('speaking'); this._playChunk(msg.data); return; }
         if (type === 'turn_end') { this._setState('listening'); this.emit('turn_end', msg); return; }
