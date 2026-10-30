@@ -7,7 +7,7 @@
         '    super();',
         '    const o = (options && options.processorOptions) || {};',
         '    this._ratio = (o.srcRate || 16000) / (o.dstRate || 16000);',
-        '    this._dstBlock = 3200;',
+        '    this._dstBlock = 1600;',
         '    this._out = new Int16Array(this._dstBlock);',
         '    this._n = 0;',
         '    this._frac = 0;',
@@ -57,7 +57,7 @@
             token: '',
             vadSpeechRms: 0.02,
             vadSilenceRms: 0.012,
-            vadSilenceMs: 800,
+            vadSilenceMs: 500,
             onEvent: null
         }, options || {});
         this.state = 'idle';
@@ -69,7 +69,7 @@
         this.activeSources = [];
         this.sawSpeech = false;
         this.silentBlocks = 0;
-        this._blockMs = 200;
+        this._blockMs = 100;
         this._closedByUser = false;
     }
 
@@ -112,6 +112,12 @@
             if (!self._closedByUser) self._setState('idle');
         };
         ws.onerror = function () { self.emit('error', { message: '连接服务器失败' }); };
+        self._visHandler = function () {
+            if (document.visibilityState !== 'visible') return;
+            if (self.playCtx && self.playCtx.state === 'suspended') self.playCtx.resume();
+            if (self.micCtx && self.micCtx.state === 'suspended') self.micCtx.resume();
+        };
+        document.addEventListener('visibilitychange', self._visHandler);
         return new Promise(function (resolve, reject) {
             var timer = setTimeout(function () {
                 self._onOpenResolve = null;
@@ -157,6 +163,14 @@
         });
     };
 
+    VoiceRealtimeClient.prototype._unlockPlayback = function () {
+        if (!this.playCtx) {
+            var Ctx = window.AudioContext || window.webkitAudioContext;
+            this.playCtx = new Ctx();
+        }
+        if (this.playCtx.state === 'suspended') this.playCtx.resume();
+    };
+
     VoiceRealtimeClient.prototype._setupCapture = function () {
         var self = this;
         var Ctx = window.AudioContext || window.webkitAudioContext;
@@ -172,6 +186,7 @@
             src.connect(node);
             self.micCtx.resume();
             self._workletNode = node;
+            self._unlockPlayback();
             self._setState('listening');
         });
     };
@@ -255,7 +270,11 @@
         src.onended = function () {
             var idx = self.activeSources.indexOf(src);
             if (idx >= 0) self.activeSources.splice(idx, 1);
-            if (!self.activeSources.length && self.state === 'speaking') self._setState('listening');
+            if (!self.activeSources.length && self.state === 'speaking') {
+                self.sawSpeech = false;
+                self.silentBlocks = 0;
+                self._setState('listening');
+            }
         };
         this.playCtx.resume();
     };
@@ -267,6 +286,10 @@
     };
 
     VoiceRealtimeClient.prototype._teardownMedia = function () {
+        if (this._visHandler) {
+            document.removeEventListener('visibilitychange', this._visHandler);
+            this._visHandler = null;
+        }
         if (this._workletNode) { try { this._workletNode.disconnect(); } catch (e) {} this._workletNode = null; }
         if (this.micCtx) { try { this.micCtx.close(); } catch (e) {} this.micCtx = null; }
         if (this.stream) { this.stream.getTracks().forEach(function (t) { t.stop(); }); this.stream = null; }
