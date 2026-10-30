@@ -51,6 +51,9 @@
         'registerProcessor("pcm-capture", PCMCaptureProcessor);'
     ].join('\n');
 
+    var RECONNECT_DELAYS = [0, 1000, 2000, 4000, 8000];
+    var RECONNECT_MAX = 5;
+
     function VoiceRealtimeClient(options) {
         this.opts = Object.assign({
             wsUrl: '',
@@ -71,6 +74,11 @@
         this.silentBlocks = 0;
         this._blockMs = 100;
         this._closedByUser = false;
+        this._sessionId = null;
+        this._reconnectAttempts = 0;
+        this._reconnectTimer = null;
+        this._serverCloseReason = null;
+        this._micWanted = false;
     }
 
     VoiceRealtimeClient.prototype.emit = function (type, payload) {
@@ -83,14 +91,19 @@
         this.emit('state', s);
     };
 
-    VoiceRealtimeClient.prototype.start = function () {
+    VoiceRealtimeClient.prototype._applySessionId = function (url) {
+        var sid = this._sessionId;
+        if (!sid) return url;
+        var enc = encodeURIComponent(sid);
+        if (/([?&])session_id=[^&]*/.test(url)) return url.replace(/([?&])session_id=[^&]*/, '$1session_id=' + enc);
+        return url + (url.indexOf('?') >= 0 ? '&' : '?') + 'session_id=' + enc;
+    };
+
+    VoiceRealtimeClient.prototype._openSocket = function () {
         var self = this;
-        if (this.state !== 'idle') return Promise.reject(new Error('already started'));
-        this._closedByUser = false;
-        this._setState('connecting');
         var proto = location.protocol === 'https:' ? 'wss://' : 'ws://';
         var base = this.opts.wsUrl.indexOf('ws') === 0 ? this.opts.wsUrl : proto + location.host + this.opts.wsUrl;
-        var ws = new WebSocket(base);
+        var ws = new WebSocket(this._applySessionId(base));
         this.ws = ws;
         ws.onopen = function () {
             self.ws.send(JSON.stringify({ type: 'auth', token: self.opts.token || '' }));
@@ -100,24 +113,8 @@
             try { msg = JSON.parse(ev.data); } catch (e) { return; }
             self._onServerMessage(msg);
         };
-        ws.onclose = function () {
-            self.emit('closed');
-            self._teardownMedia();
-            if (self._onOpenReject) {
-                var rej = self._onOpenReject;
-                self._onOpenResolve = null;
-                self._onOpenReject = null;
-                rej(new Error('连接被关闭'));
-            }
-            if (!self._closedByUser) self._setState('idle');
-        };
+        ws.onclose = function (ev) { self._onWsClose(ev); };
         ws.onerror = function () { self.emit('error', { message: '连接服务器失败' }); };
-        self._visHandler = function () {
-            if (document.visibilityState !== 'visible') return;
-            if (self.playCtx && self.playCtx.state === 'suspended') self.playCtx.resume();
-            if (self.micCtx && self.micCtx.state === 'suspended') self.micCtx.resume();
-        };
-        document.addEventListener('visibilitychange', self._visHandler);
         return new Promise(function (resolve, reject) {
             var timer = setTimeout(function () {
                 self._onOpenResolve = null;
@@ -129,13 +126,114 @@
         });
     };
 
+    VoiceRealtimeClient.prototype._onWsClose = function (ev) {
+        this.ws = null;
+        if (this._onOpenReject) {
+            var rej = this._onOpenReject;
+            this._onOpenResolve = null;
+            this._onOpenReject = null;
+            rej(new Error('连接被关闭'));
+        }
+        this._teardownMedia();
+        if (this._closedByUser) {
+            this._setState('idle');
+            this.emit('closed', { reason: 'user' });
+            return;
+        }
+        if (!this._serverCloseReason && ev && (ev.code === 4401 || ev.code === 4429)) {
+            this._serverCloseReason = 'rejected:' + ev.code;
+        }
+        if (this._serverCloseReason === 'superseded') {
+            this._setState('idle');
+            this.emit('closed', { reason: 'superseded' });
+            return;
+        }
+        if (this._serverCloseReason === 'session timeout') {
+            this._setState('idle');
+            this.emit('closed', { reason: 'session timeout' });
+            return;
+        }
+        if (this._serverCloseReason) {
+            this._setState('closed');
+            this.emit('closed', { reason: this._serverCloseReason });
+            return;
+        }
+        this._scheduleReconnect();
+    };
+
+    VoiceRealtimeClient.prototype._scheduleReconnect = function () {
+        var self = this;
+        if (this._reconnectTimer) return;
+        if (this._reconnectAttempts >= RECONNECT_MAX) {
+            this._setState('closed');
+            this.emit('reconnect_failed', { attempts: this._reconnectAttempts });
+            this.emit('closed', { reason: 'reconnect failed' });
+            return;
+        }
+        var delay = RECONNECT_DELAYS[Math.min(this._reconnectAttempts, RECONNECT_DELAYS.length - 1)];
+        this._setState('reconnecting');
+        this.emit('reconnecting', { attempt: this._reconnectAttempts + 1, delay: delay });
+        this._reconnectTimer = setTimeout(function () {
+            self._reconnectTimer = null;
+            self._reconnectAttempts += 1;
+            self._reconnect();
+        }, delay);
+    };
+
+    VoiceRealtimeClient.prototype._reconnect = function () {
+        var self = this;
+        this._setState('connecting');
+        this._openSocket().then(function () {
+            if (self._micWanted) {
+                self.startMic().catch(function (e) {
+                    self.emit('error', { message: '重连成功，但麦克风重新打开失败（' + (e && e.message || '未知错误') + '），可用下方输入框打字' });
+                });
+            }
+        }).catch(function () {
+            self._teardownMedia();
+            self._scheduleReconnect();
+        });
+    };
+
+    VoiceRealtimeClient.prototype.reconnectNow = function () {
+        if (this._closedByUser || this._serverCloseReason) return false;
+        if (this.state === 'ready' || this.state === 'listening' || this.state === 'speaking' || this.state === 'thinking') return false;
+        if (this._reconnectTimer) { clearTimeout(this._reconnectTimer); this._reconnectTimer = null; }
+        this._reconnectAttempts = 0;
+        this._reconnect();
+        return true;
+    };
+
+    VoiceRealtimeClient.prototype.start = function () {
+        var self = this;
+        if (this.state !== 'idle') return Promise.reject(new Error('already started'));
+        this._closedByUser = false;
+        this._serverCloseReason = null;
+        this._setState('connecting');
+        return this._openSocket();
+    };
+
     VoiceRealtimeClient.prototype._onOpenReady = function () {
         if (typeof this._onOpenResolve === 'function') { this._onOpenResolve(); this._onOpenResolve = null; }
     };
 
     VoiceRealtimeClient.prototype._onServerMessage = function (msg) {
         var type = msg.type;
-        if (type === 'ready') { this._onOpenReady(); this.emit('ready', msg); return; }
+        if (type === 'ready') {
+            if (msg.session_id) this._sessionId = String(msg.session_id);
+            this._reconnectAttempts = 0;
+            this._onOpenReady();
+            this.emit('ready', msg);
+            return;
+        }
+        if (type === 'ping') { return; }
+        if (type === 'closed') {
+            var reason = String(msg.reason || 'server closed');
+            this._serverCloseReason = reason;
+            if (reason === 'session timeout') this.emit('session_timeout', msg);
+            if (this.ws) { try { this.ws.close(); } catch (e) {} }
+            return;
+        }
         if (type === 'asr_partial') { this.emit('asr_partial', msg); return; }
         if (type === 'asr_final') { this.emit('asr_final', msg); return; }
         if (type === 'thinking') { this.emit('thinking', msg); return; }
@@ -159,6 +257,7 @@
             audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 }
         }).then(function (stream) {
             self.stream = stream;
+            self._micWanted = true;
             return self._setupCapture();
         });
     };
@@ -187,6 +286,14 @@
             self.micCtx.resume();
             self._workletNode = node;
             self._unlockPlayback();
+            if (!self._visHandler) {
+                self._visHandler = function () {
+                    if (document.visibilityState !== 'visible') return;
+                    if (self.playCtx && self.playCtx.state === 'suspended') self.playCtx.resume();
+                    if (self.micCtx && self.micCtx.state === 'suspended') self.micCtx.resume();
+                };
+                document.addEventListener('visibilitychange', self._visHandler);
+            }
             self._setState('listening');
         });
     };
@@ -299,6 +406,8 @@
 
     VoiceRealtimeClient.prototype.stop = function () {
         this._closedByUser = true;
+        this._micWanted = false;
+        if (this._reconnectTimer) { clearTimeout(this._reconnectTimer); this._reconnectTimer = null; }
         if (this.ws) { try { this.ws.send(JSON.stringify({ type: 'stop' })); } catch (e) {} try { this.ws.close(); } catch (e) {} this.ws = null; }
         this._teardownMedia();
         this._setState('idle');
