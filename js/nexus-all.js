@@ -7425,6 +7425,7 @@ try {
         clear(el) {
             const entry = el ? _tracked.get(el) : null;
             if (!entry) return;
+            if (entry.timer) { clearTimeout(entry.timer); entry.timer = null; }
             entry.cleanUntilInput = true;
             writeStore(entry.key, null);
         },
