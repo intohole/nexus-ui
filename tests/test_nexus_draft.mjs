@@ -141,6 +141,20 @@ check('attach 返回 entry 且 key 含 pathname+name', !!entry && entry.key.incl
     check('超 128KB 不落盘(配额守卫)', store['nxd:' + eb.key] === undefined);
 }
 
+{
+    const ed = makeEl('TEXTAREA');
+    ed.setAttribute('data-nx-draft', 'edit-case');
+    ed.value = '文章原始内容';
+    store['nxd:edit-case'] = JSON.stringify({ v: '改了一半没保存的版本', t: Date.now() });
+    window.NexusDraft.attach(ed);
+    await new Promise(r => setTimeout(r, 10));
+    check('编辑场景(初值非空+草稿不同)也弹恢复条', !!bannerInDom && bannerInDom.childNodes.some(n => n.textContent.includes('未保存')));
+    const restoreBtn = bannerInDom.childNodes.find(n => n.textContent === '恢复');
+    restoreBtn.click();
+    await new Promise(r => setTimeout(r, 10));
+    check('编辑恢复回到改后版本', ed.value === '改了一半没保存的版本');
+}
+
 let pass = 0;
 for (const [name, ok] of results) {
     console.log((ok ? 'PASS' : 'FAIL') + ' ' + name);

@@ -137,7 +137,7 @@
 
         const existing = readStore(key);
         const current = el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ? String(el.value || '') : String(el.textContent || '');
-        if (existing && existing.v && existing.v !== current && current === '') {
+        if (existing && existing.v && existing.v !== current) {
             if (!entry.hadDraftShown) {
                 entry.hadDraftShown = true;
                 entry._pendingDraft = existing.v;
@@ -150,6 +150,7 @@
         } else if (existing && (existing.v === current)) {
             writeStore(key, null);
         }
+        el.setAttribute('data-nx-draft-on', '1');
         return entry;
     }
 
@@ -158,6 +159,7 @@
         if (!entry) return;
         if (entry.timer) clearTimeout(entry.timer);
         if (entry._onInput) el.removeEventListener('input', entry._onInput);
+        if (el.removeAttribute) el.removeAttribute('data-nx-draft-on');
         _tracked.delete(el);
     }
 
@@ -215,6 +217,17 @@
                 evt.preventDefault();
                 evt.returnValue = '';
             });
+        },
+
+        _bindAutoScan() {
+            if (this.__scanBound || typeof MutationObserver !== 'function') return;
+            this.__scanBound = true;
+            const mo = new MutationObserver(function () {
+                const list = document.querySelectorAll('[data-nx-draft]:not([data-nx-draft-on])');
+                list.forEach(function (el) { attach(el); });
+            });
+            const startAt = document.body ? document.body : document.documentElement;
+            if (startAt) mo.observe(startAt, { childList: true, subtree: true });
         }
     };
 
@@ -223,9 +236,11 @@
         document.addEventListener('DOMContentLoaded', function () {
             NexusDraft.scan(document);
             NexusDraft._bindUnloadGuard();
+            NexusDraft._bindAutoScan();
         }, { once: true });
     } else {
         NexusDraft.scan(document);
         NexusDraft._bindUnloadGuard();
+        NexusDraft._bindAutoScan();
     }
 })();
