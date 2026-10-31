@@ -12,7 +12,9 @@
             'suki': '/suki/', 'lyra': '/lyra/', 'codeblock': '/codeblock/',
             'promptgenius': '/promptgenius/', 'financialkg': '/financialkg/',
             'goldenstock': '/golden/', 'beememory': '/beememory/', 'drawio': '/drawio/',
-            'moutain': '/mountain'
+            'moutain': '/mountain',
+            // 商业端应用公网入口在 biz 域（主门户 biz 分流，主域路径不存在），通知深链必须绝对形态
+            'adsmart': 'https://biz.songguokr.com/adsmart'
         };
         const APP_LABELS = {
             'resumeai': '跃职', 'challengeplanet': '星轨挑战', 'onenote': '拾光',
@@ -24,6 +26,7 @@
             'goldenstock': '金股智投', 'golden': '金股智投', 'versecraft': '墨韵创作',
             'beememory': '蜜蜂记忆', 'minideploy': '部署平台', 'moutain': '采薇',
             'userfeedback': '意见反馈', 'usercenter': '钱包',
+            'adsmart': '青鸟',
             'notifycenter': '通知中心', 'system': '系统'
         };
         function normalize(url) {
