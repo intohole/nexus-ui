@@ -52,6 +52,8 @@ FILES: list[str] = [
     "components/nux-ai-indicator.js",
     "components/nux-bottom-nav.js",
     "core/nexus-app.js",
+    "core/nexus-guard.js",
+    "core/nexus-draft.js",
 ]
 
 

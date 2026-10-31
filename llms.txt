@@ -253,6 +253,8 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 - `js/nexus-credit-panel.js`：积分面板 + 402 余额不足引导卡（随 nexus-all 聚合包分发）。浮标点击展开面板（余额/模式/每日签到/任务进度/去钱包，真实调 `/api/credits/tasks/*`）；全局监听 `nexus:insufficient-credits` 事件（nexus-api-error.js 在 mapHttpError 时自动派发，detail 含 code/balance/cost/overdraft/wallet_url）弹引导卡，动作=去赚积分（开面板）/去钱包；`NexusCreditPanel.open()/close()/show402(detail)`。
 - `js/nexus-feedback-float.js`：全局反馈浮标（右下角微表单+我的反馈回音，自动附带应用名/页面/console 最近报错环），提交走 userFeedback UC 轨，未注册应用服务端自动建档；`NexusFeedbackFloat.open()/close()/stop()`，关闭 `localStorage.nux_feedback_float='off'` 或 `<html data-nux-feedback="off">`；首页/登录注册页/门户/userfeedback 自身自动跳过。
 - `js/core/` 三件套：`NexusApp`（应用壳生命周期）/ `NexusUser`（用户态，`getDisplayName` 同时挂 NexusUtils）/ `NexusErrorText`（错误文案归一，`safeErrorText` 同时挂 NexusUtils）。nexus-agent/challengePlanet/oneNote 在用。
+- `js/core/nexus-guard.js`：全局异常兜底 `window.NexusGuard`——加载即接管 `window error`（运行时异常→人话 toast+console.error 保留；资源加载失败→仅 console.warn+上报）与 `unhandledrejection`（非 401/非 NexusStreamError/非 AbortError 的未捕获 promise 异常）；同指纹异常 60s 节流防 toast 风暴；上报钩子 `NexusGuard.onReport = fn`（默认 null，业务仓可选接）；与 `NexusApp.handleError`（Vue 渲染错误链路）零双 toast（`__nxHandled` 标记互认）。裸引散件的仓（不引 nexus-all）必须单引本文件才有 window 级兜底。
+- `js/core/nexus-draft.js`：输入资产守卫 `window.NexusDraft`——长文本输入防丢。声明式：`<textarea data-nx-draft="唯一键">`（DOM 就绪自动挂载；Vue 动态创建的节点需在创建后调 `NexusDraft.scan(root)`）；程序式：`NexusDraft.attach(el,{key})`。行为：输入防抖 500ms 落 sessionStorage（上限 128KB 配额守卫）→再次进页检出草稿弹恢复条（一键恢复[派发 input 事件兼容 v-model]/弃用）→beforeunload 在管非空拦截关闭→提交成功后业务必须调 `NexusDraft.clear(el)` 清稿（含 cleanUntilInput 语义：clear 后不再拦 untilinput，防「已提交仍被拦」）。
 
 ### nux-pagination 分页组件
 
