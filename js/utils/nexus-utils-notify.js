@@ -129,19 +129,19 @@
             const UNSUPPORTED = {
                 no_sw: '当前浏览器不支持系统推送',
                 no_push: '当前浏览器不支持系统推送',
-                unsupported_browser: '当前浏览器暂不支持，请用 Safari 打开后开启',
+                insecure_context: '系统推送需要 HTTPS 环境',
                 not_standalone_ios: '先「添加到主屏幕」，再从主屏幕打开即可开启',
                 not_granted: '通知权限未开启，可在浏览器设置中重新允许',
                 channel_off: '推送通道未开启',
-                subscribe_failed: '订阅失败，请稍后重试'
+                subscribe_failed: '订阅失败，请检查网络后重试'
             };
             function browserFamily() {
                 const ua = navigator.userAgent || '';
                 if (/iPhone|iPad|iPod/.test(ua)) return 'ios-safari';
                 if (/Safari/.test(ua) && !/Chrome|Edg|Firefox/.test(ua)) return 'safari';
                 if (/Edg/.test(ua)) return 'edge';
-                if (/Chrome/.test(ua)) return 'chrome';
                 if (/Firefox/.test(ua)) return 'firefox';
+                if (/Chrome/.test(ua)) return 'chrome';
                 return 'other';
             }
             function isIos() { return /iPhone|iPad|iPod/.test(navigator.userAgent || ''); }
@@ -150,10 +150,15 @@
                 return !!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
             }
             function capability() {
+                if (!window.isSecureContext) return { ok: false, reason: UNSUPPORTED.insecure_context };
                 if (!('serviceWorker' in navigator)) return { ok: false, reason: UNSUPPORTED.no_sw };
                 if (!('PushManager' in window) || !('Notification' in window)) return { ok: false, reason: UNSUPPORTED.no_push };
                 const fam = browserFamily();
-                if (fam !== 'safari' && fam !== 'ios-safari') return { ok: false, reason: UNSUPPORTED.unsupported_browser };
+                // r24 解锁 chrome/edge/firefox：Web Push 是跨浏览器标准协议（VAPID+RFC 8291），
+                // r23 误锁 Safari-only 的根因是服务端 endpoint 白名单只有 Apple（循环论证：
+                // Chrome 产出 fcm endpoint 被服务端拒 → 误读为「Chrome 不行」）。
+                // iOS 全系浏览器仍要求 A2HS（standalone）——iOS 平台约束，与浏览器族无关。
+                if (fam === 'other') return { ok: false, reason: UNSUPPORTED.no_push };
                 if (isIos() && !isStandalone()) return { ok: false, reason: UNSUPPORTED.not_standalone_ios };
                 return { ok: true, family: fam, reason: '' };
             }

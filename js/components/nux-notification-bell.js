@@ -22,13 +22,26 @@
                 listSeq: 0,
                 push: null,
                 pushBusy: false,
-                pushLoaded: false
+                pushLoaded: false,
+                pushBannerGone: false,
+                pushRecoverOpen: false,
+                pushError: ''
             };
         },
         computed: {
             authed: function() { return !!this.token; },
             hiddenCount: function() { return Math.max(0, this.total - this.items.length); },
             hasUnreadItems: function() { return this.items.some(function(i) { return !i.is_read; }); },
+            pushDenied: function() {
+                var wp = (window.NexusUtils && NexusUtils.notify) ? NexusUtils.notify.webpush : null;
+                return !!wp && !!this.push && this.push.enabled && !this.push.subscribed
+                    && wp.capability().ok && wp.permissionState() === 'denied';
+            },
+            pushGuide: function() {
+                return !!this.push && this.push.enabled && !this.push.subscribed
+                    && !this.pushCapBlocked && !this.pushDenied
+                    && !this.pushBannerGone && this.pushLoaded;
+            },
             pushApiBase: function() {
                 return (this.baseUrl || '').replace(/\/$/, '') + '/api/notify';
             },
@@ -151,6 +164,7 @@
                 if (this.open) {
                     this.filter = this.unread > 0 ? 'unread' : 'all';
                     this.loadList();
+                    this.pushBannerGone = this.readPushDismissed();
                     this.refreshPush();
                 }
             },
@@ -173,6 +187,7 @@
                 var self = this;
                 var wp = (window.NexusUtils && NexusUtils.notify) ? NexusUtils.notify.webpush : null;
                 if (!wp || self.pushBusy || !self.push || !self.push.enabled) return;
+                if (self.pushDenied) { self.pushRecoverOpen = true; return; }
                 if (!self.push.subscribed) {
                     var cap = wp.capability();
                     if (!cap.ok) {
@@ -181,6 +196,7 @@
                     }
                 }
                 self.pushBusy = true;
+                self.pushRecoverOpen = false;
                 var action = self.push.subscribed ? wp.disable(self._pushApi(), self.pushApiBase)
                     : wp.enable(self._pushApi(), self.pushApiBase).then(function() {
                         return wp.sendTest(self._pushApi(), self.pushApiBase).catch(function() {});
@@ -194,8 +210,16 @@
                     self.refreshPush();
                 }).catch(function(err) {
                     self.pushBusy = false;
-                    if (window.showToast) window.showToast((err && err.message) || '操作失败，请稍后重试', 'error');
+                    self.pushError = (err && err.message) || '操作失败，请稍后重试';
+                    if (window.showToast) window.showToast(self.pushError, 'error');
                 });
+            },
+            dismissPushGuide: function() {
+                this.pushBannerGone = true;
+                try { window.localStorage.setItem('nux_push_bell_dismissed_v1', '1'); } catch (e) {}
+            },
+            readPushDismissed: function() {
+                try { return window.localStorage.getItem('nux_push_bell_dismissed_v1') === '1'; } catch (e) { return false; }
             },
             setFilter: function(f) {
                 if (this.filter === f) return;
@@ -276,10 +300,25 @@
                 <div v-if="open" id="nux-notify-panel" class="nux-notify-panel" role="dialog" :aria-label="title" @click.stop>
                     <div class="nux-notify-head">
                         <span class="nux-notify-title">{{ title }}</span>
-                        <button v-if="push && push.enabled && pushLoaded" type="button" :class="['nux-notify-push', push.subscribed ? 'is-on' : '', pushCapBlocked ? 'is-unsupported' : '']" :disabled="pushBusy" :title="push.subscribed ? ('每日至多 ' + (push.dailyLimit || 12) + ' 条，点击关闭') : '开启后简报与提醒直达系统通知'" @click.stop="togglePush">
-                            <i :class="push.subscribed ? 'fa-solid fa-bell' : 'fa-regular fa-bell'" aria-hidden="true"></i>{{ push.subscribed ? '锁屏推送已开' : '开启锁屏推送' }}
+                        <button v-if="push && push.enabled && pushLoaded" type="button" :class="['nux-notify-push', push.subscribed ? 'is-on' : '', pushDenied ? 'is-denied' : '', pushCapBlocked ? 'is-unsupported' : '']" :disabled="pushBusy" :title="pushDenied ? '通知权限已被拒绝，点击查看如何重新开启' : (push.subscribed ? ('每日至多 ' + (push.dailyLimit || 12) + ' 条，点击关闭') : '开启后简报与提醒直达系统通知')" @click.stop="togglePush">
+                            <i :class="push.subscribed ? 'fa-solid fa-bell' : (pushDenied ? 'fa-solid fa-triangle-exclamation' : 'fa-regular fa-bell')" aria-hidden="true"></i>{{ pushBusy ? (push.subscribed ? '关闭中…' : '开启中…') : (push.subscribed ? '锁屏推送已开' : (pushDenied ? '推送权限已关闭' : '开启锁屏推送')) }}
                         </button>
                         <button type="button" class="nux-notify-allread" v-if="hasUnreadItems" @click.stop="markAllRead">全部已读</button>
+                    </div>
+                    <div v-if="pushError && pushLoaded" class="nux-notify-push-note is-error" role="alert">
+                        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i><span>{{ pushError }}</span>
+                        <button type="button" class="nux-notify-push-note-x" @click.stop="pushError = ''" aria-label="知道了"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+                    </div>
+                    <div v-else-if="pushRecoverOpen && pushDenied" class="nux-notify-push-note is-recover" role="alert">
+                        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                        <span>通知权限已被拒绝，需要到浏览器设置里手动允许：浏览器设置 → 网站通知 → 找到本站选「允许」，回来再检测。</span>
+                        <button type="button" class="nux-notify-push-note-cta" @click.stop="pushRecoverOpen = false; refreshPush()">重新检测</button>
+                    </div>
+                    <div v-else-if="pushGuide" class="nux-notify-push-note" role="note">
+                        <i class="fa-solid fa-mobile-screen" aria-hidden="true"></i>
+                        <span>简报与提醒直达系统锁屏，每日至多 {{ push.dailyLimit || 12 }} 条。</span>
+                        <button type="button" class="nux-notify-push-note-cta" @click.stop="togglePush">开启</button>
+                        <button type="button" class="nux-notify-push-note-x" @click.stop="dismissPushGuide" aria-label="不再提示"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
                     </div>
                     <div class="nux-notify-toolbar" v-if="!loading && !error">
                         <div class="nux-notify-seg" role="tablist" :aria-label="title + '筛选'">
