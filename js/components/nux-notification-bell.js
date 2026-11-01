@@ -171,7 +171,10 @@
             refreshPush: function() {
                 var self = this;
                 var wp = (window.NexusUtils && NexusUtils.notify) ? NexusUtils.notify.webpush : null;
-                if (!wp || self.pushBusy) return;
+                if (!wp || self.pushBusy || typeof NexusApi === 'undefined') {
+                    self.pushLoaded = true;
+                    return;
+                }
                 wp.status(self._pushApi(), self.pushApiBase).then(function(state) {
                     self.push = state;
                     self.pushLoaded = true;
