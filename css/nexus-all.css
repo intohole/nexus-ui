@@ -799,8 +799,7 @@ a:hover { color: var(--app-accent-hover); }
 .nux-notify-reload,
 .nux-checkin-ghost,
 .nux-checkin-mini,
-.nux-ob-btn,
-.nux-footer .nux-footer-link {
+.nux-ob-btn {
     min-height: 44px;
   }
   .nux-menu-user-btn,
@@ -811,6 +810,9 @@ a:hover { color: var(--app-accent-hover); }
 .nx-modal-close,
 .nxsp-close {
     min-width: 44px;
+  }
+  .nux-footer .nux-footer-link {
+    padding: 4px 6px;
   }
   .nux-chip-remove,
 .nux-notif-panel-item-delete,
@@ -4537,22 +4539,20 @@ a.nx-citation-title:focus-visible { outline: 2px solid var(--nx-primary); outlin
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--nx-space-2);
-  padding: var(--nx-space-5) var(--nx-space-4);
+  gap: var(--nx-space-1);
+  padding: var(--nx-space-3) var(--nx-space-4);
   color: var(--nx-text-muted);
   font-size: 12px;
-  line-height: 1.7;
+  line-height: 1.6;
   text-align: center;
 }
 .nux-footer-brand {
-  font-size: 13px;
   font-weight: 600;
   color: var(--nx-text-secondary);
-  margin-bottom: var(--nx-space-1);
 }
 .nux-footer-disclaimer {
   max-width: 720px;
-  margin: 0 auto var(--nx-space-2);
+  margin: 0 auto;
   font-size: 12px;
   line-height: 1.6;
   color: var(--nx-text-secondary);
@@ -4569,7 +4569,7 @@ a.nx-citation-title:focus-visible { outline: 2px solid var(--nx-primary); outlin
 .nux-footer .nux-footer-link {
   color: var(--nx-text-secondary);
   text-decoration: none;
-  padding: 5px 2px;
+  padding: 2px;
   transition: color .2s;
 }
 .nux-footer .nux-footer-link:hover {

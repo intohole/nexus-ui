@@ -168,8 +168,7 @@
 .nux-notify-reload,
 .nux-checkin-ghost,
 .nux-checkin-mini,
-.nux-ob-btn,
-.nux-footer .nux-footer-link {
+.nux-ob-btn {
     min-height: 44px;
   }
   .nux-menu-user-btn,
@@ -180,6 +179,9 @@
 .nx-modal-close,
 .nxsp-close {
     min-width: 44px;
+  }
+  .nux-footer .nux-footer-link {
+    padding: 4px 6px;
   }
   .nux-chip-remove,
 .nux-notif-panel-item-delete,

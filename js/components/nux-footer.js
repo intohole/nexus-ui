@@ -15,9 +15,10 @@
         },
         template: `
             <footer class="nux-footer">
-                <span v-if="appName" class="nux-footer-brand">{{ appName }}</span>
                 <div v-if="disclaimer" class="nux-footer-disclaimer">{{ disclaimer }}</div>
                 <div class="nux-footer-row">
+                    <span v-if="appName" class="nux-footer-brand">{{ appName }}</span>
+                    <span v-if="appName" class="nux-footer-sep">·</span>
                     <span class="nux-footer-copy">© {{ company }}</span>
                     <span class="nux-footer-sep">·</span>
                     <span class="nux-footer-ai" v-if="showAiBadge" role="note"><span class="nx-ai-badge nx-ai-badge-md" data-tone="accent">AI 生成</span></span>

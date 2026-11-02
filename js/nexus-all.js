@@ -3049,10 +3049,24 @@
         return String(text).replace(MATH_ALNUM_RE, mathCharToAscii);
     }
 
+    // 中文语境 emphasis 边界：CommonMark flanking 判定把 CJK 归字母类，「是**"x"**的」
+    // 中 `**` 前为汉字、后为标点时不满足 left-flanking，加粗以字面 ** 露出（LLM 中文
+    // 输出高频形态，suki r12 visual-judge 实锤）。仅对 marked 解析不了的这个形态
+    // 直出 <strong>（DOMPurify 白名单内）；两侧为字母/空白的正常形态交给 marked。
+    // 不用 lookbehind（Safari <16.4 语法错误会炸整个模块）。
+    const CJK_EMPH_RE = /([\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]|^)\*\*([^*\n]+?)\*\*(?=[\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]|$)/g;
+
+    function normalizeCjkEmphasis(text) {
+        if (!text || text.indexOf('**') === -1) return text;
+        return String(text).replace(CJK_EMPH_RE, function (m, pre, inner) {
+            return pre + '<strong>' + inner + '</strong>';
+        });
+    }
+
     function render(text, options) {
         if (!text) return '';
         const opts = options || {};
-        const normalized = normalizeMathUnicode(text);
+        const normalized = normalizeCjkEmphasis(normalizeMathUnicode(text));
         if (window.marked && window.DOMPurify) {
             try {
                 const protected_ = protectMath(normalized);
