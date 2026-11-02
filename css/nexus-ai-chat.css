@@ -345,7 +345,7 @@
     height: 18px;
     padding: 0 5px;
     background: var(--nx-accent, rgb(79, 70, 229));
-    color: rgb(255, 255, 255);
+    color: var(--nx-text-on-accent, #fff);
     border-radius: 9px;
     font-size: 0.6875rem;
     font-weight: 600;
@@ -453,7 +453,7 @@
 
 .nx-ai-chat-send {
     background: var(--nx-accent, rgb(79, 70, 229));
-    color: rgb(255, 255, 255);
+    color: var(--nx-text-on-accent, #fff);
 }
 
 .nx-ai-chat-send:hover:not(:disabled) {
@@ -472,7 +472,7 @@
 
 .nx-ai-chat-stop {
     background: var(--nx-danger, rgb(220, 38, 38));
-    color: rgb(255, 255, 255);
+    color: var(--nx-text-on-accent, #fff);
 }
 
 .nx-ai-chat-stop:hover {
@@ -664,7 +664,7 @@
     line-height: 1.6;
     color: var(--nx-warning-text, rgb(146, 64, 14));
     background: var(--nx-warning-soft, rgba(251, 191, 36, 0.12));
-    border: 1px solid rgba(217, 119, 6, 0.25);
+    border: 1px solid rgba(var(--nx-warning-rgb, 217, 119, 6), 0.25);
     border-radius: var(--nx-radius-sm, 0.25rem);
     padding: var(--nx-space-2, 0.5rem) var(--nx-space-2, 0.5rem);
 }
@@ -672,7 +672,7 @@
 .nx-ai-chat-warning svg {
     flex: none;
     margin-top: 2px;
-    color: rgb(217, 119, 6);
+    color: var(--nx-warning, rgb(217, 119, 6));
 }
 
 .nx-ai-chat-assistant .nx-ai-chat-content a { color: var(--nx-accent, rgb(79, 70, 229)); }
@@ -727,7 +727,7 @@
 .nx-ai-chat-edit-send {
     background: var(--nx-accent, rgb(79, 70, 229));
     border: 1px solid var(--nx-accent, rgb(79, 70, 229));
-    color: rgb(255, 255, 255);
+    color: var(--nx-text-on-accent, #fff);
 }
 
 .nx-ai-chat-edit-cancel:hover,

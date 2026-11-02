@@ -22,7 +22,7 @@
   background: color-mix(in srgb, var(--app-accent, var(--nx-primary)) 15%, transparent);
 }
 .nux-checkin-streak-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.nux-checkin-streak-num { font-size: var(--nx-text-3xl); font-weight: 800; line-height: 1.1; color: var(--nx-text-heading); }
+.nux-checkin-streak-num { font-size: var(--nx-text-3xl); font-weight: 800; line-height: 1.1; color: var(--nx-text-heading); font-variant-numeric: tabular-nums; }
 .nux-checkin-streak-num span { font-size: var(--nx-text-sm); font-weight: 500; color: var(--nx-text-secondary); margin-left: 2px; }
 .nux-checkin-streak-label { display: flex; align-items: center; gap: 4px; font-size: var(--nx-text-sm); color: var(--nx-text-secondary); }
 .nux-checkin-streak-label .trend { font-style: normal; font-weight: 700; }
@@ -86,7 +86,7 @@
 }
 .nux-checkin-step:active { transform: scale(0.94); background: var(--nx-bg-hover); }
 .nux-checkin-display { min-width: 96px; text-align: center; }
-.nux-checkin-display .num { font-size: var(--nx-text-3xl); font-weight: 800; color: var(--nx-text-heading); line-height: 1.1; }
+.nux-checkin-display .num { font-size: var(--nx-text-3xl); font-weight: 800; color: var(--nx-text-heading); line-height: 1.1; font-variant-numeric: tabular-nums; }
 .nux-checkin-display .tgt { font-size: var(--nx-text-xs); color: var(--nx-text-muted); }
 .nux-checkin-presets { display: flex; gap: var(--nx-space-2); flex-wrap: wrap; justify-content: center; }
 .nux-checkin-preset {

@@ -639,7 +639,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(15, 23, 42, 0.45);
+  background: var(--nx-overlay-bg, rgba(15, 23, 42, 0.45));
   backdrop-filter: blur(2px);
   padding: 16px calc(16px + var(--nx-safe-right, 0px)) calc(16px + var(--nx-safe-bottom, 0px)) calc(16px + var(--nx-safe-left, 0px));
   padding-top: calc(16px + var(--nx-safe-top, 0px));
@@ -672,7 +672,7 @@
   height: 56px;
   margin-bottom: 14px;
   border-radius: 16px;
-  background: rgba(79, 70, 229, 0.1);
+  background: rgba(var(--app-accent-rgb, 79, 70, 229), 0.1);
   color: var(--nx-color-primary, #4f46e5);
   font-size: 24px;
   font-weight: 700;
@@ -692,7 +692,7 @@
   text-decoration: none;
   transition: background 0.15s;
 }
-.nux-onboarding-link:hover { background: rgba(79, 70, 229, 0.08); }
+.nux-onboarding-link:hover { background: rgba(var(--app-accent-rgb, 79, 70, 229), 0.08); }
 .nux-onboarding-link-primary { background: var(--nx-color-primary, #4f46e5); color: var(--nx-text-on-accent); }
 .nux-onboarding-link-primary:hover { background: var(--nx-color-primary-strong, #4338ca); color: var(--nx-text-on-accent); }
 .nux-onboarding-dots { display: flex; gap: 6px; justify-content: center; margin-top: 18px; }

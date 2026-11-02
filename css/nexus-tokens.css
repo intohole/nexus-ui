@@ -19,8 +19,8 @@
 
   --nx-text-heading: #0f172a;
   --nx-text-body: #334155;
-  --nx-text-secondary: #64748b;
-  --nx-text-muted: #94a3b8;
+  --nx-text-secondary: #475569;
+  --nx-text-muted: #64748b;
   --nx-text-accent: var(--app-accent-strong, var(--app-accent));
   --nx-text-on-accent: var(--app-accent-contrast, #ffffff);
 
@@ -35,6 +35,21 @@
   --nx-warning-rgb: 245, 158, 11;
   --nx-danger-rgb: 239, 68, 68;
   --nx-info-rgb: 59, 130, 246;
+
+  /* 文字档语义色（soft 底/tint 底上用，白底 ≥4.5:1；图形/进度条仍用上方亮档） */
+  --nx-success-text: #047857;
+  --nx-warning-text: #b45309;
+  --nx-danger-text: #b91c1c;
+  --nx-info-text: #1d4ed8;
+
+  /* 恒暗代码面（markdown 代码块设计意图=常暗底配 atom-one-dark 高亮，不随主题翻面） */
+  --nx-code-block-bg: #16202f;
+
+  /* 实心反馈面（toast 等，白字 ≥4.5:1） */
+  --nx-toast-success-bg: #047857;
+  --nx-toast-warning-bg: #b45309;
+  --nx-toast-danger-bg: #b91c1c;
+  --nx-toast-info-bg: #1d4ed8;
 
   --nx-overlay-bg: rgba(0, 0, 0, 0.5);
 
@@ -68,7 +83,6 @@
   --nx-text-strong: #0f172a;
   --nx-text-tertiary: var(--nx-text-secondary);
   --nx-warning-soft: rgba(245, 158, 11, 0.12);
-  --nx-warning-text: var(--nx-warning);
   --nx-chat-kb-bg: var(--nx-bg-elevated);
   --nx-switch-track: #d5dce6;
   --nx-undo-bg: #475569;
@@ -97,7 +111,7 @@
 
 :root {
   --nx-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-  --nx-font-mono: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
+  --nx-font-mono: "JetBrains Mono", "Fira Code", "Cascadia Code", ui-monospace, "PingFang SC", "Microsoft YaHei", monospace;
   --nx-text-xs: 0.75rem;
   --nx-text-sm: 0.875rem;
   --nx-text-base: 0.9375rem;
@@ -170,8 +184,8 @@
   --nx-border-hover: rgba(255, 255, 255, 0.15);
   --nx-text-heading: #f1f5f9;
   --nx-text-body: #cbd5e1;
-  --nx-text-secondary: #94a3b8;
-  --nx-text-muted: #7a8a9e;
+  --nx-text-secondary: #a9b9cc;
+  --nx-text-muted: #96a6ba;
   --nx-text-on-accent: var(--app-accent-contrast, #ffffff);
   --nx-primary: var(--app-accent, #6366f1);
   --nx-success: #34d399;
@@ -182,6 +196,19 @@
   --nx-warning-rgb: 251, 191, 36;
   --nx-danger-rgb: 248, 113, 113;
   --nx-info-rgb: 96, 165, 250;
+
+  /* 文字档语义色（暗色下用亮档本身，soft 暗底 ≥4.5:1） */
+  --nx-success-text: #34d399;
+  --nx-warning-text: #fbbf24;
+  --nx-danger-text: #fca5a5;
+  --nx-info-text: #60a5fa;
+
+  /* 恒暗代码面 / 实心反馈面（与浅色同值：代码块恒暗、toast 深实心白字两端达标） */
+  --nx-code-block-bg: #16202f;
+  --nx-toast-success-bg: #047857;
+  --nx-toast-warning-bg: #b45309;
+  --nx-toast-danger-bg: #b91c1c;
+  --nx-toast-info-bg: #1d4ed8;
   --nx-overlay-bg: rgba(30, 41, 59, 0.75);
   --nx-glass-bg: rgba(36, 48, 68, 0.7);
   --nx-glass-border: rgba(255, 255, 255, 0.08);
@@ -210,7 +237,6 @@
   --nx-text-tertiary: var(--nx-text-secondary);
   --nx-text-accent: var(--app-accent-strong, var(--app-accent));
   --nx-warning-soft: rgba(251, 191, 36, 0.15);
-  --nx-warning-text: var(--nx-warning);
   --nx-chat-kb-bg: var(--nx-bg-elevated);
   --nx-switch-track: #3b4a5f;
   --nx-undo-bg: #64748b;

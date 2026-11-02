@@ -146,14 +146,14 @@
   text-align: center;
 }
 
-.nux-cal-cell.selected .nux-cal-count { background: rgba(255, 255, 255, 0.85); color: var(--cal-accent); }
+.nux-cal-cell.selected .nux-cal-count { background: var(--nx-bg-elevated, #fff); color: var(--cal-accent); }
 
 .nux-cal-cell.seq.done { background: rgba(var(--nx-success-rgb), 0.16); }
-.nux-cal-cell.seq.done .nux-cal-mark { color: var(--nx-success); }
+.nux-cal-cell.seq.done .nux-cal-mark { color: var(--nx-success-text, var(--nx-success)); }
 .nux-cal-cell.seq.frozen { background: rgba(var(--nx-info-rgb), 0.14); }
-.nux-cal-cell.seq.frozen .nux-cal-mark { color: var(--nx-info); }
+.nux-cal-cell.seq.frozen .nux-cal-mark { color: var(--nx-info-text, var(--nx-info)); }
 .nux-cal-cell.seq.mended { background: rgba(var(--nx-warning-rgb), 0.18); }
-.nux-cal-cell.seq.mended .nux-cal-mark { color: var(--nx-warning); }
+.nux-cal-cell.seq.mended .nux-cal-mark { color: var(--nx-warning-text, var(--nx-warning)); }
 .nux-cal-cell.seq.missed { background: var(--nx-bg-muted); }
 .nux-cal-cell.seq.missed .nux-cal-mark { color: var(--nx-text-muted); }
 .nux-cal-cell.seq.future .nux-cal-num { color: var(--nx-text-muted); }

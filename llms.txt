@@ -60,6 +60,8 @@ app.mount('#app');
 
 主题令牌四件套（亮色行）：`--app-accent`（600 档，按钮底/大字）/ `--app-accent-hover` / `--app-accent-strong`（700 档，白底文字 AA≥4.5，文字级强调统一走 `--nx-text-accent` 自动消费）/ `--app-accent-rgb`；暗色行同构（400 档 accent + 300 档 hover/strong + `--app-accent-contrast` 深字）。全 27 套 WCAG 实测达标（2026-10）。
 
+语义色双档制（2026-11 起，凡文字一律用文字档）：`--nx-{success,warning,danger,info}-text`（soft/tint 底上的文字色，双主题 AA≥4.5）与亮档 `--nx-{success,warning,...}`（图形/进度条/左边框/图标）；实心反馈面（toast 等）用 `--nx-toast-{success,warning,danger,info}-bg`（深实心底白字≥4.5，双主题同值）。markdown 代码块恒暗面 `--nx-code-block-bg`（不随主题翻面，配浅白代码字 + atom-one-dark 高亮）；文字阶梯 `--nx-text-{heading,body,secondary,muted}` 双主题全档 AA（muted 浅 #64748b / 暗 #96a6ba）。中文排版约定：字重层级只用 400/600/700（Windows YaHei 无 Medium，500 档是假象）；数字对比场景加 `font-variant-numeric: tabular-nums`；中文文字禁 letter-spacing/uppercase。
+
 ## 暗色模式
 
 ```javascript

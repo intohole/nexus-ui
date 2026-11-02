@@ -217,7 +217,7 @@
 
 .nxsp-mask {
     position: fixed; inset: 0; z-index: var(--nx-z-side-mask);
-    background: rgba(15, 23, 42, .42);
+    background: var(--nx-overlay-bg, rgba(15, 23, 42, .42));
     opacity: 0; pointer-events: none; transition: opacity .26s ease;
 }
 .nxsp-mask.open { opacity: 1; pointer-events: auto; }

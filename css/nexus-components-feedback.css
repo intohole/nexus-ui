@@ -103,10 +103,11 @@
               transform var(--nx-transition-base) var(--nx-ease-out);
 }
 .nux-toast-item.is-in { opacity: 1; transform: none; }
-.nux-toast-success { background: var(--nx-success); }
-.nux-toast-warning { background: var(--nx-warning); }
-.nux-toast-error { background: var(--nx-danger); }
-.nux-toast-info { background: var(--nx-info); }
+/* 实心反馈面用深一档语义色：白字（on-accent）≥4.5:1，浅/暗色同值 */
+.nux-toast-success { background: var(--nx-toast-success-bg, var(--nx-success)); }
+.nux-toast-warning { background: var(--nx-toast-warning-bg, var(--nx-warning)); }
+.nux-toast-error { background: var(--nx-toast-danger-bg, var(--nx-danger)); }
+.nux-toast-info { background: var(--nx-toast-info-bg, var(--nx-info)); }
 
 .nux-toast-icon { font-size: var(--nx-text-lg); line-height: 1; flex-shrink: 0; }
 .nux-toast-msg { flex: 1; word-break: break-word; }
@@ -417,9 +418,6 @@
   .nux-notif-box-btn { padding: 14px 14px 16px; }
   .nux-notif-chip { min-height: 44px; }
   .nux-notif-inboxbox-btn { min-height: 44px; padding: 10px 16px; }
-}
-@media (max-width: 768px) {
-  .nux-notif-inboxbox-btn { min-height: 40px; }
 }
 .nux-notif-panel-item.is-archived .nux-notif-panel-item-icon { opacity: 0.55; }
 .nux-notif-panel-item.is-archived .nux-notif-panel-item-title { font-weight: 400; color: var(--nx-text-secondary); }
@@ -922,7 +920,7 @@
   color: var(--nx-text-muted); background: var(--nx-bg-muted); border-color: transparent;
 }
 .nux-notif-mute-hint {
-  font-size: 11px; color: var(--nx-text-muted); margin: var(--nx-space-2) var(--nx-space-2) 0;
+  font-size: var(--nx-text-xs); color: var(--nx-text-muted); margin: var(--nx-space-2) var(--nx-space-2) 0;
 }
 @media (max-width: 768px){
   .nux-notif-job { padding: 10px 12px; }

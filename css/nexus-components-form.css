@@ -35,7 +35,10 @@
   cursor: pointer;
   transition: border-color var(--nx-transition-base);
 }
-.nx-select:focus { border-color: var(--app-accent); }
+.nx-select:focus {
+  border-color: var(--app-accent);
+  box-shadow: 0 0 0 3px rgba(var(--app-accent-rgb, 99, 102, 241), 0.15);
+}
 
 .nux-form-group {
   margin-bottom: var(--nx-space-4);
@@ -69,7 +72,8 @@
   padding: var(--nx-space-2) var(--nx-space-3);
   font-size: var(--nx-text-sm);
   color: var(--nx-text-heading);
-  background: var(--nx-bg-base);
+  /* 与 nexus-components-controls.css 同名规则对齐：聚合包内后者胜出，此处保持同值防漂移 */
+  background: var(--nx-bg-surface);
   border: 1px solid var(--nx-border);
   border-radius: var(--nx-radius-md);
   outline: none;
@@ -78,7 +82,7 @@
 }
 .nux-input:focus {
   border-color: var(--app-accent, var(--nx-primary));
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--app-accent, var(--nx-primary)) 15%, transparent);
+  box-shadow: 0 0 0 3px rgba(var(--app-accent-rgb, 99, 102, 241), 0.15);
 }
 .nux-input::placeholder { color: var(--nx-text-muted); }
 
@@ -87,8 +91,6 @@
   width: 100%;
   flex: 1;
   min-height: 100vh;
-  min-height: 100dvh;
-  min-height: 100dvh;
   min-height: 100dvh;
 }
 .nux-login-brand {
@@ -169,7 +171,7 @@
 .nux-login-error {
   padding: var(--nx-space-2) var(--nx-space-3);
   background: color-mix(in srgb, var(--nx-danger) 10%, transparent);
-  color: var(--nx-danger);
+  color: var(--nx-danger-text, var(--nx-danger));
   border-radius: var(--nx-radius-md);
   font-size: var(--nx-text-sm);
   margin-bottom: var(--nx-space-4);
@@ -318,7 +320,7 @@
   height: 18px;
   margin: 0;
   border: 1.5px solid var(--nx-border-hover);
-  border-radius: 5px;
+  border-radius: var(--nx-radius-sm, 6px);
   background: var(--nx-bg-surface);
   cursor: pointer;
   display: inline-flex;
@@ -352,9 +354,12 @@
 .nux-link:hover { opacity: 0.8; }
 .nux-terms { line-height: 1.5; color: var(--nx-text-body); }
 .nux-terms a { color: var(--app-accent, var(--nx-primary)); text-decoration: underline; font-weight: 500; }
-.nux-age-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 999px; background: var(--nx-border-strong, #d1d5db); outline: none; padding: 0; }
+.nux-age-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: var(--nx-radius-full, 9999px); background: var(--nx-border-strong, #d1d5db); outline: none; padding: 0; }
 .nux-age-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--app-accent, var(--nx-primary)); border: 2px solid var(--nx-bg-surface, #fff); box-shadow: 0 1px 4px rgba(0,0,0,0.25); cursor: pointer; }
 .nux-age-slider::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--app-accent, var(--nx-primary)); border: 2px solid var(--nx-bg-surface, #fff); cursor: pointer; }
+/* 键盘焦点环画在 thumb 上（outline:none 压掉全局兜底后必须自补指示） */
+.nux-age-slider:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rgba(var(--app-accent-rgb, 99, 102, 241), 0.35); }
+.nux-age-slider:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 3px rgba(var(--app-accent-rgb, 99, 102, 241), 0.35); }
 .nux-age-notice { font-size: var(--nx-text-sm, 12px); color: var(--nx-text-muted); line-height: 1.5; margin-top: 6px; }
 .nux-login-divider {
   display: flex;
@@ -502,6 +507,10 @@
 }
 .nx-switch-input:checked + .nx-switch-slider {
   background: var(--nx-primary, #3b82f6);
+}
+/* 隐藏 input 收焦点，焦点环画到可见滑轨上（兄弟选择器，键盘可达） */
+.nx-switch-input:focus-visible + .nx-switch-slider {
+  box-shadow: 0 0 0 3px rgba(var(--app-accent-rgb, 99, 102, 241), 0.35);
 }
 .nx-switch-input:checked + .nx-switch-slider::after {
   transform: translateX(18px);
@@ -668,7 +677,7 @@
   cursor: pointer;
   font-size: var(--nx-text-sm);
 }
-.nux-uc-logout:hover { background: rgba(239, 68, 68, 0.08); }
+.nux-uc-logout:hover { background: rgba(var(--nx-danger-rgb, 239, 68, 68), 0.08); }
 .nux-uc-divider { height: 1px; background: var(--nx-border, #e2e8f0); margin: var(--nx-space-4) 0; }
 .nux-uc-action {
   width: 100%;
@@ -680,7 +689,7 @@
   cursor: pointer;
   font-size: var(--nx-text-sm);
 }
-.nux-uc-action:hover { background: rgba(59, 130, 246, 0.08); }
+.nux-uc-action:hover { background: var(--nx-primary-soft, rgba(59, 130, 246, 0.08)); }
 .nux-uc-tip { color: var(--nx-text-secondary); font-size: var(--nx-text-sm); margin-top: var(--nx-space-3); }
 .nux-uc-sessions-head {
   display: flex;

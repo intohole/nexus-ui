@@ -41,13 +41,13 @@
   font-weight: 700;
 }
 
-.nx-confidence--danger { background: rgba(var(--nx-danger-rgb, 239, 68, 68), 0.1); color: var(--nx-danger); }
+.nx-confidence--danger { background: rgba(var(--nx-danger-rgb, 239, 68, 68), 0.1); color: var(--nx-danger-text, var(--nx-danger)); }
 .nx-confidence--danger .nx-confidence-dot { background: var(--nx-danger); }
-.nx-confidence--warning { background: rgba(var(--nx-warning-rgb, 245, 158, 11), 0.12); color: var(--nx-warning); }
+.nx-confidence--warning { background: rgba(var(--nx-warning-rgb, 245, 158, 11), 0.12); color: var(--nx-warning-text, var(--nx-warning)); }
 .nx-confidence--warning .nx-confidence-dot { background: var(--nx-warning); }
 .nx-confidence--accent { background: rgba(var(--app-accent-rgb, 99, 102, 241), 0.1); color: var(--nx-primary); }
 .nx-confidence--accent .nx-confidence-dot { background: var(--nx-primary); }
-.nx-confidence--success { background: rgba(var(--nx-success-rgb, 16, 185, 129), 0.1); color: var(--nx-success); }
+.nx-confidence--success { background: rgba(var(--nx-success-rgb, 16, 185, 129), 0.1); color: var(--nx-success-text, var(--nx-success)); }
 .nx-confidence--success .nx-confidence-dot { background: var(--nx-success); }
 .nx-confidence--muted { background: var(--nx-bg-muted); color: var(--nx-text-secondary); }
 
@@ -165,9 +165,9 @@ a.nx-citation-title:focus-visible { outline: 2px solid var(--nx-primary); outlin
   font-weight: 600;
 }
 
-.nx-citation-verdict--success { background: rgba(var(--nx-success-rgb, 16, 185, 129), 0.1); color: var(--nx-success); }
-.nx-citation-verdict--warning { background: rgba(var(--nx-warning-rgb, 245, 158, 11), 0.12); color: var(--nx-warning); }
-.nx-citation-verdict--danger { background: rgba(var(--nx-danger-rgb, 239, 68, 68), 0.1); color: var(--nx-danger); }
+.nx-citation-verdict--success { background: rgba(var(--nx-success-rgb, 16, 185, 129), 0.1); color: var(--nx-success-text, var(--nx-success)); }
+.nx-citation-verdict--warning { background: rgba(var(--nx-warning-rgb, 245, 158, 11), 0.12); color: var(--nx-warning-text, var(--nx-warning)); }
+.nx-citation-verdict--danger { background: rgba(var(--nx-danger-rgb, 239, 68, 68), 0.1); color: var(--nx-danger-text, var(--nx-danger)); }
 
 .nx-citation-note {
   font-size: var(--nx-text-xs);
@@ -222,7 +222,7 @@ a.nx-citation-title:focus-visible { outline: 2px solid var(--nx-primary); outlin
 .nux-copy-btn.is-copied { color: var(--nx-success); }
 
 @media (pointer: coarse) {
-  .nux-copy-btn { height: 36px; padding: 0 12px; }
+  .nux-copy-btn { height: 44px; padding: 0 12px; }
 }
 
 .nx-timeline {

@@ -93,7 +93,7 @@
 .nx-auto-card-name { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
 .nx-auto-card-name strong { font-size: 14px; color: var(--nx-text-heading, #1f2937); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .nx-auto-card-status { font-size: 11px; padding: 2px 8px; border-radius: 999px; flex: none; }
-.nx-auto-card-status.on { background: rgba(16, 185, 129, 0.12); color: var(--nx-success, #0f9d6e); }
+.nx-auto-card-status.on { background: rgba(var(--nx-success-rgb, 16, 185, 129), 0.12); color: var(--nx-success-text, #047857); }
 .nx-auto-card-status.off { background: var(--nx-bg-tertiary, #eef1f6); color: var(--nx-text-tertiary, #9aa5b5); }
 .nx-auto-switch { position: relative; width: 42px; height: 24px; flex: none; }
 .nx-auto-switch input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }

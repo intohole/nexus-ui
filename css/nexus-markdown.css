@@ -100,7 +100,8 @@
 .nx-chat-content pre {
     margin: var(--nx-space-3, 0.75rem) 0;
     padding: var(--nx-space-4, 1rem);
-    background: var(--nx-bg-code, rgb(30, 41, 59));
+    /* 恒暗代码面：代码块设计意图=常暗底配浅白代码字（atom-one-dark 高亮），不随主题翻面 */
+    background: var(--nx-code-block-bg, #16202f);
     border-radius: var(--nx-radius-md, 0.5rem);
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -241,8 +242,8 @@
     position: absolute;
     top: 0.5rem;
     left: 0.75rem;
-    font-size: 0.7rem;
-    color: rgba(148, 163, 184, 0.7);
+    font-size: 0.75rem;
+    color: rgb(148, 163, 184);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     font-family: var(--nx-font-mono, 'SF Mono', Monaco, monospace);
@@ -303,7 +304,7 @@
     :root:not([data-theme="light"]) .nx-chat-content {
         --nx-text-body: #cbd5e1;
         --nx-text-heading: #f1f5f9;
-        --nx-text-muted: #7a8a9e;
+        --nx-text-muted: #96a6ba;
         color: var(--nx-text-body);
     }
     :root:not([data-theme="light"]) .nx-md h1,
