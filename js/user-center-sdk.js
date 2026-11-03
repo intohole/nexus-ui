@@ -602,23 +602,60 @@ class UserCenterSDK {
         }
         const boot = { sdk, http, ready: null };
         if (opts.configUrl) {
-            boot.ready = fetch(opts.configUrl)
-                .then(r => r.json())
-                .then(cfg => {
-                    const picked = (typeof opts.configPick === 'function')
-                        ? opts.configPick(cfg)
-                        : UserCenterSDK._pickUcConfig(cfg);
-                    if (picked) {
-                        if (picked.baseUrl) sdk.baseUrl = picked.baseUrl.replace(/^https?:\/\//, '//').replace(/\/+$/, '');
-                        if (picked.appKey) sdk.appKey = picked.appKey;
-                    }
-                    return boot;
-                })
-                .catch(() => boot);
+            // 引导缓存（r156）：cacheTtl 毫秒，默认 0=每次拉取（S49 纪律：显式传参才缓存）。
+            // config 是站点级低频数据（UC base_url/app_key），localStorage 按 configUrl 分键。
+            const ttl = Number(opts.cacheTtl) > 0 ? Number(opts.cacheTtl) : 0;
+            const applyConfig = (cfg) => {
+                boot.cfg = cfg;
+                const picked = (typeof opts.configPick === 'function')
+                    ? opts.configPick(cfg)
+                    : UserCenterSDK._pickUcConfig(cfg);
+                if (picked) {
+                    if (picked.baseUrl) sdk.baseUrl = picked.baseUrl.replace(/^https?:\/\//, '//').replace(/\/+$/, '');
+                    if (picked.appKey) sdk.appKey = picked.appKey;
+                }
+                return boot;
+            };
+            const cached = (ttl > 0) ? UserCenterSDK._readBootCache(opts.configUrl, ttl) : null;
+            if (cached) {
+                boot.ready = Promise.resolve(applyConfig(cached));
+            } else {
+                boot.ready = fetch(opts.configUrl)
+                    .then(r => r.json())
+                    .then(cfg => {
+                        if (ttl > 0) UserCenterSDK._writeBootCache(opts.configUrl, cfg);
+                        return applyConfig(cfg);
+                    })
+                    .catch(() => boot);
+            }
         } else {
             boot.ready = Promise.resolve(boot);
         }
         return boot;
+    }
+
+    static _bootCacheKey(configUrl) {
+        return 'nexus_uc_boot_cfg:' + String(configUrl || '');
+    }
+
+    static _readBootCache(configUrl, ttl) {
+        try {
+            const raw = window.localStorage.getItem(UserCenterSDK._bootCacheKey(configUrl));
+            if (!raw) return null;
+            const entry = JSON.parse(raw);
+            if (!entry || entry.url !== configUrl) return null;
+            if (!entry.ts || (Date.now() - entry.ts) >= ttl) return null;
+            return entry.cfg;
+        } catch (e) { return null; }
+    }
+
+    static _writeBootCache(configUrl, cfg) {
+        try {
+            window.localStorage.setItem(
+                UserCenterSDK._bootCacheKey(configUrl),
+                JSON.stringify({ url: configUrl, ts: Date.now(), cfg: cfg })
+            );
+        } catch (e) { /* 隐私模式/满额静默 */ }
     }
 
     static _pickUcConfig(cfg) {

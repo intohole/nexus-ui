@@ -6,8 +6,9 @@
     const LEAVE_MS = 220;
 
     function pickDuration(value, fallback) {
-        if (typeof value === 'number' && value > 0) return value;
-        if (value && typeof value.duration === 'number' && value.duration > 0) return value.duration;
+        // 0（数字或 {duration:0}）= 常驻：不自动关闭，靠点击退场（失败重试条形态）
+        if (typeof value === 'number') return value;
+        if (value && typeof value.duration === 'number') return value.duration;
         return fallback;
     }
 
@@ -68,9 +69,13 @@
         host.appendChild(item);
         enter(item);
 
-        const timer = setTimeout(function () { leave(item); }, pickDuration(durationValue, TOAST_MS));
+        const onClick = (durationValue && typeof durationValue === 'object' && typeof durationValue.onClick === 'function')
+            ? durationValue.onClick : null;
+        if (onClick) item.addEventListener('click', function () { onClick(item); });
+        const ttl = pickDuration(durationValue, TOAST_MS);
+        const timer = ttl > 0 ? setTimeout(function () { leave(item); }, ttl) : null;
         item.addEventListener('click', function () {
-            clearTimeout(timer);
+            if (timer) clearTimeout(timer);
             leave(item);
         });
     }

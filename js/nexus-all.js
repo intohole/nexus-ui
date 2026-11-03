@@ -590,11 +590,10 @@
         showToast(message, type = 'info', options = {}) {
             if (typeof window.showToast !== 'function') return;
             const opts = options || {};
-            if (opts.center) {
-                window.showToast(message, type, { duration: opts.duration || 3000, center: true });
-            } else {
-                window.showToast(message, type, opts.duration || 3000);
-            }
+            const payload = { duration: opts.duration !== undefined ? opts.duration : 3000 };
+            if (opts.center) payload.center = true;
+            if (typeof opts.onClick === 'function') payload.onClick = opts.onClick;
+            window.showToast(message, type, payload);
         },
 
         confirm(message, title = '操作确认', options = {}) {
@@ -1132,8 +1131,9 @@
     const LEAVE_MS = 220;
 
     function pickDuration(value, fallback) {
-        if (typeof value === 'number' && value > 0) return value;
-        if (value && typeof value.duration === 'number' && value.duration > 0) return value.duration;
+        // 0（数字或 {duration:0}）= 常驻：不自动关闭，靠点击退场（失败重试条形态）
+        if (typeof value === 'number') return value;
+        if (value && typeof value.duration === 'number') return value.duration;
         return fallback;
     }
 
@@ -1194,9 +1194,13 @@
         host.appendChild(item);
         enter(item);
 
-        const timer = setTimeout(function () { leave(item); }, pickDuration(durationValue, TOAST_MS));
+        const onClick = (durationValue && typeof durationValue === 'object' && typeof durationValue.onClick === 'function')
+            ? durationValue.onClick : null;
+        if (onClick) item.addEventListener('click', function () { onClick(item); });
+        const ttl = pickDuration(durationValue, TOAST_MS);
+        const timer = ttl > 0 ? setTimeout(function () { leave(item); }, ttl) : null;
         item.addEventListener('click', function () {
-            clearTimeout(timer);
+            if (timer) clearTimeout(timer);
             leave(item);
         });
     }
@@ -5150,23 +5154,60 @@ class UserCenterSDK {
         }
         const boot = { sdk, http, ready: null };
         if (opts.configUrl) {
-            boot.ready = fetch(opts.configUrl)
-                .then(r => r.json())
-                .then(cfg => {
-                    const picked = (typeof opts.configPick === 'function')
-                        ? opts.configPick(cfg)
-                        : UserCenterSDK._pickUcConfig(cfg);
-                    if (picked) {
-                        if (picked.baseUrl) sdk.baseUrl = picked.baseUrl.replace(/^https?:\/\//, '//').replace(/\/+$/, '');
-                        if (picked.appKey) sdk.appKey = picked.appKey;
-                    }
-                    return boot;
-                })
-                .catch(() => boot);
+            // 引导缓存（r156）：cacheTtl 毫秒，默认 0=每次拉取（S49 纪律：显式传参才缓存）。
+            // config 是站点级低频数据（UC base_url/app_key），localStorage 按 configUrl 分键。
+            const ttl = Number(opts.cacheTtl) > 0 ? Number(opts.cacheTtl) : 0;
+            const applyConfig = (cfg) => {
+                boot.cfg = cfg;
+                const picked = (typeof opts.configPick === 'function')
+                    ? opts.configPick(cfg)
+                    : UserCenterSDK._pickUcConfig(cfg);
+                if (picked) {
+                    if (picked.baseUrl) sdk.baseUrl = picked.baseUrl.replace(/^https?:\/\//, '//').replace(/\/+$/, '');
+                    if (picked.appKey) sdk.appKey = picked.appKey;
+                }
+                return boot;
+            };
+            const cached = (ttl > 0) ? UserCenterSDK._readBootCache(opts.configUrl, ttl) : null;
+            if (cached) {
+                boot.ready = Promise.resolve(applyConfig(cached));
+            } else {
+                boot.ready = fetch(opts.configUrl)
+                    .then(r => r.json())
+                    .then(cfg => {
+                        if (ttl > 0) UserCenterSDK._writeBootCache(opts.configUrl, cfg);
+                        return applyConfig(cfg);
+                    })
+                    .catch(() => boot);
+            }
         } else {
             boot.ready = Promise.resolve(boot);
         }
         return boot;
+    }
+
+    static _bootCacheKey(configUrl) {
+        return 'nexus_uc_boot_cfg:' + String(configUrl || '');
+    }
+
+    static _readBootCache(configUrl, ttl) {
+        try {
+            const raw = window.localStorage.getItem(UserCenterSDK._bootCacheKey(configUrl));
+            if (!raw) return null;
+            const entry = JSON.parse(raw);
+            if (!entry || entry.url !== configUrl) return null;
+            if (!entry.ts || (Date.now() - entry.ts) >= ttl) return null;
+            return entry.cfg;
+        } catch (e) { return null; }
+    }
+
+    static _writeBootCache(configUrl, cfg) {
+        try {
+            window.localStorage.setItem(
+                UserCenterSDK._bootCacheKey(configUrl),
+                JSON.stringify({ url: configUrl, ts: Date.now(), cfg: cfg })
+            );
+        } catch (e) { /* 隐私模式/满额静默 */ }
     }
 
     static _pickUcConfig(cfg) {

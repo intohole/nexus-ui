@@ -36,11 +36,10 @@
         showToast(message, type = 'info', options = {}) {
             if (typeof window.showToast !== 'function') return;
             const opts = options || {};
-            if (opts.center) {
-                window.showToast(message, type, { duration: opts.duration || 3000, center: true });
-            } else {
-                window.showToast(message, type, opts.duration || 3000);
-            }
+            const payload = { duration: opts.duration !== undefined ? opts.duration : 3000 };
+            if (opts.center) payload.center = true;
+            if (typeof opts.onClick === 'function') payload.onClick = opts.onClick;
+            window.showToast(message, type, payload);
         },
 
         confirm(message, title = '操作确认', options = {}) {
