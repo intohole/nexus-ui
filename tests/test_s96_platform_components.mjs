@@ -44,6 +44,13 @@ check('table: Column 纯占位不渲染', Column.render && Column.render() === n
     const ctx2 = mkCtx(Table, { data: [], $slots: { default: () => fakeVnodes } });
     const cols2 = ctx2.columns();
     check('table: 只提取 NuxTableColumn 子节点', cols2.length === 2);
+    const fakeVnodesCC = [
+        { type: { name: 'NuxTableColumn' }, props: { label: '标题', prop: 'title', cellClass: 'mt-cell-clip' }, children: null }
+    ];
+    const ctxCC = mkCtx(Table, { data: [], $slots: { default: () => fakeVnodesCC } });
+    check('table: cellClass 提取（S97）', ctxCC.columns()[0].cellClass === 'mt-cell-clip');
+    check('table: 无 cellClass 空串兜底（S97）', cols2[0].cellClass === '');
+
     check('table: 列 props 透传', cols2[0].label === '应用' && cols2[0].prop === 'app' && cols2[1].fixed === 'right');
     check('table: scoped slot 提取为 cell 函数', typeof cols2[1].cell === 'function' && cols2[0].cell === null);
     const s1 = ctx2.cellStyle(cols2[0]);

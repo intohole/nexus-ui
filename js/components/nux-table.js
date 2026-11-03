@@ -22,6 +22,7 @@
                         width: p.width,
                         minWidth: p.minWidth,
                         fixed: p.fixed,
+                        cellClass: p.cellClass || '',
                         cell: (v.children && typeof v.children.default === 'function') ? v.children.default : null
                     };
                 });
@@ -44,6 +45,7 @@
             const wrapStyle = this.maxHeight ? { 'max-height': normSize(this.maxHeight) } : {};
             const thCells = cols.map(c => h('th', {
                 class: { 'nux-table-th': true, 'nux-table-col--fixed-right': c.fixed === 'right' },
+                class: { 'nux-table-th': true, 'nux-table-col--fixed-right': c.fixed === 'right', [c.cellClass]: !!c.cellClass },
                 style: this.cellStyle(c),
                 scope: 'col'
             }, c.label));
@@ -61,7 +63,7 @@
                     class: 'nux-table-tr',
                     onClick: e => this.$emit('row-click', row, e)
                 }, cols.map(c => h('td', {
-                    class: { 'nux-table-td': true, 'nux-table-col--fixed-right': c.fixed === 'right' },
+                    class: { 'nux-table-td': true, 'nux-table-col--fixed-right': c.fixed === 'right', [c.cellClass]: !!c.cellClass },
                     style: this.cellStyle(c)
                 }, this.cellContent(c, row, i)))));
             }

@@ -6,7 +6,8 @@
             prop: { type: String, default: '' },
             width: { type: [String, Number], default: '' },
             minWidth: { type: [String, Number], default: '' },
-            fixed: { type: String, default: '' }
+            fixed: { type: String, default: '' },
+            cellClass: { type: String, default: '' }
         },
         render() { return null; }
     };
