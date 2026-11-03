@@ -27,9 +27,10 @@ SKIP_REPOS = {"nexus-ui", "handoff", "backups"}
 # 轮次档案（r156 定谳；新仓迁移后更新此表，census 输出与表格冲突即报警）
 KNOWN = {
     "usercenter": "heavy", "smartCode": "heavy", "promptManager": "heavy",
-    "moutain": "heavy", "promptGenius": "heavy",
-    "WisePath": "light", "aiPet": "light", "lyra": "light", "userFeedback": "light",
-    "goldenStock": "done", "goldenFish": "done",
+    "moutain": "heavy",
+    "WisePath": "light",
+    "goldenStock": "done", "goldenFish": "done", "lyra": "done", "aiPet": "done",
+    "promptGenius": "done", "userFeedback": "done",
 }
 
 
@@ -89,9 +90,10 @@ def main() -> int:
     for name, expect in KNOWN.items():
         r = rows.get(name)
         actual = r["band"] if r else "n/a"
-        if expect == "done" and not (actual == "done" or actual == "n/a"):
+        actual_done = actual in ("done", "n/a")
+        if expect == "done" and not actual_done:
             drift.append(f"{name}: 台账=done 实测={actual}")
-        elif expect != "done" and actual == "done":
+        elif expect != "done" and actual_done:
             drift.append(f"{name}: 台账={expect} 实测=done（请更新 KNOWN 表）")
 
     width = max(len(n) for n in rows) if rows else 10
