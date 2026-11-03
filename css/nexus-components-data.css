@@ -129,3 +129,21 @@
   .nux-stat-value { font-size: var(--nx-text-xl); }
   .nux-tab-item { padding: var(--nx-space-2) var(--nx-space-3); font-size: var(--nx-text-xs); }}
 
+.nux-table-wrap { position: relative; overflow: auto; border: 1px solid var(--nx-border); border-radius: var(--nx-radius-md); background: var(--nx-bg-surface); }
+.nux-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: var(--nx-text-sm); color: var(--nx-text-body); }
+.nux-table-th { position: sticky; top: 0; z-index: 2; text-align: left; padding: var(--nx-space-2) var(--nx-space-3); font-weight: 600; font-size: var(--nx-text-xs); color: var(--nx-text-secondary); background: var(--nx-bg-muted); border-bottom: 1px solid var(--nx-border); white-space: nowrap; }
+.nux-table-td { padding: var(--nx-space-2) var(--nx-space-3); border-bottom: 1px solid var(--nx-border); vertical-align: top; }
+.nux-table-tbody .nux-table-tr:last-child .nux-table-td { border-bottom: none; }
+.nux-table--stripe .nux-table-tbody .nux-table-tr:nth-child(even) .nux-table-td { background: var(--nx-bg-subtle); }
+.nux-table--clickable .nux-table-tbody .nux-table-tr { cursor: pointer; transition: background var(--nx-transition-fast); }
+.nux-table--clickable .nux-table-tbody .nux-table-tr:hover .nux-table-td { background: var(--nx-bg-hover); }
+.nux-table-col--fixed-right { position: sticky; right: 0; z-index: 1; background: var(--nx-bg-surface); box-shadow: -1px 0 0 var(--nx-border); }
+.nux-table-th.nux-table-col--fixed-right { z-index: 3; background: var(--nx-bg-muted); }
+.nux-table--stripe .nux-table-tbody .nux-table-tr:nth-child(even) .nux-table-col--fixed-right { background: var(--nx-bg-subtle); }
+.nux-table--clickable .nux-table-tbody .nux-table-tr:hover .nux-table-col--fixed-right { background: var(--nx-bg-hover); }
+.nux-table-state { padding: var(--nx-space-6) var(--nx-space-3); text-align: center; color: var(--nx-text-muted); font-size: var(--nx-text-sm); }
+.nux-table-state--loading { color: var(--nx-text-secondary); }
+.nux-table--loading .nux-table-tbody { opacity: 0.55; }
+@media (max-width: 768px) {
+  .nux-table-th, .nux-table-td { padding: var(--nx-space-1) var(--nx-space-2); }
+}

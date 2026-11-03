@@ -66,6 +66,8 @@
         'nux-swipe-actions': 'NuxSwipeActions',
         'nux-tab-group': 'NuxTabGroup',
         'nux-tag': 'NuxTag',
+        'nux-table': 'NuxTable',
+        'nux-table-column': 'NuxTableColumn',
         'nux-textarea': 'NuxTextarea',
         'nux-theme-toggle': 'NuxThemeToggle',
         'nux-tool-call': 'NuxToolCall',
