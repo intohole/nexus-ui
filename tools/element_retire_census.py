@@ -26,9 +26,8 @@ SKIP_REPOS = {"nexus-ui", "handoff", "backups"}
 
 # 轮次档案（r156 定谳；新仓迁移后更新此表，census 输出与表格冲突即报警）
 KNOWN = {
-    "usercenter": "heavy", "smartCode": "heavy", "promptManager": "heavy",
-    "moutain": "heavy",
-    "WisePath": "light",
+    "promptManager": "heavy",
+    "usercenter": "done", "smartCode": "done", "moutain": "done", "WisePath": "done",
     "goldenStock": "done", "goldenFish": "done", "lyra": "done", "aiPet": "done",
     "promptGenius": "done", "userFeedback": "done",
 }
