@@ -12,7 +12,8 @@
     "element-plus": {
       "version": "2.6.1",
       "pkg": "element-plus",
-      "cdn": "https://registry.npmmirror.com/element-plus/{version}/files/dist/"
+      "cdn": "https://registry.npmmirror.com/element-plus/{version}/files/dist/",
+      "retire": "r156 起退役中：新页面禁用 el-*（handoff/31 §五）；生产仅 vendor 自托管形态，存留仓=smartCode/usercenter/promptManager/promptGenius/moutain/WisePath/lyra/aiPet/userFeedback（模板迁移挂各仓前端专项轮），退役完成时本条目整体删除"
     },
     "axios": {
       "version": "1.6.8",
