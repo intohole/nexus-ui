@@ -90,9 +90,15 @@
         tryBases(API_BASES, token, '/webpush/status').then(function (st) {
             var d = st.data || {};
             var subs = Array.isArray(d.subscriptions) ? d.subscriptions : [];
-            if (!d.enabled || subs.some(function (x) { return x.enabled; })) {
+            if (subs.some(function (x) { return x.enabled; })) {
+                // 已有有效订阅：真已订阅，永久静默
                 s.subscribedAt = s.subscribedAt || Date.now();
                 writeState(s);
+                return;
+            }
+            if (!d.enabled) {
+                // 服务端通道未配置（VAPID 缺失等）：本次不出现且不落任何状态——
+                // 误写 subscribedAt 会把邀请条永久静默，通道开通后老访客再无机会
                 return;
             }
             return tryBases(API_BASES, token, '/notifications/box-summary').then(function (bs) {
