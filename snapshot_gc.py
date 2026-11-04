@@ -98,6 +98,7 @@ def main() -> int:
     ap.add_argument("--local", action="store_true", help="附带本地旧快照删除（gitignored 工件，无需提交）")
     ap.add_argument("--keep", type=int, default=3)
     ap.add_argument("--node", help="只处理指定节点")
+    ap.add_argument("--no-nodes", action="store_true", help="只处理本地，不探测节点")
     args = ap.parse_args()
     refs = referenced_versions()
     print(f"工作区钉版引用版本: {sorted(refs) or '无'}（引用中的版本一律不删）")
@@ -117,6 +118,10 @@ def main() -> int:
                 print(f"  删除本地 {name}: {e}")
                 failed += 1
         print("  （本地快照为 gitignored 工件，删除即终局，无需提交）")
+
+    if args.no_nodes:
+        print(f"\n结论: {'完成' if failed == 0 else f'{failed} 项 FAIL'}（--no-nodes，未探测节点）")
+        return 0 if failed == 0 else 2
 
     for name, ssh_alias, apps_root in NODE_MAP:
         if args.node and name != args.node:

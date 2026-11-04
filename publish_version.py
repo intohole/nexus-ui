@@ -24,6 +24,7 @@ import hashlib
 import json
 import re
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -142,6 +143,11 @@ def main() -> int:
     ok = not diff_report(files, snap)
     print(f"[publish_version] v{version} 快照已生成 ({len(files)} 文件, fp={fingerprint(files)})"
           + ("" if ok else "，但校验发现差异，请检查"))
+    gc = subprocess.run(
+        [sys.executable, str(REPO / "snapshot_gc.py"), "--apply", "--local", "--no-nodes", "--keep", "3"],
+        capture_output=True, text=True)
+    gc_lines = ((gc.stdout or "") + (gc.stderr or "")).strip().splitlines()
+    print(f"[publish_version] 本地快照回收(保留3版): {gc_lines[-1] if gc_lines else '无输出'}")
     return 0 if ok else 2
 
 
