@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>S98 nux-icons 渲染验证页</title>
+<link rel="stylesheet" href="../css/nux-icons.css">
+<style>
+body { font-family: -apple-system, sans-serif; background: #fff; color: #111; padding: 24px; }
+body.dark { background: #1c1f26; color: #e8eaed; }
+.row { display: flex; flex-wrap: wrap; gap: 14px; margin: 10px 0; align-items: center; font-size: 18px; }
+.cell { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 84px; font-size: 11px; }
+.cell i { font-size: 22px; }
+.big i { font-size: 36px; }
+.spin i { color: #4a7dff; }
+</style>
+</head>
+<body>
+<h3>S98 mask 方案渲染验证（浅色）</h3>
+<div class="row" id="icons"></div>
+<div class="row big"><i class="fas fa-envelope"></i><i class="fas fa-spinner fa-spin"></i><i class="fas fa-plus fa-2x"></i></div>
+<div class="row spin"><i class="fas fa-circle-notch fa-spin"></i><i class="fas fa-sync-alt"></i></div>
+<div class="row"><i class="fas fa-check" style="color:#1a9c62"></i><i class="fas fa-triangle-exclamation" style="color:#d97706"></i></div>
+<script>
+const names = ['envelope','spinner','plus','check','chevron-right','xmark','bolt','lightbulb','triangle-exclamation','bullseye','magnifying-glass','arrows-rotate','arrow-right','robot','user','star','clock','trash','chevron-down','cube','chart-line','lock','key','gear','wand-magic-sparkles','circle-check','tags','house','paper-plane','bell','book-open-reader','heart-pulse','stethoscope','graduation-cap','fire','brain','shield-halved','route','briefcase','gauge-high','flag-checkered','coins','hourglass-half','diagram-project','location-dot','calendar-days','download','eye','copy','link'];
+document.getElementById('icons').innerHTML = names.map(n =>
+    `<div class="cell"><i class="fas fa-${n}"></i><span>${n}</span></div>`).join('');
+document.querySelectorAll('#icons .cell i').forEach(i => {
+    const st = getComputedStyle(i);
+    if (!st.webkitMaskImage || st.webkitMaskImage === 'none') {
+        i.parentElement.style.outline = '1px dashed #e05252';
+        i.parentElement.title = '不在本仓子集（预期红框=名字超集，非缺陷）';
+    }
+});
+</script>
+</body>
+</html>

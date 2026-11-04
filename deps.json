@@ -28,7 +28,9 @@
     "font-awesome": {
       "version": "6.5.1",
       "pkg": "@fortawesome/fontawesome-free",
-      "cdn": "https://registry.npmmirror.com/@fortawesome/fontawesome-free/{version}/files/css/all.min.css"
+      "cdn": "https://registry.npmmirror.com/@fortawesome/fontawesome-free/{version}/files/css/all.min.css",
+      "retire": "S98 起退役：全舰队 13 仓摘 vendor/fontawesome 引用改仓内 nux-icons.css 子集（mask data URI 承载，handoff/31 §5.2c）；新页面禁用 fontawesome CDN/vendor，图标走 nux-icons.css 或 nux-icon 组件",
+      "status": "retired"
     },
     "vue-router": {
       "version": "4.3.2",
