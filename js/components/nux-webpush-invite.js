@@ -13,6 +13,7 @@
     var STATE_KEY = 'nux_push_invite_state_v1';
     var IDLE_MS = 4000;
     var COOLDOWN_DAYS = 7;
+    var FAIL_COOLDOWN_DAYS = 3;
     var MAX_IMPRESSIONS = 3;
     var API_BASES = ['/api/notify', '/notifycenter/api/notify'];
 
@@ -48,7 +49,7 @@
         if (el) el.remove();
     }
 
-    function renderBar(host, text, onEnable) {
+    function renderBar(host, text, onEnable, ctaLabel) {
         var bar = document.createElement('div');
         bar.id = 'nux-push-invite';
         bar.className = 'nux-push-invite';
@@ -56,12 +57,13 @@
         bar.innerHTML =
             '<i class="fa-solid fa-mobile-screen nux-push-invite-ic" aria-hidden="true"></i>' +
             '<span class="nux-push-invite-text">' + text + '</span>' +
-            '<button type="button" class="nux-push-invite-cta">开启</button>' +
+            '<button type="button" class="nux-push-invite-cta">' + (ctaLabel || '开启') + '</button>' +
             '<button type="button" class="nux-push-invite-close" aria-label="暂不开启">' +
             '<i class="fa-solid fa-xmark" aria-hidden="true"></i></button>';
         bar.querySelector('.nux-push-invite-cta').addEventListener('click', function () {
             bar.classList.add('is-busy');
-            onEnable().catch(function () {}).then(function () { removeBar(); });
+            var done = onEnable ? onEnable() : Promise.resolve();
+            done.catch(function () {}).then(function () { removeBar(); });
         });
         bar.querySelector('.nux-push-invite-close').addEventListener('click', function () {
             var s = readState();
@@ -71,6 +73,13 @@
         });
         host.appendChild(bar);
         requestAnimationFrame(function () { bar.classList.add('is-in'); });
+    }
+
+    function dismissFor(days) {
+        var s = readState();
+        s.dismissedAt = Date.now() - (COOLDOWN_DAYS - days) * 86400000;
+        writeState(s);
+        removeBar();
     }
 
     function maybeInvite() {
@@ -101,6 +110,25 @@
                 // 误写 subscribedAt 会把邀请条永久静默，通道开通后老访客再无机会
                 return;
             }
+            // r25 可达性分型：服务端确认当前浏览器家族的 push service 不可达时，
+            // 不再邀请点「开启」（原生订阅必败+3 次配额被失败耗尽=永久静默的撞墙链），
+            // 换引导形态——教育 Safari/A2HS 通路，点了只记冷却，不触发订阅。
+            var unreachable = !util.familyReachable(d);
+            if (unreachable) {
+                var seen = readState();
+                seen.impressions = (seen.impressions || 0) + 1;
+                writeState(seen);
+                renderBar(
+                    document.body,
+                    '锁屏推送在当前浏览器的网络下不可达——用 <b>Safari</b> 打开本页即可一键开启（iPhone 需先「添加到主屏幕」）',
+                    null,
+                    '知道了'
+                );
+                // 「知道了」=短期冷却（3 天），通道可达性随网络变化，引导可再现
+                var cta = document.querySelector('#nux-push-invite .nux-push-invite-cta');
+                if (cta) cta.addEventListener('click', function () { dismissFor(FAIL_COOLDOWN_DAYS); });
+                return;
+            }
             return tryBases(API_BASES, token, '/notifications/box-summary').then(function (bs) {
                 var boxes = (bs.data && bs.data.boxes) || [];
                 var unread = 0;
@@ -120,6 +148,13 @@
                         done.subscribedAt = Date.now();
                         writeState(done);
                         if (window.showToast) window.showToast('已开启，测试推送已发出——请查看系统通知', 'success');
+                    }).catch(function () {
+                        // 撞墙残余兜底（r25）：失败不白花曝光配额——回退 1 次曝光+短期冷却，
+                        // 不再像 r24 时代 3 次失败即永久静默。
+                        var rolled = readState();
+                        rolled.impressions = Math.max(0, (rolled.impressions || 1) - 1);
+                        rolled.dismissedAt = Date.now() - (COOLDOWN_DAYS - FAIL_COOLDOWN_DAYS) * 86400000;
+                        writeState(rolled);
                     });
                 });
             });

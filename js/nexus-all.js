@@ -1019,8 +1019,12 @@
                 not_standalone_ios: '先「添加到主屏幕」，再从主屏幕打开即可开启',
                 not_granted: '通知权限未开启，可在浏览器设置中重新允许',
                 channel_off: '推送通道未开启',
-                subscribe_failed: '订阅失败，请检查网络后重试'
+                subscribe_failed: '订阅失败，请检查网络后重试',
+                push_unreachable: '当前网络的推送通道不可达——用 Safari 打开本页即可开启锁屏推送'
             };
+            // r25 可达性分型：浏览器族 → 它产出的 endpoint 所属 push service 家族。
+            // 可达性锚=发送端（服务端）视角：服务端推不到的家族，客户端订阅成功也是假接通。
+            const FAMILY_PUSH_SERVICE = { safari: 'apple', 'ios-safari': 'apple', chrome: 'fcm', edge: 'fcm', firefox: 'mozilla', other: '' };
             function browserFamily() {
                 const ua = navigator.userAgent || '';
                 if (/iPhone|iPad|iPod/.test(ua)) return 'ios-safari';
@@ -1069,9 +1073,29 @@
                         subscriptions: subs,
                         pushTypes: d.push_types || [],
                         dailyLimit: d.daily_limit || 0,
-                        todayPushed: d.today_pushed || 0
+                        todayPushed: d.today_pushed || 0,
+                        pushServices: d.push_services || {}
                     };
                 });
+            }
+            // r25：服务端视角判断「当前浏览器家族的 push service」是否可达。
+            // 双键兼容（status() 转换后的 pushServices / 原始响应的 push_services）；
+            // 未知（字段缺失/老版本服务端）一律按可达处理——分型只拦确认不可达。
+            function familyReachable(statusData) {
+                const fam = browserFamily();
+                const svc = FAMILY_PUSH_SERVICE[fam] || '';
+                if (!svc) return true;
+                const map = (statusData && (statusData.pushServices || statusData.push_services)) || {};
+                if (typeof map[svc] !== 'boolean') return true;
+                return map[svc];
+            }
+            function reportFailure(api, base, stage, reason) {
+                try {
+                    api.post((base || '/api/notify') + '/webpush/subscribe-failed', {
+                        browser: browserFamily(), stage: String(stage || '').slice(0, 32),
+                        reason: String(reason || '').slice(0, 200)
+                    }).catch(function () {});
+                } catch (e) { /* 上报永不阻塞主流程 */ }
             }
             function enable(api, base) {
                 const cap = capability();
@@ -1097,6 +1121,17 @@
                         endpoint: sub.endpoint, p256dh: keys.p256dh || '', auth: keys.auth || '',
                         browser: browserFamily()
                     }).then(function () { return sub.endpoint; });
+                }).catch(function (err) {
+                    // r25 订阅失败上报：浏览器侧失败此前零服务端痕迹（撞墙无痕）。
+                    // 拒绝授权是用户主动选择不是故障，不算失败；其余全量上报。
+                    const msg = (err && err.message) || '';
+                    if (msg !== UNSUPPORTED.not_granted) {
+                        const stage = msg === UNSUPPORTED.channel_off ? 'vapid'
+                            : msg === UNSUPPORTED.subscribe_failed || msg === UNSUPPORTED.push_unreachable ? 'server'
+                            : 'subscribe';
+                        reportFailure(api, base, stage, msg || String(err));
+                    }
+                    throw err;
                 });
             }
             function disable(api, base) {
@@ -1116,7 +1151,7 @@
                     return true;
                 });
             }
-            return { capability, permissionState, browserFamily, status, enable, disable, sendTest, UNSUPPORTED };
+            return { capability, permissionState, browserFamily, status, enable, disable, sendTest, familyReachable, reportFailure, UNSUPPORTED };
         })();
         return { resolve, normalize, appLabel, isToday, jobEntries, typeTone, typeIcon, typeLabel, clip, webpush };
     })();
@@ -6997,6 +7032,7 @@ try {
     var STATE_KEY = 'nux_push_invite_state_v1';
     var IDLE_MS = 4000;
     var COOLDOWN_DAYS = 7;
+    var FAIL_COOLDOWN_DAYS = 3;
     var MAX_IMPRESSIONS = 3;
     var API_BASES = ['/api/notify', '/notifycenter/api/notify'];
 
@@ -7032,7 +7068,7 @@ try {
         if (el) el.remove();
     }
 
-    function renderBar(host, text, onEnable) {
+    function renderBar(host, text, onEnable, ctaLabel) {
         var bar = document.createElement('div');
         bar.id = 'nux-push-invite';
         bar.className = 'nux-push-invite';
@@ -7040,12 +7076,13 @@ try {
         bar.innerHTML =
             '<i class="fa-solid fa-mobile-screen nux-push-invite-ic" aria-hidden="true"></i>' +
             '<span class="nux-push-invite-text">' + text + '</span>' +
-            '<button type="button" class="nux-push-invite-cta">开启</button>' +
+            '<button type="button" class="nux-push-invite-cta">' + (ctaLabel || '开启') + '</button>' +
             '<button type="button" class="nux-push-invite-close" aria-label="暂不开启">' +
             '<i class="fa-solid fa-xmark" aria-hidden="true"></i></button>';
         bar.querySelector('.nux-push-invite-cta').addEventListener('click', function () {
             bar.classList.add('is-busy');
-            onEnable().catch(function () {}).then(function () { removeBar(); });
+            var done = onEnable ? onEnable() : Promise.resolve();
+            done.catch(function () {}).then(function () { removeBar(); });
         });
         bar.querySelector('.nux-push-invite-close').addEventListener('click', function () {
             var s = readState();
@@ -7055,6 +7092,13 @@ try {
         });
         host.appendChild(bar);
         requestAnimationFrame(function () { bar.classList.add('is-in'); });
+    }
+
+    function dismissFor(days) {
+        var s = readState();
+        s.dismissedAt = Date.now() - (COOLDOWN_DAYS - days) * 86400000;
+        writeState(s);
+        removeBar();
     }
 
     function maybeInvite() {
@@ -7085,6 +7129,25 @@ try {
                 // 误写 subscribedAt 会把邀请条永久静默，通道开通后老访客再无机会
                 return;
             }
+            // r25 可达性分型：服务端确认当前浏览器家族的 push service 不可达时，
+            // 不再邀请点「开启」（原生订阅必败+3 次配额被失败耗尽=永久静默的撞墙链），
+            // 换引导形态——教育 Safari/A2HS 通路，点了只记冷却，不触发订阅。
+            var unreachable = !util.familyReachable(d);
+            if (unreachable) {
+                var seen = readState();
+                seen.impressions = (seen.impressions || 0) + 1;
+                writeState(seen);
+                renderBar(
+                    document.body,
+                    '锁屏推送在当前浏览器的网络下不可达——用 <b>Safari</b> 打开本页即可一键开启（iPhone 需先「添加到主屏幕」）',
+                    null,
+                    '知道了'
+                );
+                // 「知道了」=短期冷却（3 天），通道可达性随网络变化，引导可再现
+                var cta = document.querySelector('#nux-push-invite .nux-push-invite-cta');
+                if (cta) cta.addEventListener('click', function () { dismissFor(FAIL_COOLDOWN_DAYS); });
+                return;
+            }
             return tryBases(API_BASES, token, '/notifications/box-summary').then(function (bs) {
                 var boxes = (bs.data && bs.data.boxes) || [];
                 var unread = 0;
@@ -7104,6 +7167,13 @@ try {
                         done.subscribedAt = Date.now();
                         writeState(done);
                         if (window.showToast) window.showToast('已开启，测试推送已发出——请查看系统通知', 'success');
+                    }).catch(function () {
+                        // 撞墙残余兜底（r25）：失败不白花曝光配额——回退 1 次曝光+短期冷却，
+                        // 不再像 r24 时代 3 次失败即永久静默。
+                        var rolled = readState();
+                        rolled.impressions = Math.max(0, (rolled.impressions || 1) - 1);
+                        rolled.dismissedAt = Date.now() - (COOLDOWN_DAYS - FAIL_COOLDOWN_DAYS) * 86400000;
+                        writeState(rolled);
                     });
                 });
             });

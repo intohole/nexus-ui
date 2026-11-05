@@ -153,6 +153,9 @@
         }).catch(function (err) {
             self._pushBusy = false;
             var reason = (err && err.message) || '开启失败，请稍后重试';
+            // r25：服务端可达性闸 422 的 detail 翻译成用户可读的通路引导（bell 同判例）
+            if (/push_service_unreachable/.test(reason)) reason = wp.UNSUPPORTED.push_unreachable;
+            else if (reason.indexOf('webpush subscribe rejected') >= 0) reason = wp.UNSUPPORTED.subscribe_failed;
             renderPill(self, self._pushState);
             renderFail(self, self._esc(reason));
             if (window.showToast) window.showToast(reason, 'error');

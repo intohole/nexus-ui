@@ -213,8 +213,12 @@
                     self.refreshPush();
                 }).catch(function(err) {
                     self.pushBusy = false;
-                    self.pushError = (err && err.message) || '操作失败，请稍后重试';
-                    if (window.showToast) window.showToast(self.pushError, 'error');
+                    var msg = (err && err.message) || '操作失败，请稍后重试';
+                    // r25：服务端可达性闸 422 的 detail 翻译成用户可读的通路引导
+                    if (/push_service_unreachable/.test(msg)) msg = wp.UNSUPPORTED.push_unreachable;
+                    else if (msg.indexOf('webpush subscribe rejected') >= 0) msg = wp.UNSUPPORTED.subscribe_failed;
+                    self.pushError = msg;
+                    if (window.showToast) window.showToast(msg, 'error');
                 });
             },
             dismissPushGuide: function() {

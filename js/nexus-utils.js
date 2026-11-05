@@ -1024,8 +1024,12 @@
                 not_standalone_ios: '先「添加到主屏幕」，再从主屏幕打开即可开启',
                 not_granted: '通知权限未开启，可在浏览器设置中重新允许',
                 channel_off: '推送通道未开启',
-                subscribe_failed: '订阅失败，请检查网络后重试'
+                subscribe_failed: '订阅失败，请检查网络后重试',
+                push_unreachable: '当前网络的推送通道不可达——用 Safari 打开本页即可开启锁屏推送'
             };
+            // r25 可达性分型：浏览器族 → 它产出的 endpoint 所属 push service 家族。
+            // 可达性锚=发送端（服务端）视角：服务端推不到的家族，客户端订阅成功也是假接通。
+            const FAMILY_PUSH_SERVICE = { safari: 'apple', 'ios-safari': 'apple', chrome: 'fcm', edge: 'fcm', firefox: 'mozilla', other: '' };
             function browserFamily() {
                 const ua = navigator.userAgent || '';
                 if (/iPhone|iPad|iPod/.test(ua)) return 'ios-safari';
@@ -1074,9 +1078,29 @@
                         subscriptions: subs,
                         pushTypes: d.push_types || [],
                         dailyLimit: d.daily_limit || 0,
-                        todayPushed: d.today_pushed || 0
+                        todayPushed: d.today_pushed || 0,
+                        pushServices: d.push_services || {}
                     };
                 });
+            }
+            // r25：服务端视角判断「当前浏览器家族的 push service」是否可达。
+            // 双键兼容（status() 转换后的 pushServices / 原始响应的 push_services）；
+            // 未知（字段缺失/老版本服务端）一律按可达处理——分型只拦确认不可达。
+            function familyReachable(statusData) {
+                const fam = browserFamily();
+                const svc = FAMILY_PUSH_SERVICE[fam] || '';
+                if (!svc) return true;
+                const map = (statusData && (statusData.pushServices || statusData.push_services)) || {};
+                if (typeof map[svc] !== 'boolean') return true;
+                return map[svc];
+            }
+            function reportFailure(api, base, stage, reason) {
+                try {
+                    api.post((base || '/api/notify') + '/webpush/subscribe-failed', {
+                        browser: browserFamily(), stage: String(stage || '').slice(0, 32),
+                        reason: String(reason || '').slice(0, 200)
+                    }).catch(function () {});
+                } catch (e) { /* 上报永不阻塞主流程 */ }
             }
             function enable(api, base) {
                 const cap = capability();
@@ -1102,6 +1126,17 @@
                         endpoint: sub.endpoint, p256dh: keys.p256dh || '', auth: keys.auth || '',
                         browser: browserFamily()
                     }).then(function () { return sub.endpoint; });
+                }).catch(function (err) {
+                    // r25 订阅失败上报：浏览器侧失败此前零服务端痕迹（撞墙无痕）。
+                    // 拒绝授权是用户主动选择不是故障，不算失败；其余全量上报。
+                    const msg = (err && err.message) || '';
+                    if (msg !== UNSUPPORTED.not_granted) {
+                        const stage = msg === UNSUPPORTED.channel_off ? 'vapid'
+                            : msg === UNSUPPORTED.subscribe_failed || msg === UNSUPPORTED.push_unreachable ? 'server'
+                            : 'subscribe';
+                        reportFailure(api, base, stage, msg || String(err));
+                    }
+                    throw err;
                 });
             }
             function disable(api, base) {
@@ -1121,7 +1156,7 @@
                     return true;
                 });
             }
-            return { capability, permissionState, browserFamily, status, enable, disable, sendTest, UNSUPPORTED };
+            return { capability, permissionState, browserFamily, status, enable, disable, sendTest, familyReachable, reportFailure, UNSUPPORTED };
         })();
         return { resolve, normalize, appLabel, isToday, jobEntries, typeTone, typeIcon, typeLabel, clip, webpush };
     })();
