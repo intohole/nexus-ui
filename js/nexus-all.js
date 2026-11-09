@@ -3892,6 +3892,174 @@
     window.createNexusCrud = createNexusCrud;
 })();
 
+/* ===== nexus-deep-link.js ===== */
+(function() {
+    'use strict';
+
+    /* NexusDeepLink —— 深链承接原语（v2.86.0）
+     * 收编全工作区 10 仓手写的 URLSearchParams+replaceState 四段式：
+     *   take(keys)     一次性取走深链参数并清理地址栏（消费即清参，防刷新重放）
+     *   stash/popReturn 登录回跳 canonical（登录前存、成功后回跳）
+     * 值统一为原始字符串，数字/布尔语义由消费方转换。
+     */
+
+    var RETURN_KEY = 'nxdl:return';
+
+    function keyList(keys) {
+        return Array.isArray(keys) ? keys : [keys];
+    }
+
+    function readValues(keys) {
+        var search = new URLSearchParams(location.search);
+        var values = {};
+        keyList(keys).forEach(function(k) {
+            if (search.has(k)) values[k] = search.get(k);
+        });
+        return values;
+    }
+
+    function cleanKeys(keys) {
+        var search = new URLSearchParams(location.search);
+        keyList(keys).forEach(function(k) { search.delete(k); });
+        var qs = search.toString();
+        history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + location.hash);
+    }
+
+    function take(keys, opts) {
+        var o = opts || {};
+        var values = readValues(keys);
+        var hasAny = Object.keys(values).length > 0;
+        if (hasAny && o.clean !== false) cleanKeys(keys);
+        return { values: values, hasAny: hasAny };
+    }
+
+    function get(key) {
+        return new URLSearchParams(location.search).get(key);
+    }
+
+    /* 只存相对路径（pathname+search+hash），从源头排除外链注入；回跳时再做双保险校验 */
+    function stash() {
+        try {
+            sessionStorage.setItem(RETURN_KEY, location.pathname + location.search + location.hash);
+        } catch (e) { /* 隐私模式等场景静默降级 */ }
+    }
+
+    function isSafePath(target) {
+        return typeof target === 'string' && target.charAt(0) === '/' && target.charAt(1) !== '/';
+    }
+
+    function popReturn(opts) {
+        var o = opts || {};
+        var target = '';
+        try {
+            target = sessionStorage.getItem(RETURN_KEY) || '';
+            sessionStorage.removeItem(RETURN_KEY);
+        } catch (e) { /* ignore */ }
+        if (!isSafePath(target)) return '';
+        if (o.go) location.replace(target);
+        return target;
+    }
+
+    window.NexusDeepLink = {
+        take: take,
+        get: get,
+        stash: stash,
+        popReturn: popReturn,
+        isSafePath: isSafePath,
+        RETURN_KEY: RETURN_KEY
+    };
+})();
+
+/* ===== nexus-pager.js ===== */
+(function() {
+    'use strict';
+
+    /* NexusPager —— 分页状态机原语（v2.86.0），收编 6 仓手写 page/hasMore/loadMore 状态机。
+     * 与 createNexusCrud().listPaged 组合即得全量分页（crud 管请求塑形，本原语管响应式状态）。
+     * fetch 约定：(page, pageSize) => Promise，返回 {items, total?}（裸数组/{data}/{results,count} 均可 coerce）；
+     * offset 型 API 由消费方在 fetch 内换算：fetch: (p, s) => api.get(url, {offset:(p-1)*s, limit:s})。
+     * 状态字段与 nux-pagination props 对齐（page/totalPages/@prev/@next）。
+     */
+
+    function coerce(res) {
+        if (Array.isArray(res)) return { items: res, total: null };
+        if (!res || typeof res !== 'object') return { items: [], total: null };
+        var items = null, total = null;
+        if (Array.isArray(res.items)) { items = res.items; total = res.total; }
+        else if (Array.isArray(res.data)) { items = res.data; total = res.total; }
+        else if (res.data && Array.isArray(res.data.items)) { items = res.data.items; total = res.data.total; }
+        else if (Array.isArray(res.results)) { items = res.results; total = res.count; }
+        else if (Array.isArray(res.list)) { items = res.list; total = res.total; }
+        return { items: items || [], total: (total === undefined || total === null) ? null : Number(total) };
+    }
+
+    function create(config) {
+        if (!config || typeof config.fetch !== 'function') {
+            throw new Error('NexusPager.create: config.fetch is required');
+        }
+        var V = window.Vue;
+        if (!V || typeof V.reactive !== 'function') {
+            throw new Error('NexusPager.create: 需要全局 Vue 3（请先加载 vue.global.prod.js）');
+        }
+        var pageSize = config.pageSize || 20;
+        var onChange = typeof config.onChange === 'function' ? config.onChange : null;
+
+        var state = V.reactive({
+            items: [],
+            page: 1,
+            pageSize: pageSize,
+            totalPages: 1,
+            hasMore: false,
+            loading: false,
+            error: null,
+            loaded: false
+        });
+
+        function apply(res, append) {
+            var d = coerce(res);
+            state.items = append ? state.items.concat(d.items) : d.items;
+            if (d.total !== null) {
+                state.totalPages = Math.max(1, Math.ceil(d.total / pageSize));
+                state.hasMore = d.items.length > 0 && state.items.length < d.total;
+            } else {
+                state.totalPages = Math.max(1, state.page);
+                state.hasMore = d.items.length >= pageSize;
+            }
+        }
+
+        function load(page, append) {
+            if (state.loading) return Promise.resolve();
+            var target = Math.max(1, page || 1);
+            state.loading = true;
+            state.error = null;
+            return Promise.resolve()
+                .then(function() { return config.fetch(target, pageSize); })
+                .then(function(res) {
+                    state.page = target;
+                    apply(res, append);
+                    state.loaded = true;
+                    if (onChange) onChange(state);
+                })
+                .catch(function(err) {
+                    state.error = err || new Error('NexusPager: fetch failed');
+                })
+                .finally(function() {
+                    state.loading = false;
+                });
+        }
+
+        return {
+            state: state,
+            goto: function(p) { return load(p, false); },
+            loadMore: function() { return load(state.page + 1, true); },
+            refresh: function() { return load(state.page, false); },
+            reload: function() { return load(1, false); }
+        };
+    }
+
+    window.NexusPager = { create: create, coerce: coerce };
+})();
+
 /* ===== nexus-mobile.js ===== */
 (function() {
     var SIDEBAR_SEL = '.sidebar, .nx-sidebar';
@@ -4283,6 +4451,7 @@
         'nux-poster': 'NuxPoster',
         'nux-progress': 'NuxProgress',
         'nux-result-view': 'NuxResultView',
+        'nux-reveal-strip': 'NuxRevealStrip',
         'nux-search-box': 'NuxSearchBox',
         'nux-section': 'NuxSection',
         'nux-segmented': 'NuxSegmented',
@@ -6998,6 +7167,88 @@ try {
     }
 
     window.NuxAiIndicator = NuxAiIndicator;
+})();
+
+/* ===== components/nux-reveal-strip.js ===== */
+(function () {
+    /* nux-reveal-strip 承接条（v2.86.0）—— 承诺动词落点原语，收编各仓手搓 strip/banner 家族。
+     * 诚实性语义：可见性由消费方 computed 求交决定（用户级资格旗标 × 条目级属性），
+     * 本组件只管呈现与动作承接，不代判资格（piying 前6 P0 谎报判例的平台化防线）。
+     * dismissKey 提供时 dismiss 记忆落 localStorage（nxrs: 前缀，TTL 默认 7 天）。
+     */
+    var DISMISS_PREFIX = 'nxrs:';
+    var DEFAULT_ICONS = { info: '💬', success: '🎉', warn: '⚠️', accent: '✨' };
+
+    function readDismiss(key) {
+        try {
+            var raw = localStorage.getItem(DISMISS_PREFIX + key);
+            if (!raw) return false;
+            var rec = JSON.parse(raw);
+            if (!rec || typeof rec.ts !== 'number') return false;
+            return (Date.now() - rec.ts) >= 0 && (Date.now() - rec.ts) < (rec.ttl || 0);
+        } catch (e) { return false; }
+    }
+
+    function writeDismiss(key, ttl) {
+        try {
+            localStorage.setItem(DISMISS_PREFIX + key, JSON.stringify({ ts: Date.now(), ttl: ttl }));
+        } catch (e) { /* ignore */ }
+    }
+
+    var NuxRevealStrip = {
+        name: 'NuxRevealStrip',
+        props: {
+            variant: { type: String, default: 'accent' },
+            icon: { type: String, default: '' },
+            title: { type: String, required: true },
+            desc: { type: String, default: '' },
+            ctaText: { type: String, default: '' },
+            ctaLoading: { type: Boolean, default: false },
+            dismissible: { type: Boolean, default: false },
+            dismissKey: { type: String, default: '' },
+            dismissTtl: { type: Number, default: 7 * 24 * 3600 * 1000 }
+        },
+        emits: ['cta', 'dismiss'],
+        data: function () { return { hidden: false }; },
+        computed: {
+            resolvedIcon: function () {
+                return this.icon || DEFAULT_ICONS[this.variant] || '✨';
+            },
+            canDismiss: function () {
+                return this.dismissible && !!this.dismissKey;
+            },
+            cls: function () {
+                return ['nx-reveal-strip', 'is-' + this.variant];
+            }
+        },
+        created: function () {
+            if (this.canDismiss && readDismiss(this.dismissKey)) this.hidden = true;
+        },
+        methods: {
+            onCta: function () {
+                if (this.ctaLoading) return;
+                this.$emit('cta');
+            },
+            onDismiss: function () {
+                this.hidden = true;
+                if (this.canDismiss) writeDismiss(this.dismissKey, this.dismissTtl);
+                this.$emit('dismiss');
+            }
+        },
+        template:
+            '<div v-if="!hidden" :class="cls" role="status" aria-live="polite">' +
+            '  <span v-if="resolvedIcon" class="nx-rs-icon" aria-hidden="true">{{ resolvedIcon }}</span>' +
+            '  <div class="nx-rs-body">' +
+            '    <div class="nx-rs-title">{{ title }}</div>' +
+            '    <div v-if="desc" class="nx-rs-desc">{{ desc }}</div>' +
+            '  </div>' +
+            '  <button v-if="ctaText" type="button" class="nux-btn nux-btn--primary nx-rs-cta"' +
+            '          :disabled="ctaLoading" @click="onCta">{{ ctaLoading ? \'…\' : ctaText }}</button>' +
+            '  <button v-if="dismissible" type="button" class="nx-rs-close" aria-label="关闭" @click="onDismiss">×</button>' +
+            '</div>'
+    };
+
+    window.NuxRevealStrip = NuxRevealStrip;
 })();
 
 /* ===== components/nux-bottom-nav.js ===== */

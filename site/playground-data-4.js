@@ -148,4 +148,81 @@
       }
     ]
   });
+
+  window.PG_CATS.push({
+    id: 'carryover',
+    name: '承接与分页',
+    demos: [
+      {
+        id: 'reveal-strip',
+        tag: 'nux-reveal-strip',
+        title: '承接条',
+        desc: '承诺动词落点原语：唤回/资格承接/风险提示一条横幅说完，CTA 真实接线，可关闭记忆 7 天（资格求交由消费方 computed 负责）',
+        tpl: `
+<div class="demo-col">
+  <nux-reveal-strip variant="accent" title="3 天前你记了一件事"
+    desc="点开确认后，下一个唤回名额才会前进" cta-text="点开确认"
+    @cta="ping('唤回确认已承接')"></nux-reveal-strip>
+  <nux-reveal-strip variant="success" title="领取成功，已到账 200 积分"
+    desc="今日签到 +50，注册礼 +150" cta-text="去花掉"
+    @cta="ping('打开钱包动线')"></nux-reveal-strip>
+  <nux-reveal-strip variant="warn" title="有 1 条断更风险"
+    desc="「每日散步」已中断 1 天，今晚 24 点前补卡可续" cta-text="立即补卡"
+    dismissible dismiss-key="pg-risk"
+    @cta="ping('补卡动线')" @dismiss="ping('已记 7 天不再提示')"></nux-reveal-strip>
+</div>`,
+        code: `<nux-reveal-strip variant="warn" title="有 1 条断更风险"
+  desc="「每日散步」已中断 1 天，今晚 24 点前补卡可续"
+  cta-text="立即补卡" dismissible dismiss-key="risk-1019"
+  @cta="revive()" @dismiss="onDismiss()"></nux-reveal-strip>`,
+        methods: {
+          ping(msg) { showToast(msg, 'success'); }
+        }
+      },
+      {
+        id: 'nexus-pager',
+        tag: 'NexusPager',
+        title: '分页状态机',
+        desc: 'fetch 进去、响应式状态出来：page/totalPages/hasMore/loadMore 全自动，与 nux-pagination 直接对齐，offset 型 API 在 fetch 内换算',
+        tpl: `
+<div class="demo-col">
+  <div class="demo-row" style="flex-wrap:wrap">
+    <nux-tag v-for="it in pager.items" :key="it.id">{{ it.name }}</nux-tag>
+  </div>
+  <div class="demo-row">
+    <button class="nux-btn nux-btn--ghost" :disabled="!pager.hasMore || pager.loading" @click="more">
+      {{ pager.loading ? '加载中…' : 'loadMore（已加载 ' + pager.items.length + ' / 25）' }}
+    </button>
+    <nux-pagination :page="pager.page" :total-pages="pager.totalPages"
+      @prev="pgPrev" @next="pgNext"></nux-pagination>
+  </div>
+</div>`,
+        code: `const pager = NexusPager.create({
+  pageSize: 6,
+  fetch: (page, pageSize) => crud.listPaged(page, pageSize)
+});
+pager.reload();
+// pager.state.items / totalPages / hasMore / loading；pager.loadMore() 追加、goto(p) 跳页`,
+        data() { return { pager: { items: [], page: 1, totalPages: 1, hasMore: false, loading: false } }; },
+        created() {
+          const self = this;
+          this.$pg = NexusPager.create({
+            pageSize: 6,
+            fetch: (page, size) => new Promise((res) => setTimeout(() => {
+              const total = 25, start = (page - 1) * size, items = [];
+              for (let i = start; i < Math.min(start + size, total); i++) items.push({ id: i + 1, name: '条目 ' + (i + 1) });
+              res({ items: items, total: total });
+            }, 350))
+          });
+          this.pager = this.$pg.state;
+          this.$pg.reload();
+        },
+        methods: {
+          more() { this.$pg.loadMore(); },
+          pgPrev() { if (this.pager.page > 1) this.$pg.goto(this.pager.page - 1); },
+          pgNext() { if (this.pager.page < this.pager.totalPages) this.$pg.goto(this.pager.page + 1); }
+        }
+      }
+    ]
+  });
 })();

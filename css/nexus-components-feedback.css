@@ -969,3 +969,44 @@
   .nux-push-invite { left: 12px; right: 12px; max-width: none; transform: translateY(12px); }
   .nux-push-invite.is-in { transform: translateY(0); }
 }
+
+/* ===== nux-reveal-strip 承接条（v2.86.0）：承诺动词落点原语；资格求交由消费方 computed 负责 ===== */
+.nx-reveal-strip {
+  display: flex;
+  align-items: center;
+  gap: var(--nx-space-3);
+  padding: var(--nx-space-3) var(--nx-space-4);
+  border-radius: var(--nx-radius-lg);
+  background: var(--nx-bg-card);
+  border: 1px solid var(--nx-border);
+  border-left: 3px solid var(--app-accent);
+  box-shadow: var(--nx-shadow-sm);
+}
+.nx-reveal-strip.is-info { border-left-color: var(--nx-accent); background: var(--nx-accent-soft); }
+.nx-reveal-strip.is-success { border-left-color: var(--nx-success); background: rgba(var(--nx-success-rgb), 0.08); }
+.nx-reveal-strip.is-warn { border-left-color: var(--nx-warning); background: rgba(var(--nx-warning-rgb), 0.08); }
+.nx-rs-icon { font-size: 20px; line-height: 1; flex-shrink: 0; }
+.nx-rs-body { flex: 1; min-width: 0; }
+.nx-rs-title { font-size: var(--nx-text-sm); font-weight: 700; color: var(--nx-text-heading); }
+.nx-rs-desc { font-size: var(--nx-text-xs); color: var(--nx-text-secondary); margin-top: 2px; }
+/* 双类特异度压过聚合包后段的 .nux-btn 38px 地板（controls 段拼在 feedback 段之后） */
+.nx-reveal-strip .nx-rs-cta { flex-shrink: 0; min-height: 44px; }
+.nx-rs-close {
+  flex-shrink: 0; border: none; background: none; cursor: pointer;
+  color: var(--nx-text-secondary);
+  width: 44px; height: 44px; padding: 0;
+  font-size: 20px; line-height: 1;
+  border-radius: var(--nx-radius-full);
+}
+.nx-rs-close:hover { background: var(--nx-bg-hover); }
+@media (prefers-reduced-motion: no-preference) {
+  .nx-reveal-strip { animation: nx-rs-in 0.24s ease-out; }
+}
+@keyframes nx-rs-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+@media (max-width: 380px) {
+  .nx-reveal-strip { flex-wrap: wrap; }
+  .nx-rs-cta { flex: 1 1 100%; }
+}

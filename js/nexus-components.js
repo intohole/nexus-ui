@@ -52,6 +52,7 @@
         'nux-poster': 'NuxPoster',
         'nux-progress': 'NuxProgress',
         'nux-result-view': 'NuxResultView',
+        'nux-reveal-strip': 'NuxRevealStrip',
         'nux-search-box': 'NuxSearchBox',
         'nux-section': 'NuxSection',
         'nux-segmented': 'NuxSegmented',

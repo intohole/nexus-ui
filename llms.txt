@@ -26,7 +26,8 @@ CDN地址（全工作区统一，版本见 `nexus-ui/deps.json`）：`https://so
 
 <!-- toast/confirm/prompt 不需要引脚本：nexus-all.js 已提供全局函数 window.showToast / window.nuxConfirm / window.nuxPrompt -->
 <!-- 积分浮标与反馈浮标随 nexus-all.js 自动激活（详见下方「全局件」一节），不需要任何接入代码 -->
-<!-- 以下 6 个组件已随 nexus-all.js 内置，无需再单引脚本：nux-result-view / nux-ai-badge / nux-skeleton / nux-empty-state / nux-error-state / nux-ai-indicator -->
+<!-- 以下 7 个组件已随 nexus-all.js 内置，无需再单引脚本：nux-result-view / nux-ai-badge / nux-skeleton / nux-empty-state / nux-error-state / nux-ai-indicator / nux-reveal-strip -->
+<!-- NexusDeepLink / NexusPager 全局工厂随 nexus-all.js 直接可用，无需引脚本（详见「工具脚本」一节） -->
 <!-- 图标依赖说明：nux-checkin / nux-app-card / nux-notification-bell / nux-about-page（含 about 数据）使用 font-awesome 6.x 图标类，宿主需自行引入 FA（deps.json 已纳管 CDN）；其余组件均为内联 SVG，无外部图标依赖 -->
 
 <!-- 按需引入 composables -->
@@ -218,13 +219,13 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 
 用户协议页面唯一事实源：本仓库 `agreement.html`（协议条款/隐私政策文案直接维护在该页）。
 
-### 全部组件索引（64 个，以 `NexusComponents.list()` 为准）
+### 全部组件索引（65 个，以 `NexusComponents.list()` 为准）
 
 | 分类 | 组件 |
 |------|------|
 | 布局骨架 | nux-layout-sidebar / nux-layout-topnav / nux-bottom-nav / nux-side-panel / nux-section / nux-backtop |
 | 站点级 | nux-footer / nux-about-page / nux-menu-about / nux-login-page / nux-forgot-password / nux-menu-user / nux-settings-drawer |
-| 反馈 | nux-undo-toast / nux-modal / nux-drawer / nux-notification-bell / nux-notification-panel† / nux-loading / nux-skeleton / nux-empty-state / nux-error-state / nux-ai-task-progress |
+| 反馈 | nux-undo-toast / nux-modal / nux-drawer / nux-notification-bell / nux-notification-panel† / nux-loading / nux-skeleton / nux-empty-state / nux-error-state / nux-ai-task-progress / nux-reveal-strip |
 | 数据展示 | nux-stat-card / nux-tag / nux-avatar / nux-progress / nux-calendar / nux-checkin / nux-result-view / nux-selection-bar / nux-pagination / nux-poster / nux-conversation-list / nux-icon |
 | 表单控件 | nux-form-group / nux-button / nux-input / nux-textarea / nux-select / nux-switch / nux-checkbox / nux-input-number / nux-search-box / nux-segmented / nux-chip-group / nux-accordion / nux-tab-group |
 | 交互增强 | nux-file-upload / nux-swipe-actions / nux-theme-toggle / nux-camera-recognize / nux-voice-input |
@@ -245,6 +246,8 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 - `NexusStream.subscribe(url, { headers, idleTimeout, maxRetries, backoffBase, backoffMax, terminalTypes, onEvent, onClose })`：长连接订阅编排（指数退避重连+抖动+空闲看门狗+终态收口），收编自 MiaoBi sse.js subscribePath 语义；相对 URL 自动应用 window.PATH_PREFIX。v2.51.0 起。
 - `.nx-touch`（css/nexus-mobile.css，coarse-pointer 媒体块内）：业务自绘控件的通用触控地板——挂类即得 44px 地板+::after 隐形热区扩展，替代各仓自写 44px @media 规则；随 nexus-all.css 聚合包全量分发。v2.51.0 起。
 - `js/nexus-theme-init.js`：首帧防闪烁 IIFE（同步执行，无导出）。读 `nx-theme`，dark 用之，未设置跟随系统。业务仓如有历史存储 key，在引入前声明 `window.NEXUS_THEME_LEGACY_KEYS = ['旧key1','旧key2']`，首访自动迁移到 `nx-theme` 并清除旧 key；迁移只认 `dark/light` 合法值。
+- `js/nexus-deep-link.js`：深链承接 `window.NexusDeepLink`（take/stash/popReturn，v2.86.0 起，详见「NexusDeepLink 深链承接」一节）。v2.86.0 起纳入 nexus-all.js 装配。
+- `js/nexus-pager.js`：分页状态机 `window.NexusPager`（create/coerce，v2.86.0 起，详见「NexusPager 分页状态机」一节）。v2.86.0 起纳入 nexus-all.js 装配。
 
 ### 全局件（随 nexus-all.js 自动装配，无需引脚本；均为 IIFE 自动激活）
 
@@ -269,6 +272,55 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 
 Props: page(Number=1)/totalPages(Number=1)/hasPrev(Boolean，缺省按 page>1 推算)/hasNext(Boolean，缺省按 page<totalPages 推算)
 Events: prev/next
+
+### nux-reveal-strip 承接条（v2.86.0）
+
+承诺动词落点原语，收编各仓手搓 strip/banner 家族（唤回语境条/复活条/风险横幅/资格承接胶囊）。已随 nexus-all.js 内置。**诚实性语义**：可见性由消费方 computed 求交决定（用户级资格旗标 × 条目级属性），组件不代判资格；CTA 承诺必须有真实落点（onClick 接线）。
+
+```html
+<nux-reveal-strip v-if="recallVisible" variant="accent" icon="🌙"
+  title="3 天前你记了一件事" desc="点开确认后，下一个唤回名额才会前进"
+  cta-text="点开确认" :cta-loading="confirming"
+  dismissible dismiss-key="recall-r2"
+  @cta="openById(lastId)" @dismiss="recallVisible=false"></nux-reveal-strip>
+```
+
+Props: variant('accent'|'info'|'success'|'warn'，默认 accent，各档左侧色条+浅底)/icon(String，缺省按 variant 给默认 emoji)/title(String，必填)/desc/ctaText/ctaLoading/dismissible(Boolean)/dismissKey(String，提供时 dismiss 落 localStorage `nxrs:` 键)/dismissTtl(Number，默认 7 天)
+Events: cta / dismiss
+类名锚：`.nx-reveal-strip`（变体 `is-info/is-success/is-warn/is-accent`；CTA `.nx-rs-cta` 44px 触控地板；≤380px 自动纵排 CTA 全宽）
+
+### NexusDeepLink 深链承接（v2.86.0 全局工厂，随 nexus-all.js 可用）
+
+收编 10 仓手写的 `URLSearchParams`+`replaceState` 承接四段式。
+
+```javascript
+// 页面加载时一次性取走深链参数并清理地址栏（消费即清参，防刷新重放）：
+const { values, hasAny } = NexusDeepLink.take(['item_id', 'quickadd', 'import']);
+if (values.item_id) openById(Number(values.item_id));      // 值为原始字符串，数字自行转换
+// 登录回跳 canonical（登录前 stash，登录成功后 popReturn）：
+NexusDeepLink.stash();                                      // 登录页跳转前
+const back = NexusDeepLink.popReturn({ go: true });         // go:true 直接 location.replace 回跳
+```
+
+API: `take(keys, {clean:true})` → `{values, hasAny}`（默认 replaceState 清理已消费参数，可传 `clean:false` 只读不清）/ `get(key)` 单读不清 / `stash()` 存当前相对路径到 sessionStorage `nxdl:return` / `popReturn({go})` 取回跳地址——只存相对路径且回跳校验首字符 `/` 非双斜杠，外链/绝对 URL 一律拒绝（防 open-redirect）。
+
+### NexusPager 分页状态机（v2.86.0 全局工厂，随 nexus-all.js 可用）
+
+收编 6 仓手写 page/hasMore/loadMore 状态机；与 `createNexusCrud().listPaged` 组合即得全量分页（crud 管请求塑形，Pager 管响应式状态）。历史文档提过的 `usePagination` 从不存在，本工厂是其正身。
+
+```javascript
+const pager = NexusPager.create({
+  pageSize: 20,
+  fetch: (page, pageSize) => crud.listPaged(page, pageSize)   // offset 型 API 在 fetch 内换算
+});
+await pager.reload();                                          // 首拉
+pager.state.items / page / totalPages / hasMore / loading / error / loaded
+pager.loadMore();  // 追加下一页（items concat）
+pager.goto(3);     // 跳页（整页替换）
+pager.refresh();   // 重拉当前页
+```
+
+fetch 约定返回 `{items, total?}`，裸数组 / `{data}` / `{data:{items,total}}` / `{results,count}` 自动 coerce；无 total 时按「满页=还有下一页」推断。状态与 `nux-pagination` props 对齐（page/totalPages）。
 
 ### nux-theme-toggle 主题切换
 
