@@ -154,6 +154,62 @@ if (reason !== null) showToast('已驳回', 'success');`,
         }
       },
       {
+        id: 'overlay-stack',
+        tag: 'z 带制 v2.85.0',
+        title: '层叠带制：抽屉内确认',
+        desc: 'v2.85.0 起平台弹层恒在一切持久层之上：confirm 9995 / modal 9000 / toast 9100，抽屉(999)与应用覆盖层(≤3000)永远盖不住',
+        tpl: `
+<div class="demo-col">
+  <div class="demo-row">
+    <nux-button @click="drawerOpen = true">打开抽屉</nux-button>
+    <nux-button variant="ghost" @click="overlayOn = true">叠应用覆盖层 z3000</nux-button>
+  </div>
+  <nux-drawer v-model="drawerOpen" side="right" width="280px">
+    <div style="padding:20px;display:flex;flex-direction:column;gap:12px">
+      <strong style="margin:0">库管理</strong>
+      <p style="margin:0;font-size:13px;color:var(--nx-text-secondary)">v2.85.0 前：confirm(200) 被抽屉(999)盖死，点删除没反应。现在 confirm 专带 9995 恒最顶。</p>
+      <nux-button variant="danger" @click="delDoc">删除文档</nux-button>
+    </div>
+  </nux-drawer>
+  <div v-if="overlayOn" class="demo-app-overlay"
+       style="position:fixed;inset:0;z-index:3000;background:rgba(88,28,135,.28);display:flex;align-items:center;justify-content:center">
+    <div style="background:var(--nx-bg-surface);padding:16px 20px;border-radius:12px;box-shadow:var(--nx-shadow-lg);text-align:center;display:flex;flex-direction:column;gap:10px">
+      <span style="font-size:13px;color:var(--nx-text-secondary)">应用自建持久覆盖层（z-index: 3000）</span>
+      <nux-button size="sm" @click="delOverlay">在覆盖层里触发 confirm</nux-button>
+      <nux-button size="sm" variant="ghost" @click="overlayOn = false">关闭覆盖层</nux-button>
+    </div>
+  </div>
+</div>`,
+        code: `<!-- v2.85.0 带制：modal 9000 / confirm 9995 / toast-host 9100
+     平台弹层族恒高于抽屉(999)与应用覆盖层(≤3000)，嵌套组合零配置 -->
+<nux-drawer v-model="open">
+  <nux-button variant="danger" @click="delDoc">删除文档</nux-button>
+</nux-drawer>
+
+<!-- 应用自建覆盖层再高（≤3000）也盖不住平台 confirm -->
+<div class="app-overlay" style="z-index:3000">
+  <nux-button @click="delDoc">在覆盖层里触发 confirm</nux-button>
+</div>
+
+<script>
+async function delDoc() {
+  const ok = await nuxConfirm('确定删除该文档？此操作不可恢复。', '删除确认');
+  if (ok) showToast('已删除', 'success');
+}
+</script>`,
+        data() { return { drawerOpen: false, overlayOn: false }; },
+        methods: {
+          async delDoc() {
+            const ok = await window.nuxConfirm('确定删除该文档？此操作不可恢复。', '删除确认');
+            window.showToast(ok ? '已删除' : '已取消', ok ? 'success' : 'info');
+          },
+          async delOverlay() {
+            const ok = await window.nuxConfirm('覆盖层(3000)之上依然弹出 confirm(9995)。确认继续？', '层叠验证');
+            window.showToast(ok ? '确认成功——覆盖层盖不住平台弹层' : '已取消', ok ? 'success' : 'info');
+          }
+        }
+      },
+      {
         id: 'empty-skeleton',
         tag: 'nux-empty-state / nux-skeleton',
         title: '空状态与骨架屏',
