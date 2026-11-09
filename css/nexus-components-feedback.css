@@ -114,6 +114,9 @@
 
 .nux-confirm-overlay { opacity: 0; }
 .nux-confirm-overlay.is-in { opacity: 1; }
+/* confirm/prompt 是瞬时最顶动作（参照 Radix/AntD 分层契约）：恒高于一切持久层
+   ——含平台 drawer(998/999)、应用覆盖层（≤3000）与 S57 过渡裁决档 9990 */
+.nx-modal-overlay.nux-confirm-overlay { z-index: var(--nx-z-confirm); }
 .nux-confirm-msg { color: var(--nx-text-secondary); margin: var(--nx-space-4) 0; white-space: pre-line; }
 
 .nux-prompt-modal { max-width: 440px; }

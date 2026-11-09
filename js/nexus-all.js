@@ -5361,7 +5361,9 @@ try {
         lastToastAt: 0,
         pendingCost: 0,
         lowWarned: false,
-        toastTimer: null
+        toastTimer: null,
+        pendingUnlock: null,
+        giftUnlocked: false
     };
 
     function localToday() {
@@ -5379,6 +5381,24 @@ try {
             return;
         }
         showToast('今日签到可领积分 · 点击浮标领取');
+    }
+
+    function maybeUnlockHintToast() {
+        if (!(state.pendingUnlock > 0)) return;
+        try {
+            if (localStorage.getItem('nux_cf_rg_seen')) return;
+            localStorage.setItem('nux_cf_rg_seen', '1');
+        } catch (e) {
+            return;
+        }
+        showToast('还有 ' + state.pendingUnlock.toLocaleString('zh-CN') + ' 积分待解锁 · 完成首次 AI 使用即到账');
+    }
+
+    function maybeUnlockDoneToast(prevPending, prevUnlocked) {
+        if (prevPending === null || prevPending <= 0) return;
+        if (state.pendingUnlock !== 0 || !state.giftUnlocked || prevUnlocked) return;
+        pulse();
+        showToast('🎉 首次使用达成 · ' + prevPending.toLocaleString('zh-CN') + ' 积分已解锁入账');
     }
 
     function ensureDom() {
@@ -5433,8 +5453,9 @@ try {
         badge.classList.toggle('credit', onCredit);
         badge.classList.toggle('checkin', state.checkinDone === false);
         var checkinTip = state.checkinDone === false ? '，今日可签到' : '';
+        var unlockTip = state.pendingUnlock > 0 ? '，另有 ' + state.pendingUnlock.toLocaleString('zh-CN') + ' 分待解锁' : '';
         var hasPanel = !!(window.NexusCreditPanel && window.NexusCreditPanel.open);
-        badge.title = (onCredit ? '积分余额（体验授信垫付中' : '积分余额') + checkinTip
+        badge.title = (onCredit ? '积分余额（体验授信垫付中' : '积分余额') + checkinTip + unlockTip
             + (hasPanel ? '，点击查看' : '，点击查看钱包') + '）';
     }
 
@@ -5490,6 +5511,8 @@ try {
     function applySummary(data) {
         var prev = state.balance;
         var prevOverdraft = state.overdraftUsed;
+        var prevPending = state.pendingUnlock;
+        var prevUnlocked = state.giftUnlocked;
         state.balance = typeof data.balance === 'number' ? data.balance : prev;
         state.chargeMode = data.charge_mode || state.chargeMode;
         var od = data.overdraft || {};
@@ -5499,8 +5522,13 @@ try {
         state.overdraftExhausted = !!od.exhausted;
         var ck = data.checkin;
         state.checkinDone = (ck && typeof ck.done_today === 'boolean') ? ck.done_today : null;
+        var rg = data.register_gift || {};
+        state.pendingUnlock = (rg && typeof rg.pending_unlock === 'number') ? rg.pending_unlock : state.pendingUnlock;
+        state.giftUnlocked = !!(rg && rg.unlocked);
         renderBalance();
         maybeCheckinToast();
+        maybeUnlockHintToast();
+        maybeUnlockDoneToast(prevPending, prevUnlocked);
         if (prev !== null && state.balance !== null && state.balance < prev) {
             state.pendingCost += prev - state.balance;
             pulse();
@@ -5643,8 +5671,8 @@ try {
     function injectStyles() {
         if (document.getElementById('nux-credit-panel-style')) return;
         var css = ''
-            + '#' + ROOT_ID + '{position:fixed;left:16px;bottom:calc(64px + var(--nx-safe-bottom,0px));z-index:var(--nx-z-modal,1600);font-family:inherit;}'
-            + '#nux-credit-402-root{position:fixed;left:50%;top:18px;transform:translateX(-50%);z-index:var(--nx-z-modal,1600);'
+            + '#' + ROOT_ID + '{position:fixed;left:16px;bottom:calc(64px + var(--nx-safe-bottom,0px));z-index:var(--nx-z-modal,9000);font-family:inherit;}'
+            + '#nux-credit-402-root{position:fixed;left:50%;top:18px;transform:translateX(-50%);z-index:var(--nx-z-modal,9000);'
             + 'width:min(400px,calc(100vw - 24px));font-family:inherit;}'
             + '.nxcp-card{background:var(--nx-bg-card,#fff);color:var(--nx-text-primary,#0f172a);border-radius:14px;'
             + 'box-shadow:0 12px 40px rgba(15,23,42,0.22);border:1px solid var(--nx-border,#e2e8f0);overflow:hidden;}'

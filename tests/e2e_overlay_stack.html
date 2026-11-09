@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>overlay 层叠带制 e2e（S57 根修 v2.85.0）</title>
+    <link rel="stylesheet" href="../css/nexus-tokens.css?v=2.85.0">
+    <link rel="stylesheet" href="../css/nexus-base.css?v=2.85.0">
+    <link rel="stylesheet" href="../css/nexus-components-feedback.css?v=2.85.0">
+    <link rel="stylesheet" href="../css/nexus-components-controls.css?v=2.85.0">
+    <link rel="stylesheet" href="../css/nexus-mobile.css?v=2.85.0">
+    <style>
+        /* 应用自建持久覆盖层（z3000 = 应用覆盖带上限档，S57 普查口径 ≤3000） */
+        #app-overlay { position: fixed; inset: 0; z-index: 3000; background: rgba(88, 28, 135, 0.35); display: flex; align-items: center; justify-content: center; }
+        #app-overlay .ov-label { background: #fff; padding: 12px 20px; border-radius: 10px; }
+        .fixture-pad { padding: 20px; display: flex; flex-direction: column; gap: 12px; max-width: 520px; }
+        .drawer-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    </style>
+</head>
+<body>
+<div id="app" class="fixture-pad">
+    <h3 style="margin:0">S57 弹层带制样张：抽屉内 confirm / 应用覆盖层 / toast</h3>
+    <button id="btn-open-drawer" class="nux-btn nux-btn--primary" @click="drawerOpen = true">打开设置抽屉</button>
+    <button id="btn-open-modal" class="nux-btn" @click="pageConfirm">页面级 confirm（平台 modal 家族）</button>
+    <button id="btn-toast" class="nux-btn" @click="makeToast">弹一条 toast</button>
+    <button id="btn-toggle-app-overlay" class="nux-btn" @click="appOverlayOn = !appOverlayOn">{{ appOverlayOn ? '关闭' : '打开' }}应用持久覆盖层 z3000</button>
+    <div id="e2e-state" data-state="{{ stateLine }}"></div>
+
+    <div v-if="appOverlayOn" id="app-overlay">
+        <div class="ov-label">应用自建持久覆盖层（z-index: 3000）<button id="btn-overlay-confirm" @click="pageConfirm">触发平台 confirm</button><button id="btn-close-app-overlay" @click="appOverlayOn = false">关闭</button></div>
+    </div>
+
+    <nux-drawer v-model="drawerOpen" side="right" width="320px" label="设置抽屉">
+        <div class="drawer-body">
+            <strong>库管理抽屉</strong>
+            <button id="btn-drawer-confirm" class="nux-btn nux-btn--danger" @click="drawerConfirm">删除库文档</button>
+            <p style="margin:0;font-size:13px;color:var(--nx-text-secondary)">点删除会触发 NexusUtils.confirm——旧带制(z200)下确认弹窗被抽屉(999)盖死，本页可复现/验证根修。</p>
+        </div>
+    </nux-drawer>
+</div>
+<script src="../vendor/vue.global.prod.js?v=2.85.0"></script>
+<script src="../js/nexus-overlay-host.js?v=2.85.0"></script>
+<script src="../js/nexus-utils.js?v=2.85.0"></script>
+<script src="../js/components/nux-drawer.js?v=2.85.0"></script>
+<script>
+window.__E2E = { errors: [], drawerConfirmResolved: null, pageConfirmResolved: null, toastShown: false };
+window.addEventListener('error', function (e) { window.__E2E.errors.push(String(e.message)); });
+
+const app = Vue.createApp({
+    data() { return { drawerOpen: false, appOverlayOn: false }; },
+    computed: {
+        stateLine() {
+            return 'drawerConfirm=' + window.__E2E.drawerConfirmResolved + ' pageConfirm=' + window.__E2E.pageConfirmResolved + ' toast=' + window.__E2E.toastShown;
+        }
+    },
+    methods: {
+        async drawerConfirm() {
+            const ok = await NexusUtils.confirm('确认删除该文档？此操作不可恢复。', '删除确认');
+            window.__E2E.drawerConfirmResolved = ok;
+        },
+        async pageConfirm() {
+            const ok = await NexusUtils.confirm('这是一次页面级平台 confirm（.nx-modal-overlay 家族）。', '平台弹层');
+            window.__E2E.pageConfirmResolved = ok;
+        },
+        makeToast() {
+            NexusUtils.showToast('toast 恒在弹窗之上的通知', 'success', { duration: 15000 });
+            window.__E2E.toastShown = true;
+        }
+    }
+});
+app.component('NuxDrawer', window.NuxDrawer);
+app.mount('#app');
+</script>
+</body>
+</html>

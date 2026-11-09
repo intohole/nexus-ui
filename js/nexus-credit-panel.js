@@ -53,8 +53,8 @@
     function injectStyles() {
         if (document.getElementById('nux-credit-panel-style')) return;
         var css = ''
-            + '#' + ROOT_ID + '{position:fixed;left:16px;bottom:calc(64px + var(--nx-safe-bottom,0px));z-index:var(--nx-z-modal,1600);font-family:inherit;}'
-            + '#nux-credit-402-root{position:fixed;left:50%;top:18px;transform:translateX(-50%);z-index:var(--nx-z-modal,1600);'
+            + '#' + ROOT_ID + '{position:fixed;left:16px;bottom:calc(64px + var(--nx-safe-bottom,0px));z-index:var(--nx-z-modal,9000);font-family:inherit;}'
+            + '#nux-credit-402-root{position:fixed;left:50%;top:18px;transform:translateX(-50%);z-index:var(--nx-z-modal,9000);'
             + 'width:min(400px,calc(100vw - 24px));font-family:inherit;}'
             + '.nxcp-card{background:var(--nx-bg-card,#fff);color:var(--nx-text-primary,#0f172a);border-radius:14px;'
             + 'box-shadow:0 12px 40px rgba(15,23,42,0.22);border:1px solid var(--nx-border,#e2e8f0);overflow:hidden;}'

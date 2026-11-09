@@ -159,17 +159,18 @@
   --nx-z-trigger: 150;
   --nx-z-hamburger: 150;
   --nx-z-popover: 180;
-  --nx-z-modal: 200;
-  --nx-z-toast: 300;
   --nx-z-settings: 400;
   --nx-z-settings-panel: 401;
   --nx-z-overlay: 998;
   --nx-z-drawer: 999;
-  --nx-z-toast-host: 1100;
-  --nx-z-unlock: 1150;
   --nx-z-topmost: 1200;
   --nx-z-float: 1500;
   --nx-z-float-panel: 1600;
+  /* 平台弹层带（S57 根修 v2.85.0）：恒高于应用自建持久覆盖层（≤3000）；
+     confirm(9995) 是全平台最高交互带，仅低于瞬态加载屏（≥9998，<1s 无交互窗） */
+  --nx-z-modal: 9000;
+  --nx-z-toast-host: 9100;
+  --nx-z-confirm: 9995;
   --nx-z-max: 2147483000;
   --nx-z-max-plus: 2147483001;
 }
@@ -772,6 +773,9 @@ a:hover { color: var(--app-accent-hover); }
 
 .nux-confirm-overlay { opacity: 0; }
 .nux-confirm-overlay.is-in { opacity: 1; }
+/* confirm/prompt 是瞬时最顶动作（参照 Radix/AntD 分层契约）：恒高于一切持久层
+   ——含平台 drawer(998/999)、应用覆盖层（≤3000）与 S57 过渡裁决档 9990 */
+.nx-modal-overlay.nux-confirm-overlay { z-index: var(--nx-z-confirm); }
 .nux-confirm-msg { color: var(--nx-text-secondary); margin: var(--nx-space-4) 0; white-space: pre-line; }
 
 .nux-prompt-modal { max-width: 440px; }
