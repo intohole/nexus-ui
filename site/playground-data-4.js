@@ -204,7 +204,7 @@
 pager.reload();
 // pager.state.items / totalPages / hasMore / loading；pager.loadMore() 追加、goto(p) 跳页`,
         data() { return { pager: { items: [], page: 1, totalPages: 1, hasMore: false, loading: false } }; },
-        created() {
+        mounted() {
           const self = this;
           this.$pg = NexusPager.create({
             pageSize: 6,
