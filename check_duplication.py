@@ -40,6 +40,8 @@ KNOWN_EXCEPTIONS: dict[str, str] = {
     "miniDeploy/static/css/terminal.css#raw-vh-calc": "miniDeploy 管理台为桌面基建工具，不加载 nexus-ui 且无移动端动线，100vh 语义正确不直替（r64 定性）",
     "jinnang-app/src/api/agent.js#sse-reader": "uniapp App 端运行时无标准 EventSource/SSE，手写 UTF8 流式解码是平台约束（jinnang R1 记忆在案），NexusStream 依赖浏览器 SSE 不可用于该端",
     "codeBlock/app/static/js/science-render.js#intersection-observer": "canvas 渲染唤醒门（离屏暂停 rAF），threshold 0.01+渲染句柄生命周期内聚，单元素单观察器；与 truemirror report-nav（追踪集合）不同构不并收，共享包装层不更简（r162 定性，r114 判例同族）",
+    "aiWater/site/js/page.js#clipboard": "aiWater 产品官网不加载 nexus-ui 共享层（官网首屏性能敏感，为一 copyText 引聚合包收益为负，r64 miniDeploy 同型定性）；手搓复制链含 execCommand 回退语义完整；接共享层的触发条件=官网出现第二个共享层原语需求",
+    "aiWater/site/js/page.js#exec-command-copy": "同上 aiWater#clipboard：不加载共享层的官网手搓回退，触发条件同条",
     "smartCode/frontend/static/js/sse.js#sse-reader": "chat SSE fetch+ReadableStream 手写分帧（timeout/abort/onEvent 回调链），与 WisePath/codeBlock 同族=S18 判例：resp 消费链与 NexusStream generator 原语不匹配，SSE 族专项统一处置挂账（r162 登记）",
 }
 

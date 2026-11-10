@@ -41,6 +41,7 @@
             this.serviceHeaders = config.serviceHeaders || null;
             this.headerBuilder = config.headers || null;
             this.cacheTtl = (config.cache && config.cache.ttl) || 0;
+            this.cacheKeyHeaders = Array.isArray(config.cacheKeyHeaders) ? config.cacheKeyHeaders.map(function (h) { return String(h).toLowerCase(); }) : [];
             this.authEndpoints = Array.isArray(config.authEndpoints) ? config.authEndpoints : null;
             this.silentEndpoints = Array.isArray(config.silentEndpoints) ? config.silentEndpoints : null;
             this.errorToast = config.errorToast === true;
@@ -341,9 +342,18 @@
             const qs = new URLSearchParams(filtered).toString();
             const fullUrl = qs ? `${url}?${qs}` : url;
             if (this.cacheTtl > 0 && !options.fresh && !options.skipCache) {
-                return this._cached(fullUrl, () => this.request(fullUrl, { method: 'GET', ...options }));
+                return this._cached(this._cacheKey(fullUrl, options), () => this.request(fullUrl, { method: 'GET', ...options }));
             }
             return this.request(fullUrl, { method: 'GET', ...options });
+        }
+
+        _cacheKey(fullUrl, options) {
+            if (!this.cacheKeyHeaders.length) return fullUrl;
+            const h = this._buildHeaders(options.headers || {});
+            const lower = {};
+            Object.keys(h).forEach(function (k) { lower[k.toLowerCase()] = h[k]; });
+            const scope = this.cacheKeyHeaders.map(function (k) { return k + '=' + (lower[k] === undefined || lower[k] === null ? '' : String(lower[k])); }).join('&');
+            return `${fullUrl}\u0001${scope}`;
         }
 
         _cached(key, loader) {
