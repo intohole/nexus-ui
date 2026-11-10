@@ -1,6 +1,7 @@
 (function() {
     const NuxNotificationBell = {
         name: 'nux-notification-bell',
+        components: (window.NuxNotificationDigestPanel ? { 'nux-notification-digest-panel': window.NuxNotificationDigestPanel } : {}),
         props: {
             baseUrl: { type: String, default: '/notifycenter' },
             pollInterval: { type: Number, default: 60000 },
@@ -20,6 +21,7 @@
                 token: '',
                 filter: 'all',
                 listSeq: 0,
+                digest: null,
                 push: null,
                 pushBusy: false,
                 pushLoaded: false,
@@ -162,7 +164,7 @@
             onOpen: function() {
                 this.open = !this.open;
                 if (this.open) {
-                    this.filter = this.unread > 0 ? 'unread' : 'all';
+                    this.filter = 'all';
                     this.loadList();
                     this.pushBannerGone = this.readPushDismissed();
                     this.refreshPush();
@@ -244,6 +246,11 @@
                 var seq = ++self.listSeq;
                 self.loading = true;
                 self.error = '';
+                if (window.NuxNotificationDigest && self.filter === 'all') {
+                    NuxNotificationDigest.fetch('/api/notify', self.fetchJson).then(function(d) {
+                        self.digest = d;
+                    });
+                }
                 self.fetchJson(self.listUrl()).then(function(d) {
                     if (seq !== self.listSeq) return;
                     self.items = (d && Array.isArray(d.items)) ? d.items : [];
@@ -266,6 +273,9 @@
             },
             activate: function(item) {
                 var self = this;
+                if (window.NuxNotificationDigest) {
+                    NuxNotificationDigest.reportClick('/api/notify', self.fetchJson, item.id);
+                }
                 if (!item.is_read) {
                     self.fetchJson('/api/notify/' + item.id + '/read', { method: 'PUT' }).catch(function() {});
                     item.is_read = true;
@@ -344,6 +354,7 @@
                         <span>{{ emptyText }}</span>
                     </div>
                     <div v-else class="nux-notify-scroll">
+                        <nux-notification-digest-panel v-if="filter === 'all' && digest" :digest="digest" api-base="/api/notify" :fetch-json="fetchJson" @activate="activate"></nux-notification-digest-panel>
                         <div v-for="g in groups" :key="g.label" class="nux-notify-group">
                             <div class="nux-notify-group-label">{{ g.label }}<span v-if="g.unread" class="nux-notify-group-unread">{{ g.unread }} 条未读</span></div>
                             <ul class="nux-notify-list">

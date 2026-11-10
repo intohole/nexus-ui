@@ -4,12 +4,10 @@
         this._baseUrl = options.baseUrl || '/api/notify';
         this._tokenKey = options.tokenKey || 'uc_access_token';
         this._list = []; this._total = 0; this._page = 1; this._pageSize = 20;
-        this._loading = false; this._container = null;
-        this._manager = options.manager || null;
+        this._loading = false; this._container = null; this._digest = null; this._manager = options.manager || null;
         this._onNotificationClick = options.onNotificationClick || null;
-        this._filter = 'all'; this._box = 'inbox'; this._typeFilter = '';
-        this._inboxBox = 'action'; this._boxSummary = null;
-        this._typeItems = []; this._unreadReal = null;
+        this._filter = 'all'; this._box = 'inbox'; this._typeFilter = ''; this._inboxBox = 'action';
+        this._boxSummary = null; this._typeItems = []; this._unreadReal = null;
         this._confirmId = null; this._confirmTimer = null;
     }
     NuxNotificationPanel.prototype._esc = function (v) {
@@ -21,6 +19,7 @@
     };
     NuxNotificationPanel.prototype._fetchSummary = function () {
         var self = this;
+        if (window.NuxNotificationDigest) NuxNotificationDigest.sync(self);
         self._getApi().get(self._baseUrl + '/notifications/box-summary').then(function (d) {
             self._boxSummary = d || null;
             self._renderInboxSeg();
@@ -271,9 +270,11 @@
         itemEl.click();
     };
     NuxNotificationPanel.prototype._activateItem = function (el, jobUrl) {
+        var self = this;
         var id = parseInt(el.getAttribute('data-id'), 10);
         var item = this._list.find(function (n) { return n.id === id; });
         if (!item) return;
+        if (window.NuxNotificationDigest) NuxNotificationDigest.reportClick(self._baseUrl, function (u) { return self._getApi().get(u); }, id);
         if (jobUrl) return this._goto(jobUrl, item);
         if (!item.is_read) {
             if (this._manager) this._manager.markRead(id);

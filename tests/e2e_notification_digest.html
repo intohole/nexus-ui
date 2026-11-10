@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>r26 digest E2E</title>
+  <link rel="stylesheet" href="/css/nexus-all.css">
+  <script src="/vendor/vue.global.prod.js"></script>
+  <script src="/js/nexus-all.js"></script>
+  <script src="/js/components/nux-notification-bell.js"></script>
+</head>
+<body>
+  <div id="app" style="padding:24px">
+    <nux-notification-bell base-url="/notifycenter"></nux-notification-bell>
+  </div>
+  <script>
+    localStorage.setItem('uc_access_token', 'e2e-digest-token');
+    const app = Vue.createApp({});
+    app.config.warnHandler = function (msg, inst, trace) {
+      (window.__VUE_WARNS = window.__VUE_WARNS || []).push(String(msg).slice(0, 200));
+      console.warn('[vue-warn]', msg);
+    };
+    app.config.errorHandler = function (err) {
+      (window.__VUE_ERRORS = window.__VUE_ERRORS || []).push(String(err).slice(0, 200));
+    };
+    NexusComponents.register(app);
+    app.mount('#app');
+    window.__E2E_READY = true;
+  </script>
+</body>
+</html>

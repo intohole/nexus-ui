@@ -55,6 +55,7 @@ FILES: list[str] = [
     "components/nux-reveal-strip.js",
     "components/nux-bottom-nav.js",
     "components/nux-webpush-invite.js",
+    "components/nux-notification-digest.js",
     "core/nexus-app.js",
     "core/nexus-guard.js",
     "core/nexus-draft.js",
