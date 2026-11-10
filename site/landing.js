@@ -40,10 +40,10 @@
         ],
         busy: false,
         quickCode: [
-          '<link rel="stylesheet" href="https://songguokr.com/nexus-ui/v2.86.3/css/nexus-all.css">',
-          '<script src="https://songguokr.com/nexus-ui/v2.86.3/vendor/vue.global.prod.js"><\/script>',
-          '<script src="https://songguokr.com/nexus-ui/v2.86.3/js/nexus-all.js"><\/script>',
-          '<script src="https://songguokr.com/nexus-ui/v2.86.3/js/components/nux-button.js"><\/script>',
+          '<link rel="stylesheet" href="https://songguokr.com/nexus-ui/v2.86.4/css/nexus-all.css">',
+          '<script src="https://songguokr.com/nexus-ui/v2.86.4/vendor/vue.global.prod.js"><\/script>',
+          '<script src="https://songguokr.com/nexus-ui/v2.86.4/js/nexus-all.js"><\/script>',
+          '<script src="https://songguokr.com/nexus-ui/v2.86.4/js/components/nux-button.js"><\/script>',
           '<script>NexusComponents.register(app)<\/script>'
         ],
         compCats: [
