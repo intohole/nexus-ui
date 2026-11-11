@@ -69,3 +69,11 @@
                 border-color var(--nx-transition-fast), background var(--nx-transition-fast);
   }
 }
+
+/* v2.89.0 NexusPageTransition 默认淡入淡出（QQ/UC 不支持自动降级直跳，无害） */
+@media (prefers-reduced-motion: no-preference) {
+    ::view-transition-old(root) { animation: nx-vt-out 160ms ease both; }
+    ::view-transition-new(root) { animation: nx-vt-in 200ms ease both; }
+}
+@keyframes nx-vt-out { to { opacity: 0; } }
+@keyframes nx-vt-in { from { opacity: 0; } }

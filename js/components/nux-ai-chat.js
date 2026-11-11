@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    const { ref, reactive, onMounted, onBeforeUnmount, watch, nextTick } = Vue;
+    const { ref, reactive, computed, onMounted, onBeforeUnmount, watch, nextTick } = Vue;
 
     const H = window.NuxAiChatHelpers;
     const DEFAULT_FEATURES = H.defaultFeatures;
@@ -26,13 +26,14 @@
             scrollThreshold: { type: Number, default: 150 },
             streaming: { type: Boolean, default: false }
         },
-        emits: ['update:messages', 'send', 'chunk', 'done', 'error', 'stop', 'retry', 'clear', 'stream-start', 'stream-end', 'meta', 'widget-action', 'voice-result', 'regenerate', 'edit-resend'],
+        emits: ['update:messages', 'send', 'chunk', 'done', 'error', 'stop', 'retry', 'clear', 'stream-start', 'stream-end', 'meta', 'widget-action', 'voice-result', 'regenerate', 'edit-resend', 'attachment-pick', 'attachment-remove', 'interrupt-action'],
         components: Object.assign(
             { NuxAiWidgets: window.NuxAiWidgets },
             window.NuxVoiceInput ? { NuxVoiceInput: window.NuxVoiceInput } : {},
             window.NuxToolCall ? { NuxToolCall: window.NuxToolCall } : {},
             window.NuxCitations ? { NuxCitations: window.NuxCitations } : {},
-            window.NuxConfidence ? { NuxConfidence: window.NuxConfidence } : {}
+            window.NuxConfidence ? { NuxConfidence: window.NuxConfidence } : {},
+            window.NuxInterruptCard ? { NuxInterruptCard: window.NuxInterruptCard } : {}
         ),
         setup(props, ctx) {
             const feat = Object.assign({}, DEFAULT_FEATURES, props.features);
@@ -54,9 +55,75 @@
             const scrollEl = ref(null);
             const inputEl = ref(null);
             const listEl = ref(null);
+            const fileEl = ref(null);
             const kbHeight = ref(0);
             let rafId = null;
             let unmountKb = null;
+            let ttsOff = null;
+
+            // v2.89.0：附件/TTS/Interrupt 三扩展，纯逻辑在 helpers，组件只留 UI 态与事件出口。
+            const attachments = reactive([]);
+            const isDragOver = ref(false);
+            const speakingId = ref('');
+
+            const hasPendingUpload = computed(() => attachments.some((a) => a.status === 'uploading'));
+
+            function addAttachmentFiles(fileList) {
+                const picked = H.filterAttachmentFiles(fileList, attachments, inputCfg);
+                picked.accepted.forEach((file) => {
+                    const att = H.attachmentFrom(file);
+                    if (String(file.type).indexOf('image/') === 0) {
+                        try { att.preview = URL.createObjectURL(file); } catch (e) {}
+                    }
+                    attachments.push(att);
+                    if (typeof inputCfg.attachmentUpload === 'function') H.uploadAttachment(att, inputCfg.attachmentUpload);
+                });
+                if (picked.oversize > 0 && window.showToast) showToast('单个附件不超过 ' + (inputCfg.attachmentMaxSizeMb || 10) + 'MB');
+                if (picked.overflow > 0 && window.showToast) showToast('最多 ' + (inputCfg.attachmentMaxCount || 4) + ' 个附件');
+                if (picked.accepted.length) ctx.emit('attachment-pick', attachments.slice());
+            }
+
+            function removeAttachment(att) {
+                const idx = attachments.indexOf(att);
+                if (idx < 0) return;
+                if (att.preview) { try { URL.revokeObjectURL(att.preview); } catch (e) {} }
+                attachments.splice(idx, 1);
+                ctx.emit('attachment-remove', att);
+            }
+
+            function takeAttachmentsForSend() { return H.snapshotAttachments(attachments); }
+
+            function pickAttachmentFiles() {
+                if (fileEl.value) { fileEl.value.value = ''; fileEl.value.click(); }
+            }
+
+            function onDragOver(e) {
+                if (!feat.attachments) return;
+                isDragOver.value = true;
+                if (e && e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+            }
+
+            function onDragLeave() { isDragOver.value = false; }
+
+            function onDrop(e) {
+                if (!feat.attachments) return;
+                isDragOver.value = false;
+                const files = e && e.dataTransfer && e.dataTransfer.files;
+                if (files && files.length) addAttachmentFiles(files);
+            }
+
+            function onPaste(e) {
+                if (!feat.attachments) return;
+                const files = e.clipboardData && e.clipboardData.files;
+                if (files && files.length) { e.preventDefault(); addAttachmentFiles(files); }
+            }
+
+            function speakMessage(m) { H.speakMessage({ speakingId }, m); }
+
+            function onInterruptAction(m, ev) {
+                ctx.emit('interrupt-action', ev, m);
+                if (m && m.interrupt) m.interrupt = null;
+            }
 
             function emitMessages() {
                 ctx.emit('update:messages', list.slice());
@@ -179,6 +246,7 @@
                 lastSendTime: lastSendTime,
                 scrollEl: scrollEl, inputEl: inputEl, listEl: listEl,
                 props: props, feat: feat, inputCfg: inputCfg,
+                takeAttachmentsForSend: takeAttachmentsForSend,
                 emit: function () { ctx.emit.apply(ctx, arguments); },
                 nextTick: nextTick,
                 emitMessages: emitMessages, smartScroll: smartScroll,
@@ -270,7 +338,8 @@
             }
 
             watch(() => props.messages, (newVal) => {
-                if (newVal && newVal.length !== list.length) {
+                if (!newVal || !newVal.length) return;
+                if (newVal.length !== list.length) {
                     list.splice(0, list.length, ...newVal.map(m => reactive(Object.assign({}, m))));
                     nextTick(() => smartScroll(true));
                 }
@@ -284,6 +353,9 @@
                 unmountKb = (window.NexusMobile && NexusMobile.mountKeyboard)
                     ? NexusMobile.mountKeyboard(!!feat.keyboardAvoid, kbHeight, () => { if (scrollEl.value && list.length) scrollToBottomEl(scrollEl.value, false); })
                     : (function () { return function () {}; }());
+                if (window.NexusTts) ttsOff = NexusTts.onState((s) => {
+                    if (s !== 'speaking' && speakingId.value) speakingId.value = '';
+                });
             });
 
             onBeforeUnmount(() => {
@@ -293,6 +365,9 @@
                 list.forEach((m) => { if (m._stopStreamWatch) m._stopStreamWatch(); });
                 stopStreamers();
                 stopElapsed();
+                if (ttsOff) ttsOff();
+                if (window.NexusTts) NexusTts.stop();
+                attachments.forEach((a) => { if (a.preview) { try { URL.revokeObjectURL(a.preview); } catch (e) {} } });
             });
 
             ctx.expose({
@@ -303,15 +378,20 @@
                     emitMessages();
                     nextTick(() => scrollToBottomEl(scrollEl.value, false));
                 },
-                focus: () => { if (inputEl.value) inputEl.value.focus(); }
+                focus: () => { if (inputEl.value) inputEl.value.focus(); },
+                addAttachmentFiles: addAttachmentFiles,
+                removeAttachment: removeAttachment
             });
 
             return {
                 list, input, isStreaming, isError, errorMsg, showScrollBtn, newMsgCount,
-                elapsed, kbHeight, scrollEl, inputEl, listEl, feat, inputCfg, roleCfg,
+                elapsed, kbHeight, scrollEl, inputEl, listEl, fileEl, feat, inputCfg, roleCfg,
+                hasTts: !!window.NexusTts,
                 renderMarkdown, send, stop, retry, clear, regenerate, editResend,
                 copyMessage, copyMessageError, startEdit, cancelEdit, confirmEdit, scrollToBottom,
-                metaChips, isCitedRefs,
+                metaChips, isCitedRefs, attachments, isDragOver, speakingId, hasPendingUpload,
+                addAttachmentFiles, removeAttachment, pickAttachmentFiles,
+                onDragOver, onDragLeave, onDrop, onPaste, speakMessage, onInterruptAction,
                 onScroll, onInput, onKeydown, onCompositionStart, onCompositionEnd,
                 clickQuickReply, smartScroll, onWidgetAction, onVoiceResult
             };

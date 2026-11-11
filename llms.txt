@@ -26,7 +26,8 @@ CDN地址（全工作区统一，版本见 `nexus-ui/deps.json`）：`https://so
 
 <!-- toast/confirm/prompt 不需要引脚本：nexus-all.js 已提供全局函数 window.showToast / window.nuxConfirm / window.nuxPrompt -->
 <!-- 积分浮标与反馈浮标随 nexus-all.js 自动激活（详见下方「全局件」一节），不需要任何接入代码 -->
-<!-- 以下 7 个组件已随 nexus-all.js 内置，无需再单引脚本：nux-result-view / nux-ai-badge / nux-skeleton / nux-empty-state / nux-error-state / nux-ai-indicator / nux-reveal-strip -->
+<!-- 以下 8 个组件已随 nexus-all.js 内置，无需再单引脚本：nux-result-view / nux-ai-badge / nux-skeleton / nux-empty-state / nux-error-state / nux-ai-indicator / nux-reveal-strip / nux-interrupt-card -->
+<!-- NexusPageTransition 视图切换原语随 nexus-all.js 直接可用，无需引脚本（详见「工具脚本」一节） -->
 <!-- NexusDeepLink / NexusPager 全局工厂随 nexus-all.js 直接可用，无需引脚本（详见「工具脚本」一节） -->
 <!-- 图标依赖说明：nux-checkin / nux-app-card / nux-notification-bell / nux-about-page（含 about 数据）使用 font-awesome 6.x 图标类，宿主需自行引入 FA（deps.json 已纳管 CDN）；其余组件均为内联 SVG，无外部图标依赖 -->
 
@@ -229,7 +230,7 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 | 数据展示 | nux-stat-card / nux-tag / nux-avatar / nux-progress / nux-calendar / nux-checkin / nux-result-view / nux-selection-bar / nux-pagination / nux-poster / nux-conversation-list / nux-icon |
 | 表单控件 | nux-form-group / nux-button / nux-input / nux-textarea / nux-select / nux-switch / nux-checkbox / nux-input-number / nux-search-box / nux-segmented / nux-chip-group / nux-accordion / nux-tab-group |
 | 交互增强 | nux-file-upload / nux-swipe-actions / nux-theme-toggle / nux-camera-recognize / nux-voice-input |
-| AI 能力 | nux-ai-badge / nux-ai-chat / nux-ai-indicator / nux-ai-notice / nux-ai-widgets / nux-clarify-card / nux-tool-call |
+| AI 能力 | nux-ai-badge / nux-ai-chat / nux-ai-indicator / nux-ai-notice / nux-ai-widgets / nux-clarify-card / nux-interrupt-card / nux-tool-call |
 | 应用与引导 | nux-app-card / nux-app-switcher / nux-automation / nux-onboarding / nux-onboarding-strip |
 
 ### 零引用组件处置记录（2026-10-06 全工作区实测）
@@ -237,6 +238,10 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 † nux-notification-panel 是 vanilla 构造函数（`new NuxNotificationPanel(options)`，nux-notification-bell 内部依赖），不在 NexusComponents 注册表——嵌入页用法直接 new，不走 Vue 注册。
 
 **r114 复活订正（2026-10-19）**：d33d3d3 下架的 4 组件中 3 个实为误伤——challengePlanet(8-22)/nexus-agent(9-06)/WisePath/goldenFish 已在消费 `nux-conversation-list`/`nux-result-view`/`nux-swipe-actions`，生产静默断链 9 天，已整体复活（文件+注册表+bundle）；仅 `nux-radio-group` 确认零消费维持下架。配套反向门禁 `check_component_refs.py`（C1 脚本引用存在性 + C2 标签可解析性）已接入 C6。
+
+### nux-conversation-list 会话列表（v2.89.0 增强）
+
+`<nux-conversation-list :api :conversation-url :active-id :show-search :show-archive :show-rename :static-items></nux-conversation-list>`。api 模式（默认）：GET `{conversationUrl}?page=1&page_size=N` 拉列表、`{conversationUrl}/search?q=` 搜索、POST 新建、DELETE 删除（nuxConfirm 二次确认）、PATCH 归档/重命名；`listAdapter/itemAdapter` 兼容裸数组与 `{data|items|records|list}` 多形态返回。**v2.89.0 两件**：①行内重命名——「改名」→内嵌 input（Enter/Esc/blur 三通道收口），emit `@renamed(conv,title)`；②`staticItems` 业务管列模式——传数组即跳过 api（fetch/搜索/删除/归档按钮全隐），搜索框本地 keyword 过滤，重命名/选择仍 emit 出去由业务侧落库。suki/resumeAI 等自有会话仓收归呈现层的通道。
 
 原 8 个零消费组件中 7 个（nux-breadcrumb / nux-date-picker / nux-infinite-scroll / nux-portal-footer / nux-qrcode / nux-slider / nux-sortable + nux-radar-chart）已删除下架（业务侧决策：死代码移除，无兼容期）；nux-about-page 保留（nexus-ui 站点 about.html 自用，且 MiaoBi/oneNote 生产环境经自家 /about.html 302 到站内 about.html 间接消费，不可判死）。nux-user-center 已随 v2.54.0 全链下架（nux-menu-user 一并退役），无残留依赖。
 
@@ -249,6 +254,7 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 - `js/nexus-deep-link.js`：深链承接 `window.NexusDeepLink`（take/stash/popReturn，v2.86.0 起，详见「NexusDeepLink 深链承接」一节）。v2.86.0 起纳入 nexus-all.js 装配。
 - `js/nexus-pager.js`：分页状态机 `window.NexusPager`（create/coerce，v2.86.0 起，详见「NexusPager 分页状态机」一节）。v2.86.0 起纳入 nexus-all.js 装配。
 - `js/nexus-tts.js`：双通道朗读原语 `window.NexusTts`（speak/stop/enabled/setEnabled/isSpeaking/supported/onState/config，v2.87.0 起，随 nexus-all.js 装配）。`config({storeKey, prefer:'web'|'server', endpoint, requestor, lang, rate, pitch, maxLen, volume})` 设应用级默认；`prefer:'server'` 先走服务端 TTS（requestor(text)→Promise<url> 或 endpoint POST {text}→url）失败回退 web speech，默认纯前端 speechSynthesis、失败时有通道再回退服务端。seq 守卫防打断竞态；state ∈ idle/speaking。headless 无 UI。codeBlock voice.js 已直替（Voice API 保持）。
+- `js/nexus-page-transition.js`：视图切换原语 `window.NexusPageTransition`（transition/nameOf/vueTransition，v2.89.0 起，随 nexus-all.js 装配）。`transition(updateFn)` 包装 document.startViewTransition，QQ/UC 内核或 prefers-reduced-motion 自动降级直跳（行为等价旧链零风险）；`nameOf(el, name)` 设/清 view-transition-name；`vueTransition(routerFn)` 与 Vue 路由切换/nextTick 对齐的组合式壳。默认淡入淡出动画在 nexus-motion.css（::view-transition-old/new(root)）。
 
 ### 全局件（随 nexus-all.js 自动装配，无需引脚本；均为 IIFE 自动激活）
 
@@ -380,7 +386,8 @@ if (reason !== null) { /* 确认提交（含空字符串，required:false 时可
 | nux-login-page | 登录/注册一体化组件。**加载顺序**：`nux-login-page-helpers.js` → `nux-login-page-template.js` → `nux-login-page.js`（与 nux-ai-chat 系同模式），再 `NexusComponents.register(app)`。Props 见文末 nux-login-page 段落；支持账号/手机号/验证码登录、注册、忘记密码动态加载（nux-forgot-password.js）、图形验证码、协议勾选、主题色注入 |
 | nux-ai-widgets | AI 对话消息内组件渲染器（后端 SSE `widget` / `widget_update` 事件驱动，nux-ai-chat 自动路由到 `msg.widgets` 并渲染）。**加载顺序**：`nux-ai-chat-helpers.js` → `nux-ai-chat-template.js` → `nux-ai-widgets.js` →（可选增强）`nux-ai-widgets-rich.js` → `nux-ai-chat.js`。基础类型：table / cards / steps / related / choice / feedback；`nux-ai-widgets-rich.js` 追加：form（表单收集）/ chart（图表，echarts 按需 CDN 加载）/ confirm（危险操作二次确认）。steps 支持 `percent` + `status`（running/done/failed）呈现任务进度，可经 `widget_update` 流式更新。交互统一经 `@widget-action` 透传 `{id,type,action,payload}`，action ∈ send/submit/confirm/cancel/feedback/open |
 | nux-tool-call | `<nux-tool-call :items="toolCalls"></nux-tool-call>`（AI 工具调用卡三态：running 转圈行 / done 折叠摘要（人话耗时，点击展开入参 dl + 结果 monospace）/ error 亮红给原因与建议。items=[{id,name,label?,status:'running'|'done'|'error'|'failed'|…,args|input,result|output,error,duration_ms}]，状态字符串宽容归一，result 对象自动 JSON 美化并 2000 字截断。nux-ai-chat 收到后端 SSE 富事件 `tool`/`tool_executed`/`tool_update`/`tool_result` 自动路由：纯名称事件保持旧 chips 形态，带 status/args/result 自动升级本组件，tool_result 按 id（缺 id 按同名 running 项）幂等回填 |
-| nux-ai-chat | `<nux-ai-chat :messages :send-handler :features :input-config :welcome :quick-replies :roles :placeholder></nux-ai-chat>`（全功能对话组件。**加载顺序**：nexus-all（含 nexus-chat.js，语义路由/传输单源自 v2.87.0 上收）→ `nux-ai-chat-helpers.js` → `nux-ai-chat-template.js` →（可选增强）`nux-ai-widgets.js`/`-rich.js` → `nux-ai-chat.js`。emits：send/chunk/done/error/stop/retry/clear/stream-start/stream-end/meta/widget-action/voice-result/**regenerate/edit-resend**。**feat 分级默认（v2.87.0）**：`chatActions:true`（消息操作条 hover 显示：编辑重发/复制/重新生成；**服务端持久会话仓**须接线 regenerate/edit-resend 事件同步后端或显式 `chatActions:false` 关闭——aiPet 判例：无消息级 regenerate API+同文幂等会撞「刚才问过」）；`reasoningAuto:true`（thinking 流式中自动展开、收口自动收起、耗时标签，手动开合后尊重手动）；`metaStrip:false`（按需开：消息尾部 tokens/耗时 mono 芯片，meta 事件驱动）；`stopButton/streamBlocks/smartScroll/messageCopy/richReasoning/richTools/richReferences:true`、`streamFallback/scrollToBottomButton/aiTag/keyboardAvoid:true`、`voice:false`） |
+| nux-interrupt-card | `<nux-interrupt-card :title :body :payload :actions :allow-edit :input-placeholder :resolved :disabled></nux-interrupt-card>`（对话流内 human-in-loop 确认卡，v2.89.0 起、随 nexus-all.js 内置。AG-UI Interrupts 对应物：agent 暂停请求人工裁决。actions 归一化 approve(同意,primary)/continue(继续,primary)/reject(拒绝,danger)/retry(重试)/pause(暂停)/edit(修改)，对象形态 `{action,label,tone}` 可覆写；`allow-edit` 开启时 edit 先展开内嵌输入，确认后 emit `{action:'edit',input}`。统一 emit `@action` 收 `{action,input}`；`resolved` 传 true 或字符串（「已同意」）切已处理态。与全局 nuxConfirm 分工：本卡=对话流内嵌卡（跟随消息气泡），nuxConfirm=全局浮层。nux-ai-chat 已自动路由 `interrupt` SSE 事件并渲染本卡 |
+| nux-ai-chat | `<nux-ai-chat :messages :send-handler :features :input-config :welcome :quick-replies :roles :placeholder></nux-ai-chat>`（全功能对话组件。**v2.89.0 三扩展**：①composer 附件内嵌——`features.attachments:true` 开启（默认关），`inputConfig.attachmentAccept/attachmentMaxCount(4)/attachmentMaxSizeMb(10)/attachmentUpload(file)→Promise<{url}>`（提供 uploader 则组件自管 pending→uploading→done/error 状态机且上传未完禁发送，否则附件原样经 send 第三参与 `@send` 第二参透传业务侧自管上传）；支持点击/拖拽/粘贴三通道，附件条 UI 归组件，expose `addAttachmentFiles/removeAttachment`；②消息朗读——`features.speakButton:true` 开启（默认关），操作条挂 NexusTts，自动剥离 markdown（代码块折叠为「代码省略」）；③Interrupts——后端 SSE `interrupt`/`interrupt_resolve` 事件自动路由 `msg.interrupt` 并渲染 nux-interrupt-card（AG-UI human-in-loop 对应物，actions 默认 approve/reject，`@interrupt-action` 透出 `{action,input}`），`features.interrupts:true` 默认开。**加载顺序**：nexus-all（含 nexus-chat.js，语义路由/传输单源自 v2.87.0 上收）→ `nux-ai-chat-helpers.js` → `nux-ai-chat-template.js` →（可选增强）`nux-ai-widgets.js`/`-rich.js` → `nux-ai-chat.js`。emits：send/chunk/done/error/stop/retry/clear/stream-start/stream-end/meta/widget-action/voice-result/**regenerate/edit-resend**。**feat 分级默认（v2.87.0）**：`chatActions:true`（消息操作条 hover 显示：编辑重发/复制/重新生成；**服务端持久会话仓**须接线 regenerate/edit-resend 事件同步后端或显式 `chatActions:false` 关闭——aiPet 判例：无消息级 regenerate API+同文幂等会撞「刚才问过」）；`reasoningAuto:true`（thinking 流式中自动展开、收口自动收起、耗时标签，手动开合后尊重手动）；`metaStrip:false`（按需开：消息尾部 tokens/耗时 mono 芯片，meta 事件驱动）；`stopButton/streamBlocks/smartScroll/messageCopy/richReasoning/richTools/richReferences:true`、`streamFallback/scrollToBottomButton/aiTag/keyboardAvoid:true`、`voice:false`） |
 | nux-camera-recognize | `<nux-camera-recognize upload-url="/api/vision/recognize" prompt="识别图片内容" :json-mode="false" :auto-recognize="true" :stages="['上传图片','AI 识别中','整理结果']" @capture @success @error @cancel></nux-camera-recognize>`（拍照/相册 → 识别 → 结果展示一条龙；自动降级系统相机；结果默认 Markdown 或 JSON 键值表，`#result` 插槽可覆盖） |
 | nux-voice-input | `<nux-voice-input :handler="transcribe" @result="onResult" @error="onErr" @state-change="fn"></nux-voice-input>`（录音 → WAV 16kHz → 转写；`handler(blob)` 自定义转写，不传则 POST `transcribeUrl`（multipart，字段名 `fieldName`，经 NexusApi.uploadFile）；事件 result `{text,duration}` / error / state-change；`max-seconds` 默认 60 自动截断，size sm/md） |
 | nux-automation | `<nux-automation :rules="rules" :templates="templates" :trigger-presets="presets" :loading="loading" @create="fn" @update="(id,p)=>fn" @toggle="(rule,on)=>fn" @run="fn" @remove="fn"></nux-automation>`（自动化规则管理面板：列表 + 模板化新建/编辑弹窗；规则元素含 id/name/icon/enabled/action_type/action_config/trigger_type/trigger_config/last_run_at/last_status/last_message；trigger_type=event 为手动触发） |
@@ -443,6 +450,8 @@ Props: title(String='正在生成')/stages(Array，元素为 String 或 {key,lab
 
 Events: cancel（点击「取消生成」）。容器 `role="status"` + `aria-live="polite"`，脉冲动画遵循 prefers-reduced-motion。
 
+
+**v2.89.0 通用化**：新增 `state`（running 默认/done/error——done 全部勾选 pct=100 头部换 ✓、error 当前步亮红头部换 ✕ 进度条隐藏）与 stages 项级 `status`（done/active/error/pending 覆写序推）+`detail`（非 pending 步骤下方注脚，如耗时/失败原因）；对照六仓手搓步骤条（smartCode turnSteps/goldenStock progress/adSmart/travelMate/challengePlanet/suki 两态）的统一收编位。
 #### nux-ai-notice AI 生成内容显式标识条
 
 《人工智能生成合成内容标识办法》要求的显式标识，只标注在 AI 生成内容本身或对话交互界面，禁止全站定性表述。

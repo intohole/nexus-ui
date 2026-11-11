@@ -1010,3 +1010,20 @@
   .nx-reveal-strip { flex-wrap: wrap; }
   .nx-rs-cta { flex: 1 1 100%; }
 }
+
+/* v2.89.0 task-progress 通用化：整体终态标记 + 单步 status 覆写 + detail 注脚 */
+.nux-ai-task-mark {
+  flex: none; width: 15px; height: 15px; line-height: 15px; text-align: center;
+  font-size: 12px; font-weight: 700; border-radius: 50%;
+}
+.nux-ai-task-mark.is-done { color: var(--nx-success); background: rgba(34, 197, 94, 0.12); }
+.nux-ai-task-mark.is-error { color: var(--nx-danger); background: rgba(239, 68, 68, 0.12); }
+.nux-ai-task-stage { flex-wrap: wrap; }
+.nux-ai-task-stage.is-error .nux-ai-task-dot { background: var(--nx-danger); animation: none; }
+.nux-ai-task-stage.is-error .nux-ai-task-stage-label { color: var(--nx-danger); font-weight: 600; }
+.nux-ai-task-stage-detail {
+  width: 100%; margin-left: 19px; font-size: var(--nx-text-xs);
+  color: var(--nx-text-muted); line-height: 1.5;
+}
+.nux-ai-task-stage.is-error .nux-ai-task-stage-detail { color: var(--nx-danger); opacity: 0.8; }
+.nux-ai-task.is-state-error .nux-ai-task-bar-val { background: var(--nx-danger); }

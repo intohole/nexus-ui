@@ -12,7 +12,8 @@
             message: { type: String, default: '' },
             cancellable: { type: Boolean, default: false },
             compact: { type: Boolean, default: false },
-            findings: { type: Array, default: function () { return []; } }
+            findings: { type: Array, default: function () { return []; } },
+            state: { type: String, default: 'running' }
         },
         emits: ['cancel'],
         computed: {
@@ -22,9 +23,14 @@
                 for (var i = 0; i < source.length; i++) {
                     var item = source[i];
                     if (item && typeof item === 'object') {
-                        list.push({ key: item.key === undefined ? String(i) : String(item.key), label: item.label || '' });
+                        list.push({
+                            key: item.key === undefined ? String(i) : String(item.key),
+                            label: item.label || '',
+                            detail: item.detail || '',
+                            status: item.status || ''
+                        });
                     } else {
-                        list.push({ key: String(i), label: item === undefined || item === null ? '' : String(item) });
+                        list.push({ key: String(i), label: item === undefined || item === null ? '' : String(item), detail: '', status: '' });
                     }
                 }
                 return list;
@@ -44,6 +50,7 @@
                 return -1;
             },
             pct: function () {
+                if (this.state === 'done') return 100;
                 if (typeof this.percent === 'number' && !isNaN(this.percent)) {
                     return Math.min(Math.max(Math.round(this.percent), 0), 100);
                 }
@@ -56,7 +63,11 @@
                 return this.pct + '%';
             },
             activeLabel: function () {
-                return this.currentIndex >= 0 ? this.normalized[this.currentIndex].label : '';
+                if (this.currentIndex >= 0) {
+                    var cur = this.normalized[this.currentIndex];
+                    return cur.detail || cur.label;
+                }
+                return '';
             },
             normalizedFindings: function () {
                 var list = [];
@@ -74,6 +85,10 @@
         },
         methods: {
             stateOf: function (index) {
+                var stage = this.normalized[index];
+                if (stage && stage.status) return stage.status;
+                if (this.state === 'done') return 'done';
+                if (this.state === 'error' && index === this.currentIndex) return 'error';
                 if (this.currentIndex < 0) return 'pending';
                 if (index < this.currentIndex) return 'done';
                 if (index === this.currentIndex) return 'active';
@@ -81,20 +96,23 @@
             }
         },
         template: `
-            <div class="nux-ai-task" :class="{ 'is-compact': compact }" role="status" aria-live="polite">
+            <div class="nux-ai-task" :class="[{ 'is-compact': compact }, 'is-state-' + state]" role="status" aria-live="polite">
                 <div class="nux-ai-task-head">
-                    <span class="nux-ai-task-spinner" aria-hidden="true"></span>
+                    <span v-if="state === 'done'" class="nux-ai-task-mark is-done" aria-hidden="true">✓</span>
+                    <span v-else-if="state === 'error'" class="nux-ai-task-mark is-error" aria-hidden="true">✕</span>
+                    <span v-else class="nux-ai-task-spinner" aria-hidden="true"></span>
                     <span class="nux-ai-task-title">{{ title }}</span>
-                    <span v-if="!compact" class="nux-ai-task-pct">{{ pctText }}</span>
+                    <span v-if="!compact && state !== 'error'" class="nux-ai-task-pct">{{ pctText }}</span>
                 </div>
                 <ol v-if="normalized.length" class="nux-ai-task-stages">
                     <li v-for="(stage, i) in normalized" :key="stage.key"
                         class="nux-ai-task-stage" :class="'is-' + stateOf(i)">
                         <span class="nux-ai-task-dot" aria-hidden="true"></span>
                         <span class="nux-ai-task-stage-label">{{ stage.label }}</span>
+                        <span v-if="stage.detail && stateOf(i) !== 'pending'" class="nux-ai-task-stage-detail">{{ stage.detail }}</span>
                     </li>
                 </ol>
-                <div class="nux-ai-task-bar" role="progressbar" :aria-valuenow="pct" aria-valuemin="0" aria-valuemax="100" aria-label="生成进度">
+                <div v-if="state === 'running'" class="nux-ai-task-bar" role="progressbar" :aria-valuenow="pct" aria-valuemin="0" aria-valuemax="100" aria-label="生成进度">
                     <div class="nux-ai-task-bar-val" :style="{ width: pct + '%' }"></div>
                 </div>
                 <p v-if="message || activeLabel" class="nux-ai-task-msg">{{ message || activeLabel }}</p>

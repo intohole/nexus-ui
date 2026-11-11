@@ -22,7 +22,7 @@ HASH_IN_QUERY_RE = re.compile(r'(?P<prefix>[?&])h=(?P<hash>[0-9a-zA-Z]+)')
 HASH_VALUE_RE = re.compile(r'h=[0-9a-zA-Z]+')
 VERSION_PARAM_RE = re.compile(r'[?&][a-z_]+=')
 HTML_TARGET_RE = re.compile(r'\.html?$', re.I)
-SKIP_DIRS = (".git", "node_modules", "vendor", "__pycache__", "dist", ".venv", "venv", "logs", "data")
+SKIP_DIRS = (".git", "node_modules", "vendor", "__pycache__", "dist", ".venv", "venv", "logs", "data", ".v2c")
 SNAPSHOT_RE = re.compile(r"^v\d+(?:\.\d+)+$")
 SKIP_URL_PREFIX = ("http://", "https://", "//", "data:", "#", "mailto:")
 
@@ -126,7 +126,11 @@ def scan_once(target: str, root: str, ignore: tuple, fix: bool, add: bool = Fals
             if path.lower().startswith(ignore):
                 continue
             scanned += 1
-            stale = sync_html(path, dirpath, fix, add) if fn.endswith(".html") else sync_css(path, dirpath, fix)
+            try:
+                stale = sync_html(path, dirpath, fix, add) if fn.endswith(".html") else sync_css(path, dirpath, fix)
+            except UnicodeDecodeError:
+                print("[跳过非文本] %s" % os.path.relpath(path, root))
+                continue
             if not stale:
                 continue
             changed += 1

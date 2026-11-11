@@ -37,11 +37,16 @@
             activeId: { type: String, default: '' },
             showSearch: { type: Boolean, default: true },
             showArchive: { type: Boolean, default: true },
+            showRename: { type: Boolean, default: true },
             pageSize: { type: Number, default: 100 },
+            staticItems: { type: Array, default: null },
             listAdapter: { type: Function, default: pickList },
             itemAdapter: { type: Function, default: resolveItem }
         },
-        emits: ['select', 'created', 'deleted', 'archive', 'error'],
+        emits: ['select', 'created', 'deleted', 'archive', 'renamed', 'error'],
+        directives: {
+            focus: { mounted(el) { el.focus(); if (el.select) el.select(); } }
+        },
         setup(props, ctx) {
             const api = props.api || (window.NexusApi ? new NexusApi() : null);
             const list = ref([]);
@@ -51,11 +56,23 @@
             const keyword = ref('');
             const error = ref('');
             const creating = ref(false);
+            const renamingId = ref('');
+            const renameDraft = ref('');
             let searchTimer = null;
 
             const canSearch = computed(() => props.conversationUrl && props.showSearch);
+            const isStatic = computed(() => Array.isArray(props.staticItems));
+
+            const visibleList = computed(() => {
+                if (!isStatic.value) return list.value;
+                const kw = keyword.value.trim().toLowerCase();
+                if (!kw) return props.staticItems;
+                return props.staticItems.filter((c) =>
+                    String(c.title || '').toLowerCase().indexOf(kw) >= 0);
+            });
 
             async function load() {
+                if (isStatic.value) { list.value = props.staticItems.slice(); total.value = props.staticItems.length; return; }
                 if (!api) return;
                 loading.value = true;
                 error.value = '';
@@ -89,6 +106,7 @@
 
             function onSearchInput() {
                 if (searchTimer) { clearTimeout(searchTimer); }
+                if (isStatic.value) return;
                 const kw = keyword.value;
                 searchTimer = setTimeout(() => { search(kw.trim()); }, 320);
             }
@@ -149,6 +167,37 @@
                 }
             }
 
+            function startRename(conv) {
+                if (!props.showRename) return;
+                renamingId.value = conv.id;
+                renameDraft.value = conv.title || '';
+            }
+
+            function cancelRename() {
+                renamingId.value = '';
+                renameDraft.value = '';
+            }
+
+            async function confirmRename(conv) {
+                const title = String(renameDraft.value || '').trim();
+                cancelRename();
+                if (!title || title === conv.title) return;
+                if (isStatic.value || !api) {
+                    ctx.emit('renamed', { ...conv, title: title }, title);
+                    return;
+                }
+                try {
+                    const res = await api.patch(`${props.conversationUrl}/${conv.id}`, { title: title });
+                    const updated = props.itemAdapter(res);
+                    const idx = list.value.findIndex((c) => c.id === conv.id);
+                    if (idx >= 0) list.value[idx] = { ...list.value[idx], ...(updated && updated.id ? updated : { title: title }) };
+                    ctx.emit('renamed', list.value[idx] || { ...conv, title: title }, title);
+                } catch (e) {
+                    error.value = e && e.message ? e.message : '重命名失败';
+                    ctx.emit('error', e);
+                }
+            }
+
             function select(conv) {
                 if (conv.status === 'archived' && props.showArchive) return;
                 ctx.emit('select', conv);
@@ -187,7 +236,9 @@
 
             return {
                 list, total, loading, searching, keyword, error, creating,
-                canSearch, load, search, onSearchInput, create, remove, toggleArchive, select, fmtTime
+                renamingId, renameDraft, visibleList, isStatic,
+                canSearch, load, search, onSearchInput, create, remove, toggleArchive,
+                startRename, cancelRename, confirmRename, select, fmtTime
             };
         },
         template: `
@@ -217,21 +268,28 @@
                 </div>
 
                 <ul v-else class="nx-conv-list-items">
-                    <li v-for="c in list" :key="c.id" class="nx-conv-list-item"
+                    <li v-for="c in visibleList" :key="c.id" class="nx-conv-list-item"
                         :class="{ 'is-active': c.id === activeId, 'is-archived': c.status === 'archived' }"
                         :aria-current="c.id === activeId ? 'true' : false" tabindex="0"
                         @click="select(c)" @keydown.enter.prevent="select(c)" @keydown.space.prevent="select(c)">
                         <div class="nx-conv-list-item-main">
-                            <span class="nx-conv-list-item-title">{{ c.title || newTitle }}</span>
-                            <span v-if="c.status === 'archived'" class="nx-conv-list-item-badge">已归档</span>
+                            <input v-if="renamingId === c.id" v-model="renameDraft" class="nx-conv-list-rename-input"
+                                :aria-label="'重命名会话'" maxlength="60"
+                                @click.stop @keydown.enter.prevent="confirmRename(c)" @keydown.esc.prevent="cancelRename()"
+                                @blur="confirmRename(c)" v-focus>
+                            <template v-else>
+                                <span class="nx-conv-list-item-title">{{ c.title || newTitle }}</span>
+                                <span v-if="c.status === 'archived'" class="nx-conv-list-item-badge">已归档</span>
+                            </template>
                         </div>
                         <div class="nx-conv-list-item-sub">
                             <span class="nx-conv-list-item-time">{{ fmtTime(c.updated_at || c.created_at) }}</span>
                             <span class="nx-conv-list-item-actions" @click.stop>
-                                <button v-if="showArchive" type="button" class="nx-conv-list-item-btn" :title="c.status === 'archived' ? '恢复' : '归档'" @click="toggleArchive(c)">
+                                <button v-if="showRename && renamingId !== c.id" type="button" class="nx-conv-list-item-btn" title="重命名" @click="startRename(c)">改名</button>
+                                <button v-if="showArchive && !isStatic" type="button" class="nx-conv-list-item-btn" :title="c.status === 'archived' ? '恢复' : '归档'" @click="toggleArchive(c)">
                                     {{ c.status === 'archived' ? '恢复' : '归档' }}
                                 </button>
-                                <button type="button" class="nx-conv-list-item-btn is-danger" title="删除" @click="remove(c)">删除</button>
+                                <button v-if="!isStatic" type="button" class="nx-conv-list-item-btn is-danger" title="删除" @click="remove(c)">删除</button>
                             </span>
                         </div>
                     </li>

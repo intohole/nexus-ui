@@ -27,6 +27,18 @@
                             </div>
                             <div class="nx-ai-chat-bubble">
                                 <slot name="message-before" :msg="m"></slot>
+                                <div v-if="m.attachments && m.attachments.length" class="nx-ai-chat-atts">
+                                    <a v-for="a in m.attachments" :key="a.id" class="nx-ai-chat-att"
+                                        :class="'is-' + (a.status || 'done')"
+                                        :href="a.url || (a.preview) || null" target="_blank" rel="noopener"
+                                        :title="a.name">
+                                        <img v-if="a.type && a.type.indexOf('image/') === 0 && (a.preview || a.url)" class="nx-ai-chat-att-thumb" :src="a.preview || a.url" alt="">
+                                        <svg v-else class="nx-ai-chat-att-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                                        <span class="nx-ai-chat-att-name">{{ a.name }}</span>
+                                        <span v-if="a.status === 'uploading'" class="nx-ai-chat-att-state">上传中…</span>
+                                        <span v-else-if="a.status === 'error'" class="nx-ai-chat-att-state is-error">失败</span>
+                                    </a>
+                                </div>
                                 <div v-if="feat.richReasoning && (m.thinking || m.thinkingMs)" class="nx-ai-chat-reasoning" :class="{ 'is-open': m.showReasoning }">
                                     <button type="button" class="nx-ai-chat-reasoning-toggle" @click="m._reasoningManual = true; m.showReasoning = !m.showReasoning">
                                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" :style="m.showReasoning ? 'transform:rotate(180deg)' : ''"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -93,6 +105,12 @@
                                     </div>
                                 </div>
                                 <nux-ai-widgets v-if="m.widgets && m.widgets.length" :widgets="m.widgets" @action="(ev) => onWidgetAction(ev, m)"></nux-ai-widgets>
+                                <nux-interrupt-card v-if="feat.interrupts && m.interrupt"
+                                    :title="m.interrupt.title" :body="m.interrupt.body"
+                                    :payload="m.interrupt.payload" :actions="m.interrupt.actions"
+                                    :allow-edit="m.interrupt.allowEdit" :input-placeholder="m.interrupt.inputPlaceholder"
+                                    @action="(ev) => onInterruptAction(m, ev)"
+                                ></nux-interrupt-card>
                                 <slot name="message-after" :msg="m"></slot>
                             </div>
                             <div v-if="m.error" class="nx-ai-chat-error-bar" role="alert">
@@ -107,6 +125,7 @@
                             </div>
                             <div v-else-if="!m.streaming && !m.error && m.content && feat.messageCopy" class="nx-ai-chat-actions">
                                 <button v-if="feat.chatActions && m.role === 'assistant'" class="nx-ai-chat-action-btn" @click="regenerate(m)">重新生成</button>
+                                <button v-if="feat.speakButton && hasTts" class="nx-ai-chat-action-btn" @click="speakMessage(m)">{{ speakingId === m.id ? '停止朗读' : '朗读' }}</button>
                                 <button class="nx-ai-chat-action-btn" @click="copyMessage(m)">复制</button>
                             </div>
                         </div>
@@ -121,11 +140,24 @@
                 </button>
             </transition>
 
-            <div class="nx-ai-chat-input-wrap">
+            <div class="nx-ai-chat-input-wrap" :class="{ 'is-drag-over': isDragOver }"
+                @dragover.prevent="onDragOver" @dragleave.prevent="onDragLeave" @drop.prevent="onDrop">
                 <slot name="input-before"></slot>
                 <div v-if="isStreaming" class="nx-ai-chat-status">
                     <span class="nx-ai-chat-status-spinner"></span>
                     <span class="nx-ai-chat-status-text">AI 正在生成，已用时 {{ elapsed }}s</span>
+                </div>
+                <div v-if="feat.attachments && attachments.length" class="nx-ai-chat-att-bar">
+                    <span v-for="a in attachments" :key="a.id" class="nx-ai-chat-att is-composer" :title="a.name">
+                        <img v-if="a.type && a.type.indexOf('image/') === 0 && a.preview" class="nx-ai-chat-att-thumb" :src="a.preview" alt="">
+                        <svg v-else class="nx-ai-chat-att-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                        <span class="nx-ai-chat-att-name">{{ a.name }}</span>
+                        <span v-if="a.status === 'uploading'" class="nx-ai-chat-att-state">上传中…</span>
+                        <span v-else-if="a.status === 'error'" class="nx-ai-chat-att-state is-error" :title="a.error">失败</span>
+                        <button type="button" class="nx-ai-chat-att-remove" :aria-label="'移除附件 ' + a.name" :disabled="a.status === 'uploading'" @click="removeAttachment(a)">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
+                    </span>
                 </div>
                 <div class="nx-ai-chat-input-row">
                     <nux-voice-input
@@ -137,6 +169,10 @@
                         size="sm"
                         @result="onVoiceResult"
                     ></nux-voice-input>
+                    <button v-if="feat.attachments" type="button" class="nx-ai-chat-btn nx-ai-chat-attach" :disabled="disabled || isStreaming" aria-label="添加附件" @click="pickAttachmentFiles">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                    </button>
+                    <input ref="fileEl" type="file" class="nx-ai-chat-file-input" :accept="inputCfg.attachmentAccept || undefined" multiple hidden @change="addAttachmentFiles($event.target.files)">
                     <textarea
                         ref="inputEl"
                         v-model="input"
@@ -150,11 +186,12 @@
                         @keydown="onKeydown"
                         @compositionstart="onCompositionStart"
                         @compositionend="onCompositionEnd"
+                        @paste="onPaste"
                     ></textarea>
                     <button v-if="isStreaming && feat.stopButton" class="nx-ai-chat-btn nx-ai-chat-stop" @click="stop" aria-label="停止生成">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"></rect></svg>
                     </button>
-                    <button v-else class="nx-ai-chat-btn nx-ai-chat-send" :class="{ 'is-empty': !input.trim() }" :disabled="isStreaming || disabled" @click="send()" aria-label="发送">
+                    <button v-else class="nx-ai-chat-btn nx-ai-chat-send" :class="{ 'is-empty': !input.trim() }" :disabled="isStreaming || disabled || hasPendingUpload" @click="send()" aria-label="发送">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                     </button>
                 </div>

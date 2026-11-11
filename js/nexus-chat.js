@@ -128,6 +128,23 @@
         return 'done';
     }
 
+    // v2.89.0：TTS 朗读前剥离 markdown 语法（代码块/表格/标记符号不进语音）。
+    function stripMarkdownForTts(text) {
+        let t = String(text || '');
+        t = t.replace(/```[\s\S]*?(```|$)/g, '，代码省略，');
+        t = t.replace(/`([^`]*)`/g, '$1');
+        t = t.replace(/!\[([^\]]*)\]\([^)]*\)/g, '，图片，');
+        t = t.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1');
+        t = t.replace(/^\s{0,3}#{1,6}\s+/gm, '');
+        t = t.replace(/^\s*[-*+]\s+/gm, '');
+        t = t.replace(/^\s*>\s?/gm, '');
+        t = t.replace(/(\*\*|__)(.*?)\1/g, '$2');
+        t = t.replace(/(\*|_)(.*?)\1/g, '$2');
+        t = t.replace(/\|/g, '，');
+        t = t.replace(/\n{2,}/g, '。').replace(/\n/g, '，');
+        return t.trim();
+    }
+
     function routeRichEvent(msg, event, data) {
         const payload = data || {};
         const type = String(event || payload.type || '').toLowerCase();
@@ -177,6 +194,19 @@
                 error: payload.error || '',
                 duration_ms: payload.duration_ms || 0
             });
+        } else if (type === 'interrupt' || type === 'interrupt_request') {
+            // v2.89.0：AG-UI Interrupts 对应物——human-in-loop 暂停请求，一消息一活跃卡。
+            msg.interrupt = {
+                id: payload.id || ('it_' + Date.now()),
+                title: payload.title || 'AI 请求确认',
+                body: payload.body || payload.content || payload.message || '',
+                payload: payload.payload !== undefined ? payload.payload : payload.data,
+                actions: Array.isArray(payload.actions) && payload.actions.length ? payload.actions : ['approve', 'reject'],
+                allowEdit: !!payload.allow_edit,
+                inputPlaceholder: payload.input_placeholder || ''
+            };
+        } else if (type === 'interrupt_resolve') {
+            if (msg.interrupt && (!payload.id || payload.id === msg.interrupt.id)) msg.interrupt = null;
         } else if (type === 'references' || type === 'reference') {
             msg.references = payload.references || payload.items || [];
         } else if (type === 'credibility' && (payload.level || payload.pct !== undefined)) {
@@ -307,6 +337,7 @@
         bindRetry: bindRetry,
         typingCursor: typingCursor,
         normalizeToolStatus: normalizeToolStatus,
+        stripMarkdownForTts: stripMarkdownForTts,
         routeRichEvent: routeRichEvent,
         createStreamController: createStreamController,
         fallbackRequest: fallbackRequest

@@ -18,7 +18,10 @@
             richReasoning: true,
             richTools: true,
             richReferences: true,
-            voice: false
+            voice: false,
+            speakButton: false,
+            attachments: false,
+            interrupts: true
         },
         defaultInput: {
             enterToSend: true,
@@ -29,7 +32,11 @@
             checkComposing: true,
             maxRows: 6,
             voiceUrl: '',
-            voiceMaxSeconds: 60
+            voiceMaxSeconds: 60,
+            attachmentAccept: '',
+            attachmentMaxCount: 4,
+            attachmentMaxSizeMb: 10,
+            attachmentUpload: null
         },
         defaultRoles: {
             user: { avatar: '🧑', label: '我' },
@@ -72,6 +79,64 @@
             if (ms) chips.push(ms >= 1000 ? (Math.round(ms / 100) / 10) + 's' : ms + 'ms');
             if (msg.thinkingMs) chips.push('思考 ' + msg.thinkingMs + 's');
             return chips;
+        },
+        // v2.89.0：composer 附件纯函数族（准入/快照/上传状态机/TTS 朗读），Vue-free
+        // 注入形态与 createActions 同构；UI 态（drag/条渲染）归组件。
+        attachmentFrom: function (file) {
+            return {
+                id: 'att_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                file: file, name: file.name, size: file.size, type: file.type || '',
+                status: 'pending', url: '', error: '', preview: ''
+            };
+        },
+        filterAttachmentFiles: function (files, existing, inputCfg) {
+            const max = (inputCfg && inputCfg.attachmentMaxCount) || 4;
+            const maxBytes = ((inputCfg && inputCfg.attachmentMaxSizeMb) || 10) * 1024 * 1024;
+            const list = Array.from(files || []);
+            const room = Math.max(0, max - existing.length);
+            const inRoom = list.slice(0, room);
+            const accepted = inRoom.filter((f) => f.size <= maxBytes);
+            return { accepted: accepted, oversize: inRoom.length - accepted.length, overflow: list.length - room };
+        },
+        uploadAttachment: function (att, uploader) {
+            att.status = 'uploading';
+            return Promise.resolve()
+                .then(() => uploader(att.file))
+                .then((out) => {
+                    att.status = 'done';
+                    att.url = (out && (out.url || out.audio_url)) || '';
+                    if (!att.url) { att.status = 'error'; att.error = '上传响应缺少 url'; }
+                    return att;
+                })
+                .catch((e) => {
+                    att.status = 'error';
+                    att.error = (e && e.message) || '上传失败';
+                    return att;
+                });
+        },
+        snapshotAttachments: function (attachments) {
+            if (!attachments || !attachments.length) return null;
+            const out = attachments.map((a) => ({
+                id: a.id, name: a.name, size: a.size, type: a.type,
+                status: a.status, url: a.url
+            }));
+            attachments.splice(0, attachments.length);
+            return out;
+        },
+        speakMessage: function (env, m) {
+            if (!window.NexusTts || !m || !m.content) return;
+            const sid = env.speakingId;
+            if (sid.value === m.id) {
+                NexusTts.stop();
+                sid.value = '';
+                return;
+            }
+            sid.value = m.id;
+            const strip = (window.NexusChat && NexusChat.stripMarkdownForTts)
+                || window.NuxAiChatHelpers.stripMarkdownForTts;
+            NexusTts.speak(strip(m.content)).then((ok) => {
+                if (!ok && sid.value === m.id) sid.value = '';
+            });
         },
         // 对话动作状态机工厂（r137 自 nux-ai-chat setup 抽出，行为逐行守恒；
         // env 依赖注入形态保持 Vue-free，tests/test_ai_chat_actions.mjs 直测）。
@@ -144,7 +209,7 @@
                 assistantMsg._turnStart = Date.now();
                 list.push(assistantMsg);
                 emitMessages();
-                if (opts && opts.emitSend) emit('send', text);
+                if (opts && opts.emitSend) emit('send', text, (opts && opts.attachments) || null);
                 smartScroll(true);
 
                 isStreaming.value = true;
@@ -199,7 +264,7 @@
 
                 try {
                     const handler = props.sendHandler || defaultSend;
-                    await handler(text, callbacks);
+                    await handler(text, callbacks, (opts && opts.attachments) || null);
                 } catch (e) {
                     if (!stopped) settle(false, assistantMsg, e.message || '请求异常');
                 }
@@ -228,9 +293,11 @@
                     content: text,
                     created_at: new Date().toISOString()
                 };
+                const atts = env.takeAttachmentsForSend ? env.takeAttachmentsForSend() : null;
+                if (atts) userMsg.attachments = atts;
                 list.push(userMsg);
 
-                await startTurn(text, { emitSend: true });
+                await startTurn(text, { emitSend: true, attachments: atts });
             }
 
             // 重新生成：从任一成功 assistant 消息截断后续并重发其前最近的用户提问。

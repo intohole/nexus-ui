@@ -794,3 +794,118 @@
     color: var(--nx-text, rgb(226, 232, 240));
     background: var(--nx-bg-secondary, rgb(15, 23, 42));
 }
+
+/* ===== v2.89.0 composer 附件内嵌 ===== */
+.nx-ai-chat-file-input {
+    display: none;
+}
+
+.nx-ai-chat-attach {
+    color: var(--nx-text-muted, rgb(100, 116, 139));
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: var(--nx-radius-sm, 8px);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nx-ai-chat-attach:hover {
+    color: var(--nx-accent, rgb(79, 70, 229));
+    background: var(--nx-bg-tertiary, rgb(241, 245, 249));
+}
+
+.nx-ai-chat-input-wrap.is-drag-over {
+    outline: 2px dashed var(--nx-accent, rgb(79, 70, 229));
+    outline-offset: -2px;
+    border-radius: var(--nx-radius-md, 10px);
+}
+
+.nx-ai-chat-att-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--nx-space-2, 0.5rem);
+    padding: 0 var(--nx-space-1, 0.25rem) var(--nx-space-2, 0.5rem);
+}
+
+.nx-ai-chat-atts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--nx-space-2, 0.5rem);
+    margin-bottom: var(--nx-space-2, 0.5rem);
+}
+
+.nx-ai-chat-att {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 220px;
+    padding: 4px 8px;
+    border-radius: var(--nx-radius-full, 999px);
+    background: var(--nx-bg-tertiary, rgb(241, 245, 249));
+    border: 1px solid var(--nx-border, rgb(226, 232, 240));
+    color: var(--nx-text-secondary, rgb(71, 85, 105));
+    font-size: 12px;
+    line-height: 1.4;
+    text-decoration: none;
+}
+
+.nx-ai-chat-att:hover {
+    border-color: var(--nx-accent, rgb(79, 70, 229));
+}
+
+.nx-ai-chat-att.is-error {
+    border-color: var(--nx-danger, rgb(220, 38, 38));
+}
+
+.nx-ai-chat-att-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    object-fit: cover;
+    flex: none;
+}
+
+.nx-ai-chat-att-icon {
+    flex: none;
+    opacity: 0.7;
+}
+
+.nx-ai-chat-att-name {
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nx-ai-chat-att-state {
+    flex: none;
+    font-size: 11px;
+    color: var(--nx-text-muted, rgb(100, 116, 139));
+}
+
+.nx-ai-chat-att-state.is-error {
+    color: var(--nx-danger, rgb(220, 38, 38));
+}
+
+.nx-ai-chat-att-remove {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--nx-text-muted, rgb(100, 116, 139));
+    cursor: pointer;
+    padding: 0;
+}
+
+.nx-ai-chat-att-remove:hover {
+    color: var(--nx-danger, rgb(220, 38, 38));
+    background: var(--nx-bg-surface, #fff);
+}

@@ -247,3 +247,10 @@
 @media (hover: none) and (pointer: coarse) {
   .nx-conv-list-search-input { font-size: 16px; }
 }
+
+/* v2.89.0 会话列表行内重命名 */
+.nx-conv-list-rename-input {
+  width: 100%; min-width: 0; font-size: inherit; font-weight: inherit; color: inherit;
+  background: var(--nx-bg-surface, #fff); border: 1px solid var(--nx-primary, #6366f1);
+  border-radius: var(--nx-radius-sm, 6px); padding: 2px 6px; outline: none;
+}

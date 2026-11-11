@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>v2.89.0 对话面扩展族走查</title>
+<script src="/js/nexus-theme-init.js"></script>
+<link rel="stylesheet" href="/css/nexus-all.css">
+<style>
+    body { padding: 28px 32px; font-family: system-ui, -apple-system, sans-serif; max-width: 880px; margin: 0 auto; }
+    h3 { margin: 26px 0 10px; font-size: 15px; color: var(--nx-text-secondary, #667); border-bottom: 1px solid var(--nx-border, #e5e8ef); padding-bottom: 6px; }
+    .demo-log { font-size: 12px; color: var(--nx-text-muted, #889); margin-top: 6px; min-height: 16px; font-family: SFMono-Regular, Menlo, monospace; }
+</style>
+</head>
+<body>
+<div id="app">
+    <h3>Interrupt 卡（human-in-loop 三态）</h3>
+    <div style="display:grid;gap:12px">
+        <nux-interrupt-card id="it-open" title="AI 请求授权" body="将读取你的日历以安排复盘时间"
+            :payload="{scope:'calendar.read', days:7}" :actions="['approve','edit','reject']"
+            :allow-edit="true" input-placeholder="补充授权范围说明…" @action="logIt('open', $event)"></nux-interrupt-card>
+        <nux-interrupt-card title="生成策略确认" body="采用激进档位重新平衡持仓" :actions="['approve','pause']" resolved="已同意"></nux-interrupt-card>
+        <nux-interrupt-card title="上传补全" body="缺少体检报告第 2 页" :actions="['retry']"></nux-interrupt-card>
+    </div>
+    <div class="demo-log" id="it-log">{{ itLog }}</div>
+
+    <h3>ai-chat composer 附件（点击/拖拽/粘贴 + 上传状态机）</h3>
+    <nux-ai-chat ref="chat" style="height:360px;border:1px solid var(--nx-border,#e5e8ef);border-radius:12px"
+        :features="{ attachments: true, speakButton: true, voice: false }"
+        :input-config="{ attachmentMaxCount: 3, attachmentMaxSizeMb: 1, attachmentUpload: uploadAtt }"
+        :send-handler="fakeSend"
+        :messages="[]" placeholder="拖入或粘贴文件试试"></nux-ai-chat>
+    <div class="demo-log" id="att-log">{{ attLog }}</div>
+
+    <h3>task-progress 终态（done / error / detail）</h3>
+    <div style="display:grid;gap:14px">
+        <nux-ai-task-progress title="持仓深研完成" state="done"
+            :stages="[{key:'a',label:'拉取行情'},{key:'b',label:'计算指标',detail:'28 项指标全绿'},{key:'c',label:'生成结论'}]"
+            :current="'c'"></nux-ai-task-progress>
+        <nux-ai-task-progress title="报告渲染失败" state="error" message="模板引擎超时，可重试"
+            :stages="[{key:'a',label:'拉取行情'},{key:'b',label:'渲染模板',status:'error',detail:'12s 超时'},{key:'c',label:'生成结论'}]"
+            :current="'b'"></nux-ai-task-progress>
+    </div>
+
+    <h3>conversation-list staticItems + 行内重命名</h3>
+    <div style="width:340px;border:1px solid var(--nx-border,#e5e8ef);border-radius:12px;padding:10px">
+        <nux-conversation-list :static-items="convos" :active-id="'c2'" :show-archive="false" @renamed="logRename"></nux-conversation-list>
+    </div>
+    <div class="demo-log" id="conv-log">{{ convLog }}</div>
+</div>
+
+<script src="/vendor/vue.global.prod.js"></script>
+<script src="/js/nexus-all.js"></script>
+<script src="/js/components/nux-ai-chat-helpers.js"></script>
+<script src="/js/components/nux-ai-chat-template.js"></script>
+<script src="/js/components/nux-ai-chat.js"></script>
+<script src="/js/components/nux-conversation-list.js"></script>
+<script src="/js/components/nux-ai-task-progress.js"></script>
+<script>
+const { createApp, ref } = Vue;
+createApp({
+    setup() {
+        const itLog = ref('');
+        const attLog = ref('');
+        const convLog = ref('');
+        const chat = ref(null);
+        function logIt(tag, ev) { itLog.value = `${tag}:${ev.action}${ev.input ? '/' + ev.input : ''}`; }
+        function logRename(conv, title) {
+            convLog.value = `renamed:${conv.id}/${title}`;
+            const c = convos.find((x) => x.id === conv.id);
+            if (c) c.title = title;
+        }
+        function uploadAtt(file) {
+            return new Promise((resolve) => setTimeout(() => resolve({ url: 'https://cdn.example/' + file.name }), 120));
+        }
+        async function fakeSend(text, callbacks) {
+            callbacks.onChunk('收到：' + text, '收到：' + text);
+            callbacks.onDone('收到：' + text);
+        }
+        const convos = [
+            { id: 'c1', title: '每晚复盘', updated_at: '2026-11-12T08:30:00Z' },
+            { id: 'c2', title: '体检报告解读', updated_at: '2026-11-11T21:00:00Z' },
+            { id: 'c3', title: '旅行预算', updated_at: '2026-11-09T12:00:00Z' }
+        ];
+        window.__fixture = { chat, itLog, attLog, convLog };
+        return { itLog, attLog, convLog, chat, convos, logIt, logRename, uploadAtt, fakeSend };
+    }
+}).component('nux-ai-chat', window.NuxAiChat)
+  .component('nux-conversation-list', window.NuxConversationList)
+  .component('nux-interrupt-card', window.NuxInterruptCard)
+  .component('nux-ai-task-progress', window.NuxAiTaskProgress)
+  .mount('#app');
+</script>
+</body>
+</html>

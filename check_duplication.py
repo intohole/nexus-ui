@@ -21,7 +21,7 @@ REGISTRY = Path(__file__).resolve().parent / "js" / "nexus-components.js"
 
 SCAN_SUFFIXES = (".js", ".html", ".htm", ".css")
 SKIP_DIRS = {
-    ".git", ".venv", "venv", "node_modules", "vendor", "__pycache__", "dist",
+    ".git", ".venv", "venv", "node_modules", "vendor", "__pycache__", "dist", ".v2c",
     "build", "logs", "data", ".trae", ".trae-html-share-packages", "handoff",
     ".know", "drawio", "tests", "test", "e2e", ".mypy_cache", ".pytest_cache",
 }

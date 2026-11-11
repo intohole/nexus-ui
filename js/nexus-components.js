@@ -24,6 +24,7 @@
         'nux-chip-group': 'NuxChipGroup',
         'nux-citations': 'NuxCitations',
         'nux-clarify-card': 'NuxClarifyCard',
+        'nux-interrupt-card': 'NuxInterruptCard',
         'nux-confidence': 'NuxConfidence',
         'nux-conversation-list': 'NuxConversationList',
         'nux-copy-button': 'NuxCopyButton',

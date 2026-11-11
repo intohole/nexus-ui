@@ -516,6 +516,14 @@ a:hover { color: var(--app-accent-hover); }
   }
 }
 
+/* v2.89.0 NexusPageTransition 默认淡入淡出（QQ/UC 不支持自动降级直跳，无害） */
+@media (prefers-reduced-motion: no-preference) {
+    ::view-transition-old(root) { animation: nx-vt-out 160ms ease both; }
+    ::view-transition-new(root) { animation: nx-vt-in 200ms ease both; }
+}
+@keyframes nx-vt-out { to { opacity: 0; } }
+@keyframes nx-vt-in { from { opacity: 0; } }
+
 /* ===== nexus-themes.css ===== */
 /*
  * Nexus Design System — 应用特色色配置 v2.3
@@ -1669,6 +1677,23 @@ a:hover { color: var(--app-accent-hover); }
   .nx-reveal-strip { flex-wrap: wrap; }
   .nx-rs-cta { flex: 1 1 100%; }
 }
+
+/* v2.89.0 task-progress 通用化：整体终态标记 + 单步 status 覆写 + detail 注脚 */
+.nux-ai-task-mark {
+  flex: none; width: 15px; height: 15px; line-height: 15px; text-align: center;
+  font-size: 12px; font-weight: 700; border-radius: 50%;
+}
+.nux-ai-task-mark.is-done { color: var(--nx-success); background: rgba(34, 197, 94, 0.12); }
+.nux-ai-task-mark.is-error { color: var(--nx-danger); background: rgba(239, 68, 68, 0.12); }
+.nux-ai-task-stage { flex-wrap: wrap; }
+.nux-ai-task-stage.is-error .nux-ai-task-dot { background: var(--nx-danger); animation: none; }
+.nux-ai-task-stage.is-error .nux-ai-task-stage-label { color: var(--nx-danger); font-weight: 600; }
+.nux-ai-task-stage-detail {
+  width: 100%; margin-left: 19px; font-size: var(--nx-text-xs);
+  color: var(--nx-text-muted); line-height: 1.5;
+}
+.nux-ai-task-stage.is-error .nux-ai-task-stage-detail { color: var(--nx-danger); opacity: 0.8; }
+.nux-ai-task.is-state-error .nux-ai-task-bar-val { background: var(--nx-danger); }
 
 /* ===== nexus-components-checkin.css ===== */
 .nux-checkin { display: flex; flex-direction: column; gap: var(--nx-space-4); }
@@ -5127,6 +5152,13 @@ a.nx-citation-title:focus-visible { outline: 2px solid var(--nx-primary); outlin
   .nx-conv-list-search-input { font-size: 16px; }
 }
 
+/* v2.89.0 会话列表行内重命名 */
+.nx-conv-list-rename-input {
+  width: 100%; min-width: 0; font-size: inherit; font-weight: inherit; color: inherit;
+  background: var(--nx-bg-surface, #fff); border: 1px solid var(--nx-primary, #6366f1);
+  border-radius: var(--nx-radius-sm, 6px); padding: 2px 6px; outline: none;
+}
+
 /* ===== nexus-components-settings.css ===== */
 /* 设置中心（nux-settings-drawer）与自动化管理（nux-automation）共享样式 */
 .nx-settings-overlay {
@@ -7306,6 +7338,121 @@ a.nx-citation-title:focus-visible { outline: 2px solid var(--nx-primary); outlin
 [data-theme="dark"] .nx-ai-chat-edit-input {
     color: var(--nx-text, rgb(226, 232, 240));
     background: var(--nx-bg-secondary, rgb(15, 23, 42));
+}
+
+/* ===== v2.89.0 composer 附件内嵌 ===== */
+.nx-ai-chat-file-input {
+    display: none;
+}
+
+.nx-ai-chat-attach {
+    color: var(--nx-text-muted, rgb(100, 116, 139));
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: var(--nx-radius-sm, 8px);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nx-ai-chat-attach:hover {
+    color: var(--nx-accent, rgb(79, 70, 229));
+    background: var(--nx-bg-tertiary, rgb(241, 245, 249));
+}
+
+.nx-ai-chat-input-wrap.is-drag-over {
+    outline: 2px dashed var(--nx-accent, rgb(79, 70, 229));
+    outline-offset: -2px;
+    border-radius: var(--nx-radius-md, 10px);
+}
+
+.nx-ai-chat-att-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--nx-space-2, 0.5rem);
+    padding: 0 var(--nx-space-1, 0.25rem) var(--nx-space-2, 0.5rem);
+}
+
+.nx-ai-chat-atts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--nx-space-2, 0.5rem);
+    margin-bottom: var(--nx-space-2, 0.5rem);
+}
+
+.nx-ai-chat-att {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 220px;
+    padding: 4px 8px;
+    border-radius: var(--nx-radius-full, 999px);
+    background: var(--nx-bg-tertiary, rgb(241, 245, 249));
+    border: 1px solid var(--nx-border, rgb(226, 232, 240));
+    color: var(--nx-text-secondary, rgb(71, 85, 105));
+    font-size: 12px;
+    line-height: 1.4;
+    text-decoration: none;
+}
+
+.nx-ai-chat-att:hover {
+    border-color: var(--nx-accent, rgb(79, 70, 229));
+}
+
+.nx-ai-chat-att.is-error {
+    border-color: var(--nx-danger, rgb(220, 38, 38));
+}
+
+.nx-ai-chat-att-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    object-fit: cover;
+    flex: none;
+}
+
+.nx-ai-chat-att-icon {
+    flex: none;
+    opacity: 0.7;
+}
+
+.nx-ai-chat-att-name {
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nx-ai-chat-att-state {
+    flex: none;
+    font-size: 11px;
+    color: var(--nx-text-muted, rgb(100, 116, 139));
+}
+
+.nx-ai-chat-att-state.is-error {
+    color: var(--nx-danger, rgb(220, 38, 38));
+}
+
+.nx-ai-chat-att-remove {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--nx-text-muted, rgb(100, 116, 139));
+    cursor: pointer;
+    padding: 0;
+}
+
+.nx-ai-chat-att-remove:hover {
+    color: var(--nx-danger, rgb(220, 38, 38));
+    background: var(--nx-bg-surface, #fff);
 }
 
 /* ===== nexus-mobile.css ===== */

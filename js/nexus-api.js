@@ -335,6 +335,8 @@
         }
 
         get(url, params = {}, options = {}) {
+            params = params || {};
+            options = options || {};
             const filtered = {};
             Object.entries(params).forEach(([k, v]) => {
                 if (v !== undefined && v !== null && v !== '') filtered[k] = v;
