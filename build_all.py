@@ -32,6 +32,7 @@ FILES: list[str] = [
     "nexus-markdown.js",
     "nexus-streamdown.js",
     "nexus-chat.js",
+    "nexus-tts.js",
     "nexus-structured.js",
     "nexus-crud.js",
     "nexus-deep-link.js",

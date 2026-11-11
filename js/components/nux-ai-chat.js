@@ -21,7 +21,7 @@
             welcome: { type: Object, default: () => ({}) },
             quickReplies: { type: Array, default: () => [] },
             roles: { type: Object, default: () => ({}) },
-            placeholder: { type: String, default: '输入消息，Enter发送，Shift+Enter换行' },
+            placeholder: { type: String, default: '输入消息，Enter 发送' },
             disabled: { type: Boolean, default: false },
             scrollThreshold: { type: Number, default: 150 },
             streaming: { type: Boolean, default: false }
@@ -201,6 +201,8 @@
                 }
             }
 
+            const metaChips = (m) => H.metaChips(m);
+
             function copyMessageError(msg) {
                 const text = (msg && msg.errorMsg) || errorMsg.value || '生成失败';
                 if (window.NexusUtils && NexusUtils.copyText) {
@@ -309,7 +311,7 @@
                 elapsed, kbHeight, scrollEl, inputEl, listEl, feat, inputCfg, roleCfg,
                 renderMarkdown, send, stop, retry, clear, regenerate, editResend,
                 copyMessage, copyMessageError, startEdit, cancelEdit, confirmEdit, scrollToBottom,
-                isCitedRefs,
+                metaChips, isCitedRefs,
                 onScroll, onInput, onKeydown, onCompositionStart, onCompositionEnd,
                 clickQuickReply, smartScroll, onWidgetAction, onVoiceResult
             };

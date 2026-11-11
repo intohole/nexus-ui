@@ -27,11 +27,12 @@
                             </div>
                             <div class="nx-ai-chat-bubble">
                                 <slot name="message-before" :msg="m"></slot>
-                                <div v-if="feat.richReasoning && m.thinking" class="nx-ai-chat-reasoning">
-                                    <button type="button" class="nx-ai-chat-reasoning-toggle" @click="m.showReasoning = !m.showReasoning">
+                                <div v-if="feat.richReasoning && (m.thinking || m.thinkingMs)" class="nx-ai-chat-reasoning" :class="{ 'is-open': m.showReasoning }">
+                                    <button type="button" class="nx-ai-chat-reasoning-toggle" @click="m._reasoningManual = true; m.showReasoning = !m.showReasoning">
                                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" :style="m.showReasoning ? 'transform:rotate(180deg)' : ''"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                         <span>思考过程</span>
-                                        <span v-if="m.streaming">…</span>
+                                        <span v-if="m.streaming" class="nx-ai-chat-reasoning-live">思考中…</span>
+                                        <span v-else-if="m.thinkingMs" class="nx-ai-chat-reasoning-ms">{{ m.thinkingMs }}s</span>
                                     </button>
                                     <div v-if="m.showReasoning" class="nx-ai-chat-reasoning-body">{{ m.thinking }}</div>
                                 </div>
@@ -72,6 +73,9 @@
                                     <div v-else class="nx-ai-chat-content nx-md" v-html="renderMarkdown(m.content)"></div>
                                     <span v-if="m.streaming" class="nx-ai-chat-cursor"></span>
                                 </template>
+                                <div v-if="feat.metaStrip && metaChips(m).length" class="nx-ai-chat-meta-strip">
+                                    <span v-for="(c, ci) in metaChips(m)" :key="'mc' + ci" class="nx-ai-chat-meta-chip">{{ c }}</span>
+                                </div>
                                 <div v-if="feat.richReferences && m.references && m.references.length" class="nx-ai-chat-references">
                                     <nux-citations v-if="isCitedRefs(m.references)" :items="m.references" title="引用来源"></nux-citations>
                                     <template v-else>

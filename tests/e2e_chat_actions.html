@@ -3,39 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>对话控制面 e2e（S64：重新生成/编辑重发/失败态标准化）</title>
-    <script src="../vendor/vue.global.prod.js?v=2.76.0"></script>
-    <script src="../js/nexus-utils.js?v=2.76.0"></script>
-    <script src="../js/nexus-markdown.js?v=2.76.0"></script>
-    <script src="../js/nexus-streamdown.js?v=2.76.0"></script>
-    <link rel="stylesheet" href="../css/nexus-tokens.css?v=2.76.0">
-    <link rel="stylesheet" href="../css/nexus-base.css?v=2.76.0">
-    <link rel="stylesheet" href="../css/nexus-markdown.css?v=2.76.0">
-    <link rel="stylesheet" href="../css/nexus-ai-chat.css?v=2.76.0">
+    <title>对话控制面 e2e（S64+v2.87.0：控制面默认开/reasoning 自动开合/meta 用量条）</title>
+    <script src="../vendor/vue.global.prod.js?v=2.87.0"></script>
+    <script src="../js/nexus-utils.js?v=2.87.0"></script>
+    <script src="../js/nexus-markdown.js?v=2.87.0"></script>
+    <script src="../js/nexus-streamdown.js?v=2.87.0"></script>
+    <link rel="stylesheet" href="../css/nexus-tokens.css?v=2.87.0">
+    <link rel="stylesheet" href="../css/nexus-base.css?v=2.87.0">
+    <link rel="stylesheet" href="../css/nexus-markdown.css?v=2.87.0">
+    <link rel="stylesheet" href="../css/nexus-ai-chat.css?v=2.87.0">
     <style>
         body { display: flex; gap: 16px; }
         .e2e-col { flex: 1; min-width: 0; height: 100vh; display: flex; flex-direction: column; }
         .e2e-col h2 { font-size: 13px; margin: 8px 0 4px; color: #475569; }
         .e2e-chat { flex: 1; min-height: 0; }
+        @media (max-width: 900px) {
+            body { flex-direction: column; }
+            .e2e-col { height: auto; min-height: 480px; }
+        }
     </style>
 </head>
 <body>
 <div class="e2e-col" id="app-on">
-    <h2>feat.chatActions: true</h2>
-    <nux-ai-chat ref="chat" class="e2e-chat" :send-handler="fakeStream" :features="{ voice: false, chatActions: true }" @regenerate="onEvt('regenerate', $event)" @edit-resend="onEvt('edit-resend', $event)"></nux-ai-chat>
+    <h2>默认（chatActions 默认开，不显式传）</h2>
+    <nux-ai-chat ref="chat" class="e2e-chat" :send-handler="fakeStream" :features="{ voice: false }" @regenerate="onEvt('regenerate', $event)" @edit-resend="onEvt('edit-resend', $event)"></nux-ai-chat>
 </div>
 <div class="e2e-col" id="app-off">
-    <h2>feat.chatActions 默认关（对照）</h2>
-    <nux-ai-chat ref="chat" class="e2e-chat" :send-handler="fakeStream" :features="{ voice: false }"></nux-ai-chat>
+    <h2>feat.chatActions 显式关（对照）</h2>
+    <nux-ai-chat ref="chat" class="e2e-chat" :send-handler="fakeStream" :features="{ voice: false, chatActions: false }"></nux-ai-chat>
 </div>
-<script src="../js/components/nux-ai-chat-helpers.js?v=2.76.0"></script>
-<script src="../js/components/nux-ai-chat-template.js?v=2.76.0"></script>
-<script src="../js/components/nux-ai-widgets.js?v=2.76.0"></script>
-<script src="../js/components/nux-ai-widgets-rich.js?v=2.76.0"></script>
-<script src="../js/components/nux-tool-call.js?v=2.76.0"></script>
-<script src="../js/components/nux-citations.js?v=2.76.0"></script>
-<script src="../js/components/nux-confidence.js?v=2.76.0"></script>
-<script src="../js/components/nux-ai-chat.js?v=2.76.0"></script>
+<div class="e2e-col" id="app-rich">
+    <h2>reasoning 自动开合 + metaStrip</h2>
+    <nux-ai-chat ref="chat" class="e2e-chat" :send-handler="fakeStream" :features="{ voice: false, metaStrip: true, streamFallback: false }"></nux-ai-chat>
+</div>
+<script src="../js/nexus-chat.js?v=2.87.0"></script>
+<script src="../js/components/nux-ai-chat-helpers.js?v=2.87.0"></script>
+<script src="../js/components/nux-ai-chat-template.js?v=2.87.0"></script>
+<script src="../js/components/nux-ai-widgets.js?v=2.87.0"></script>
+<script src="../js/components/nux-ai-widgets-rich.js?v=2.87.0"></script>
+<script src="../js/components/nux-tool-call.js?v=2.87.0"></script>
+<script src="../js/components/nux-citations.js?v=2.87.0"></script>
+<script src="../js/components/nux-confidence.js?v=2.87.0"></script>
+<script src="../js/components/nux-ai-chat.js?v=2.87.0"></script>
 <script>
 window.__E2E = { phase: 'init', errors: [], events: [], result: null };
 window.addEventListener('error', function (e) { window.__E2E.errors.push(String(e.message)); });
@@ -47,6 +56,25 @@ const REPLIES = {
 };
 
 function fakeStream(text, callbacks) {
+    if (text === '第四问') {
+        let think = '';
+        let said = '';
+        setTimeout(function () { callbacks.onEvent('thinking', { content: '用户在问第四问，我需要分三步考虑。' }); }, 30);
+        setTimeout(function () {
+            const reply = '这是带推理过程的第四问回答。';
+            const timer = setInterval(function () {
+                if (said.length >= reply.length) {
+                    clearInterval(timer);
+                    callbacks.onEvent('meta', { type: 'meta', usage: { total_tokens: 128 }, duration_ms: 2400 });
+                    callbacks.onDone(said);
+                    return;
+                }
+                said += reply.slice(said.length, said.length + 3);
+                callbacks.onChunk('', said);
+            }, 20);
+        }, 260);
+        return;
+    }
     if (REPLIES[text] === null) {
         setTimeout(function () { callbacks.onError(new Error('注入的失败：上游 500')); }, 120);
         return;
@@ -66,11 +94,11 @@ function fakeStream(text, callbacks) {
     }, 20);
 }
 
-function mountApp(sel) {
+function mountApp(sel, extra) {
     const app = Vue.createApp({
         setup() {
             function onEvt() {}
-            return { fakeStream: fakeStream, onEvt: onEvt };
+            return Object.assign({ fakeStream: fakeStream, onEvt: onEvt }, extra || {});
         }
     });
     ['NuxAiChat', 'NuxAiWidgets', 'NuxToolCall', 'NuxCitations', 'NuxConfidence'].forEach(function (n) {
@@ -81,27 +109,29 @@ function mountApp(sel) {
 
 const onApp = mountApp('#app-on');
 const offApp = mountApp('#app-off');
+const richApp = mountApp('#app-rich');
 window.__E2E.onApp = onApp;
 window.__E2E.offApp = offApp;
+window.__E2E.richApp = richApp;
 onApp.onEvt = function (name, payload) { window.__E2E.events.push([name, payload]); };
 
 function setInput(vm, text) {
-    const ta = vm.$refs.chat.$.setupState; // expose 面拿不到内部 input；走 DOM
-    const el = document.querySelector('#app-on .nx-ai-chat-input');
+    const el = document.querySelector((vm === onApp ? '#app-on ' : vm === offApp ? '#app-off ' : '#app-rich ') + '.nx-ai-chat-input');
     const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set;
     setter.call(el, text);
     el.dispatchEvent(new Event('input', { bubbles: true }));
 }
 function pressEnter(vm) {
-    const el = document.querySelector('#app-on .nx-ai-chat-input');
+    const el = document.querySelector((vm === onApp ? '#app-on ' : vm === offApp ? '#app-off ' : '#app-rich ') + '.nx-ai-chat-input');
     el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
 }
 function msgs(vm) {
-    return Array.from(document.querySelectorAll((vm === onApp ? '#app-on ' : '#app-off ') + '.nx-ai-chat-msg'));
+    const scope = vm === onApp ? '#app-on ' : vm === offApp ? '#app-off ' : '#app-rich ';
+    return Array.from(document.querySelectorAll(scope + '.nx-ai-chat-msg'));
 }
 function textOf(el) { return (el.querySelector('.nx-ai-chat-content') || {}).textContent || ''; }
 function waitIdle(vm, timeout) {
-    var scope = vm === onApp ? '#app-on ' : '#app-off ';
+    var scope = vm === onApp ? '#app-on ' : vm === offApp ? '#app-off ' : '#app-rich ';
     var t0 = Date.now();
     var saw = false;
     return new Promise(function (resolve) {
@@ -113,7 +143,7 @@ function waitIdle(vm, timeout) {
                 return resolve(true);
             }
             if (Date.now() - t0 > (timeout || 6000)) return resolve(false);
-            setTimeout(poll, 50);
+            setTimeout(poll, 40);
         })();
     });
 }
@@ -122,14 +152,14 @@ function waitIdle(vm, timeout) {
     const R = {};
     await new Promise(function (r) { setTimeout(r, 100); });
 
-    // ① fill+Enter 真实动线发送
+    // ① fill+Enter 真实动线发送（默认开列）
     setInput(onApp, '第一问');
     pressEnter(onApp);
     await waitIdle(onApp);
     R.sendDone = msgs(onApp).length === 2 && /第一问/.test(textOf(msgs(onApp)[1]));
     R.sendViaEnter = /对.{0,3}第一问/.test(textOf(msgs(onApp)[1]));
 
-    // ② 重新生成：点 assistant 消息上的「重新生成」
+    // ② 重新生成（默认开列，无显式 chatActions 传参）
     const regenBtn = Array.from(msgs(onApp)[1].querySelectorAll('.nx-ai-chat-action-btn')).find(function (b) { return b.textContent === '重新生成'; });
     R.regenBtnPresent = !!regenBtn;
     if (regenBtn) regenBtn.click();
@@ -137,7 +167,7 @@ function waitIdle(vm, timeout) {
     R.regenTruncate = msgs(onApp).length === 2;
     R.regenEvt = window.__E2E.events.some(function (e) { return e[0] === 'regenerate' && e[1] === '第一问'; });
 
-    // ③ 编辑重发：点 user 消息上的「编辑」→ textarea 改文案 → 点「重发」
+    // ③ 编辑重发
     const editBtn = Array.from(msgs(onApp)[0].querySelectorAll('.nx-ai-chat-action-btn')).find(function (b) { return b.textContent === '编辑'; });
     R.editBtnPresent = !!editBtn;
     if (editBtn) editBtn.click();
@@ -156,7 +186,7 @@ function waitIdle(vm, timeout) {
     R.editResendDone = msgs(onApp).length === 2 && /编辑后文案/.test(textOf(msgs(onApp)[1]));
     R.editEvt = window.__E2E.events.some(function (e) { return e[0] === 'edit-resend' && e[1] === '改后的第二问'; });
 
-    // ④ 失败态标准化：第三问注入 onError（按注入模式推导：error-bar 在场+文案+复制详情+重试）
+    // ④ 失败态标准化
     setInput(onApp, '第三问');
     pressEnter(onApp);
     await waitIdle(onApp);
@@ -166,19 +196,38 @@ function waitIdle(vm, timeout) {
     R.failCopyBtn = !!(bar && Array.from(bar.querySelectorAll('button')).some(function (b) { return b.textContent === '复制详情'; }));
     R.failRetryBtn = !!(bar && Array.from(bar.querySelectorAll('button')).some(function (b) { return b.textContent === '重试'; }));
 
-    // ⑤ 对照实例：默认关零变化（无编辑/重新生成钮，error-bar 无复制详情）
-    setInput2(offApp, '第一问');
-    function setInput2(vm, text) {
-        const el = document.querySelector('#app-off .nx-ai-chat-input');
-        const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set;
-        setter.call(el, text);
-        el.dispatchEvent(new Event('input', { bubbles: true }));
-        el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-    }
+    // ⑤ 对照列：显式关零变化
+    setInput(offApp, '第一问');
+    pressEnter(offApp);
     await waitIdle(offApp);
     const offBtns = Array.from(document.querySelectorAll('#app-off .nx-ai-chat-action-btn')).map(function (b) { return b.textContent; });
     R.offNoNewButtons = offBtns.indexOf('编辑') < 0 && offBtns.indexOf('重新生成') < 0;
     R.offCopyOnly = offBtns.every(function (t) { return t === '复制'; });
+
+    // ⑥ reasoning 自动开合 + meta 用量条（富列）
+    setInput(richApp, '第四问');
+    pressEnter(richApp);
+    const sawOpen = await new Promise(function (resolve) {
+        var t0 = Date.now();
+        (function poll() {
+            var body = document.querySelector('#app-rich .nx-ai-chat-reasoning-body');
+            if (body && body.textContent.length > 0) return resolve(true);
+            if (Date.now() - t0 > 4000) return resolve(false);
+            setTimeout(poll, 40);
+        })();
+    });
+    R.richAutoOpenDuringStream = sawOpen;
+    await waitIdle(richApp);
+    const richMsg = msgs(richApp)[1];
+    R.richAutoCollapseAfterDone = !richMsg.querySelector('.nx-ai-chat-reasoning-body');
+    R.richReasoningMsShown = !!richMsg.querySelector('.nx-ai-chat-reasoning-ms');
+    const toggleBtn = richMsg.querySelector('.nx-ai-chat-reasoning-toggle');
+    if (toggleBtn) toggleBtn.click();
+    await new Promise(function (r) { setTimeout(r, 50); });
+    R.richManualReopen = !!richMsg.querySelector('.nx-ai-chat-reasoning-body');
+    const chips = Array.from(richMsg.querySelectorAll('.nx-ai-chat-meta-chip')).map(function (c) { return c.textContent; });
+    R.metaChipsShown = chips.length >= 2 && /128 tokens/.test(chips.join('|')) && /2\.4s/.test(chips.join('|'));
+    R.metaStripOffElsewhere = !document.querySelector('#app-on .nx-ai-chat-meta-strip') && !document.querySelector('#app-off .nx-ai-chat-meta-strip');
 
     window.__E2E.result = R;
     window.__E2E.phase = 'done';

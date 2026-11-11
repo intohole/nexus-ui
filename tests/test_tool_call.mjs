@@ -20,6 +20,7 @@ const load = (f) => (0, eval)(readFileSync(ROOT + f, 'utf8'));
 load('components/nux-tool-call.js');
 load('components/nux-confidence.js');
 load('components/nux-citations.js');
+load('nexus-chat.js');
 load('components/nux-ai-chat-helpers.js');
 load('nexus-components.js');
 

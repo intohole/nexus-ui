@@ -7,6 +7,7 @@ const results = [];
 const check = (name, cond) => { results.push([name, !!cond]); };
 const load = (f) => (0, eval)(readFileSync(ROOT + f, 'utf8'));
 
+load('nexus-chat.js');
 load('components/nux-ai-chat-helpers.js');
 const H = window.NuxAiChatHelpers;
 
@@ -242,7 +243,19 @@ const flush = () => new Promise((r) => setImmediate(r));
     env.props.apiConfig.streamUrl = '/api/chat/stream';
     env.props.sendHandler = null;
     window.NexusApi = class { };
-    window.NexusChat = { ChatController: class { constructor(cfg) { usedDefault = !!cfg.api && cfg.url === '/api/chat/stream'; } start() {} stop() {} } };
+    window.NexusChat = {
+        ChatController: class { constructor(cfg) { usedDefault = !!cfg.api && cfg.url === '/api/chat/stream'; } start() {} stop() {} },
+        createStreamController: function (cfg, content, callbacks, onController) {
+            const ctrl = new window.NexusChat.ChatController({
+                api: cfg.apiInstance || (window.NexusApi ? new window.NexusApi() : null),
+                url: cfg.streamUrl
+            });
+            if (onController) onController(ctrl);
+            callbacks.registerStop(() => ctrl.stop());
+            ctrl.start();
+            return ctrl;
+        }
+    };
     const a = H.createActions(env);
     const p = a.send('q');
     await flush();
@@ -258,7 +271,7 @@ const flush = () => new Promise((r) => setImmediate(r));
     const a = H.createActions(env);
     env.list.push({ id: 'u1', role: 'user', content: '第一问' }, { id: 'a1', role: 'assistant', content: '答一' });
     a.regenerate();
-    check('regenerate: feat.chatActions 默认关时 no-op', env.list.length === 2 && !env.isStreaming.value);
+    check('regenerate: feat.chatActions 显式关闭时 no-op', env.list.length === 2 && !env.isStreaming.value);
 }
 {
     const env = makeEnv();
@@ -335,6 +348,68 @@ const flush = () => new Promise((r) => setImmediate(r));
     await a.send('q2');
     check('settle: 失败文案落消息级 errorMsg（首条不被末条覆盖）',
         env.list[1].errorMsg === '这条会失败' && env.list[3].errorMsg === '这条会失败');
+}
+
+// ---- v2.87.0 前沿对齐：分级默认 / reasoning 自动开合 / thinkingMs / metaChips ----
+load('nexus-chat.js');
+{
+    check('defaultFeatures: chatActions 分级默认开', H.defaultFeatures.chatActions === true);
+    check('defaultFeatures: reasoningAuto 默认开', H.defaultFeatures.reasoningAuto === true);
+    check('defaultFeatures: metaStrip 默认关（拥挤风险隔离）', H.defaultFeatures.metaStrip === false);
+}
+{
+    const env = makeEnv({ feat: { reasoningAuto: true } });
+    let finish;
+    env.props.sendHandler = (text, cb) => new Promise((resolve) => {
+        cb.onEvent('thinking', { content: '我先想想' });
+        finish = () => { cb.onChunk('答', '答'); cb.onDone('答'); resolve(); };
+    });
+    const a = H.createActions(env);
+    const p = a.send('q');
+    await flush();
+    const m = env.list[1];
+    check('reasoningAuto: thinking 事件自动展开（流式中）', m.showReasoning === true);
+    finish();
+    await p;
+    check('reasoningAuto: 收口自动收起（未手动干预）', m.showReasoning === false && m.thinking === '');
+    check('reasoningAuto: thinkingMs 首响记账', typeof m.thinkingMs === 'number' && m.thinkingMs >= 0);
+}
+{
+    const env = makeEnv();
+    env.feat.reasoningAuto = false;
+    env.props.sendHandler = async (text, cb) => {
+        cb.onEvent('thinking', { content: '想想' });
+        cb.onChunk('答', '答');
+        cb.onDone('答');
+    };
+    const a = H.createActions(env);
+    await a.send('q');
+    check('reasoningAuto=false: 全程不自动开合', env.list[1].showReasoning === false);
+}
+{
+    const env = makeEnv({ feat: { reasoningAuto: true } });
+    let finish;
+    env.props.sendHandler = (text, cb) => new Promise((resolve) => {
+        cb.onEvent('thinking', { content: '想想' });
+        finish = () => { cb.onChunk('答', '答'); cb.onDone('答'); resolve(); };
+    });
+    const a = H.createActions(env);
+    const p = a.send('q');
+    await flush();
+    const m = env.list[1];
+    check('reasoningAuto: 流式中自动展开', m.showReasoning === true);
+    m._reasoningManual = true;
+    finish();
+    await p;
+    check('reasoningAuto: 手动开过则收口不收起', m.showReasoning === true);
+}
+{
+    check('metaChips: tokens+秒级耗时双 chip',
+        JSON.stringify(H.metaChips({ meta: { usage: { total_tokens: 128 }, duration_ms: 2450 } }))
+            === JSON.stringify(['128 tokens', '2.5s']));
+    check('metaChips: 毫秒级耗时', H.metaChips({ meta: { duration_ms: 340 } })[0] === '340ms');
+    check('metaChips: 无 meta 返回空', H.metaChips({}).length === 0);
+    check('metaChips: thinkingMs 追加思考 chip', H.metaChips({ meta: {}, thinkingMs: 1.2 })[0] === '思考 1.2s');
 }
 
 let pass = 0;

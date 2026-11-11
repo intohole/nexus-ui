@@ -516,12 +516,12 @@ const html = NexusMarkdown.render(mdText);`,
         id: 'aichat',
         tag: 'nux-ai-chat',
         title: 'AI 对话组件',
-        desc: '流式输出、停止、重试、快捷回复、语音输入全部内置；本页用本地模拟流演示，接 sendHandler 即接真实模型',
+        desc: '流式输出、停止、重试、消息操作条（编辑/复制/重新生成，默认开）、思考过程自动开合、用量条（metaStrip）、快捷回复、语音输入全部内置；本页用本地模拟流演示，接 sendHandler 即接真实模型',
         tpl: `
 <div style="height: 420px">
   <nux-ai-chat :messages="msgs" :send-handler="handler"
-               :features="{ voice: true }" :input-config="{ voiceUrl: '/mock/transcribe' }"
-               placeholder="问点什么，回车发送"></nux-ai-chat>
+               :features="{ voice: true, metaStrip: true }" :input-config="{ voiceUrl: '/mock/transcribe' }"
+               placeholder="问点什么，回车发送（AI 回答 hover 出操作条）"></nux-ai-chat>
 </div>`,
         code: `<nux-ai-chat :messages="msgs" :send-handler="handler"
   :features="{ voice: true }" :input-config="{ voiceUrl: '/api/transcribe' }"
@@ -547,14 +547,17 @@ async handler(text, cb) {
         methods: {
           handler(text, cb) {
             const reply = text.includes('能做什么')
-              ? '我可以流式回答问题、渲染 **Markdown**、支持**停止**与**重试**。\n\n- 接入 `sendHandler` 即可对接任意模型\n- 接入 `apiConfig` 可走统一的 NexusApi 网关'
+              ? '我可以流式回答问题、渲染 **Markdown**、支持**停止**与**重试**。\n\n- 接入 `sendHandler` 即可对接任意模型\n- 接入 `apiConfig` 可走统一的 NexusApi 网关\n- 消息操作条默认开：hover 回答可复制/重新生成，hover 提问可编辑重发'
               : '收到：「' + text + '」。\n\n这是本地模拟的流式回复。把 `sendHandler` 换成你的模型网关，这里就会输出真实回答。';
+            cb.onEvent('thinking', { content: '用户问的是「' + text + '」，我先组织一下回答的要点，再开始流式输出。' });
             let i = 0;
+            const t0 = Date.now();
             const timer = setInterval(() => {
               i += 2;
               cb.onChunk(reply.slice(0, i), reply.slice(0, i));
               if (i >= reply.length) {
                 clearInterval(timer);
+                cb.onEvent('meta', { type: 'meta', usage: { total_tokens: 96 + reply.length }, duration_ms: Date.now() - t0 });
                 cb.onDone(reply);
               }
             }, 24);
@@ -690,6 +693,40 @@ async handler(text, cb) {
             };
             window.showToast('压缩完成', 'success');
           }
+        }
+      },
+      {
+        id: 'nexus-tts',
+        tag: 'NexusTts',
+        title: 'NexusTts 双通道朗读',
+        desc: 'TTS 原语：纯前端 speechSynthesis 优先，config({storeKey, prefer, endpoint, requestor}) 一行接服务端合成与语音开关记忆',
+        tpl: `
+<div>
+  <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+    <nux-button size="sm" @click="speak">朗读一段话</nux-button>
+    <nux-button size="sm" variant="ghost" @click="stop">停止</nux-button>
+    <span style="font-size:13px; color: var(--nx-text-secondary)">state: {{ state }}</span>
+  </div>
+</div>`,
+        code: `NexusTts.config({ storeKey: 'nexus-tts-voice', prefer: 'web' });
+const ok = await NexusTts.speak('你好，这是共享层朗读原语。');
+NexusTts.stop();
+NexusTts.onState(s => console.log(s)); // idle | speaking`,
+        data() { return { state: 'idle' }; },
+        mounted() {
+          if (window.NexusTts) this._off = NexusTts.onState((s) => { this.state = s; });
+        },
+        beforeUnmount() {
+          if (this._off) this._off();
+          if (window.NexusTts) NexusTts.stop();
+        },
+        methods: {
+          async speak() {
+            if (!window.NexusTts) { window.showToast('NexusTts 未加载', 'error'); return; }
+            const ok = await NexusTts.speak('你好，这是 Nexus UI 共享层的朗读原语，优先走浏览器本地语音，配置 endpoint 后可切换服务端合成。');
+            if (!ok) window.showToast('当前环境不支持本地语音合成', 'warning');
+          },
+          stop() { if (window.NexusTts) NexusTts.stop(); }
         }
       }
     ]

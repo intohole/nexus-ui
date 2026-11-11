@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    const CHAT_VERSION = '1.1.0';
+    const CHAT_VERSION = '1.2.0';
 
     function delegateMarkdown(text) {
         if (window.NexusMarkdown && typeof window.NexusMarkdown.render === 'function') {
@@ -121,6 +121,131 @@
         }
     }
 
+    function normalizeToolStatus(status) {
+        const s = String(status || '').toLowerCase();
+        if ({ running: 1, executing: 1, in_progress: 1, pending: 1 }[s]) return 'running';
+        if ({ error: 1, failed: 1, failure: 1, cancelled: 1 }[s]) return 'error';
+        return 'done';
+    }
+
+    function routeRichEvent(msg, event, data) {
+        const payload = data || {};
+        const type = String(event || payload.type || '').toLowerCase();
+        let handled = true;
+        if (type === 'meta') {
+            msg.meta = payload;
+        } else if (type === 'thinking') {
+            msg.thinking = (msg.thinking || '') + (payload.content || payload.thinking || '');
+        } else if (type === 'tool' || type === 'tool_executed' || type === 'tool_update' || type === 'tool_result') {
+            const calls = msg.toolCalls || (msg.toolCalls = []);
+            const tools = msg.tools || (msg.tools = []);
+            const callId = payload.id || payload.call_id || payload.tool_call_id || '';
+            const label = payload.display_name || payload.name || payload.tool || '';
+            const isUpdate = type === 'tool_update' || type === 'tool_result';
+            if (isUpdate) {
+                const target = callId
+                    ? calls.find((c) => c.id === callId)
+                    : calls.find((c) => c.name === label && c.status === 'running');
+                if (target) {
+                    const status = payload.status
+                        ? normalizeToolStatus(payload.status)
+                        : (payload.error ? 'error' : 'done');
+                    target.status = status;
+                    if (payload.result !== undefined) target.result = payload.result;
+                    if (payload.output !== undefined && payload.result === undefined) target.result = payload.output;
+                    if (payload.error) target.error = payload.error;
+                    if (payload.duration_ms !== undefined) target.duration_ms = payload.duration_ms;
+                    if (!target.name && label) target.name = label;
+                    return true;
+                }
+            }
+            const hasDetail = !!(payload.status || payload.args || payload.input
+                || payload.result || payload.output || payload.error || payload.duration_ms);
+            if (!hasDetail && !isUpdate) {
+                if (label) tools.push(label);
+                return true;
+            }
+            const status = payload.status
+                ? normalizeToolStatus(payload.status)
+                : (payload.error ? 'error' : (isUpdate ? 'done' : 'running'));
+            calls.push({
+                id: callId || ('c_' + calls.length + '_' + Date.now()),
+                name: label || payload.display_name || '工具调用',
+                status: status,
+                args: payload.args !== undefined ? payload.args : payload.input,
+                result: payload.result !== undefined ? payload.result : payload.output,
+                error: payload.error || '',
+                duration_ms: payload.duration_ms || 0
+            });
+        } else if (type === 'references' || type === 'reference') {
+            msg.references = payload.references || payload.items || [];
+        } else if (type === 'credibility' && (payload.level || payload.pct !== undefined)) {
+            msg.credibility = payload;
+        } else if (type === 'warning' || type === 'credibility') {
+            const warnings = msg.warnings || (msg.warnings = []);
+            const text = payload.content || payload.message || payload.text || '';
+            if (text) warnings.push(text);
+        } else if (type === 'widget' || type === 'component') {
+            const widgets = msg.widgets || (msg.widgets = []);
+            widgets.push({
+                id: payload.id || ('w_' + widgets.length + '_' + Date.now()),
+                type: payload.widget || payload.component || payload.type || '',
+                title: payload.title || '',
+                data: payload.data || payload
+            });
+        } else if (type === 'widget_update' || type === 'component_update') {
+            const widgets = msg.widgets || (msg.widgets = []);
+            const target = widgets.find((w) => w.id === payload.id);
+            if (target) {
+                if (payload.data) target.data = payload.data;
+                if (payload.title) target.title = payload.title;
+                if (payload.disabled !== undefined) {
+                    target.data = Object.assign({}, target.data || {}, { disabled: !!payload.disabled });
+                }
+            }
+        } else {
+            handled = false;
+        }
+        return handled;
+    }
+
+    function createStreamController(cfg, content, callbacks, onController) {
+        if (!cfg.streamUrl) { callbacks.onError(new Error('未配置 apiConfig.streamUrl')); return null; }
+        const api = cfg.apiInstance || (window.NexusApi ? new NexusApi() : null);
+        if (!api) { callbacks.onError(new Error('NexusApi 未加载')); return null; }
+        if (!window.NexusChat || !NexusChat.ChatController) { callbacks.onError(new Error('NexusChat 未加载')); return null; }
+        const ctrl = new NexusChat.ChatController({
+            api: api,
+            url: cfg.streamUrl,
+            body: Object.assign({}, cfg.body || {}, { content: content }),
+            contentKey: cfg.contentKey || 'content',
+            eventKey: cfg.eventKey || 'delta',
+            doneKey: cfg.doneKey || 'done',
+            onChunk: (chunk, full) => callbacks.onChunk(chunk, full),
+            onDone: (full) => callbacks.onDone(full),
+            onError: (err) => callbacks.onError(err),
+            onEvent: (ev, data) => { if (callbacks.onEvent) callbacks.onEvent(ev, data); }
+        });
+        if (onController) onController(ctrl);
+        callbacks.registerStop(() => ctrl.stop());
+        ctrl.start();
+        return ctrl;
+    }
+
+    async function fallbackRequest(cfg, content, assistantMsg, fx) {
+        let ok = true, err = '';
+        try {
+            const api = cfg.apiInstance || (window.NexusApi ? new NexusApi() : null);
+            if (!api) throw new Error('NexusApi 未加载');
+            const res = await api.post(cfg.fallbackUrl, Object.assign({}, cfg.body || {}, { content: content }));
+            assistantMsg.content = res.data.content || res.data.answer || res.data.reply || '（无内容）';
+        } catch (e) {
+            ok = false;
+            err = e.message || '降级同步也失败';
+        }
+        fx.onFinish(ok, assistantMsg, err);
+    }
+
     function createStreamingButton(opts) {
         const options = opts || {};
         const button = options.button;
@@ -180,7 +305,11 @@
         createStreamingButton: createStreamingButton,
         renderError: renderError,
         bindRetry: bindRetry,
-        typingCursor: typingCursor
+        typingCursor: typingCursor,
+        normalizeToolStatus: normalizeToolStatus,
+        routeRichEvent: routeRichEvent,
+        createStreamController: createStreamController,
+        fallbackRequest: fallbackRequest
     };
 
     window.NexusChat = NexusChat;
