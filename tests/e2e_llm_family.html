@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM 组件族视觉走查</title>
+<script src="/js/nexus-theme-init.js"></script>
+<link rel="stylesheet" href="/css/nexus-all.css">
+<link rel="stylesheet" href="/vendor/highlight-styles/github-dark.min.css">
+<style>
+    body { padding: 28px 32px; font-family: system-ui, -apple-system, sans-serif; max-width: 860px; margin: 0 auto; }
+    h3 { margin: 26px 0 10px; font-size: 15px; color: var(--nx-text-secondary, #667); border-bottom: 1px solid var(--nx-border, #e5e8ef); padding-bottom: 6px; }
+</style>
+</head>
+<body>
+<div id="app">
+    <h3>AI 标识（badge 双档双色调）</h3>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <nux-ai-badge text="AI 生成"></nux-ai-badge>
+        <nux-ai-badge size="sm" text="AI 生成"></nux-ai-badge>
+        <nux-ai-badge tone="neutral" text="AI 辅助"></nux-ai-badge>
+    </div>
+
+    <h3>打字指示（indicator 四态）</h3>
+    <div style="display:grid;gap:10px">
+        <nux-ai-indicator state="awaiting"></nux-ai-indicator>
+        <nux-ai-indicator state="routing"></nux-ai-indicator>
+        <nux-ai-indicator state="tool"></nux-ai-indicator>
+        <nux-ai-indicator state="streaming"></nux-ai-indicator>
+    </div>
+
+    <h3>工具调用卡（tool-call 三态）</h3>
+    <nux-tool-call :items="tools"></nux-tool-call>
+
+    <h3>引用来源（citations 三态 verdict）</h3>
+    <nux-citations :items="citations"></nux-citations>
+
+    <h3>任务进度（task-progress 运行态）</h3>
+    <nux-ai-task-progress
+        title="正在生成行程规划"
+        :stages="['理解需求','检索目的地','编排日程','生成文案']"
+        current="编排日程"
+        :percent="62"
+        message="已排定 3/5 天，正在补充美食推荐"></nux-ai-task-progress>
+
+    <h3>任务进度（task-progress 完成态）</h3>
+    <nux-ai-task-progress
+        title="持仓深研完成"
+        :stages="['拉取行情','计算指标','生成结论']"
+        :percent="100"
+        message="已完成，结论见下方卡片"></nux-ai-task-progress>
+
+    <h3>代码块（恒暗代码面+复制钮）</h3>
+    <div id="md-code"></div>
+</div>
+<script src="/vendor/vue.global.prod.js"></script>
+<script src="/vendor/marked.min.js"></script>
+<script src="/vendor/purify.min.js"></script>
+<script src="/vendor/highlight.min.js"></script>
+<script src="/js/nexus-all.js"></script>
+<script src="/js/components/nux-ai-badge.js"></script>
+<script src="/js/components/nux-ai-indicator.js"></script>
+<script src="/js/components/nux-tool-call.js"></script>
+<script src="/js/components/nux-citations.js"></script>
+<script src="/js/components/nux-ai-task-progress.js"></script>
+<script>
+window.__E2E = { phase: 'idle' };
+const app = Vue.createApp({
+    data() {
+        return {
+            tools: [
+                { name: 'stock_quote', status: 'running', args: { code: '600519.SH', fields: 'close,volume' } },
+                { name: 'calendar_lookup', status: 'done', args: { date: '2026-11-11' }, result: { holidays: '无', week: '周三' } },
+                { name: 'send_email', status: 'error', args: { to: 'boss@example.com' }, error: 'SMTP 连接超时（10.0s）' }
+            ],
+            citations: [
+                { n: 1, title: '贵州茅台 2026 年三季报解读', url: 'https://example.com/report/q3', verdict: 'supported' },
+                { n: 2, title: '白酒板块周度跟踪（第 45 周）', url: 'https://example.com/weekly/w45' },
+                { n: 3, title: '北向资金流向监测日报', url: 'https://example.com/flow/daily', verdict: 'partial' },
+                { n: 4, title: '行业政策一览：消费税动向', url: 'https://example.com/policy/tax', verdict: 'unsupported' }
+            ]
+        };
+    },
+    mounted() {
+        const el = document.getElementById('md-code');
+        if (window.NexusMarkdown && NexusMarkdown.renderTo) {
+            NexusMarkdown.renderTo(el, '```python\ndef hi(name: str) -> str:\n    return f"你好，{name}"\n```\n\n**加粗**与`行内码`混排正常。');
+        } else if (window.NexusMarkdown) {
+            el.innerHTML = NexusMarkdown.render('```python\nprint("hi")\n```');
+            el.classList.add('nx-md');
+            NexusMarkdown.postProcess(el);
+        }
+        this.$nextTick(() => { window.__E2E.phase = 'done'; });
+    }
+});
+app.use({ install: (a) => window.NexusComponents.register(a) });
+app.mount('#app');
+</script>
+</body>
+</html>

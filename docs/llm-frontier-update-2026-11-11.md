@@ -72,18 +72,52 @@ nexus-ui 的 LLM 语义面配色纪律（本轮复核固化，全部 token 化�
 
 验证：mjs 全网绿（actions 63/63 含新增 13 断言、tts 24/24 全新、tool_call 29/29 修装载序）、pytest 18/18、E2E 探针 10/10（亮暗×三端截图）+ --prove-red 判红力自证（注入 display:none 双红）、聚合包双跑 md5 确定性。
 
-## 四、下轮挂账（按价值排序）
+## 四、下轮挂账（按价值排序，前 17 轮更新）
 
 1. **aiPet 后端消息级 regenerate API**（截断+重答）+ 前端 @regenerate/@edit-resend 接线——控制面在服务端持久会话仓的正确打开方式。
-2. **nexus.tasks 长任务原语落码**（契约稿在 docs/nexus-tasks-contract-draft-2026-10-29.md）——AI Elements Task/WebPreview 的平台底座，5 仓手搓任务轮询 ~1750 行收编入口。
-3. **createLLMStream 统一包装**（goldenStock rAF 节流+心跳+错误分类范式上收，替 6 仓各异薄包装 ~350 行）。
-4. **NuxAudioRecorder**（memoria 录音+波形 ~230 行提炼，geniusStudent/aiPet 潜在消费）。
+2. **nexus.tasks 长任务原语落码**（契约稿在 docs/nexus-tasks-contract-draft-2026-10-29.md；前 17 轮判定：nexus-ui 前端半边须与 nexus-backend 同轮落，防未定契约返工+断头路）。
+3. **createLLMStream 统一包装**（前 17 轮实察：底层已 NexusStream.consume 单源，差异面=业务错误码文案；开工前先做 6 仓语义矩阵盘点）。
+4. ~~NuxAudioRecorder~~（**前 17 轮已落**：js/nexus-audio-recorder.js+memoria 直替；geniusStudent/aiPet 潜在消费待各业务轮）。
 5. **geniusStudent 两处 speak() 收编 NexusTts**（answer-box.js/child-mode.js ~200 行）。
-6. **聊天输入附件内嵌**（smartCode drag&drop ~60 行提炼进 inputConfig，AI Elements Attachments 对应物）。
+6. **聊天输入附件内嵌**（smartCode drag&drop ~60 行提炼进 inputConfig，AI Elements Attachments 对应物；元宝生态内嵌形态为中文侧佐证）。
 7. **Branch 消息分支**（需消息树+后端配合，无诉求不立项）。
 8. **smartCode 聊天全家桶退役**（~2620 行，最大单体收编，需 smartCode 业务轮配合）。
 9. **灵犀 chat-stream.js 直替 NexusStreamdown**（2026-10-27 路线图 P2 遗留，等灵犀并行窗）。
-10. **12 仓控制面采用度回访**：服务端持久仓（memoria/goldenFish 等）逐仓判定 opt-out 或接线。
+10. **12 仓控制面采用度回访**：服务端持久仓（memoria/goldenFish 等）逐仓判定 opt-out 或接线；新增：memoria 录音直替后的回归观测（生产 E2E 录音动线）。
+
+## 五、前 17 轮增补（2026-11-11 同日晚）：中文系产品配色扫描 + 语音原语 + 视觉走查
+
+### 5.1 中文系 AI 产品配色语言（补充上轮海外五产品）
+
+| 产品 | 语言 | 对 nexus-ui 的判据 |
+|---|---|---|
+| 豆包 | 温暖橙主色、简洁清新、年轻化 | **语音聊天做一级入口**=中文用户语音偏好实锤（NexusAudioRecorder/NexusTts 优先级的产品依据） |
+| DeepSeek | 深蓝「蓝鲸」渐变、科技感、亮暗跟随 | 与本工作区「深蓝灰石板+天青」方向同族，非雷区验证 |
+| 腾讯元宝 | 蓝紫、微信生态办公延伸 | accent 同样只做行动层；生态功能内嵌（文件/@提问）=Chat 内附件内嵌挂账的中文侧佐证 |
+| Kimi | 极简浅色、蓝色调、长文本阅读优先 | 阅读密度克制=LLM 内容面不抢戏同判 |
+
+平台层结论：nexus-ui 不锁品牌色（27 应用 `.app-*` 主题换肤），accent 行动层纪律与中文系四产品实践完全兼容；中文特有诉求（长辈大字/语音优先/口语化兜底文案）在 memoria 已有实践。
+
+### 5.2 语音面四块格局与前 17 轮落位
+
+| 块 | 承载物 | 状态 |
+|---|---|---|
+| ASR 直传（PCM→WAV） | nux-voice-input.js | 已有 |
+| 实时语音流 | nux-voice-realtime.js | 已有 |
+| 朗读 | NexusTts（前 16 轮） | 已有 |
+| **录音+波形（MediaRecorder 形态）** | **NexusAudioRecorder（前 17 轮）** | **本轮补齐**——headless：mime 探测+AnalyserNode 能量帧回调（frameIntervalMs 节流）+时长上限+放弃语义（discarded 标志 blob 照给消费方自决）+starting 态竞态守卫+seq 守卫；消费方 memoria interview.js 直替（-60 行+离页 destroy 清理新增） |
+
+### 5.3 前十七轮判定记录
+
+- **createLLMStream 统一包装：判不落**。goldenStock SSEStream 实察=底层已是 NexusStream.consume 单源，薄包装的差异面是业务错误码文案（PICK_RATE_LIMIT 等）与 toast 行为——语义矩阵未盘点前上收会变成配置项堆砌；挂账保持，开工前先做 6 仓语义矩阵盘点。
+- **nux-task-card 前端半边：判不落**。契约稿「待拍板清单」4 项未决（任务表位置/进度通道/迁移策略/取消粒度），按未定契约写前端=拍板后返工；且无后端配合即断头路（API 存在≠动线存在）。留 nexus-backend 专属窗同轮落。
+- **helpers 委托别名判留**：全舰队业务仓零消费，唯一消费者=tests/test_tool_call.mjs 直调面+helpers 内部 env 回退链；10 行成本换直调面稳定。
+- **工具链资产漂移观察**：handoff/46 描述的 s55_css_theme_audit、handoff/64 的 s111_var_audit、handoff/80 的 s103_line_census 三个审计器本地 scripts/ 均不存在（疑似夜轮侧资产或 r184 清理波及）——「挂账信息会过时，开工前必对表」第三形态：**索引描述的工具也要对表存在性**。
+- 本轮 CSS 改动面=零（headless 原语不设 css 判例）；夹具页样式全部 var(--nx-*) token 带合法 fallback。
+
+### 5.4 视觉走查三审判例（判官驱动）
+
+一审抓夹具层假雷+真雷各半：代码块渲染链断裂（手动 innerHTML 缺 `nx-md` class → 语言标签游离视口+右端断口+暗色白底反转，**平台正确用法=NexusMarkdown.renderTo**）+夹具按钮裸样式（对表 var(--nx-*) token）。二审甄别：copy 按钮 hover-only 是产品语义非缺陷（**静态截图判 hover-only 面必须先 hover 再拍**）+hljs 真雷（恒暗代码面误引亮主题 github.min.css → **恒暗面恒引暗色语法主题**）。三审全 PASS。
 
 ## 参考
 

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexusAudioRecorder E2E</title>
+<script src="/js/nexus-theme-init.js"></script>
+<link rel="stylesheet" href="/css/nexus-all.css">
+</head>
+<body style="padding:24px;font-family:system-ui">
+  <h3>NexusAudioRecorder 运行态夹具</h3>
+  <button id="start" type="button" style="background:var(--nx-accent,#4a7dff);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:14px;cursor:pointer">开始录音</button>
+  <button id="discard" type="button" style="background:var(--nx-bg-tertiary,#eef1f6);color:var(--nx-text-primary,#333);border:1px solid var(--nx-border,#dde1ea);border-radius:8px;padding:8px 18px;font-size:14px;cursor:pointer;margin-left:10px">放弃录音</button>
+  <div id="status" style="margin-top:12px">idle</div>
+  <div class="m-wave-demo" style="display:flex;gap:4px;align-items:flex-end;height:50px;margin-top:12px">
+    <i style="width:8px;background:var(--nx-accent,#4a7dff);height:6px"></i><i style="width:8px;background:var(--nx-accent,#4a7dff);height:6px"></i><i style="width:8px;background:var(--nx-accent,#4a7dff);height:6px"></i><i style="width:8px;background:var(--nx-accent,#4a7dff);height:6px"></i><i style="width:8px;background:var(--nx-accent,#4a7dff);height:6px"></i>
+  </div>
+  <div id="result" style="margin-top:12px;white-space:pre-wrap"></div>
+<script src="/js/nexus-all.js"></script>
+<script>
+(function () {
+    const E2E = { phase: 'idle', frames: 0, result: null, err: null };
+    window.__E2E = E2E;
+    let rec = null;
+    const bars = document.querySelectorAll('.m-wave-demo i');
+    document.getElementById('start').addEventListener('click', async () => {
+        if (!window.NexusAudioRecorder || !NexusAudioRecorder.isSupported()) {
+            E2E.err = 'unsupported';
+            E2E.phase = 'done';
+            document.getElementById('status').textContent = '不支持';
+            return;
+        }
+        rec = NexusAudioRecorder.create({
+            maxSecs: 30,
+            frameIntervalMs: 40,
+            onFrame: (b) => {
+                E2E.frames += 1;
+                bars.forEach((el, i) => { el.style.height = Math.max(6, (b[i] || 0.05) * 48) + 'px'; });
+            },
+            onStop: (r) => {
+                E2E.result = { ext: r.ext, blobSize: r.blob.size, durationMs: r.durationMs, discarded: r.discarded };
+                E2E.phase = 'done';
+                document.getElementById('result').textContent = JSON.stringify(E2E.result);
+            },
+            onError: (e) => {
+                E2E.err = e && e.message;
+                E2E.phase = 'error';
+                document.getElementById('status').textContent = '错误: ' + E2E.err;
+            }
+        });
+        document.getElementById('status').textContent = 'recording';
+        try {
+            await rec.start();
+            E2E.phase = 'recording';
+        } catch (e) { /* onError 已记录 */ }
+    });
+    document.getElementById('discard').addEventListener('click', () => {
+        document.getElementById('status').textContent = 'discard-stop';
+        if (rec) rec.stop(true);
+    });
+})();
+</script>
+</body>
+</html>
