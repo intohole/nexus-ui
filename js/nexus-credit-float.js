@@ -3,6 +3,7 @@
     if (window.NexusCreditFloat) return;
 
     var POLL_MS = 45000;
+    var SETTLE_DELAY_MS = 30000;
     var TOAST_THROTTLE_MS = 30000;
     var TOAST_STAY_MS = 3200;
     var LOW_BALANCE = 200;
@@ -74,6 +75,9 @@
         pendingCost: 0,
         lowWarned: false,
         toastTimer: null,
+        settleTimer: null,
+        settlePending: false,
+        settleOverdraft: false,
         pendingUnlock: null,
         giftUnlocked: false
     };
@@ -113,6 +117,32 @@
         showToast('🎉 首次使用达成 · ' + prevPending.toLocaleString('zh-CN') + ' 积分已解锁入账');
     }
 
+    function armSettle() {
+        if (state.settleTimer) clearTimeout(state.settleTimer);
+        state.settleTimer = setTimeout(settleNow, SETTLE_DELAY_MS);
+    }
+
+    function cancelSettle() {
+        if (state.settleTimer) {
+            clearTimeout(state.settleTimer);
+            state.settleTimer = null;
+        }
+    }
+
+    function settleNow() {
+        var hadDrop = state.settlePending;
+        var odGrew = state.settleOverdraft;
+        cancelSettle();
+        state.settlePending = false;
+        state.settleOverdraft = false;
+        renderBalance();
+        if (!hadDrop && !odGrew) return;
+        pulse();
+        if (hadDrop) flushCostToast(state.balance);
+        if (odGrew) flushCreditToast();
+        warnIfLow(state.balance);
+    }
+
     function ensureDom() {
         var root = document.getElementById(ROOT_ID);
         if (root) return root;
@@ -127,6 +157,7 @@
             + '<div class="nxcf-toast" role="status"></div>';
         document.body.appendChild(root);
         root.querySelector('.nxcf-badge').addEventListener('click', function() {
+            settleNow();
             if (window.NexusCreditPanel && typeof window.NexusCreditPanel.open === 'function') {
                 window.NexusCreditPanel.open();
                 return;
@@ -237,21 +268,26 @@
         var rg = data.register_gift || {};
         state.pendingUnlock = (rg && typeof rg.pending_unlock === 'number') ? rg.pending_unlock : state.pendingUnlock;
         state.giftUnlocked = !!(rg && rg.unlocked);
-        renderBalance();
         maybeCheckinToast();
         maybeUnlockHintToast();
         maybeUnlockDoneToast(prevPending, prevUnlocked);
         if (prev !== null && state.balance !== null && state.balance < prev) {
             state.pendingCost += prev - state.balance;
-            pulse();
-            flushCostToast(state.balance);
+            state.settlePending = true;
+            armSettle();
         } else if (prev !== null && state.balance > prev) {
+            settleNow();
             pulse();
         }
         if (state.overdraftUsed > prevOverdraft) {
-            pulse();
-            flushCreditToast();
+            state.settleOverdraft = true;
+            armSettle();
         }
+        if (state.settleTimer) {
+            renderBadgeState();
+            return;
+        }
+        renderBalance();
         if (state.balance !== null) warnIfLow(state.balance);
     }
 
@@ -301,6 +337,7 @@
     function stop() {
         if (state.timer) clearInterval(state.timer);
         state.timer = null;
+        cancelSettle();
         document.removeEventListener('visibilitychange', onVisibility);
         var root = document.getElementById(ROOT_ID);
         if (root) root.remove();
