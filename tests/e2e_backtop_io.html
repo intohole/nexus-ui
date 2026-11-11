@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NuxBacktop IO E2E</title>
+<script src="/js/nexus-theme-init.js"></script>
+<link rel="stylesheet" href="/css/nexus-all.css">
+</head>
+<body style="margin:0;font-family:system-ui">
+  <div id="app" style="padding:16px">
+    <h3>NuxBacktop IO 化夹具</h3>
+    <nux-backtop ref="bt" :threshold="300"></nux-backtop>
+    <div style="height:3000px;background:linear-gradient(#eef,#fff)">长内容区（滚动驱动）</div>
+  </div>
+  <div id="result" style="position:fixed;top:8px;right:8px;background:#fff;border:1px solid #ddd;border-radius:8px;padding:8px;max-width:340px;font-size:12px;white-space:pre-wrap;z-index:99"></div>
+<script src="/vendor/vue.global.prod.js"></script>
+<script src="/js/nexus-all.js"></script>
+<script src="/js/components/nux-backtop.js"></script>
+<script>
+(function () {
+    window.__E2E = { logs: [], scrollListenerAdded: false };
+    const origAdd = window.addEventListener;
+    window.addEventListener = function (type, fn, opts) {
+        if (type === 'scroll') window.__E2E.scrollListenerAdded = true;
+        return origAdd.call(window, type, fn, opts);
+    };
+    function log(name, pass, note) {
+        window.__E2E.logs.push({ name: name, pass: pass, note: note || '' });
+        document.getElementById('result').textContent = JSON.stringify(window.__E2E.logs, null, 2);
+    }
+    window.__E2E.log = log;
+    const app = Vue.createApp({
+        data() { return {}; }
+    });
+    app.component('NuxBacktop', window.NuxBacktop);
+    app.mount('#app');
+    window.__E2E.app = app;
+    window.__E2E.log('挂载', window.NuxBacktop ? true : false, window.NuxBacktop ? '' : 'NuxBacktop 未加载');
+})();
+</script>
+</body>
+</html>

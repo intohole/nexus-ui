@@ -53,6 +53,22 @@
                 this.$emit('edit', e);
             }
         },
+        mounted() {
+            this._tipEls = [];
+            if (typeof NexusTip === 'undefined' || !NexusTip.supported()) return;
+            const editBtn = this.$el.querySelector('.nux-app-card-edit');
+            if (editBtn) {
+                NexusTip.bind(editBtn, { text: '编辑应用信息与跳转' });
+                editBtn.removeAttribute('title');
+                this._tipEls.push(editBtn);
+            }
+        },
+        beforeUnmount() {
+            if (this._tipEls && typeof NexusTip !== 'undefined') {
+                this._tipEls.forEach(el => NexusTip.unbind(el));
+            }
+            this._tipEls = [];
+        },
         template: `
             <div class="nux-app-card" :style="vars">
                 <a class="nux-app-card-cover" :href="href" target="_blank" rel="noopener noreferrer" @click="emitOpen" :aria-label="'打开' + name"></a>

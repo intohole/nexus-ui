@@ -19,8 +19,8 @@
             }
         },
         methods: {
-            onScroll() {
-                this.visible = (window.scrollY || document.documentElement.scrollTop) > this.threshold;
+            onIntersect(entries) {
+                this.visible = !entries[entries.length - 1].isIntersecting;
             },
             toTop() {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -28,11 +28,19 @@
             }
         },
         mounted() {
-            window.addEventListener('scroll', this.onScroll, { passive: true });
-            this.onScroll();
+            const sentinel = document.createElement('div');
+            sentinel.setAttribute('data-nux-backtop-sentinel', '');
+            sentinel.style.cssText = 'position:absolute;top:0;left:0;width:1px;height:1px;pointer-events:none;';
+            document.body.insertBefore(sentinel, document.body.firstChild);
+            this._sentinel = sentinel;
+            this._observer = new IntersectionObserver(this.onIntersect, {
+                rootMargin: this.threshold + 'px 0px 0px 0px'
+            });
+            this._observer.observe(sentinel);
         },
         beforeUnmount() {
-            window.removeEventListener('scroll', this.onScroll);
+            if (this._observer) this._observer.disconnect();
+            if (this._sentinel && this._sentinel.parentNode) this._sentinel.parentNode.removeChild(this._sentinel);
         },
         template: `
             <transition name="nux-backtop-fade">
