@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexusPageTransition E2E</title>
+<script src="/js/nexus-theme-init.js"></script>
+<link rel="stylesheet" href="/css/nexus-all.css">
+</head>
+<body style="padding:24px;font-family:system-ui">
+  <h3>NexusPageTransition v1.0.0 运行态夹具</h3>
+  <div id="panel-a" data-case="A" style="padding:16px;border:1px solid var(--nx-border,#dde1ea);border-radius:10px">
+    <b>面板 A</b><span id="label-a">A</span>
+  </div>
+  <div id="panel-b" data-case="B" style="padding:16px;border:1px solid var(--nx-border,#dde1ea);border-radius:10px;margin-top:8px;display:none">
+    <b>面板 B</b><span id="label-b">B</span>
+  </div>
+  <div id="status" style="margin-top:12px">idle</div>
+  <div id="result" style="margin-top:12px;white-space:pre-wrap"></div>
+<script src="/js/nexus-all.js"></script>
+<script>
+(function () {
+    window.__E2E = { logs: [], phase: 'idle', calls: [], svtCalls: 0 };
+    function log(name, pass, note) {
+        window.__E2E.logs.push({ name: name, pass: pass, note: note || '' });
+        document.getElementById('result').textContent = JSON.stringify(window.__E2E.logs, null, 2);
+    }
+    window.__E2E.log = log;
+    var PT = window.NexusPageTransition;
+    if (!PT) { log('原语挂载', false, 'window.NexusPageTransition 不存在'); return; }
+    log('原语挂载', true, 'version=' + PT.version);
+
+    document.getElementById('status').textContent = 'ready';
+    window.__E2E.phase = 'ready';
+
+    window.__E2E.swapPanels = function () {
+        var a = document.getElementById('panel-a');
+        var b = document.getElementById('panel-b');
+        var va = a.style.display === 'none';
+        a.style.display = va ? '' : 'none';
+        b.style.display = va ? '' : 'none';
+    };
+
+    var origSVT = document.startViewTransition;
+    window.__E2E.stubNative = function (mode) {
+        window.__E2E.svtCalls = 0;
+        if (mode === 'remove') {
+            document.startViewTransition = undefined;
+        } else if (mode === 'fake') {
+            document.startViewTransition = function (fn) {
+                window.__E2E.svtCalls += 1;
+                try { fn(); } catch (e) { }
+                return { finished: Promise.resolve() };
+            };
+        }
+    };
+    window.__E2E.restoreNative = function () {
+        if (origSVT) document.startViewTransition = origSVT;
+        else delete document.startViewTransition;
+        window.__E2E.svtCalls = 0;
+    };
+})();
+</script>
+</body>
+</html>

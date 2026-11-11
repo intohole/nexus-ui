@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexusTip E2E</title>
+<script src="/js/nexus-theme-init.js"></script>
+<link rel="stylesheet" href="/css/nexus-all.css">
+</head>
+<body style="padding:24px;font-family:system-ui">
+  <h3>NexusTip 运行态夹具</h3>
+  <button id="t1" type="button" style="background:var(--nx-accent,#4a7dff);color:#fff;border:none;border-radius:8px;padding:8px 18px">悬停看我</button>
+  <button id="t2" type="button" style="background:var(--nx-bg-tertiary,#eef1f6);border:1px solid var(--nx-border,#dde1ea);border-radius:8px;padding:8px 18px;margin-left:10px">fallback 位</button>
+  <div id="result" style="margin-top:16px;white-space:pre-wrap"></div>
+<script src="/js/nexus-all.js"></script>
+<script src="/js/nexus-tip.js"></script>
+<script>
+(function () {
+    window.__E2E = { logs: [], phase: 'idle' };
+    function log(name, pass, note) {
+        window.__E2E.logs.push({ name: name, pass: pass, note: note || '' });
+        document.getElementById('result').textContent = JSON.stringify(window.__E2E.logs, null, 2);
+    }
+    window.__E2E.log = log;
+    if (!window.NexusTip) { log('原语挂载', false, 'window.NexusTip 不存在'); return; }
+    log('原语挂载', true, 'version=' + window.NexusTip.version);
+    window.__E2E.phase = 'ready';
+
+    var origShow = HTMLElement.prototype.showPopover;
+    window.__E2E.stubNoPopover = function () {
+        HTMLElement.prototype.showPopover = undefined;
+        HTMLElement.prototype.hidePopover = undefined;
+    };
+    window.__E2E.restorePopover = function () {
+        HTMLElement.prototype.showPopover = origShow;
+    };
+})();
+</script>
+</body>
+</html>

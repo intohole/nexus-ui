@@ -39,6 +39,7 @@ FILES: list[str] = [
     "nexus-deep-link.js",
     "nexus-pager.js",
     "nexus-page-transition.js",
+    "nexus-tip.js",
     "nexus-mobile.js",
     "nexus-pull-refresh.js",
     "nexus-components.js",

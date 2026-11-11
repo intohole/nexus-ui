@@ -1695,6 +1695,26 @@ a:hover { color: var(--app-accent-hover); }
 .nux-ai-task-stage.is-error .nux-ai-task-stage-detail { color: var(--nx-danger); opacity: 0.8; }
 .nux-ai-task.is-state-error .nux-ai-task-bar-val { background: var(--nx-danger); }
 
+.nux-tip {
+    background: var(--nx-bg-tooltip, var(--nx-text-primary, #1f2430));
+    color: var(--nx-text-tooltip, var(--nx-bg-page, #fff));
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    line-height: 1.5;
+    max-width: 260px;
+    border: none;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, .18);
+    z-index: 80;
+}
+.nux-tip:popover-open {
+    display: block;
+}
+[data-nux-tip][popover] {
+    position: fixed;
+    inset: auto;
+}
+
 /* ===== nexus-components-checkin.css ===== */
 .nux-checkin { display: flex; flex-direction: column; gap: var(--nx-space-4); }
 
