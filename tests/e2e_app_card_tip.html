@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><title>app-card tip</title>
+<link rel="stylesheet" href="/css/nexus-all.css"></head>
+<body style="padding:24px;font-family:system-ui">
+<div id="app"><nux-app-card :app="app" editable></nux-app-card></div>
+<script src="/vendor/vue.global.prod.js"></script>
+<script src="/js/nexus-all.js"></script>
+<script src="/js/components/nux-app-card.js"></script>
+<script>
+(function () {
+    const app = Vue.createApp({ data() { return { app: { name: '示例应用', display_name: '示例应用', url: 'https://example.com', description: 'desc' } }; } });
+    app.component('NuxAppCard', window.NuxAppCard);
+    app.mount('#app');
+})();
+</script>
+</body></html>
