@@ -35,6 +35,7 @@ MAX_LINE_LEN = 3000
 # 仅豁免已明确记录的单条命中，不豁免整个文件，避免掩盖后续新增违规。
 # r57：mobile-base 十条例外全部摘牌（8 仓改名/裁剪/迁移完成），现为空表占位。
 KNOWN_EXCEPTIONS: dict[str, str] = {
+    "xunji/static/js/pages/case.js#clipboard": "S137 发版窗登记：xunji 并行会话活跃在写（11-13 02:02 提交），勿代动；case.js 分享链 clipboard+静默吞错形态与 NexusUtils.copyText（execCommand 回退+toast）语义有差（失败要 pushLog 不 toast），由 xunji 线或下窗按其错误面语义直替后摘牌",
     "MiaoBi/static/js/report-view.js#intersection-observer": "章节高亮视口追踪（root=滚动容器+rootMargin -140px 顶收缩，isIntersecting ⟺ r.top≤140 精确等价旧 getBoundingClientRect 循环，s135 IO 化），索引 map+相交集合取最大索引语义；与 truemirror report-nav 同族不同构（root 收缩视口 vs document 追踪），共享包装层不更简（s135 定性，r162 判例同族）",
     "truemirror/static/js/report-nav.js#intersection-observer": "多元素视口可见性追踪（tm-chart-inview body 类切换），非滚动加载观察器；含 observe 集合增删与 document.contains 剪枝的生命周期管理，共享包装层不会更简（r114 定性）。若后续出现第二处同形态需求，再收归 NexusUtils.onIntersect",
     "miniDeploy/static/css/iframe.css#raw-vh-calc": "miniDeploy 管理台为桌面基建工具，不加载 nexus-ui 且无移动端动线，100vh 语义正确不直替（r64 定性）",
