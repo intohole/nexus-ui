@@ -34,7 +34,7 @@ async def run_case(pw, port: str, prove_red: bool) -> list[tuple[str, bool, str]
     page.set_default_timeout(6000)
 
     if prove_red:
-        await page.evaluate("() => { window.NexusTip.bind = () => {}; }")
+        await page.evaluate("() => { window.NexusTip.bind = () => {}; window.NexusTip.update = () => {}; }")
 
     async def check(name: str, expr: str) -> None:
         try:
@@ -50,8 +50,9 @@ async def run_case(pw, port: str, prove_red: bool) -> list[tuple[str, bool, str]
         """() => {
             const T = window.NexusTip;
             if (!T) return { pass: false, note: '原语未挂载' };
-            const okApi = T.version === '1.0.0' && typeof T.supported === 'function'
-                && typeof T.bind === 'function' && typeof T.unbind === 'function';
+            const okApi = T.version === '1.1.0' && typeof T.supported === 'function'
+                && typeof T.bind === 'function' && typeof T.unbind === 'function'
+                && typeof T.update === 'function';
             return { pass: okApi && T.supported() === true, note: `supported=${T.supported()}` };
         }""",
     )
@@ -126,6 +127,44 @@ async def run_case(pw, port: str, prove_red: bool) -> list[tuple[str, bool, str]
             window.__E2E.restorePopover();
             window.NexusTip.unbind(el);
             return { pass: titleSet && !threw, note: `title=${titleSet} threw=${threw}` };
+        })()""",
+    )
+
+    await check(
+        "H update：open 态换文案+重定位",
+        """(async () => {
+            const el = document.getElementById('t3');
+            window.NexusTip.bind(el, { text: '收藏' });
+            el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: false }));
+            await new Promise(r => setTimeout(r, 120));
+            window.NexusTip.update(el, '取消收藏并移出常用列表');
+            await new Promise(r => setTimeout(r, 120));
+            const tip = document.querySelector('[data-nux-tip]');
+            const open = tip ? (tip.matches(':popover-open') || tip.hasAttribute('open')) : false;
+            const txt = tip ? tip.textContent : '';
+            const positioned = tip ? (tip.style.left !== '' && tip.style.top !== '') : false;
+            const stillHost = el.hasAttribute('data-nux-tip-host');
+            return { pass: !!tip && open && txt === '取消收藏并移出常用列表' && positioned && stillHost,
+                     note: `open=${open} txt=${txt.slice(0, 14)} pos=${positioned}` };
+        })()""",
+    )
+
+    await check(
+        "I update 边界：未 bind 零炸+fallback title 同步",
+        """(async () => {
+            let threw = false;
+            try {
+                window.NexusTip.update(document.getElementById('t1'), 'x');
+                window.NexusTip.update(null, 'x');
+                window.NexusTip.update(document.getElementById('t3'), '');
+            } catch (e) { threw = true; }
+            window.__E2E.stubNoPopover();
+            const el = document.getElementById('t3');
+            window.NexusTip.update(el, '降级新文案');
+            const titleSynced = el.getAttribute('title') === '降级新文案';
+            window.__E2E.restorePopover();
+            window.NexusTip.unbind(el);
+            return { pass: !threw && titleSynced, note: `threw=${threw} titleSynced=${titleSynced}` };
         })()""",
     )
 
