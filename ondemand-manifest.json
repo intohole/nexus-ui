@@ -1,0 +1,558 @@
+{
+ "description": "按需引依赖映射登记快照（组件/原语→依赖文件；hard=缺文件调用即断链，soft=守卫降级）",
+ "generated_by": "scripts/s140_ondemand_audit.py --regen",
+ "consumers": [
+  "scripts/s140_ondemand_audit.py (R1/R2)",
+  "scripts/s140_ondemand_probe.py (符号对表)"
+ ],
+ "files": {
+  "components/nux-about-page.js": {
+   "hard": {},
+   "soft": [
+    "nexus-utils.js"
+   ]
+  },
+  "components/nux-ai-chat-helpers.js": {
+   "hard": {
+    "nexus-tts.js": [
+     "NexusTts"
+    ]
+   },
+   "soft": [
+    "nexus-chat.js"
+   ]
+  },
+  "components/nux-ai-chat.js": {
+   "hard": {
+    "nexus-utils.js": [
+     "NexusUtils"
+    ],
+    "nexus-streamdown.js": [
+     "NexusStreamdown"
+    ],
+    "nexus-mobile.js": [
+     "NexusMobile"
+    ]
+   },
+   "soft": [
+    "components/nux-ai-chat-helpers.js",
+    "components/nux-ai-chat-template.js",
+    "components/nux-ai-widgets.js",
+    "components/nux-citations.js",
+    "components/nux-confidence.js",
+    "components/nux-interrupt-card.js",
+    "components/nux-tool-call.js",
+    "components/nux-voice-input.js",
+    "nexus-markdown.js",
+    "nexus-tts.js"
+   ]
+  },
+  "components/nux-ai-notice.js": {
+   "hard": {},
+   "soft": [
+    "components/nux-ai-badge.js"
+   ]
+  },
+  "components/nux-ai-widgets-rich.js": {
+   "hard": {},
+   "soft": [
+    "nexus-utils.js"
+   ]
+  },
+  "components/nux-ai-widgets.js": {
+   "hard": {},
+   "soft": [
+    "nexus-utils.js"
+   ]
+  },
+  "components/nux-app-card.js": {
+   "hard": {
+    "nexus-tip.js": [
+     "NexusTip"
+    ]
+   },
+   "soft": []
+  },
+  "components/nux-app-switcher.js": {
+   "hard": {
+    "nexus-utils.js": [
+     "NexusUtils"
+    ]
+   },
+   "soft": [
+    "composables/use-recent.js"
+   ]
+  },
+  "components/nux-calendar.js": {
+   "hard": {},
+   "soft": [
+    "nexus-utils.js"
+   ]
+  },
+  "components/nux-camera-recognize.js": {
+   "hard": {
+    "nexus-markdown.js": [
+     "NexusMarkdown"
+    ],
+    "nexus-utils.js": [
+     "NexusUtils"
+    ]
+   },
+   "soft": [
+    "nexus-api.js"
+   ]
+  },
+  "components/nux-checkin.js": {
+   "hard": {},
+   "soft": [
+    "nexus-utils.js"
+   ]
+  },
+  "components/nux-clarify-card.js": {
+   "hard": {},
+   "soft": [
+    "nexus-utils.js"
+   ]
+  },
+  "components/nux-conversation-list.js": {
+   "hard": {
+    "nexus-utils.js": [
+     "NexusUtils"
+    ]
+   },
+   "soft": [
+    "nexus-api.js"
+   ]
+  },
+  "components/nux-copy-button.js": {
+   "hard": {
+    "nexus-utils.js": [
+     "NexusUtils"
+    ]
+   },
+   "soft": []
+  },
+  "components/nux-drawer.js": {
+   "hard": {
+    "nexus-utils.js": [
+     "NexusUtils"
+    ]
+   },
+   "soft": []
+  },
+  "components/nux-file-upload.js": {
+   "hard": {
+    "nexus-utils.js": [
+     "NexusUtils"
+    ]
+   },
+   "soft": []
+  },
+  "components/nux-icon.js": {
+   "hard": {},
+   "soft": [
+    "components/nux-icon-data.js"
+   ]
+  },
+  "components/nux-interrupt-card.js": {
+   "hard": {},
+   "soft": [
+    "nexus-utils.js"
+   ]
+  },
+  "components/nux-login-page-helpers.js": {
+   "hard": {},
+   "soft": [
+    "components/nux-forgot-password.js",
+    "user-center-sdk.js"
+   ]
+  },
+  "components/nux-login-page.js": {
+   "hard": {
+    "nexus-validators.js": [
+     "NexusValidators"
+    ]
+   },
+   "soft": [
+    "components/nux-forgot-password.js",
+    "components/nux-login-page-helpers.js",
+    "components/nux-login-page-template.js",
+    "user-center-sdk.js"
+   ]
+  },
+  "components/nux-menu-about.js": {
+   "hard": {},
+   "soft": [
+    "nexus-utils.js"
+   ]
+  },
+  "components/nux-menu-user.js": {
+   "hard": {},
+   "soft": [
+    "components/nux-avatar.js",
+    "nexus-utils.js",
+    "user-center-sdk.js"
+   ]
+  },
+  "components/nux-modal.js": {
+   "hard": {
+    "nexus-utils.js": [
+     "NexusUtils"
+    ]
+   },
+   "soft": []
+  },
+  "components/nux-notification-bell.js": {
+   "hard": {
+    "nexus-utils.js": [
+     "NexusUtils"
+    ],
+    "nexus-api.js": [
+     "NexusApi"
+    ]
+   },
+   "soft": [
+    "components/nux-notification-digest.js"
+   ]
+  },
+  "components/nux-notification-digest.js": {
+   "hard": {
+    "nexus-utils.js": [
+     "NexusUtils"
+    ]
+   },
+   "soft": []
+  },
+  "components/nux-notification-mute.js": {
+   "hard": {
+    "nexus-utils.js": [
+     "NexusUtils"
+    ],
+    "components/nux-notification-panel.js": [
+     "NuxNotificationPanel"
+    ]
+   },
+   "soft": []
+  },
+  "components/nux-notification-panel.js": {
+   "hard": {
+    "nexus-utils.js": [
+     "NexusUtils"
+    ],
+    "nexus-api.js": [
+     "NexusApi"
+    ]
+   },
+   "soft": [
+    "components/nux-notification-digest.js"
+   ]
+  },
+  "components/nux-notification-webpush.js": {
+   "hard": {
+    "nexus-utils.js": [
+     "NexusUtils"
+    ],
+    "components/nux-notification-panel.js": [
+     "NuxNotificationPanel"
+    ]
+   },
+   "soft": []
+  },
+  "components/nux-poster.js": {
+   "hard": {},
+   "soft": [
+    "nexus-utils.js"
+   ]
+  },
+  "components/nux-result-view.js": {
+   "hard": {},
+   "soft": [
+    "nexus-utils.js"
+   ]
+  },
+  "components/nux-segmented.js": {
+   "hard": {},
+   "soft": [
+    "nexus-utils.js"
+   ]
+  },
+  "components/nux-settings-drawer.js": {
+   "hard": {
+    "nexus-utils.js": [
+     "NexusUtils"
+    ]
+   },
+   "soft": []
+  },
+  "components/nux-side-panel.js": {
+   "hard": {
+    "nexus-utils.js": [
+     "NexusUtils"
+    ]
+   },
+   "soft": []
+  },
+  "components/nux-stat-card.js": {
+   "hard": {},
+   "soft": [
+    "nexus-utils.js"
+   ]
+  },
+  "components/nux-tab-group.js": {
+   "hard": {
+    "nexus-utils.js": [
+     "NexusUtils"
+    ]
+   },
+   "soft": []
+  },
+  "components/nux-table.js": {
+   "hard": {},
+   "soft": [
+    "components/nux-table-column.js"
+   ]
+  },
+  "components/nux-theme-toggle.js": {
+   "hard": {},
+   "soft": [
+    "nexus-utils.js"
+   ]
+  },
+  "components/nux-voice-input.js": {
+   "hard": {
+    "nexus-utils.js": [
+     "NexusUtils"
+    ]
+   },
+   "soft": [
+    "nexus-api.js"
+   ]
+  },
+  "components/nux-webpush-invite.js": {
+   "hard": {
+    "nexus-utils.js": [
+     "NexusUtils"
+    ],
+    "nexus-api.js": [
+     "NexusApi"
+    ]
+   },
+   "soft": []
+  },
+  "core/nexus-app.js": {
+   "hard": {},
+   "soft": [
+    "core/nexus-error-text.js",
+    "nexus-components.js",
+    "nexus-utils.js"
+   ]
+  },
+  "core/nexus-guard.js": {
+   "hard": {},
+   "soft": [
+    "core/nexus-app.js",
+    "core/nexus-error-text.js",
+    "nexus-api-error.js"
+   ]
+  },
+  "nexus-api-factory.js": {
+   "hard": {
+    "nexus-api.js": [
+     "NexusApi"
+    ]
+   },
+   "soft": [
+    "nexus-api-error.js"
+   ]
+  },
+  "nexus-api.js": {
+   "hard": {
+    "nexus-stream.js": [
+     "NexusStream"
+    ],
+    "nexus-utils.js": [
+     "NexusUtils"
+    ]
+   },
+   "soft": [
+    "nexus-api-error.js"
+   ]
+  },
+  "nexus-chat.js": {
+   "hard": {
+    "nexus-stream.js": [
+     "NexusStream"
+    ]
+   },
+   "soft": [
+    "nexus-api.js",
+    "nexus-markdown.js"
+   ]
+  },
+  "nexus-components.js": {
+   "hard": {},
+   "soft": [
+    "components/nux-about-page.js",
+    "components/nux-accordion.js",
+    "components/nux-ai-badge.js",
+    "components/nux-ai-chat-helpers.js",
+    "components/nux-ai-chat-template.js",
+    "components/nux-ai-chat.js",
+    "components/nux-ai-indicator.js",
+    "components/nux-ai-notice.js",
+    "components/nux-ai-task-progress.js",
+    "components/nux-ai-widgets-rich.js",
+    "components/nux-ai-widgets.js",
+    "components/nux-app-card.js",
+    "components/nux-app-switcher.js",
+    "components/nux-automation.js",
+    "components/nux-avatar.js",
+    "components/nux-backtop.js",
+    "components/nux-bottom-nav.js",
+    "components/nux-button.js",
+    "components/nux-calendar.js",
+    "components/nux-camera-recognize.js",
+    "components/nux-checkbox.js",
+    "components/nux-checkin.js",
+    "components/nux-chip-group.js",
+    "components/nux-citations.js",
+    "components/nux-clarify-card.js",
+    "components/nux-confidence.js",
+    "components/nux-conversation-list.js",
+    "components/nux-copy-button.js",
+    "components/nux-descriptions.js",
+    "components/nux-drawer.js",
+    "components/nux-empty-state.js",
+    "components/nux-error-state.js",
+    "components/nux-file-upload.js",
+    "components/nux-footer.js",
+    "components/nux-forgot-password.js",
+    "components/nux-form-group.js",
+    "components/nux-icon.js",
+    "components/nux-input-number.js",
+    "components/nux-input.js",
+    "components/nux-interrupt-card.js",
+    "components/nux-layout-sidebar.js",
+    "components/nux-layout-topnav.js",
+    "components/nux-loading.js",
+    "components/nux-login-page-helpers.js",
+    "components/nux-login-page-template.js",
+    "components/nux-login-page.js",
+    "components/nux-menu-about.js",
+    "components/nux-menu-user.js",
+    "components/nux-modal.js",
+    "components/nux-notification-bell.js",
+    "components/nux-notification-panel.js",
+    "components/nux-onboarding-strip.js",
+    "components/nux-onboarding.js",
+    "components/nux-pagination.js",
+    "components/nux-poster.js",
+    "components/nux-progress.js",
+    "components/nux-result-view.js",
+    "components/nux-reveal-strip.js",
+    "components/nux-search-box.js",
+    "components/nux-section.js",
+    "components/nux-segmented.js",
+    "components/nux-select.js",
+    "components/nux-selection-bar.js",
+    "components/nux-settings-drawer.js",
+    "components/nux-side-panel.js",
+    "components/nux-skeleton.js",
+    "components/nux-stat-card.js",
+    "components/nux-swipe-actions.js",
+    "components/nux-switch.js",
+    "components/nux-tab-group.js",
+    "components/nux-table-column.js",
+    "components/nux-table.js",
+    "components/nux-tag.js",
+    "components/nux-textarea.js",
+    "components/nux-theme-toggle.js",
+    "components/nux-timeline.js",
+    "components/nux-tool-call.js",
+    "components/nux-undo-toast.js",
+    "components/nux-voice-input.js"
+   ]
+  },
+  "nexus-credit-float.js": {
+   "hard": {},
+   "soft": [
+    "nexus-credit-panel.js",
+    "nexus-utils.js"
+   ]
+  },
+  "nexus-credit-panel.js": {
+   "hard": {},
+   "soft": [
+    "nexus-credit-float.js",
+    "nexus-utils.js"
+   ]
+  },
+  "nexus-feedback-float.js": {
+   "hard": {
+    "nexus-utils.js": [
+     "NexusUtils"
+    ]
+   },
+   "soft": []
+  },
+  "nexus-markdown.js": {
+   "hard": {
+    "nexus-utils.js": [
+     "NexusUtils"
+    ]
+   },
+   "soft": []
+  },
+  "nexus-overlay-host.js": {
+   "hard": {},
+   "soft": [
+    "nexus-utils.js"
+   ]
+  },
+  "nexus-pull-refresh.js": {
+   "hard": {},
+   "soft": [
+    "nexus-utils.js"
+   ]
+  },
+  "nexus-stream.js": {
+   "hard": {},
+   "soft": [
+    "nexus-utils.js"
+   ]
+  },
+  "nexus-streamdown.js": {
+   "hard": {},
+   "soft": [
+    "nexus-markdown.js"
+   ]
+  },
+  "nexus-structured.js": {
+   "hard": {
+    "nexus-stream.js": [
+     "NexusStream"
+    ],
+    "nexus-utils.js": [
+     "NexusUtils"
+    ]
+   },
+   "soft": [
+    "nexus-markdown.js"
+   ]
+  },
+  "nexus-tts.js": {
+   "hard": {},
+   "soft": [
+    "nexus-api.js"
+   ]
+  },
+  "user-center-sdk.js": {
+   "hard": {
+    "nexus-utils.js": [
+     "NexusUtils"
+    ]
+   },
+   "soft": []
+  }
+ }
+}
