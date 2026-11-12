@@ -40,6 +40,7 @@ FILES: list[str] = [
     "nexus-pager.js",
     "nexus-page-transition.js",
     "nexus-tip.js",
+    "nexus-vitals.js",
     "nexus-mobile.js",
     "nexus-pull-refresh.js",
     "nexus-components.js",

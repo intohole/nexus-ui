@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexusVitals E2E</title>
+<script src="/js/nexus-theme-init.js"></script>
+<link rel="stylesheet" href="/css/nexus-all.css">
+</head>
+<body style="padding:24px;font-family:system-ui">
+  <h3>NexusVitals 运行态夹具</h3>
+  <div id="lcp-target" style="width:320px;height:160px;background:linear-gradient(135deg,#4a7dff,#9db8ff);border-radius:12px;margin:12px 0"></div>
+  <button id="act" type="button" style="background:var(--nx-accent,#4a7dff);color:#fff;border:none;border-radius:8px;padding:8px 18px">交互一下</button>
+  <div id="result" style="margin-top:16px;white-space:pre-wrap"></div>
+<script src="/js/nexus-all.js"></script>
+<script src="/js/nexus-vitals.js"></script>
+<script>
+(function () {
+    window.__E2E = { requests: [], logs: [] };
+    function log(name, pass, note) {
+        window.__E2E.logs.push({ name: name, pass: pass, note: note || '' });
+        document.getElementById('result').textContent = JSON.stringify(window.__E2E.logs, null, 2);
+    }
+    window.__E2E.log = log;
+    if (!window.NexusVitals) { log('原语挂载', false, 'window.NexusVitals 不存在'); return; }
+    log('原语挂载', true, 'version=' + window.NexusVitals.version);
+    var ep = '/mock-vitals';
+    var r = window.NexusVitals.init({ app: 'fixture-app', endpoint: ep });
+    window.__E2E.initResult = r;
+    document.getElementById('act').addEventListener('click', function () {
+        var t0 = performance.now();
+        for (var i = 0; i < 400000; i++) { Math.sqrt(i * 7.3); }
+        window.__E2E.blockCost = performance.now() - t0;
+    });
+})();
+</script>
+</body>
+</html>
