@@ -99,11 +99,28 @@
         registry.delete(el);
     }
 
+    function bindAll(root, selector) {
+        if (!root) return root;
+        if (!nativeSupported()) return root;
+        var sel = selector || 'button[title], .btn[title], .dropdown-item[title], a[title][aria-label]';
+        var nodes = root.querySelectorAll(sel);
+        for (var i = 0; i < nodes.length; i++) {
+            var el = nodes[i];
+            if (el.hasAttribute('data-tip-keep')) continue;
+            var text = el.getAttribute('title') || '';
+            if (!text) continue;
+            bind(el, { text: text });
+            el.removeAttribute('title');
+        }
+        return root;
+    }
+
     window.NexusTip = {
         version: TIP_VERSION,
         supported: nativeSupported,
         bind: bind,
         update: update,
+        bindAll: bindAll,
         unbind: unbind
     };
 })();

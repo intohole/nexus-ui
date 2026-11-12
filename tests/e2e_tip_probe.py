@@ -52,7 +52,8 @@ async def run_case(pw, port: str, prove_red: bool) -> list[tuple[str, bool, str]
             if (!T) return { pass: false, note: '原语未挂载' };
             const okApi = T.version === '1.1.0' && typeof T.supported === 'function'
                 && typeof T.bind === 'function' && typeof T.unbind === 'function'
-                && typeof T.update === 'function';
+                && typeof T.update === 'function'
+                && typeof T.bindAll === 'function';
             return { pass: okApi && T.supported() === true, note: `supported=${T.supported()}` };
         }""",
     )
@@ -165,6 +166,34 @@ async def run_case(pw, port: str, prove_red: bool) -> list[tuple[str, bool, str]
             window.__E2E.restorePopover();
             window.NexusTip.unbind(el);
             return { pass: !threw && titleSynced, note: `threw=${threw} titleSynced=${titleSynced}` };
+        })()""",
+    )
+
+    await check(
+        "J bindAll：容器批量收编+幂等+跳过动态",
+        """(async () => {
+            const host = document.createElement('div');
+            host.innerHTML = '<button title="甲提示">a</button>'
+                + '<button class="btn" title="丁提示">d</button>'
+                + '<button title="丙提示" data-tip-keep>c</button>';
+            document.body.appendChild(host);
+            const out = window.NexusTip.bindAll(host);
+            const b0 = host.children[0], b1 = host.children[1], b2 = host.children[2];
+            const taken0 = !b0.hasAttribute('title') && b0.hasAttribute('data-nux-tip-host');
+            const taken1 = !b1.hasAttribute('title') && b1.hasAttribute('data-nux-tip-host');
+            const skippedKeep = b2.hasAttribute('title') && !b2.hasAttribute('data-nux-tip-host');
+            const hostsBefore = host.querySelectorAll('[data-nux-tip-host]').length;
+            window.NexusTip.bindAll(host);
+            const hostsAfter = host.querySelectorAll('[data-nux-tip-host]').length;
+            const retOk = out === host;
+            b0.dispatchEvent(new MouseEvent('mouseenter', { bubbles: false }));
+            await new Promise(r => setTimeout(r, 100));
+            const txt = (document.querySelector('[data-nux-tip]') || {}).textContent || '';
+            b0.dispatchEvent(new MouseEvent('mouseleave', { bubbles: false }));
+            host.remove();
+            window.NexusTip.unbind(b0); window.NexusTip.unbind(b1);
+            return { pass: retOk && taken0 && taken1 && skippedKeep && hostsBefore === 2 && hostsAfter === 2 && txt === '甲提示',
+                     note: `ret=${retOk} t0=${taken0} t1=${taken1} keep=${skippedKeep} h=${hostsBefore}->${hostsAfter} txt=${txt.slice(0,6)}` };
         })()""",
     )
 
