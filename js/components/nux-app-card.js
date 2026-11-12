@@ -51,16 +51,32 @@
                 e.preventDefault();
                 e.stopPropagation();
                 this.$emit('edit', e);
+            },
+            _wireFav(el) {
+                const text = this.faved ? '取消收藏' : '收藏';
+                if (typeof NexusTip === 'undefined') { el.setAttribute('title', text); return; }
+                NexusTip.bind(el, { text: text });
+                if (NexusTip.supported()) el.removeAttribute('title');
+                this._tipEls.push(el);
             }
         },
         mounted() {
             this._tipEls = [];
+            const favBtn = this.$el.querySelector('.nux-app-card-fav');
+            if (favBtn) this._wireFav(favBtn);
             if (typeof NexusTip === 'undefined' || !NexusTip.supported()) return;
             const editBtn = this.$el.querySelector('.nux-app-card-edit');
             if (editBtn) {
                 NexusTip.bind(editBtn, { text: '编辑应用信息与跳转' });
                 editBtn.removeAttribute('title');
                 this._tipEls.push(editBtn);
+            }
+        },
+        watch: {
+            faved(val) {
+                const el = this.$el && this.$el.querySelector('.nux-app-card-fav');
+                if (!el || typeof NexusTip === 'undefined') return;
+                NexusTip.update(el, val ? '取消收藏' : '收藏');
             }
         },
         beforeUnmount() {
@@ -81,7 +97,7 @@
                             <i v-if="badge.icon" :class="badge.icon"></i>{{ badge.label }}
                         </span>
                         <button v-if="showFav" type="button" class="nux-app-card-fav" :class="{on: faved}"
-                                :title="faved ? '取消收藏' : '收藏'" :aria-label="faved ? '取消收藏' : '收藏'" @click="emitFav">
+                                :aria-label="faved ? '取消收藏' : '收藏'" @click="emitFav">
                             <i class="fa" :class="faved ? 'fa-star' : 'fa-regular fa-star'"></i>
                         </button>
                         <button v-if="editable" type="button" class="nux-app-card-edit" title="编辑应用信息与跳转" @click="emitEdit">
