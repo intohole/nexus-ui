@@ -38,6 +38,7 @@
             showSearch: { type: Boolean, default: true },
             showArchive: { type: Boolean, default: true },
             showRename: { type: Boolean, default: true },
+            showDelete: { type: Boolean, default: true },
             pageSize: { type: Number, default: 100 },
             staticItems: { type: Array, default: null },
             listAdapter: { type: Function, default: pickList },
@@ -131,7 +132,7 @@
             }
 
             async function remove(conv) {
-                if (!api || !conv) return;
+                if (!conv) return;
                 if (window.nuxConfirm) {
                     const name = conv.title || props.newTitle;
                     const ok = await window.nuxConfirm(`「${name}」删除后无法恢复，确定删除吗？`, '删除对话', {
@@ -139,6 +140,10 @@
                         confirmType: 'danger'
                     });
                     if (!ok) return;
+                }
+                if (isStatic.value || !api) {
+                    ctx.emit('deleted', conv.id);
+                    return;
                 }
                 try {
                     await api.delete(`${props.conversationUrl}/${conv.id}`);
@@ -289,7 +294,7 @@
                                 <button v-if="showArchive && !isStatic" type="button" class="nx-conv-list-item-btn" :title="c.status === 'archived' ? '恢复' : '归档'" @click="toggleArchive(c)">
                                     {{ c.status === 'archived' ? '恢复' : '归档' }}
                                 </button>
-                                <button v-if="!isStatic" type="button" class="nx-conv-list-item-btn is-danger" title="删除" @click="remove(c)">删除</button>
+                                <button v-if="showDelete" type="button" class="nx-conv-list-item-btn is-danger" title="删除" @click="remove(c)">删除</button>
                             </span>
                         </div>
                     </li>
