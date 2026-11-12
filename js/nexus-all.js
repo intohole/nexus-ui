@@ -4689,7 +4689,7 @@
 (function () {
     'use strict';
 
-    var TIP_VERSION = '1.0.0';
+    var TIP_VERSION = '1.1.0';
     var GAP = 8;
     var registry = new WeakMap();
 
@@ -4754,11 +4754,26 @@
         if (!el || !opts || !opts.text) return;
         if (!nativeSupported()) {
             el.setAttribute('title', opts.text);
+            el.setAttribute('data-nux-tip-host', '');
             return;
         }
         var entry = ensureTip(el);
         entry.tip.textContent = opts.text;
         el.setAttribute('data-nux-tip-host', '');
+    }
+
+    function update(el, text) {
+        if (!el || !text) return;
+        if (!nativeSupported()) {
+            if (el.hasAttribute('data-nux-tip-host')) el.setAttribute('title', text);
+            return;
+        }
+        var entry = registry.get(el);
+        if (!entry) return;
+        entry.tip.textContent = text;
+        var open = false;
+        try { open = entry.tip.matches(':popover-open'); } catch (e) { open = entry.tip.hasAttribute('open'); }
+        if (open) position(el, entry.tip);
     }
 
     function unbind(el) {
@@ -4772,10 +4787,28 @@
         registry.delete(el);
     }
 
+    function bindAll(root, selector) {
+        if (!root) return root;
+        if (!nativeSupported()) return root;
+        var sel = selector || 'button[title], .btn[title], .dropdown-item[title], a[title][aria-label]';
+        var nodes = root.querySelectorAll(sel);
+        for (var i = 0; i < nodes.length; i++) {
+            var el = nodes[i];
+            if (el.hasAttribute('data-tip-keep')) continue;
+            var text = el.getAttribute('title') || '';
+            if (!text) continue;
+            bind(el, { text: text });
+            el.removeAttribute('title');
+        }
+        return root;
+    }
+
     window.NexusTip = {
         version: TIP_VERSION,
         supported: nativeSupported,
         bind: bind,
+        update: update,
+        bindAll: bindAll,
         unbind: unbind
     };
 })();
