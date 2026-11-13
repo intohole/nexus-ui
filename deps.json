@@ -21,7 +21,7 @@
       "cdn": "https://registry.npmmirror.com/axios/{version}/files/dist/axios.min.js"
     },
     "nexus-ui": {
-      "version": "2.93.0",
+      "version": "2.94.0",
       "pkg": null,
       "cdn": "https://songguokr.com/nexus-ui/v{version}/"
     },
@@ -137,6 +137,7 @@
     "promptManager/readme.html",
     "handoff",
     "jinnang_archive",
-    "nexus-ui/tests"
+    "nexus-ui/tests",
+    "arcade/data"
   ]
 }
