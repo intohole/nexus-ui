@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    const CHAT_VERSION = '1.2.0';
+    const CHAT_VERSION = '1.3.0';
 
     function delegateMarkdown(text) {
         if (window.NexusMarkdown && typeof window.NexusMarkdown.render === 'function') {
@@ -53,7 +53,7 @@
         get isStreaming() { return this.controller !== null; }
 
         async start() {
-            if (!this.api || !this.url) { this.onError('未配置API或URL'); return; }
+            if (!this.api || !this.url) { this.onError('未配置API或URL', { code: 'config' }); return; }
             this.receivedChunks = '';
             this.controller = new AbortController();
             const requestId = `chat_${Date.now()}_${Math.random().toString(36).slice(2)}`;
@@ -76,18 +76,18 @@
                 } else if (error && error.code === 'timeout') {
                     this.onError(this.receivedChunks
                         ? '响应超时，已保留前面生成的内容，请重试或缩短问题'
-                        : '响应超时，请重试或更换问题');
+                        : '响应超时，请重试或更换问题', { code: 'timeout' });
                 } else if (error && error.status === 401) {
-                    this.onError('登录已过期，请重新登录');
+                    this.onError('登录已过期，请重新登录', { status: 401 });
                 } else if (error && error.status) {
                     const m = /^HTTP \d+ (.*)$/s.exec(error.message || '');
                     let msg = null;
                     if (m) {
                         try { msg = this.api._extractError(JSON.parse(m[1])); } catch (e) { }
                     }
-                    this.onError(msg || `请求失败 ${error.status}`);
+                    this.onError(msg || `请求失败 ${error.status}`, { status: error.status });
                 } else {
-                    this.onError((error && error.message) || '网络错误');
+                    this.onError((error && error.message) || '网络错误', { code: 'network' });
                 }
             } finally {
                 this.api.abortControllers.delete(requestId);
@@ -99,7 +99,10 @@
         _handleData(data, event) {
             if (this.onEvent) this.onEvent(event, data);
             if (event === 'error') {
-                this.onError(data.message || data.error || 'AI处理出错');
+                this.onError(data.message || data.error || 'AI处理出错', {
+                    code: data.code || '',
+                    status: Number(data.code) || 0
+                });
                 return;
             }
             if (event === this.eventKey || event === 'delta' || event === 'content' || event === 'message') {
@@ -253,7 +256,7 @@
             doneKey: cfg.doneKey || 'done',
             onChunk: (chunk, full) => callbacks.onChunk(chunk, full),
             onDone: (full) => callbacks.onDone(full),
-            onError: (err) => callbacks.onError(err),
+            onError: (err, meta) => callbacks.onError(err, meta),
             onEvent: (ev, data) => { if (callbacks.onEvent) callbacks.onEvent(ev, data); }
         });
         if (onController) onController(ctrl);

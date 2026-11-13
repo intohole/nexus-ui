@@ -278,6 +278,54 @@
     opacity: 0.8;
 }
 
+.nx-ai-chat-error-kind {
+    display: inline-block;
+    margin-right: 0.375rem;
+    padding: 0 0.375rem;
+    border-radius: var(--nx-radius-sm, 0.25rem);
+    background: rgba(var(--nx-danger-rgb, 239, 68, 68), 0.12);
+    font-style: normal;
+    font-size: var(--nx-text-xs, 0.75rem);
+    line-height: 1.6;
+}
+
+.nx-ai-chat-earlier {
+    display: flex;
+    justify-content: center;
+    padding: 0.25rem 0 var(--nx-space-3, 0.75rem);
+}
+
+.nx-ai-chat-earlier-btn {
+    min-height: 32px;
+    padding: 0.25rem 0.875rem;
+    background: var(--nx-bg-secondary, rgb(241, 245, 249));
+    border: 1px solid var(--nx-border, rgb(226, 232, 240));
+    border-radius: var(--nx-radius-full, 9999px);
+    color: var(--nx-text-muted, rgb(148, 163, 184));
+    font-size: var(--nx-text-sm, 0.8125rem);
+    font-family: inherit;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.nx-ai-chat-earlier-btn:hover {
+    color: var(--nx-accent, rgb(79, 70, 229));
+    border-color: var(--nx-accent, rgb(79, 70, 229));
+}
+
+.nx-ai-chat-earlier-loading {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    color: var(--nx-text-muted, rgb(148, 163, 184));
+    font-size: var(--nx-text-sm, 0.8125rem);
+}
+
+[data-theme="dark"] .nx-ai-chat-earlier-btn {
+    background: var(--nx-bg-tertiary, rgba(0, 0, 0, 0.2));
+    border-color: var(--nx-border, rgb(51, 65, 85));
+}
+
 .nx-ai-chat-actions {
     display: flex;
     gap: var(--nx-space-2, 0.5rem);
@@ -412,6 +460,10 @@
     padding: 0.375rem 0.25rem 0.5rem;
     color: var(--nx-text-muted, rgb(148, 163, 184));
     font-size: var(--nx-text-sm, 0.8125rem);
+}
+
+.nx-ai-chat-status-text {
+    font-variant-numeric: tabular-nums;
 }
 
 .nx-ai-chat-status-spinner {
@@ -586,6 +638,21 @@
 
     .nx-ai-chat-quick-btn {
         padding: 0.625rem 1rem;
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .nx-ai-chat-welcome-desc {
+        max-width: 100%;
+    }
+
+    .nx-ai-chat-quick {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .nx-ai-chat-earlier-btn {
+        min-height: 40px;
     }
 }
 

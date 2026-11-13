@@ -4,6 +4,13 @@
         <div class="nx-ai-chat" :class="{ 'keyboard-open': kbHeight > 0 }" :style="kbHeight > 0 ? { '--nx-chat-kb': kbHeight + 'px' } : null">
             <div class="nx-ai-chat-messages" ref="scrollEl" role="log" aria-live="polite" aria-relevant="additions" @scroll="onScroll">
                 <div class="nx-ai-chat-list" ref="listEl">
+                    <div v-if="feat.loadEarlier && (hasMore || earlierLoading)" class="nx-ai-chat-earlier">
+                        <div v-if="earlierLoading" class="nx-ai-chat-earlier-loading">
+                            <span class="nx-ai-chat-status-spinner"></span>
+                            <span>正在加载更早的消息…</span>
+                        </div>
+                        <button v-else type="button" class="nx-ai-chat-earlier-btn" @click="loadEarlier">加载更早的消息</button>
+                    </div>
                     <div v-if="!list.length && !$slots.empty && !$slots.welcome" class="nx-ai-chat-welcome">
                         <div class="nx-ai-chat-welcome-icon">{{ welcome.icon || '👋' }}</div>
                         <h3 class="nx-ai-chat-welcome-title">{{ welcome.title || 'AI助手为您服务' }}</h3>
@@ -114,17 +121,20 @@
                                 <slot name="message-after" :msg="m"></slot>
                             </div>
                             <div v-if="m.error" class="nx-ai-chat-error-bar" role="alert">
-                                <span class="nx-ai-chat-error-text">{{ m.errorMsg || errorMsg || '生成失败' }}</span>
+                                <span class="nx-ai-chat-error-text">
+                                    <em v-if="errorKind(m)" class="nx-ai-chat-error-kind">{{ errorKind(m) }}</em>
+                                    {{ m.errorMsg || errorMsg || '生成失败' }}
+                                </span>
                                 <span class="nx-ai-chat-error-ops">
                                     <button v-if="feat.chatActions" class="nx-ai-chat-retry-btn" @click="copyMessageError(m)">复制详情</button>
                                     <button class="nx-ai-chat-retry-btn" @click="retry(m)">重试</button>
                                 </span>
                             </div>
-                            <div v-if="m.role === 'user' && feat.chatActions && !m._editing && !isStreaming" class="nx-ai-chat-actions">
+                            <div v-if="m.role === 'user' && feat.chatActions && feat.editResend !== 'off' && !m._editing && !isStreaming" class="nx-ai-chat-actions">
                                 <button class="nx-ai-chat-action-btn" @click="startEdit(m)" :aria-label="'编辑并重发'">编辑</button>
                             </div>
                             <div v-else-if="!m.streaming && !m.error && m.content && feat.messageCopy" class="nx-ai-chat-actions">
-                                <button v-if="feat.chatActions && m.role === 'assistant'" class="nx-ai-chat-action-btn" @click="regenerate(m)">重新生成</button>
+                                <button v-if="feat.chatActions && feat.regenerate !== 'off' && m.role === 'assistant'" class="nx-ai-chat-action-btn" @click="regenerate(m)">重新生成</button>
                                 <button v-if="feat.speakButton && hasTts" class="nx-ai-chat-action-btn" @click="speakMessage(m)">{{ speakingId === m.id ? '停止朗读' : '朗读' }}</button>
                                 <button class="nx-ai-chat-action-btn" @click="copyMessage(m)">复制</button>
                             </div>

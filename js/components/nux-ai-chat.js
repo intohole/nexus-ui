@@ -24,7 +24,8 @@
             placeholder: { type: String, default: '输入消息，Enter 发送' },
             disabled: { type: Boolean, default: false },
             scrollThreshold: { type: Number, default: 150 },
-            streaming: { type: Boolean, default: false }
+            streaming: { type: Boolean, default: false },
+            hasMore: { type: Boolean, default: false }
         },
         emits: ['update:messages', 'send', 'chunk', 'done', 'error', 'stop', 'retry', 'clear', 'stream-start', 'stream-end', 'meta', 'widget-action', 'voice-result', 'regenerate', 'edit-resend', 'attachment-pick', 'attachment-remove', 'interrupt-action'],
         components: Object.assign(
@@ -47,6 +48,7 @@
             const errorMsg = ref('');
             const showScrollBtn = ref(false);
             const newMsgCount = ref(0);
+            const earlierLoading = ref(false);
             const isComposing = ref(false);
             const lastSendTime = ref(0);
             const elapsed = ref(0);
@@ -150,11 +152,35 @@
             }
 
             function onScroll() {
+                if (feat.loadEarlier && props.hasMore && !earlierLoading.value
+                    && scrollEl.value && scrollEl.value.scrollTop <= 48) {
+                    loadEarlier();
+                }
                 if (!feat.smartScroll) return;
                 const near = isNearBottom(scrollEl.value, props.scrollThreshold);
                 showScrollBtn.value = !near && list.length > 0;
                 if (near) newMsgCount.value = 0;
             }
+
+            function loadEarlier() {
+                if (!feat.loadEarlier || !props.hasMore || earlierLoading.value) return;
+                earlierLoading.value = true;
+                ctx.emit('load-earlier');
+            }
+
+            function prependMessages(msgs) {
+                earlierLoading.value = false;
+                if (!msgs || !msgs.length) return;
+                const el = scrollEl.value;
+                const prevHeight = el ? el.scrollHeight : 0;
+                const prevTop = el ? el.scrollTop : 0;
+                list.splice(0, 0, ...msgs.map(m => reactive(Object.assign({}, m))));
+                nextTick(() => {
+                    if (el) el.scrollTop = el.scrollHeight - prevHeight + prevTop;
+                });
+            }
+
+            function resetLoadEarlier() { earlierLoading.value = false; }
 
             function smartScroll(force) {
                 if (rafId) cancelAnimationFrame(rafId);
@@ -270,6 +296,7 @@
             }
 
             const metaChips = (m) => H.metaChips(m);
+            const errorKind = (m) => H.errorKind(m);
 
             function copyMessageError(msg) {
                 const text = (msg && msg.errorMsg) || errorMsg.value || '生成失败';
@@ -279,7 +306,7 @@
             }
 
             function startEdit(m) {
-                if (!feat.chatActions || isStreaming.value || props.disabled) return;
+                if (!feat.chatActions || feat.editResend === 'off' || isStreaming.value || props.disabled) return;
                 if (!m || m.role !== 'user') return;
                 m._editDraft = m.content;
                 m._editing = true;
@@ -345,6 +372,10 @@
                 }
             }, { deep: false });
 
+            watch(() => props.hasMore, (val) => {
+                if (!val) earlierLoading.value = false;
+            });
+
             onMounted(() => {
                 nextTick(() => {
                     if (list.length > 0) scrollToBottomEl(scrollEl.value, false);
@@ -380,7 +411,10 @@
                 },
                 focus: () => { if (inputEl.value) inputEl.value.focus(); },
                 addAttachmentFiles: addAttachmentFiles,
-                removeAttachment: removeAttachment
+                removeAttachment: removeAttachment,
+                prependMessages: prependMessages,
+                resetLoadEarlier: resetLoadEarlier,
+                loadEarlier: loadEarlier
             });
 
             return {
@@ -393,7 +427,8 @@
                 addAttachmentFiles, removeAttachment, pickAttachmentFiles,
                 onDragOver, onDragLeave, onDrop, onPaste, speakMessage, onInterruptAction,
                 onScroll, onInput, onKeydown, onCompositionStart, onCompositionEnd,
-                clickQuickReply, smartScroll, onWidgetAction, onVoiceResult
+                clickQuickReply, smartScroll, onWidgetAction, onVoiceResult,
+                earlierLoading, loadEarlier, errorKind
             };
         },
         template: window.NuxAiChatTemplate

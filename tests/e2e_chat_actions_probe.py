@@ -51,7 +51,7 @@ async def run_theme(pw, port: str, theme: str, prove_red: bool, width: int) -> l
             R = {}
             ok = False
             note = f"夹具执行异常: {str(e)[:80]}"
-        results.append((f"{theme}: 夹具 23 断言（控制面四动线+对照+reasoning/meta）", ok, note))
+        results.append((f"{theme}: 夹具全断言（控制面四动线+对照+reasoning/meta+上翻加载）", ok, note))
 
         try:
             await page.hover("#app-on .nx-ai-chat-msg >> nth=0")

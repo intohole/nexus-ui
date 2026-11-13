@@ -412,6 +412,39 @@ load('nexus-chat.js');
     check('metaChips: thinkingMs 追加思考 chip', H.metaChips({ meta: {}, thinkingMs: 1.2 })[0] === '思考 1.2s');
 }
 
+{
+    check('errorKind: 429 判请求过于频繁', H.errorKind({ errorStatus: 429 }) === '请求过于频繁');
+    check('errorKind: 5xx 判服务暂时不可用', H.errorKind({ errorStatus: 503 }) === '服务暂时不可用');
+    check('errorKind: timeout 判响应超时', H.errorKind({ errorCode: 'timeout' }) === '响应超时');
+    check('errorKind: network 判网络连接异常', H.errorKind({ errorCode: 'network' }) === '网络连接异常');
+    check('errorKind: 无锚点返回空', H.errorKind({}) === '');
+}
+{
+    const env = makeEnv({ feat: { streamFallback: false } });
+    env.props.sendHandler = async (text, cb) => { cb.onError('请求过于频繁', { status: 429 }); };
+    const a = H.createActions(env);
+    await a.send('q');
+    const m = env.list[1];
+    check('errorMeta: 状态码落消息体', m.errorStatus === 429 && m.errorCode === '');
+    check('errorMeta: 文案仍走字符串首参', m.errorMsg === '请求过于频繁' && env.errorMsg.value === '请求过于频繁');
+}
+{
+    const env = makeEnv({ feat: { streamFallback: false, chatActions: true, regenerate: 'off' } });
+    env.list.push({ id: 'u1', role: 'user', content: '问' }, { id: 'a1', role: 'assistant', content: '答', streaming: false });
+    const a = H.createActions(env);
+    a.regenerate(env.list[1]);
+    check('regenerate: off 模式不截断不发事件',
+        env.list.length === 2 && !env.events.some((e) => e[0] === 'regenerate'));
+}
+{
+    const env = makeEnv({ feat: { streamFallback: false, chatActions: true, editResend: 'off' } });
+    env.list.push({ id: 'u1', role: 'user', content: '旧问' });
+    const a = H.createActions(env);
+    a.editResend(env.list[0], '新问');
+    check('editResend: off 模式不改写不发事件',
+        env.list[0].content === '旧问' && !env.events.some((e) => e[0] === 'edit-resend'));
+}
+
 let pass = 0;
 for (const [name, ok] of results) {
     console.log((ok ? 'PASS' : 'FAIL') + ' ' + name);

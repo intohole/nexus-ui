@@ -18,6 +18,9 @@
             richReasoning: true,
             richTools: true,
             richReferences: true,
+            loadEarlier: true,
+            regenerate: 'local',
+            editResend: 'local',
             voice: false,
             speakButton: false,
             attachments: false,
@@ -79,6 +82,18 @@
             if (ms) chips.push(ms >= 1000 ? (Math.round(ms / 100) / 10) + 's' : ms + 'ms');
             if (msg.thinkingMs) chips.push('思考 ' + msg.thinkingMs + 's');
             return chips;
+        },
+        errorKind: function (msg) {
+            const code = String((msg && msg.errorCode) || '');
+            const status = Number((msg && msg.errorStatus) || (code.match(/^\d+$/) ? code : 0) || 0);
+            if (code === 'timeout') return '响应超时';
+            if (code === 'network') return '网络连接异常';
+            if (code === 'config') return '配置缺失';
+            if (status === 429) return '请求过于频繁';
+            if (status >= 500) return '服务暂时不可用';
+            if (status === 408 || status === 504) return '响应超时';
+            if (status === 401 || status === 403) return '登录状态失效';
+            return '';
         },
         // v2.89.0：composer 附件纯函数族（准入/快照/上传状态机/TTS 朗读），Vue-free
         // 注入形态与 createActions 同构；UI 态（drag/条渲染）归组件。
@@ -163,7 +178,7 @@
             let stopped = false;
             let stopFn = null;
 
-            function settle(ok, msg, err) {
+            function settle(ok, msg, err, errMeta) {
                 msg.streaming = false;
                 if (feat.reasoningAuto && !msg._reasoningManual && msg.showReasoning) {
                     msg.showReasoning = false;
@@ -171,6 +186,8 @@
                 if (!ok) {
                     msg.error = true;
                     msg.errorMsg = err || '未知错误';
+                    msg.errorCode = (errMeta && errMeta.code) || '';
+                    msg.errorStatus = (errMeta && errMeta.status) || 0;
                     isError.value = true;
                     errorMsg.value = err || '未知错误';
                 }
@@ -246,7 +263,7 @@
                         if (full && !assistantMsg.content) assistantMsg.content = full;
                         settle(true, assistantMsg);
                     },
-                    onError: (err) => {
+                    onError: (err, errMeta) => {
                         if (stopped) {
                             settle(true, assistantMsg);
                             return;
@@ -254,7 +271,10 @@
                         if (feat.streamFallback && props.apiConfig.fallbackUrl) {
                             fallbackSync(text, assistantMsg);
                         } else {
-                            settle(false, assistantMsg, err && err.message ? err.message : 'AI服务暂时不可用');
+                            const errText = typeof err === 'string'
+                                ? err
+                                : (err && err.message) || 'AI服务暂时不可用';
+                            settle(false, assistantMsg, errText, errMeta);
                         }
                     },
                     currentMessage: assistantMsg,
@@ -303,7 +323,7 @@
             // 重新生成：从任一成功 assistant 消息截断后续并重发其前最近的用户提问。
             // 纯前端编排——用户消息保留在列表，不重复 push；消息变更经 emitMessages 灌出。
             function regenerate(msg) {
-                if (!feat.chatActions || isStreaming.value || props.disabled) return;
+                if (!feat.chatActions || feat.regenerate === 'off' || isStreaming.value || props.disabled) return;
                 let target = msg;
                 if (!target) {
                     for (let i = list.length - 1; i >= 0; i--) {
@@ -328,7 +348,7 @@
 
             // 编辑重发：改写既有用户消息并截断其后，以新文案重发该轮。
             function editResend(msg, newContent) {
-                if (!feat.chatActions || isStreaming.value || props.disabled) return;
+                if (!feat.chatActions || feat.editResend === 'off' || isStreaming.value || props.disabled) return;
                 if (!msg || msg.role !== 'user') return;
                 const text = String(newContent != null ? newContent : msg.content).trim();
                 if (!text) return;
