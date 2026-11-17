@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><title>result-view edit</title>
+<link rel="stylesheet" href="/css/nexus-all.css"></head>
+<body style="padding:24px;font-family:system-ui">
+<div id="app">
+  <nux-result-view id="rv-default" :struct="tableStruct"></nux-result-view>
+  <nux-result-view id="rv-edit" :struct="tableStruct" editable instruct :busy="busy"
+      @edit="onEdit" @instruct="onInstruct"></nux-result-view>
+  <nux-result-view id="rv-readonly" :struct="tableStruct" editable readonly></nux-result-view>
+  <nux-result-view id="rv-kv" :struct="kvStruct" editable @edit="onEdit"></nux-result-view>
+  <pre id="events">{{ eventsText }}</pre>
+</div>
+<script src="/vendor/vue.global.prod.js"></script>
+<script src="/js/nexus-all.js"></script>
+<script src="/js/components/nux-result-view.js"></script>
+<script>
+(function () {
+    const app = Vue.createApp({ data() { return {
+        busy: false,
+        tableStruct: { kind: 'table', columns: ['answer', 'confidence'], rows: [{ answer: '旧答案', confidence: '80' }] },
+        kvStruct: { kind: 'kv', pairs: [{ k: 'summary', v: '旧摘要' }] },
+        events: []
+    }; },
+    computed: { eventsText() { return this.events.map(e => JSON.stringify(e)).join('\n'); } },
+    methods: {
+        onEdit(p) { this.events.push({ type: 'edit', ...p }); },
+        onInstruct(p) { this.events.push({ type: 'instruct', ...p }); }
+    } });
+    app.component('NuxResultView', window.NuxResultView);
+    const vm = app.mount('#app');
+    window.__setBusy = () => { vm.busy = true; };
+})();
+</script>
+</body></html>
