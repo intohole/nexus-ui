@@ -85,7 +85,9 @@
 
             async function start() {
                 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                    fail('当前浏览器不支持语音输入'); return;
+                    var secure = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+                    fail(secure ? '当前浏览器不支持语音输入' : '语音输入需要 https 访问，请改用 https:// 地址打开本页');
+                    return;
                 }
                 try {
                     mediaStream = await navigator.mediaDevices.getUserMedia({
