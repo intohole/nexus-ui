@@ -8,11 +8,12 @@
   <script src="/vendor/vue.global.prod.js"></script>
   <script src="/js/nexus-all.js"></script>
   <script src="/js/components/nux-notification-bell.js"></script>
+  <style>
+    .e2e-bell-dock { position: fixed; top: 24px; right: 32px; z-index: 20; }
+  </style>
 </head>
 <body>
-  <div id="app" style="padding:24px">
-    <nux-notification-bell base-url="/notifycenter"></nux-notification-bell>
-  </div>
+  <div id="app"><div class="e2e-bell-dock"><nux-notification-bell base-url="/notifycenter"></nux-notification-bell></div></div>
   <script>
     localStorage.setItem('uc_access_token', 'e2e-digest-token');
     const app = Vue.createApp({});

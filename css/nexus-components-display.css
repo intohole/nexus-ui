@@ -573,6 +573,13 @@
 .nux-notify-stream-item-title { font-size: 12px; color: var(--nx-text-primary); }
 .nux-notify-stream-item-sum { font-size: 11px; color: var(--nx-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .nux-notify-stream-loading { padding: 8px 0; }
+.nux-notify-stream-item:focus-visible { outline: 2px solid rgba(var(--app-accent-rgb), 0.7); outline-offset: -2px; }
+@media (prefers-reduced-motion: no-preference) {
+  .nux-notify-stream-head > i, .nux-notif-digest-stream > i { transition: transform 0.15s; }
+}
+.nux-notify-stream-head[aria-expanded="true"] > i,
+.nux-notif-digest-stream[aria-expanded="true"] > i,
+.nux-notif-digest-stream.is-open > i { transform: rotate(180deg); }
 @media (hover: none) and (pointer: coarse) {
   .nux-notify-stream-head, .nux-notify-stream-item { padding-top: 12px; padding-bottom: 12px; }
 }
@@ -583,6 +590,7 @@
 }
 .nux-notif-digest-stream:hover { background: var(--nx-bg-hover); }
 .nux-notif-digest-stream > i { margin-left: auto; color: var(--nx-text-muted); font-size: 11px; }
+.nux-notif-digest-stream:focus-visible { outline: 2px solid rgba(var(--app-accent-rgb), 0.7); outline-offset: -2px; }
 .nux-notify-item {
   display: flex;
   align-items: flex-start;

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fe5 native panel digest E2E</title>
+<link rel="stylesheet" href="/css/nexus-all.css">
+<style>body { padding: 32px; font-family: -apple-system, sans-serif; } #mount { max-width: 640px; margin: 0 auto; }</style>
+</head>
+<body>
+<button id="open-panel" type="button">打开通知中心</button>
+<div id="mount"></div>
+<script src="/vendor/vue.global.prod.js"></script>
+<script src="/js/nexus-utils.js"></script>
+<script src="/js/nexus-stream.js"></script>
+<script src="/js/nexus-api.js"></script>
+<script>window.__api = new NexusApi({ baseUrl: '', tokenKey: 'uc_access_token' });</script>
+<script src="/js/components/nux-notification-digest.js"></script>
+<script src="/js/components/nux-notification-panel.js"></script>
+<script src="/js/components/nux-notification-mute.js"></script>
+<script src="/js/components/nux-notification-webpush.js"></script>
+<script>
+(function () {
+    localStorage.setItem('uc_access_token', 'e2e-digest-token');
+    document.getElementById('open-panel').addEventListener('click', function () {
+        var panel = new NuxNotificationPanel({ baseUrl: '/api/notify', manager: {
+            markRead: function (id) { return window.__api.put('/api/notify/' + id + '/read'); },
+            markAllRead: function (box) { return window.__api.put('/api/notify/read-all' + (box ? '?box=' + box : '')); }
+        }, onNotificationClick: function () { return false; } });
+        panel.mount(document.getElementById('mount'));
+        window.__panel = panel;
+        window.__PANEL_READY = true;
+    });
+})();
+</script>
+</body>
+</html>

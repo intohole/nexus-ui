@@ -8704,6 +8704,21 @@ try {
     function appLabel(appId) {
         return window.NexusUtils && NexusUtils.notify ? NexusUtils.notify.appLabel(appId) : (appId || '');
     }
+    function clipTxt(content) {
+        return window.NexusUtils && NexusUtils.notify ? NexusUtils.notify.clip(content, 60) : '';
+    }
+    function typeIcon(item) {
+        return window.NexusUtils && NexusUtils.notify ? NexusUtils.notify.typeIcon(item.type) : '';
+    }
+    function hiddenHintText(counts) {
+        var ah = (counts && counts.action_hidden) || 0;
+        var fo = (counts && counts.folded_unread) || 0;
+        var n = ah + fo;
+        if (!n) return '';
+        if (ah && fo) return '还有 ' + n + ' 条未读（含 ' + ah + ' 条待处理），见下方全部列表';
+        if (ah) return '还有 ' + ah + ' 条待处理，见下方全部列表';
+        return '另有 ' + fo + ' 条未读，见下方全部列表';
+    }
 
     function fetch(apiBase, fetchJson) {
         return fetchJson((apiBase || '') + '/notifications/inbox-digest')
@@ -8732,12 +8747,14 @@ try {
         computed: {
             hasAction: function () { return !!(this.digest && this.digest.action_items && this.digest.action_items.length); },
             hasStreams: function () { return !!(this.digest && this.digest.streams && this.digest.streams.length); },
-            counts: function () { return (this.digest && this.digest.counts) || {}; }
+            counts: function () { return (this.digest && this.digest.counts) || {}; },
+            hiddenHint: function () { return hiddenHintText(this.counts); }
         },
         methods: {
             streamKey: function (s) { return s.app_id + ':' + s.notif_type; },
             relTime: relTime,
             appLabel: appLabel,
+            icon: typeIcon,
             toggleStream: function (s) {
                 var self = this;
                 var key = self.streamKey(s);
@@ -8760,24 +8777,23 @@ try {
             activate: function (item) {
                 this.$emit('activate', item);
             },
-            clip: function (content) {
-                return window.NexusUtils && NexusUtils.notify ? NexusUtils.notify.clip(content, 60) : '';
-            }
+            clip: clipTxt
         },
         template: '' +
             '<div v-if="hasAction || hasStreams" class="nux-notify-digest">' +
             '  <div v-if="hasAction" class="nux-notify-digest-seg">' +
             '    <div class="nux-notify-digest-label">待你处理<span v-if="counts.action_unread" class="nux-notify-digest-n">{{ counts.action_unread }}</span></div>' +
             '    <ul class="nux-notify-list">' +
-            '      <li v-for="item in digest.action_items" :key="\'a\' + item.id" :class="[\'nux-notify-item\', \'nux-notify-item-unread\']" role="button" tabindex="0" :aria-label="item.title" @click="activate(item)" @keydown.enter.prevent="activate(item)">' +
+            '      <li v-for="item in digest.action_items" :key="\'a\' + item.id" :class="[\'nux-notify-item\', \'nux-notify-item-unread\']" role="button" tabindex="0" :aria-label="item.title" @click="activate(item)" @keydown.enter.prevent="activate(item)" @keydown.space.prevent="activate(item)">' +
+            '        <span class="nux-notify-item-ic" aria-hidden="true"><i :class="icon(item)"></i></span>' +
             '        <span class="nux-notify-item-main">' +
             '          <span class="nux-notify-item-title">{{ item.title }}</span>' +
-            '          <span class="nux-notify-item-meta"><span class="nux-notify-item-app">{{ item.app_id }}</span><span class="nux-notify-item-time">{{ relTime(item.created_at) }}</span></span>' +
+            '          <span v-if="item.content" class="nux-notify-item-summary">{{ clip(item.content) }}</span>' +
+            '          <span class="nux-notify-item-meta"><span class="nux-notify-item-app">{{ appLabel(item.app_id) }}</span><span class="nux-notify-item-time">{{ relTime(item.created_at) }}</span></span>' +
             '        </span>' +
             '        <span class="nux-notify-item-dot" aria-hidden="true"></span>' +
             '      </li>' +
             '    </ul>' +
-            '    <div v-if="counts.action_hidden > 0" class="nux-notify-digest-hint">还有 {{ counts.action_hidden }} 条待处理，见下方全部列表</div>' +
             '  </div>' +
             '  <div v-if="hasStreams" class="nux-notify-digest-seg">' +
             '    <div class="nux-notify-digest-label">今日简报<span v-if="counts.stream_unread" class="nux-notify-digest-n">{{ counts.stream_unread }}</span></div>' +
@@ -8800,7 +8816,7 @@ try {
             '      </li>' +
             '    </ul>' +
             '  </div>' +
-            '  <div v-if="counts.folded_unread > 0" class="nux-notify-digest-hint">另有 {{ counts.folded_unread }} 条未读，见下方全部列表</div>' +
+            '  <div v-if="hiddenHint" class="nux-notify-digest-hint">{{ hiddenHint }}</div>' +
             '</div>'
     };
 
@@ -8829,11 +8845,77 @@ try {
                     '<i class="fa-solid fa-chevron-down" aria-hidden="true"></i></li>';
             }).join('') + '</ul></div>';
         }
-        if (d.counts.folded_unread > 0) {
-            html += '<div class="nux-notify-digest-hint">另有 ' + d.counts.folded_unread + ' 条未读，见下方全部列表</div>';
-        }
+        var hint = hiddenHintText(d.counts);
+        if (hint) html += '<div class="nux-notify-digest-hint">' + esc(hint) + '</div>';
         html += '</div>';
         list.insertAdjacentHTML('afterbegin', html);
+    }
+
+    function closeStreamCard(card) {
+        card.classList.remove('is-open');
+        card.setAttribute('aria-expanded', 'false');
+    }
+
+    function nativeStreamItem(item) {
+        return '<li class="nux-notify-stream-item" data-id="' + esc(item.id) + '" role="button" tabindex="0" aria-label="' + esc(item.title) + '">' +
+            '<span class="nux-notify-stream-item-title">' + esc(item.title) + '</span>' +
+            (item.content ? '<span class="nux-notify-stream-item-sum">' + esc(clipTxt(item.content)) + '</span>' : '') +
+            '<span class="nux-notify-item-time">' + esc(relTime(item.created_at)) + '</span></li>';
+    }
+
+    function activateNativeItem(panel, ul, target) {
+        var li = target && target.closest ? target.closest('.nux-notify-stream-item') : null;
+        if (!li) return;
+        var id = parseInt(li.getAttribute('data-id'), 10);
+        var item = (ul._items || []).filter(function (x) { return Number(x.id) === id; })[0];
+        if (!item) return;
+        reportClick(panel._baseUrl, function (u) { return panel._getApi().get(u); }, item.id);
+        var link = (window.NexusUtils && NexusUtils.notify) ? NexusUtils.notify.resolve(item) : (item.link || '');
+        if (link) { window.location.href = link; return; }
+        panel._getApi().put(panel._baseUrl + '/' + item.id + '/read').catch(function () {});
+    }
+
+    function toggleNative(panel, el) {
+        var app = el.getAttribute('data-stream-app');
+        var type = el.getAttribute('data-stream-type');
+        if (!app || !type) return;
+        var key = app + ':' + type;
+        var list = panel._container && panel._container.querySelector('.nux-notif-panel-list');
+        if (!list) return;
+        var prev = list.querySelector('.nux-notify-stream-body[data-open-key]');
+        if (prev && prev.getAttribute('data-open-key') === key) {
+            prev.remove();
+            closeStreamCard(el);
+            return;
+        }
+        if (prev) prev.remove();
+        list.querySelectorAll('.nux-notif-digest-stream[aria-expanded="true"]').forEach(closeStreamCard);
+        var ul = document.createElement('ul');
+        ul.className = 'nux-notify-stream-body';
+        ul.setAttribute('data-open-key', key);
+        ul.innerHTML = '<li class="nux-notify-stream-loading"><span class="nx-spinner" aria-hidden="true"></span></li>';
+        el.classList.add('is-open');
+        el.setAttribute('aria-expanded', 'true');
+        el.after(ul);
+        var url = panel._baseUrl + '/notifications/stream-items?app_id=' +
+            encodeURIComponent(app) + '&notif_type=' + encodeURIComponent(type);
+        panel._getApi().get(url).then(function (d) {
+            if (!ul.isConnected) return;
+            var items = (d && Array.isArray(d.items)) ? d.items : [];
+            ul._items = items;
+            ul.innerHTML = items.length ? items.map(nativeStreamItem).join('')
+                : '<li class="nux-notify-stream-item"><span class="nux-notify-stream-item-title">暂无条目</span></li>';
+            ul.addEventListener('click', function (e) { activateNativeItem(panel, ul, e.target); });
+            ul.addEventListener('keydown', function (e) {
+                if (e.key !== 'Enter' && e.key !== ' ') return;
+                if (!e.target.closest('.nux-notify-stream-item')) return;
+                e.preventDefault();
+                activateNativeItem(panel, ul, e.target);
+            });
+        }).catch(function () {
+            if (!ul.isConnected) return;
+            ul.innerHTML = '<li class="nux-notify-stream-item"><span class="nux-notify-stream-item-title">加载失败，稍后再试</span></li>';
+        });
     }
 
     function sync(panel) {
@@ -8849,6 +8931,7 @@ try {
         reportClick: reportClick,
         attach: attach,
         sync: sync,
+        toggleNative: toggleNative,
         panel: NuxNotificationDigestPanel
     };
     window.NuxNotificationDigestPanel = NuxNotificationDigestPanel;

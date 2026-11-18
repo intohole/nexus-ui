@@ -139,7 +139,6 @@
     };
     NuxNotificationPanel.prototype._syncButtons = function (sel, attr, current) {
         if (!this._container) return;
-        var self = this;
         this._container.querySelectorAll(sel).forEach(function (b) {
             var active = b.getAttribute(attr) === current;
             b.classList.toggle('active', active);
@@ -254,6 +253,8 @@
         if (e.target.closest('.nux-notif-panel-clean')) return this._archiveRead();
         var del = e.target.closest('.nux-notif-panel-item-delete');
         if (del) return this._onDeleteClick(del);
+        var streamCard = e.target.closest('.nux-notif-digest-stream');
+        if (streamCard && window.NuxNotificationDigest) return NuxNotificationDigest.toggleNative(this, streamCard);
         var pageBtn = e.target.closest('.nux-notif-panel-page-btn');
         if (pageBtn && !pageBtn.disabled) return this.load(parseInt(pageBtn.getAttribute('data-page'), 10));
         var itemEl = e.target.closest('.nux-notif-panel-item');
@@ -264,6 +265,8 @@
     };
     NuxNotificationPanel.prototype._onRootKeydown = function (e) {
         if (e.key !== 'Enter' && e.key !== ' ') return;
+        var streamCard = e.target.closest('.nux-notif-digest-stream');
+        if (streamCard) { e.preventDefault(); streamCard.click(); return; }
         var itemEl = e.target.closest('.nux-notif-panel-item');
         if (!itemEl || e.target.closest('.nux-notif-job, .nux-notif-more, .nux-notif-panel-item-actions')) return;
         e.preventDefault();
@@ -332,8 +335,7 @@
         var url = self._baseUrl + '/archive-all';
         if (self._inboxBox) url += '?box=' + self._inboxBox;
         self._getApi().put(url).then(function (d) {
-            var n = d && d.archived_count;
-            if (window.showToast) window.showToast('已归档 ' + (n || 0) + ' 条，可在归档箱找回', 'success');
+            if (window.showToast) window.showToast('已归档 ' + ((d && d.archived_count) || 0) + ' 条，可在归档箱找回', 'success');
             self.load(1);
         }).catch(function () {
             if (window.showToast) window.showToast('操作失败', 'error');
@@ -358,9 +360,7 @@
         var totalPages = Math.ceil(this._total / this._pageSize) || 1;
         if (totalPages <= 1) { footer.innerHTML = ''; return; }
         var btn = function (self, delta, disabled, label) {
-            return '<button class="nux-notif-panel-page-btn" data-page="' + (self._page + delta) + '"' +
-                (disabled ? ' disabled' : '') + ' aria-label="' + label + '"><i class="fa-solid fa-chevron-' +
-                (delta < 0 ? 'left' : 'right') + '"></i></button>';
+            return '<button class="nux-notif-panel-page-btn" data-page="' + (self._page + delta) + '"' + (disabled ? ' disabled' : '') + ' aria-label="' + label + '"><i class="fa-solid fa-chevron-' + (delta < 0 ? 'left' : 'right') + '"></i></button>';
         };
         footer.innerHTML = '<div class="nux-notif-panel-pages">' + btn(this, -1, this._page <= 1, '上一页') +
             '<span class="nux-notif-panel-page-info">' + this._page + ' / ' + totalPages + '</span>' +
