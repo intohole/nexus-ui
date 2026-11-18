@@ -23,7 +23,7 @@ SCAN_SUFFIXES = (".js", ".html", ".htm", ".css")
 SKIP_DIRS = {
     ".git", ".venv", "venv", "node_modules", "vendor", "__pycache__", "dist", ".v2c",
     "build", "logs", "data", ".trae", ".trae-html-share-packages", "handoff",
-    ".know", "drawio", "tests", "test", "e2e", ".mypy_cache", ".pytest_cache",
+    ".know", "drawio", "tests", "test", "e2e", ".mypy_cache", ".pytest_cache", "out",
 }
 SKIP_NAME_PARTS = ("e2e", "audit", "verify_", "_test", "test_", ".min.")
 # nexus-ui 自身发布产物在 miniDeploy 的 rsync 镜像：规则命中=库实现非应用侧重复（v* 快照同语义）
@@ -45,6 +45,12 @@ KNOWN_EXCEPTIONS: dict[str, str] = {
     "aiWater/site/js/page.js#clipboard": "aiWater 产品官网不加载 nexus-ui 共享层（官网首屏性能敏感，为一 copyText 引聚合包收益为负，r64 miniDeploy 同型定性）；手搓复制链含 execCommand 回退语义完整；接共享层的触发条件=官网出现第二个共享层原语需求",
     "aiWater/site/js/page.js#exec-command-copy": "同上 aiWater#clipboard：不加载共享层的官网手搓回退，触发条件同条",
     "smartCode/frontend/static/js/sse.js#sse-reader": "chat SSE fetch+ReadableStream 手写分帧（timeout/abort/onEvent 回调链），与 WisePath/codeBlock 同族=S18 判例：resp 消费链与 NexusStream generator 原语不匹配，SSE 族专项统一处置挂账（r162 登记）",
+    "piying/static/js/views/export-panel.js#clipboard": "S171 发版窗登记：signedUrl 签名链接复制，catch→$emit('notice') 组件上行通知链（含 2h 时效文案语义）与 NexusUtils.copyText 的全局 toast 语义有差，收归需带 notice 链适配，留 piying 业务轮直替后摘牌",
+    "promptGenius/frontend/js/pages/eval-panel.js#clipboard": "S171 发版窗登记：fe8 判分结果复制（已加载 NexusUtils），textarea+execCommand 手搓回退可直替 NexusUtils.copyToClipboard——fe8 收编遗留面，留 promptGenius 业务轮直替后摘牌",
+    "promptGenius/frontend/js/pages/eval-panel.js#exec-command-copy": "同上 eval-panel#clipboard：fe8 收编遗留手搓回退，触发条件同条",
+    "shensi/static/js/views/result.js#clipboard": "S171 发版窗登记：r9 批改/分享复制双点，then/error 双回调→$emit('notify') 上行通知链（含『链接生成成功但复制失败请手动复制』降级文案），与全局 toast 语义有差，留 shensi 线带 notify 链适配后摘牌",
+    "shensi/static/js/views/result.js#exec-command-copy": "同上 result#clipboard 第二命中点（shareAttempt 分享链），触发条件同条",
+    "xunji/static/js/components/case-actions.js#clipboard": "S171 发版窗登记：分享复制静默 catch（shareCopied 状态位自管理），与 case.js#clipboard 既有例外同族（S137 定性：失败语义走自管状态非 toast），由 xunji 线分享族统一收归后摘牌",
 }
 
 RULES = [

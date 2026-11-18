@@ -297,24 +297,38 @@ def ship(version: str, only: str | None = None) -> int:
     return 0 if failed == 0 else 2
 
 
-def run_apply() -> list[str]:
-    steps: list[str] = []
-    for name, cmd in [
+def APPLY_CHAIN() -> list[tuple[str, list[str] | None]]:
+    return [
         ("build_all", [sys.executable, "build_all.py"]),
         ("sync_version", [sys.executable, "sync_version.py"]),
         ("sync_asset_hash", [sys.executable, "sync_asset_hash.py", "--fix"]),
+        ("sri_resync", None),
         ("publish_version", [sys.executable, "publish_version.py"]),
-    ]:
+    ]
+
+
+def run_apply() -> list[str]:
+    import sri_link
+
+    steps: list[str] = []
+    for name, cmd in APPLY_CHAIN():
+        if cmd is None:
+            added, fixed = sri_link.sri_resync()
+            steps.append(f"{name}: ok added={added} fixed={fixed}")
+            continue
         code, out = sh(cmd, REPO)
         steps.append(f"{name}: exit={code} {'ok' if code == 0 else out.splitlines()[-1] if out else 'FAILED'}")
     return steps
 
 
 def run_checks(with_closure: bool) -> tuple[int, list[Check], list[str]]:
+    import sri_link
+
     checks = [c1_version_sync(), c2_build_determinism(), c3_asset_hash(), c4_snapshot_integrity()]
     c5, other_refs = c5_current_ref_snapshot()
     checks.append(c5)
     checks.append(c6_external_gates())
+    checks.append(sri_link.c8_sri_guard())
     if with_closure:
         checks.append(c7_closure())
     failed = sum(0 if c.ok else 1 for c in checks)
