@@ -89,7 +89,7 @@ check('checkin: display aria-live ×2', (readFileSync(ROOT + 'components/nux-che
     check('feedback-float: unread-count 原语消费', ff.includes('/api/v1/uc/echo/unread-count'));
     check('feedback-float: 徽标渲染与清零函数在', ff.includes('function renderEchoBadge') && ff.includes('function clearEchoBadge'));
     check('feedback-float: 打开面板即清徽标', /openPanel[\s\S]{0,400}clearEchoBadge/.test(ff));
-    check('feedback-float: 匿名不查（token 缺失早退）', /if \(!token\(\) \|\| window\.NexusFeedbackFloatStopped\) return/.test(ff));
+    check('feedback-float: 匿名不查（token 缺失早退）', /!H\.token \|\| !H\.token\(\) \|\| window\.NexusFeedbackFloatStopped/.test(ff));
     check('feedback-float: mine 列表新回音强调', ff.includes('nxfb-newecho') && ff.includes('item.unread_echo'));
 }
 

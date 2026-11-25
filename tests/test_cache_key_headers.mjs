@@ -31,6 +31,7 @@ global.fetch = async function(url, opts = {}) {
 Object.defineProperty(global, 'crypto', { value: (await import('node:crypto')).webcrypto, configurable: true });
 
 const load = (f) => (0, eval)(readFileSync(ROOT + f, 'utf8'));
+load('nexus-api-helpers.js');
 load('nexus-api.js');
 load('nexus-api-factory.js');
 

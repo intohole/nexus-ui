@@ -18,6 +18,7 @@ const check = (name, cond) => { results.push([name, !!cond]); };
 
 const load = (f) => (0, eval)(readFileSync(ROOT + f, 'utf8'));
 load('nexus-chat.js');
+load('nexus-ai-chat-core.js');
 load('components/nux-ai-chat-helpers.js');
 load('components/nux-interrupt-card.js');
 load('nexus-page-transition.js');
@@ -162,6 +163,7 @@ const NC = window.NexusChat;
 // ---- nexus-api null options 加固 ----
 {
     global.fetch = () => Promise.reject(new Error('stub-fetch'));
+load('nexus-api-helpers.js');
     load('nexus-api.js');
     const api = new window.NexusApi({ baseUrl: 'https://x' });
     let threw = '';
