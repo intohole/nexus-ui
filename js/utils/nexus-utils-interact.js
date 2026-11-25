@@ -47,15 +47,20 @@
             return window.nuxConfirm(message, title, options);
         },
     });
-    utils.errorDetailText = function (v) {
+    utils.errorDetailText = function (v, opts) {
+        var tr = (opts && opts.translate) || null;
+        function t(s) {
+            if (tr && tr[s]) return tr[s];
+            return s;
+        }
         if (v === null || v === undefined) return '';
-        if (typeof v === 'string') return v.trim();
+        if (typeof v === 'string') return t(v.trim());
         if (Array.isArray(v)) {
             return v.map(function (item) {
                 if (item === null || item === undefined) return '';
-                if (typeof item === 'string') return item;
+                if (typeof item === 'string') return t(item);
                 if (typeof item === 'object') {
-                    return String(item.msg || item.message || item.detail || '').replace(/^Value error,\s*/, '');
+                    return t(String(item.msg || item.message || item.detail || '').replace(/^Value error,\s*/, ''));
                 }
                 return String(item);
             }).filter(Boolean).join('；');
@@ -63,7 +68,7 @@
         if (typeof v === 'object') {
             var inner = v.message || v.detail || v.msg || v.error;
             if (inner === undefined || inner === v) return '';
-            return utils.errorDetailText(inner);
+            return utils.errorDetailText(inner, opts);
         }
         return String(v);
     };
@@ -115,6 +120,12 @@
             if (!list.length) return;
             const first = list[0];
             const last = list[list.length - 1];
+            // 焦点逃逸回收：activeElement 落在面板外（如点击遮罩后落 body）→ 一次 Tab 拉回首焦点（wanxiang 判例）
+            if (!panel.contains(document.activeElement)) {
+                e.preventDefault();
+                first.focus();
+                return;
+            }
             if (e.shiftKey && document.activeElement === first) {
                 e.preventDefault();
                 last.focus();

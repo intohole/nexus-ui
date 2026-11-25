@@ -601,15 +601,20 @@
             return window.nuxConfirm(message, title, options);
         },
     });
-    utils.errorDetailText = function (v) {
+    utils.errorDetailText = function (v, opts) {
+        var tr = (opts && opts.translate) || null;
+        function t(s) {
+            if (tr && tr[s]) return tr[s];
+            return s;
+        }
         if (v === null || v === undefined) return '';
-        if (typeof v === 'string') return v.trim();
+        if (typeof v === 'string') return t(v.trim());
         if (Array.isArray(v)) {
             return v.map(function (item) {
                 if (item === null || item === undefined) return '';
-                if (typeof item === 'string') return item;
+                if (typeof item === 'string') return t(item);
                 if (typeof item === 'object') {
-                    return String(item.msg || item.message || item.detail || '').replace(/^Value error,\s*/, '');
+                    return t(String(item.msg || item.message || item.detail || '').replace(/^Value error,\s*/, ''));
                 }
                 return String(item);
             }).filter(Boolean).join('；');
@@ -617,7 +622,7 @@
         if (typeof v === 'object') {
             var inner = v.message || v.detail || v.msg || v.error;
             if (inner === undefined || inner === v) return '';
-            return utils.errorDetailText(inner);
+            return utils.errorDetailText(inner, opts);
         }
         return String(v);
     };
@@ -669,6 +674,12 @@
             if (!list.length) return;
             const first = list[0];
             const last = list[list.length - 1];
+            // 焦点逃逸回收：activeElement 落在面板外（如点击遮罩后落 body）→ 一次 Tab 拉回首焦点（wanxiang 判例）
+            if (!panel.contains(document.activeElement)) {
+                e.preventDefault();
+                first.focus();
+                return;
+            }
             if (e.shiftKey && document.activeElement === first) {
                 e.preventDefault();
                 last.focus();
@@ -1854,38 +1865,85 @@
                (err.status === 408);
     }
 
+    function hasCJKText(s) {
+        return /[\u4e00-\u9fa5]/.test(s);
+    }
+
+    // detail 文本抽取（response/body/detail 三形态），经 NexusUtils.errorDetailText 单源
+    // （数组拼接 + Value error 前缀剥离 + translate 钩子）；共享层未在场时降级为原文直取
+    function detailText(err, translate) {
+        if (!err || !window.NexusUtils || typeof window.NexusUtils.errorDetailText !== 'function') return '';
+        let raw = null;
+        if (err.response && err.response.detail !== undefined && err.response.detail !== null && err.response.detail !== '') {
+            raw = err.response.detail;
+        } else if (err.body && err.body.detail !== undefined && err.body.detail !== null && err.body.detail !== '') {
+            raw = err.body.detail;
+        } else if (err.detail !== undefined && err.detail !== null && err.detail !== '') {
+            raw = err.detail;
+        }
+        if (raw === null) return '';
+        return window.NexusUtils.errorDetailText(raw, translate ? { translate: translate } : undefined);
+    }
+
+    // 错误文案统一映射。ctx 通道（全部可选、向后兼容——只传 {status: 文案} 的存量调用语义不变）：
+    //   ctx[status]      业务域文案覆写（数字键）
+    //   ctx.prefix       文案前缀（「投放计划：服务器开小差了」）
+    //   ctx.fallback     终态兜底（无任何命中时；不传沿用 message 直通）
+    //   ctx.translate    detail 英文→中文映射表（usercenter EN_TO_ZH 形态）
+    //   ctx.detailFirst  模式 C：detail → CJK → status（piying 形态）
+    //   ctx.trustCJKOverStatus  模式 B：CJK → status → detail（adSmart/truemirror 形态）
+    //   缺省模式 A：status → CJK → detail（travelMate 形态，亦即历史行为）
     function mapHttpError(err, context = {}) {
         emitInsufficientCredits(err);
         if (!err) return '未知错误';
+        const ctx = context || {};
+        const wrap = (t) => (ctx.prefix ? ctx.prefix + '：' + t : t);
         if (err.errorCode && ERROR_CODE_TEXT_MAP[err.errorCode]) {
-            return ERROR_CODE_TEXT_MAP[err.errorCode];
-        }
-        if (err.name === 'NexusApiError' && err.status) {
-            const custom = context[err.status];
-            if (custom) return custom;
-            const mapped = DEFAULT_ERROR_MAP[err.status];
-            if (mapped) return mapped;
-            if (err.status >= 500) return '服务器暂时不可用，请稍后重试';
-            if (err.status >= 400) return err.message || '请求失败';
-            return err.message || '请求失败';
-        }
-        if (isNetworkError(err)) {
-            return '网络连接失败，请检查网络后重试';
-        }
-        if (isTimeoutError(err)) {
-            return '请求超时，请稍后重试';
-        }
-        if (err.name === 'AbortError') {
-            return '请求超时，请稍后重试';
+            return wrap(ERROR_CODE_TEXT_MAP[err.errorCode]);
         }
         const msg = err.message || String(err);
+        const byStatus = () => {
+            if (err.name === 'NexusApiError' && err.status) {
+                if (ctx[err.status]) return wrap(ctx[err.status]);
+                const mapped = DEFAULT_ERROR_MAP[err.status];
+                if (mapped) return wrap(mapped);
+                if (err.status >= 500) return wrap('服务器暂时不可用，请稍后重试');
+                return wrap(msg || '请求失败');
+            }
+            return null;
+        };
+        const byCJK = () => (hasCJKText(msg) ? wrap(msg) : null);
+        const byDetail = () => {
+            const det = detailText(err, ctx.translate);
+            return det ? wrap(det) : null;
+        };
+        let out = null;
+        if (ctx.detailFirst) {
+            out = byDetail() || byCJK() || byStatus();
+        } else if (ctx.trustCJKOverStatus) {
+            out = byCJK() || byStatus() || byDetail();
+        } else {
+            out = byStatus() || byCJK() || byDetail();
+        }
+        if (out) return out;
+        if (isNetworkError(err)) {
+            return wrap('网络连接失败，请检查网络后重试');
+        }
+        if (isTimeoutError(err) || err.name === 'AbortError') {
+            return wrap('请求超时，请稍后重试');
+        }
         if (NETWORK_ERROR_PATTERNS.some(p => msg.includes(p))) {
-            return '网络连接失败，请检查网络后重试';
+            return wrap('网络连接失败，请检查网络后重试');
         }
-        if (msg === 'Failed to fetch' || msg.includes('Failed to fetch')) {
-            return '网络连接失败，请检查网络后重试';
+        return wrap(ctx.fallback || msg || '操作失败');
+    }
+
+    // detail 原文单源出口（usercenter localizeDetail 形态：输入是裸 detail 非完整 error）
+    function mapDetail(detail, opts) {
+        if (window.NexusUtils && typeof window.NexusUtils.errorDetailText === 'function') {
+            return window.NexusUtils.errorDetailText(detail, opts);
         }
-        return msg || '操作失败';
+        return detail === null || detail === undefined ? '' : String(detail);
     }
 
     function isInsufficientCreditsError(err) {
@@ -1923,6 +1981,7 @@
     window.isNetworkError = isNetworkError;
     window.isInsufficientCreditsError = isInsufficientCreditsError;
     window.mapHttpError = mapHttpError;
+    window.mapDetail = mapDetail;
 })();
 
 /* ===== nexus-stream.js ===== */
