@@ -80,6 +80,7 @@ msg._stoppedNote = stopper.noteFor(stopper.classify(!!msg.content));`,
       <button v-if="!isCurrent" type="button" class="nux-btn" style="min-height:30px;padding:0 12px;font-size:12px;margin-top:4px" :disabled="busy" @click="restore(item)">切回此版</button>
       <span v-else class="demo-note" style="margin-top:4px">当前使用中</span>
     </template>
+    <template #empty>还没有版本，保存后改动前的版本会自动留在这里。</template>
   </nux-timeline>
   <div class="demo-row">
     <button type="button" class="nux-btn" style="min-height:30px;padding:0 12px;font-size:12px" @click="saveVersion">保存新版本</button>
@@ -94,7 +95,12 @@ msg._stoppedNote = stopper.noteFor(stopper.classify(!!msg.content));`,
   <template #empty>还没有编辑过，保存后改动前的版本会自动留在这里。</template>
 </nux-timeline>`,
         data() {
-          return { versions: [] };
+          return {
+            versions: [
+              { time: '11月25日 10:00', tag: 'v1', title: '初版行程', desc: '首次生成', current: false },
+              { time: '11月25日 14:00', tag: 'v2', title: '加了博物馆', desc: '改动前的版本自动留档', current: true }
+            ]
+          };
         },
         methods: {
           restore(item) {
