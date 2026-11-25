@@ -65,8 +65,10 @@ RULES = [
     ("intersection-observer", "fail", r"new\s+IntersectionObserver",
      "自实现滚动加载观察器 → 优先复用库内能力，无则用原生 IntersectionObserver 封装（勿散落页面）"),
     ("local-format-util", "warn",
-     r"function\s+(formatDate|formatTime|formatMoney|formatCurrency|debounce|throttle|escapeHtml|formatBytes)\s*\(",
-     "自实现通用工具函数 → 确认 NexusUtils 是否已有等价实现（formatDate/debounce/formatCurrency/escapeHtml…）"),
+     r"(?:function\s+|(?:const|let|var)\s+)(formatDate|formatTime|formatMoney|formatCurrency|debounce|throttle|escapeHtml|formatBytes)\s*[=(]"
+     r"|\b(formatTime|formatDate|debounce|throttle|escapeHtml|formatBytes)\s*:\s*function",
+     "自实现通用工具函数 → 确认 NexusUtils 是否已有等价实现（formatDate/debounce/formatCurrency/escapeHtml…）。"
+     "覆盖 function 声明/const·let·var 赋值/对象属性 function 三形态；对象属性箭头、Utils.x = function 赋值表达式、class 方法体不追（出现即人工判，结构化解析为远期）"),
     ("local-toast", "warn", r"function\s+showToast\s*\([^)]*\)\s*\{",
      "自实现 toast → window.showToast（nexus-overlay-host 统一宿主）"),
     ("mobile-base-copy", "fail", r"mobile-base\.css",
