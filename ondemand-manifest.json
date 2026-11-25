@@ -13,22 +13,17 @@
    ]
   },
   "components/nux-ai-chat-helpers.js": {
-   "hard": {
-    "nexus-tts.js": [
-     "NexusTts"
-    ]
-   },
+   "hard": {},
    "soft": [
-    "nexus-chat.js"
+    "nexus-ai-chat-core.js",
+    "nexus-chat.js",
+    "nexus-stop.js"
    ]
   },
   "components/nux-ai-chat.js": {
    "hard": {
     "nexus-utils.js": [
      "NexusUtils"
-    ],
-    "nexus-streamdown.js": [
-     "NexusStreamdown"
     ],
     "nexus-mobile.js": [
      "NexusMobile"
@@ -43,6 +38,7 @@
     "components/nux-interrupt-card.js",
     "components/nux-tool-call.js",
     "components/nux-voice-input.js",
+    "nexus-ai-chat-core.js",
     "nexus-markdown.js",
     "nexus-tts.js"
    ]
@@ -91,15 +87,14 @@
   },
   "components/nux-camera-recognize.js": {
    "hard": {
-    "nexus-markdown.js": [
-     "NexusMarkdown"
-    ],
     "nexus-utils.js": [
      "NexusUtils"
     ]
    },
    "soft": [
-    "nexus-api.js"
+    "components/nux-camera-recognize-template.js",
+    "nexus-api.js",
+    "nexus-camera-helpers.js"
    ]
   },
   "components/nux-checkin.js": {
@@ -204,11 +199,11 @@
   },
   "components/nux-notification-bell.js": {
    "hard": {
-    "nexus-utils.js": [
-     "NexusUtils"
-    ],
     "nexus-api.js": [
      "NexusApi"
+    ],
+    "nexus-utils.js": [
+     "NexusUtils"
     ]
    },
    "soft": [
@@ -236,16 +231,17 @@
   },
   "components/nux-notification-panel.js": {
    "hard": {
+    "nexus-api.js": [
+     "NexusApi"
+    ],
     "nexus-utils.js": [
      "NexusUtils"
     ],
-    "nexus-api.js": [
-     "NexusApi"
+    "components/nux-notification-digest.js": [
+     "NuxNotificationDigest"
     ]
    },
-   "soft": [
-    "components/nux-notification-digest.js"
-   ]
+   "soft": []
   },
   "components/nux-notification-webpush.js": {
    "hard": {
@@ -330,11 +326,11 @@
   },
   "components/nux-webpush-invite.js": {
    "hard": {
-    "nexus-utils.js": [
-     "NexusUtils"
-    ],
     "nexus-api.js": [
      "NexusApi"
+    ],
+    "nexus-utils.js": [
+     "NexusUtils"
     ]
    },
    "soft": []
@@ -355,6 +351,27 @@
     "nexus-api-error.js"
    ]
   },
+  "nexus-ai-chat-core.js": {
+   "hard": {
+    "nexus-streamdown.js": [
+     "NexusStreamdown"
+    ],
+    "nexus-tts.js": [
+     "NexusTts"
+    ]
+   },
+   "soft": [
+    "components/nux-ai-chat-helpers.js",
+    "nexus-chat.js",
+    "nexus-markdown.js"
+   ]
+  },
+  "nexus-api-error.js": {
+   "hard": {},
+   "soft": [
+    "nexus-utils.js"
+   ]
+  },
   "nexus-api-factory.js": {
    "hard": {
     "nexus-api.js": [
@@ -365,7 +382,7 @@
     "nexus-api-error.js"
    ]
   },
-  "nexus-api.js": {
+  "nexus-api-helpers.js": {
    "hard": {
     "nexus-stream.js": [
      "NexusStream"
@@ -375,8 +392,25 @@
     ]
    },
    "soft": [
-    "nexus-api-error.js"
+    "nexus-api-error.js",
+    "nexus-api.js"
    ]
+  },
+  "nexus-api.js": {
+   "hard": {},
+   "soft": [
+    "nexus-api-error.js",
+    "nexus-api-helpers.js",
+    "nexus-utils.js"
+   ]
+  },
+  "nexus-camera-helpers.js": {
+   "hard": {
+    "nexus-markdown.js": [
+     "NexusMarkdown"
+    ]
+   },
+   "soft": []
   },
   "nexus-chat.js": {
    "hard": {
@@ -411,6 +445,7 @@
     "components/nux-bottom-nav.js",
     "components/nux-button.js",
     "components/nux-calendar.js",
+    "components/nux-camera-recognize-template.js",
     "components/nux-camera-recognize.js",
     "components/nux-checkbox.js",
     "components/nux-checkin.js",
@@ -470,7 +505,9 @@
     "components/nux-timeline.js",
     "components/nux-tool-call.js",
     "components/nux-undo-toast.js",
-    "components/nux-voice-input.js"
+    "components/nux-voice-input.js",
+    "nexus-ai-chat-core.js",
+    "nexus-camera-helpers.js"
    ]
   },
   "nexus-credit-float.js": {
@@ -487,13 +524,19 @@
     "nexus-utils.js"
    ]
   },
-  "nexus-feedback-float.js": {
+  "nexus-feedback-float-helpers.js": {
    "hard": {
     "nexus-utils.js": [
      "NexusUtils"
     ]
    },
    "soft": []
+  },
+  "nexus-feedback-float.js": {
+   "hard": {},
+   "soft": [
+    "nexus-feedback-float-helpers.js"
+   ]
   },
   "nexus-markdown.js": {
    "hard": {
@@ -529,11 +572,11 @@
   },
   "nexus-structured.js": {
    "hard": {
-    "nexus-stream.js": [
-     "NexusStream"
-    ],
     "nexus-utils.js": [
      "NexusUtils"
+    ],
+    "nexus-stream.js": [
+     "NexusStream"
     ]
    },
    "soft": [

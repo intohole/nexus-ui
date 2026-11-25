@@ -43,6 +43,9 @@ function makeEnv(overrides = {}) {
         }),
         clearUiState: () => { env.uiCleared = true; },
     };
+    for (const [k, v] of Object.entries(overrides)) {
+        if (k !== 'props' && k !== 'feat' && k !== 'inputCfg') env[k] = v;
+    }
     return env;
 }
 
@@ -443,6 +446,84 @@ load('nexus-chat.js');
     a.editResend(env.list[0], '新问');
     check('editResend: off 模式不改写不发事件',
         env.list[0].content === '旧问' && !env.events.some((e) => e[0] === 'edit-resend'));
+}
+
+/* ---------- v2.97.0 NexusStop 接线：seq 闸/settle 幂等/stopNote 终态签名行 ---------- */
+load('nexus-stop.js');
+{
+    /* 默认开：部分内容停止→签名行，content 不被污染；done 守恒；双结算根治 */
+    const env = makeEnv({ feat: { streamFallback: false, stopNote: true } });
+    let partial;
+    env.props.sendHandler = async (text, cb) => {
+        cb.onChunk('部', '部分内容');
+        partial = cb;
+    };
+    const a = H.createActions(env);
+    await a.send('问');
+    partial.registerStop(() => {});
+    a.stop();
+    const msg = env.list[1];
+    check('stopNote: 部分内容签名行+content 不污染', msg._stopped === 'stoppedPartial'
+        && msg._stoppedNote === '已停止 · 以上是停止前已生成的部分'
+        && msg.content === '部分内容');
+    check('stopNote: stop/stream-end/done 事件序（stream-end 恰一次）',
+        env.events.some((e) => e[0] === 'stop')
+        && env.events.filter((e) => e[0] === 'stream-end').length === 1
+        && env.events.some((e) => e[0] === 'done'));
+    const endCount = env.events.filter((e) => e[0] === 'stream-end').length;
+    /* 迟到 AbortError：settle 幂等不再二次收口 */
+    await partial.onError(new Error('The user aborted a request.'));
+    await partial.onError(new Error('again'));
+    check('双结算根治: 迟到错误零新增事件零置错', env.events.filter((e) => e[0] === 'stream-end').length === endCount
+        && !msg.error && !env.events.some((e) => e[0] === 'error'));
+    /* 迟到帧拒收：seq 闸 */
+    partial.onChunk('迟', '部分内容迟到帧');
+    check('seq 闸: 停止后迟到帧拒收', msg.content === '部分内容');
+}
+{
+    /* 空内容停止：签名行替换假占位（suki 文案） */
+    const env = makeEnv({ feat: { streamFallback: false, stopNote: true } });
+    env.props.sendHandler = async () => {};
+    const a = H.createActions(env);
+    await a.send('问');
+    a.stop();
+    check('stopNote: 空内容签名行（不冒充内容气泡）', env.list[1].content === ''
+        && env.list[1]._stoppedNote === '你已停止了这次提问');
+}
+{
+    /* opt-out：stopNote:false 回退旧占位行为 */
+    const env = makeEnv({ feat: { streamFallback: false, stopNote: false } });
+    env.props.sendHandler = async () => {};
+    const a = H.createActions(env);
+    await a.send('问');
+    a.stop();
+    check('stopNote:false 回退旧占位（8 仓 opt-out 面）', env.list[1].content === '（已停止生成）');
+}
+{
+    /* env.stopper 注入：宿主 notes 覆盖生效 */
+    const stopper = window.NexusStop.create({ notes: { stoppedPartial: '（宿主覆盖文案）' } });
+    const env = makeEnv({ feat: { streamFallback: false, stopNote: true }, stopper });
+    let cbRef;
+    env.props.sendHandler = async (t, cb) => {
+        cb.onChunk('x', 'xyz');
+        cbRef = cb;
+    };
+    const a = H.createActions(env);
+    await a.send('问');
+    cbRef.registerStop(() => {});
+    a.stop();
+    check('宿主 stopper: notes 覆盖文案透出', env.list[1]._stoppedNote === '（宿主覆盖文案）');
+    check('宿主 stopper: registerStop 贯通+平台路径本地收口释放 stopping', stopper.stopping === false);
+}
+{
+    /* cancelRequest 透传：stop 触发服务端取消钩子 */
+    let cancelHit = 0;
+    const env = makeEnv({ feat: { streamFallback: false, stopNote: true }, cancelRequest: () => { cancelHit += 1; } });
+    env.props.sendHandler = async () => {};
+    const a = H.createActions(env);
+    await a.send('问');
+    a.stop();
+    check('cancelRequest: 停止时服务端取消已发', cancelHit === 1);
 }
 
 let pass = 0;

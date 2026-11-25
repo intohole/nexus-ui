@@ -11,7 +11,8 @@
         },
         template: `
             <ol class="nx-timeline" v-if="items.length">
-                <li v-for="(item, i) in items" :key="i" class="nx-timeline-item" :class="'nx-timeline-item--' + tone(item)">
+                <li v-for="(item, i) in items" :key="i" class="nx-timeline-item"
+                    :class="['nx-timeline-item--' + tone(item), { 'is-current': !!item.current }]">
                     <span class="nx-timeline-dot" aria-hidden="true"></span>
                     <div class="nx-timeline-body">
                         <div class="nx-timeline-meta" v-if="item.time || item.tag">
@@ -20,10 +21,11 @@
                         </div>
                         <div class="nx-timeline-title">{{ item.title }}</div>
                         <div class="nx-timeline-desc" v-if="item.desc">{{ item.desc }}</div>
-                        <slot name="item" :item="item"></slot>
+                        <slot name="item" :item="item" :index="i" :is-current="!!item.current" :busy="!!item.busy"></slot>
                     </div>
                 </li>
             </ol>
+            <div v-else class="nx-timeline-empty"><slot name="empty"></slot></div>
         `
     };
 

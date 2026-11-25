@@ -2261,24 +2261,27 @@
     window.NexusStream = { post, read, consume, subscribe, authHeaders };
 })();
 
-/* ===== nexus-api.js ===== */
+/* ===== nexus-api-helpers.js ===== */
+/* NexusApiHelpers —— nexus-api 支撑层（前21 拆出）：错误归一纯函数 + 原型 mixin。
+ * mixin 含：token 存储/刷新单飞（window.__ucTokenRefresh 全局互认）/鉴权端点判定/streamPost/download。
+ * 装配双向容错：聚合包序=本文件先于 nexus-api.js（后者主动 Object.assign）；
+ * 若被晚于 nexus-api.js 加载，此处直接补到原型上，实例方法调用面（nxApi._getToken 等）不受加载序影响。
+ */
 (function() {
-    const DEFAULT_BASE_URL = (window.PATH_PREFIX || '') + '/api';
-    const MAX_RETRY = 3;
-    const MAX_ABORT_CONTROLLERS = 500;
-    const BASE_DELAY = 1000;
-    const MAX_DELAY = 30000;
+    'use strict';
+    if (window.NexusApiHelpers) return;
+
     const ApiError = window.NexusApiError || Error;
     const NET_PATTERNS = ['Failed to fetch', 'NetworkError', 'Network request failed', 'Load failed'];
 
-    function _isNetworkErr(err) {
+    function isNetworkErr(err) {
         if (!err) return false;
         if (err.isNetwork === true) return true;
         const msg = err.message || '';
         return NET_PATTERNS.some(p => msg.includes(p));
     }
 
-    function _errMsg(v) {
+    function errMsg(v) {
         if (window.NexusUtils && NexusUtils.errorDetailText) return NexusUtils.errorDetailText(v);
         if (v === null || v === undefined) return '';
         if (typeof v === 'string') return v;
@@ -2286,6 +2289,221 @@
         if (typeof v === 'object') return v.message || v.detail || v.msg || v.error || '';
         return String(v);
     }
+
+    function extractError(data) {
+        if (data.success === false) return errMsg(data.message) || errMsg(data.error) || '操作失败';
+        if (data.error) return errMsg(data.error);
+        if (data.message) return errMsg(data.message);
+        if (data.detail) return errMsg(data.detail);
+        return '请求失败';
+    }
+
+    function extractErrorCode(data) {
+        if (!data || typeof data !== 'object') return null;
+        const code = data.error_code || data.errorCode || data.code;
+        if (code == null) return null;
+        return typeof code === 'string' ? code : String(code);
+    }
+
+    const methods = {
+        _getToken() {
+            try { return this.storage.getItem(this.tokenKey) || ''; } catch (e) { return ''; }
+        },
+
+        _setToken(token) {
+            try { this.storage.setItem(this.tokenKey, token); } catch (e) {}
+        },
+
+        _getRefreshToken() {
+            if (!this.refreshTokenKey) return '';
+            try { return this.storage.getItem(this.refreshTokenKey) || ''; } catch (e) { return ''; }
+        },
+
+        _setRefreshToken(token) {
+            if (!this.refreshTokenKey) return;
+            try { this.storage.setItem(this.refreshTokenKey, token); } catch (e) {}
+        },
+
+        _clearAuth() {
+            try {
+                this.storage.removeItem(this.tokenKey);
+                this.storage.removeItem(this.userKey);
+                if (this.refreshTokenKey) this.storage.removeItem(this.refreshTokenKey);
+            } catch (e) {}
+        },
+
+        _isAuthEntry(url) {
+            const path = String(url || '').split('?')[0].split('#')[0];
+            if (/(\/login|\/register|\/sms-login|\/refresh)$/.test(path)) return true;
+            if (this.authEndpoints) {
+                return this.authEndpoints.some((ep) => path.indexOf(ep) >= 0);
+            }
+            return false;
+        },
+
+        _isSilentEntry(url) {
+            if (!this.silentEndpoints) return false;
+            const path = String(url || '').split('?')[0].split('#')[0];
+            return this.silentEndpoints.some((ep) => path.indexOf(ep) >= 0);
+        },
+
+        async _tryRefresh() {
+            if (this._refreshPromise) return this._refreshPromise;
+            // 全局刷新单飞（与 UserCenterSDK.refreshAccessToken 互认）：UC 的 refresh token
+            // 轮换+重用检测会把并发的第二次刷新判为盗用并吊销整个 token 家族（用户被随机登出）。
+            // 共享方落定后直接读存储（_getToken 每次现读），SDK 写入的新 token 自动可见。
+            const inflight = window.__ucTokenRefresh;
+            if (inflight && inflight.then) {
+                this._refreshPromise = Promise.resolve(inflight).then(() => {
+                    const token = this._getToken();
+                    if (!token) throw new Error('shared refresh produced no token');
+                    return token;
+                });
+                try { return await this._refreshPromise; } finally { this._refreshPromise = null; }
+            }
+            const refreshToken = this._getRefreshToken();
+            if (!this.refreshUrl || !refreshToken) return Promise.reject(new Error('no refresh config'));
+            const body = this.refreshBodyBuilder ? this.refreshBodyBuilder(refreshToken) : { refresh_token: refreshToken };
+            const refreshController = new AbortController();
+            const refreshTimeoutId = setTimeout(() => refreshController.abort(), this.timeout || 30000);
+            this._refreshPromise = fetch(`${this.baseUrl}${this.refreshUrl}`, {
+                method: this.refreshMethod,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+                signal: refreshController.signal
+            }).then(async (res) => {
+                let rdata; try { rdata = await res.json(); } catch { rdata = {}; }
+                if (!res.ok) throw new Error('refresh failed');
+                const newToken = rdata.access_token || (rdata.data && rdata.data.access_token);
+                const newRefresh = rdata.refresh_token || (rdata.data && rdata.data.refresh_token);
+                if (!newToken) throw new Error('no token in refresh response');
+                this._setToken(newToken);
+                if (newRefresh) this._setRefreshToken(newRefresh);
+                if (this.onRefreshSuccess) this.onRefreshSuccess(rdata, this);
+                return newToken;
+            }).catch((err) => {
+                throw err.name === 'AbortError' ? new Error('refresh timeout') : err;
+            }).finally(() => { clearTimeout(refreshTimeoutId); this._refreshPromise = null; });
+            const gateGuard = this._refreshPromise.catch(() => false);
+            window.__ucTokenRefresh = gateGuard;
+            gateGuard.then(() => { if (window.__ucTokenRefresh === gateGuard) window.__ucTokenRefresh = null; });
+            return this._refreshPromise;
+        },
+
+        ensureFreshToken(skewMs = 120000) {
+            const token = this._getToken();
+            if (!token || token.split('.').length < 2 || !this.refreshUrl) return Promise.resolve();
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+                const expMs = (payload.exp || 0) * 1000;
+                if (expMs && Date.now() > expMs - skewMs) return this._tryRefresh().catch(() => {});
+            } catch (e) {}
+            return Promise.resolve();
+        },
+
+        async streamPost(url, data = {}, { onEvent, onError, timeout = 60000, idleTimeout, headers = {} } = {}) {
+            const controller = new AbortController();
+            const requestId = this._generateRequestId(url);
+            this._registerController(requestId, controller);
+            try {
+                for await (const evt of NexusStream.post(`${this.baseUrl}${url}`, {
+                    body: JSON.stringify(data),
+                    headers: this._buildHeaders(headers),
+                    signal: controller.signal,
+                    idleTimeout: idleTimeout || Math.max(timeout, 90000),
+                    priority: 'sse-event',
+                    onUnauthorized: () => this._handleSessionExpired(),
+                })) {
+                    if (onEvent) {
+                        try { onEvent(evt.event, evt.data); } catch (e) { }
+                    }
+                }
+            } catch (error) {
+                let msg = (error && error.message) || '网络错误';
+                let code = (error && error.code) || null;
+                if (error && error.status === 401) {
+                    msg = '登录已过期，请重新登录';
+                    code = null;
+                } else if (error && error.status) {
+                    const m = /^HTTP \d+ (.*)$/s.exec(error.message || '');
+                    if (m) {
+                        try {
+                            const errData = JSON.parse(m[1]);
+                            const detail = extractError(errData);
+                            if (detail) msg = detail;
+                            code = extractErrorCode(errData);
+                        } catch (e) { }
+                    }
+                    if (this.onError) this.onError(error.status, msg);
+                } else if (error && (error.code === 'timeout' || error.name === 'AbortError')) {
+                    msg = '连接超时，请检查网络后重试';
+                } else if (isNetworkErr(error)) {
+                    msg = '网络连接失败，请检查网络后重试';
+                }
+                if (onError) onError(msg, code);
+            } finally {
+                this.abortControllers.delete(requestId);
+            }
+        },
+
+        async download(url, params = {}, options = {}) {
+            if (params && typeof params === 'object' && !(params instanceof URLSearchParams)
+                && ('method' in params || 'body' in params || 'headers' in params || 'params' in params || 'timeout' in params)) {
+                options = params;
+                params = options.params || {};
+            }
+            const method = options.method || 'GET';
+            const qs = new URLSearchParams(params).toString();
+            const fullUrl = qs ? `${url}?${qs}` : url;
+            const token = this._getToken();
+            const headers = { ...(token && { 'Authorization': `Bearer ${token}` }), ...(options.headers || {}) };
+            if (options.body !== undefined && options.body !== null) headers['Content-Type'] = 'application/json';
+            const controller = new AbortController();
+            const timeoutId = options.timeout ? setTimeout(() => controller.abort(), options.timeout) : null;
+            let response;
+            try {
+                response = await fetch(`${this.baseUrl}${fullUrl}`, {
+                    method,
+                    headers,
+                    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+                    signal: options.timeout ? controller.signal : undefined
+                });
+            } catch (err) {
+                throw isNetworkErr(err) ? new ApiError('网络连接失败，请检查网络后重试', null, null) : new ApiError(err.message || '下载失败', null, null);
+            } finally {
+                if (timeoutId) clearTimeout(timeoutId);
+            }
+            if (!response.ok) {
+                let errData;
+                try { errData = await response.json(); } catch { errData = {}; }
+                if (response.status === 401) {
+                    this._handleSessionExpired();
+                }
+                const errorMsg = extractError(errData) || `下载失败 (${response.status})`;
+                if (this.onError) this.onError(response.status, errorMsg);
+                throw new ApiError(errorMsg, response.status, errData, extractErrorCode(errData));
+            }
+            return await response.blob();
+        }
+    };
+
+    window.NexusApiHelpers = { isNetworkErr, errMsg, extractError, extractErrorCode, methods };
+
+    // 误序兜底：被晚于 nexus-api.js 加载时直接补原型（聚合包正确序下此处为 no-op）
+    if (window.NexusApi && window.NexusApi.prototype) {
+        Object.assign(window.NexusApi.prototype, methods);
+    }
+})();
+
+/* ===== nexus-api.js ===== */
+(function() {
+    const H = window.NexusApiHelpers || {};
+    const DEFAULT_BASE_URL = (window.PATH_PREFIX || '') + '/api';
+    const MAX_RETRY = 3;
+    const MAX_ABORT_CONTROLLERS = 500;
+    const BASE_DELAY = 1000;
+    const MAX_DELAY = 30000;
+    const ApiError = window.NexusApiError || Error;
 
     class NexusApi {
         constructor(config = {}) {
@@ -2331,47 +2549,6 @@
                 this.abortControllers.delete(oldestKey);
             }
             this.abortControllers.set(requestId, controller);
-        }
-
-        _getToken() {
-            try { return this.storage.getItem(this.tokenKey) || ''; } catch (e) { return ''; }
-        }
-
-        _setToken(token) {
-            try { this.storage.setItem(this.tokenKey, token); } catch (e) {}
-        }
-
-        _getRefreshToken() {
-            if (!this.refreshTokenKey) return '';
-            try { return this.storage.getItem(this.refreshTokenKey) || ''; } catch (e) { return ''; }
-        }
-
-        _setRefreshToken(token) {
-            if (!this.refreshTokenKey) return;
-            try { this.storage.setItem(this.refreshTokenKey, token); } catch (e) {}
-        }
-
-        _clearAuth() {
-            try {
-                this.storage.removeItem(this.tokenKey);
-                this.storage.removeItem(this.userKey);
-                if (this.refreshTokenKey) this.storage.removeItem(this.refreshTokenKey);
-            } catch (e) {}
-        }
-
-        _isAuthEntry(url) {
-            const path = String(url || '').split('?')[0].split('#')[0];
-            if (/(\/login|\/register|\/sms-login|\/refresh)$/.test(path)) return true;
-            if (this.authEndpoints) {
-                return this.authEndpoints.some((ep) => path.indexOf(ep) >= 0);
-            }
-            return false;
-        }
-
-        _isSilentEntry(url) {
-            if (!this.silentEndpoints) return false;
-            const path = String(url || '').split('?')[0].split('#')[0];
-            return this.silentEndpoints.some((ep) => path.indexOf(ep) >= 0);
         }
 
         _handleSessionExpired() {
@@ -2429,75 +2606,6 @@
             return { response, data };
         }
 
-        _extractError(data) {
-            if (data.success === false) return _errMsg(data.message) || _errMsg(data.error) || '操作失败';
-            if (data.error) return _errMsg(data.error);
-            if (data.message) return _errMsg(data.message);
-            if (data.detail) return _errMsg(data.detail);
-            return '请求失败';
-        }
-
-        _extractErrorCode(data) {
-            if (!data || typeof data !== 'object') return null;
-            const code = data.error_code || data.errorCode || data.code;
-            if (code == null) return null;
-            return typeof code === 'string' ? code : String(code);
-        }
-
-        async _tryRefresh() {
-            if (this._refreshPromise) return this._refreshPromise;
-            // 全局刷新单飞（与 UserCenterSDK.refreshAccessToken 互认）：UC 的 refresh token
-            // 轮换+重用检测会把并发的第二次刷新判为盗用并吊销整个 token 家族（用户被随机登出）。
-            // 共享方落定后直接读存储（_getToken 每次现读），SDK 写入的新 token 自动可见。
-            const inflight = window.__ucTokenRefresh;
-            if (inflight && inflight.then) {
-                this._refreshPromise = Promise.resolve(inflight).then(() => {
-                    const token = this._getToken();
-                    if (!token) throw new Error('shared refresh produced no token');
-                    return token;
-                });
-                try { return await this._refreshPromise; } finally { this._refreshPromise = null; }
-            }
-            const refreshToken = this._getRefreshToken();
-            if (!this.refreshUrl || !refreshToken) return Promise.reject(new Error('no refresh config'));
-            const body = this.refreshBodyBuilder ? this.refreshBodyBuilder(refreshToken) : { refresh_token: refreshToken };
-            const refreshController = new AbortController();
-            const refreshTimeoutId = setTimeout(() => refreshController.abort(), this.timeout || 30000);
-            this._refreshPromise = fetch(`${this.baseUrl}${this.refreshUrl}`, {
-                method: this.refreshMethod,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body),
-                signal: refreshController.signal
-            }).then(async (res) => {
-                let rdata; try { rdata = await res.json(); } catch { rdata = {}; }
-                if (!res.ok) throw new Error('refresh failed');
-                const newToken = rdata.access_token || (rdata.data && rdata.data.access_token);
-                const newRefresh = rdata.refresh_token || (rdata.data && rdata.data.refresh_token);
-                if (!newToken) throw new Error('no token in refresh response');
-                this._setToken(newToken);
-                if (newRefresh) this._setRefreshToken(newRefresh);
-                if (this.onRefreshSuccess) this.onRefreshSuccess(rdata, this);
-                return newToken;
-            }).catch((err) => {
-                throw err.name === 'AbortError' ? new Error('refresh timeout') : err;
-            }).finally(() => { clearTimeout(refreshTimeoutId); this._refreshPromise = null; });
-            const gateGuard = this._refreshPromise.catch(() => false);
-            window.__ucTokenRefresh = gateGuard;
-            gateGuard.then(() => { if (window.__ucTokenRefresh === gateGuard) window.__ucTokenRefresh = null; });
-            return this._refreshPromise;
-        }
-
-        ensureFreshToken(skewMs = 120000) {
-            const token = this._getToken();
-            if (!token || token.split('.').length < 2 || !this.refreshUrl) return Promise.resolve();
-            try {
-                const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
-                const expMs = (payload.exp || 0) * 1000;
-                if (expMs && Date.now() > expMs - skewMs) return this._tryRefresh().catch(() => {});
-            } catch (e) {}
-            return Promise.resolve();
-        }
-
         async request(url, options = {}) {
             const timeoutValue = options.timeout !== undefined ? options.timeout : this.timeout;
 
@@ -2519,16 +2627,16 @@
                     const { response, data } = await this._doFetch(url, options, controller);
 
                         if (!response.ok) {
-                                const errorMsg = this._extractError(data);
-                                const errorCode = this._extractErrorCode(data);
+                                const errorMsg = H.extractError(data);
+                                const errorCode = H.extractErrorCode(data);
                                 const skipUnauthorized = options.skipUnauthorized === true;
                                 if (response.status === 401 && !skipUnauthorized && !skipAuthRefresh && this.refreshUrl && !this._isAuthEntry(url)) {
                                     try {
                                         await this._tryRefresh();
                                         const retryResult = await this._doFetch(url, options, controller);
                                         if (!retryResult.response.ok) {
-                                            const retryMsg = this._extractError(retryResult.data);
-                                            throw new ApiError(retryMsg, retryResult.response.status, retryResult.data, this._extractErrorCode(retryResult.data));
+                                            const retryMsg = H.extractError(retryResult.data);
+                                            throw new ApiError(retryMsg, retryResult.response.status, retryResult.data, H.extractErrorCode(retryResult.data));
                                         }
                                         return retryResult.data;
                                     } catch (refreshErr) {
@@ -2581,7 +2689,7 @@
                             }
                             throw new ApiError('请求超时，请稍后重试', 408, null);
                         }
-                        if (_isNetworkErr(error)) {
+                        if (H.isNetworkErr && H.isNetworkErr(error)) {
                             const e = new ApiError('网络连接失败，请检查网络后重试', null, null);
                             e.isNetwork = true; throw e;
                         }
@@ -2675,59 +2783,14 @@
                 if (res.status === 401) {
                     this._handleSessionExpired();
                 }
-                if (!res.ok) throw new ApiError(this._extractError(data), res.status, data, this._extractErrorCode(data));
+                if (!res.ok) throw new ApiError(H.extractError(data), res.status, data, H.extractErrorCode(data));
                 if (this.responseAdapter) data = this.responseAdapter(data, res);
                 if (this._cache.size) this._cache.clear();
                 return data;
             }).catch((err) => {
                 if (err.name === 'NexusApiError') throw err;
-                throw _isNetworkErr(err) ? new ApiError('网络连接失败，请检查网络后重试', null, null) : new ApiError(err.message || '上传失败', null, null);
+                throw (H.isNetworkErr && H.isNetworkErr(err)) ? new ApiError('网络连接失败，请检查网络后重试', null, null) : new ApiError(err.message || '上传失败', null, null);
             });
-        }
-
-        async streamPost(url, data = {}, { onEvent, onError, timeout = 60000, idleTimeout, headers = {} } = {}) {
-            const controller = new AbortController();
-            const requestId = this._generateRequestId(url);
-            this._registerController(requestId, controller);
-            try {
-                for await (const evt of NexusStream.post(`${this.baseUrl}${url}`, {
-                    body: JSON.stringify(data),
-                    headers: this._buildHeaders(headers),
-                    signal: controller.signal,
-                    idleTimeout: idleTimeout || Math.max(timeout, 90000),
-                    priority: 'sse-event',
-                    onUnauthorized: () => this._handleSessionExpired(),
-                })) {
-                    if (onEvent) {
-                        try { onEvent(evt.event, evt.data); } catch (e) { }
-                    }
-                }
-            } catch (error) {
-                let msg = (error && error.message) || '网络错误';
-                let code = (error && error.code) || null;
-                if (error && error.status === 401) {
-                    msg = '登录已过期，请重新登录';
-                    code = null;
-                } else if (error && error.status) {
-                    const m = /^HTTP \d+ (.*)$/s.exec(error.message || '');
-                    if (m) {
-                        try {
-                            const errData = JSON.parse(m[1]);
-                            const detail = this._extractError(errData);
-                            if (detail) msg = detail;
-                            code = this._extractErrorCode(errData);
-                        } catch (e) { }
-                    }
-                    if (this.onError) this.onError(error.status, msg);
-                } else if (error && (error.code === 'timeout' || error.name === 'AbortError')) {
-                    msg = '连接超时，请检查网络后重试';
-                } else if (_isNetworkErr(error)) {
-                    msg = '网络连接失败，请检查网络后重试';
-                }
-                if (onError) onError(msg, code);
-            } finally {
-                this.abortControllers.delete(requestId);
-            }
         }
 
         cancel(url) {
@@ -2739,46 +2802,6 @@
                 if (id === url || id.startsWith(prefix)) { ctrl.abort(); keysToDelete.push(id); }
             }
             keysToDelete.forEach(id => this.abortControllers.delete(id));
-        }
-
-        async download(url, params = {}, options = {}) {
-            if (params && typeof params === 'object' && !(params instanceof URLSearchParams)
-                && ('method' in params || 'body' in params || 'headers' in params || 'params' in params || 'timeout' in params)) {
-                options = params;
-                params = options.params || {};
-            }
-            const method = options.method || 'GET';
-            const qs = new URLSearchParams(params).toString();
-            const fullUrl = qs ? `${url}?${qs}` : url;
-            const token = this._getToken();
-            const headers = { ...(token && { 'Authorization': `Bearer ${token}` }), ...(options.headers || {}) };
-            if (options.body !== undefined && options.body !== null) headers['Content-Type'] = 'application/json';
-            const controller = new AbortController();
-            const timeoutId = options.timeout ? setTimeout(() => controller.abort(), options.timeout) : null;
-            let response;
-            try {
-                response = await fetch(`${this.baseUrl}${fullUrl}`, {
-                    method,
-                    headers,
-                    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-                    signal: options.timeout ? controller.signal : undefined
-                });
-            } catch (err) {
-                throw _isNetworkErr(err) ? new ApiError('网络连接失败，请检查网络后重试', null, null) : new ApiError(err.message || '下载失败', null, null);
-            } finally {
-                if (timeoutId) clearTimeout(timeoutId);
-            }
-            if (!response.ok) {
-                let errData;
-                try { errData = await response.json(); } catch { errData = {}; }
-                if (response.status === 401) {
-                    this._handleSessionExpired();
-                }
-                const errorMsg = this._extractError(errData) || `下载失败 (${response.status})`;
-                if (this.onError) this.onError(response.status, errorMsg);
-                throw new ApiError(errorMsg, response.status, errData, this._extractErrorCode(errData));
-            }
-            return await response.blob();
         }
 
         createCrud(basePath) {
@@ -2827,6 +2850,9 @@
             if (this.onUnauthorized) this.onUnauthorized();
         }
     }
+
+    // 支撑层装配（token 存储/刷新单飞/鉴权端点判定/streamPost/download）——见 nexus-api-helpers.js
+    if (H.methods) Object.assign(NexusApi.prototype, H.methods);
 
     window.NexusApi = NexusApi;
 })();
@@ -3780,6 +3806,256 @@
     window.NexusChat = NexusChat;
 })();
 
+/* ===== nexus-stop.js ===== */
+/* NexusStop —— 「停止/取消 AI 生成」原语（前21，六仓手搓形态的单源收编）
+ *
+ * 收编的公约数语义（出现 ≥3 仓）：seq 代际闸（旧流迟到帧/回调不得污染新轮，
+ * suki askSeq 型防假停）、停止通道（registerStop 契约→controller 兜底）、
+ * 服务端取消钩子（smartCode interrupt/verseCraft cancelTask/arcade cancel 同构）、
+ * stopping 中间态（「停止中…」可 await 收尾，verseCraft/arcade 形态）、
+ * 终态四态分类与文案收敛点（suki 四态签名行收编）。
+ *
+ * 承诺语义（评审裁定）：终态状态机与渲染收敛点单源；
+ * 文案 = 平台默认单源 + 宿主 notes 覆盖（notes 四键见 DEFAULT_NOTES）。
+ *
+ * 用法（流式宿主）:
+ *   const stopper = NexusStop.create({ cancelRequest: () => api.post('/chat/interrupt') });
+ *   const seq = stopper.begin();                    // 每轮开始取代际
+ *   if (!stopper.isCurrent(seq)) return;            // 迟到回调顶部拒收
+ *   stopper.onStopFn(fn);                           // registerStop 契约
+ *   stopper.stop();                                 // 用户停止：stopFn→controller→cancelRequest
+ *   msg._stoppedNote = stopper.noteFor(stopper.classify(!!msg.content));
+ *
+ * 长任务宿主（服务端收尾型）:
+ *   stopper.stop(); await stopper.waitSettled();    // stopping 态可 await（settleTimeoutMs 兜底）
+ */
+(function() {
+    'use strict';
+    if (window.NexusStop) return;
+
+    /* 平台默认文案（源出 suki 四态签名行措辞，f18 全等断言实证）；宿主 notes 同键覆盖 */
+    var DEFAULT_NOTES = {
+        stoppedPartial: '已停止 · 以上是停止前已生成的部分',
+        stoppedEmpty: '你已停止了这次提问',
+        interrupted: '连接中断 · 以上是已收到的部分',
+        lost: '这条提问没有保留回答（可能被停止或未完成）'
+    };
+
+    window.NexusStop = {
+        DEFAULT_NOTES: DEFAULT_NOTES,
+        create: function(cfg) {
+            cfg = cfg || {};
+            var notes = Object.assign({}, DEFAULT_NOTES, cfg.notes || {});
+            var stopFn = cfg.stopFn || null;
+            var controller = null;
+            var seq = 0;
+            var stopping = false;
+            var settleTimer = null;
+            var settleWaiters = null;
+            var settleTimeoutMs = cfg.settleTimeoutMs || 8000;
+
+            /* 代际闸：begin 于每轮启动调用并捕获返回值；迟到回调以 isCurrent 拒收 */
+            function begin() {
+                seq += 1;
+                stopping = false;
+                if (settleTimer) { clearTimeout(settleTimer); settleTimer = null; }
+                return seq;
+            }
+
+            function isCurrent(s) { return s === seq; }
+
+            /* 停止通道：registerStop 契约（stopFn 优先）→ controller.stop() 兜底 */
+            function onStopFn(fn) { stopFn = fn || null; }
+            function attach(ctrl) { controller = ctrl || null; }
+
+            function finish() {
+                stopping = false;
+                if (settleTimer) { clearTimeout(settleTimer); settleTimer = null; }
+                if (settleWaiters) {
+                    var ws = settleWaiters;
+                    settleWaiters = null;
+                    ws.forEach(function (r) { r(); });
+                }
+            }
+
+            function stop() {
+                if (stopping) return;
+                stopping = true;
+                /* 停止即作废当前代际（suki askSeq 语义）：迟到帧/迟到回调即刻失效，
+                 * 无需等下一轮 begin() */
+                seq += 1;
+                if (stopFn) { try { stopFn(); } catch (e) {} }
+                else if (controller) { try { controller.stop(); } catch (e) {} }
+                /* 服务端取消钩子：火后不管（失败不阻塞本地收口，smartCode/arcade 同构语义） */
+                if (typeof cfg.cancelRequest === 'function') {
+                    try { Promise.resolve(cfg.cancelRequest()).catch(function () {}); } catch (e) {}
+                }
+                /* stopping 兜底收尾：服务端确认迟到/丢失时最迟 settleTimeoutMs 落定 */
+                settleTimer = setTimeout(finish, settleTimeoutMs);
+            }
+
+            /* stopping 态可 await：服务端收尾型宿主在 stop() 后等待（finish/settleTimeout 唤醒） */
+            function waitSettled() {
+                if (!stopping) return Promise.resolve();
+                return new Promise(function (resolve) {
+                    (settleWaiters = settleWaiters || []).push(resolve);
+                });
+            }
+
+            function classify(hasContent) {
+                return hasContent ? 'stoppedPartial' : 'stoppedEmpty';
+            }
+
+            function noteFor(kind) {
+                return notes[kind] || '';
+            }
+
+            return {
+                begin: begin,
+                isCurrent: isCurrent,
+                onStopFn: onStopFn,
+                attach: attach,
+                stop: stop,
+                finish: finish,
+                waitSettled: waitSettled,
+                classify: classify,
+                noteFor: noteFor,
+                notes: notes,
+                get stopping() { return stopping; },
+                get seq() { return seq; }
+            };
+        }
+    };
+})();
+
+/* ===== nexus-ai-chat-core.js ===== */
+/* NexusAiChatCore —— nux-ai-chat 聚合包支撑层（前21 补偿再分）
+ * 上收自 nux-ai-chat-helpers.js：composer 附件纯函数族 + TTS 朗读（helpers 保别名转发）；
+ * 下沉自 nux-ai-chat.js：流式块级渲染器工厂 + 编辑重发状态机工厂。
+ * Vue-free（工厂经 env 注入响应式依赖），tests 直测面保持。
+ */
+(function() {
+    'use strict';
+    window.NuxAiChatCore = {
+        /* ---------- composer 附件纯函数族（v2.89.0 形态守恒） ---------- */
+        attachmentFrom: function (file) {
+            return {
+                id: 'att_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                file: file, name: file.name, size: file.size, type: file.type || '',
+                status: 'pending', url: '', error: '', preview: ''
+            };
+        },
+        filterAttachmentFiles: function (files, existing, inputCfg) {
+            const max = (inputCfg && inputCfg.attachmentMaxCount) || 4;
+            const maxBytes = ((inputCfg && inputCfg.attachmentMaxSizeMb) || 10) * 1024 * 1024;
+            const list = Array.from(files || []);
+            const room = Math.max(0, max - existing.length);
+            const inRoom = list.slice(0, room);
+            const accepted = inRoom.filter((f) => f.size <= maxBytes);
+            return { accepted: accepted, oversize: inRoom.length - accepted.length, overflow: list.length - room };
+        },
+        uploadAttachment: function (att, uploader) {
+            att.status = 'uploading';
+            return Promise.resolve()
+                .then(() => uploader(att.file))
+                .then((out) => {
+                    att.status = 'done';
+                    att.url = (out && (out.url || out.audio_url)) || '';
+                    if (!att.url) { att.status = 'error'; att.error = '上传响应缺少 url'; }
+                    return att;
+                })
+                .catch((e) => {
+                    att.status = 'error';
+                    att.error = (e && e.message) || '上传失败';
+                    return att;
+                });
+        },
+        snapshotAttachments: function (attachments) {
+            if (!attachments || !attachments.length) return null;
+            const out = attachments.map((a) => ({
+                id: a.id, name: a.name, size: a.size, type: a.type,
+                status: a.status, url: a.url
+            }));
+            attachments.splice(0, attachments.length);
+            return out;
+        },
+        speakMessage: function (env, m) {
+            if (!window.NexusTts || !m || !m.content) return;
+            const sid = env.speakingId;
+            if (sid.value === m.id) {
+                NexusTts.stop();
+                sid.value = '';
+                return;
+            }
+            sid.value = m.id;
+            const strip = (window.NexusChat && NexusChat.stripMarkdownForTts)
+                || window.NuxAiChatHelpers.stripMarkdownForTts;
+            NexusTts.speak(strip(m.content)).then((ok) => {
+                if (!ok && sid.value === m.id) sid.value = '';
+            });
+        },
+
+        /* ---------- 流式块级渲染器工厂（自 nux-ai-chat.js 下沉） ----------
+         * 稳定区 html 仅块推进时变化（v-html 值不变不重建 DOM），活跃尾块经 rAF
+         * 合帧每帧最多渲一次。env: { list: array, enabled(): boolean, inList(m): boolean } */
+        createStreamers: function (env) {
+            const streamers = new WeakMap();
+            function refreshStream(m) {
+                if (!env.enabled() || !m.streaming) return;
+                if (!window.NexusStreamdown || !window.NexusMarkdown) return;
+                let s = streamers.get(m);
+                if (!s) {
+                    s = { raf: 0 };
+                    streamers.set(m, s);
+                }
+                if (s.raf) return;
+                s.raf = requestAnimationFrame(() => {
+                    s.raf = 0;
+                    if (!streamers.has(m) || !m.streaming) return;
+                    if (!env.inList(m)) { streamers.delete(m); return; }
+                    const out = NexusStreamdown.update(m.content, s);
+                    if (out) {
+                        m.stableHtml = out.stableHtml;
+                        m.activeHtml = out.activeHtml;
+                    }
+                });
+            }
+            function stopStreamers() {
+                (env.list || []).forEach((m) => {
+                    const s = streamers.get(m);
+                    if (s && s.raf) cancelAnimationFrame(s.raf);
+                });
+            }
+            return { refreshStream: refreshStream, stopStreamers: stopStreamers };
+        },
+
+        /* ---------- 编辑重发状态机工厂（自 nux-ai-chat.js 下沉） ----------
+         * env: { feat, isStreaming(ref), disabled(): boolean, editResend(msg, text) } */
+        createEditResend: function (env) {
+            function startEdit(m) {
+                if (!env.feat.chatActions || env.feat.editResend === 'off' || env.isStreaming.value || env.disabled()) return;
+                if (!m || m.role !== 'user') return;
+                m._editDraft = m.content;
+                m._editing = true;
+            }
+            function cancelEdit(m) {
+                if (!m) return;
+                m._editing = false;
+                m._editDraft = '';
+            }
+            function confirmEdit(m) {
+                if (!m || !m._editing) return;
+                const text = String(m._editDraft || '').trim();
+                m._editing = false;
+                m._editDraft = '';
+                if (!text || text === m.content) return;
+                env.editResend(m, text);
+            }
+            return { startEdit: startEdit, cancelEdit: cancelEdit, confirmEdit: confirmEdit };
+        }
+    };
+})();
+
 /* ===== nexus-tts.js ===== */
 (function () {
     'use strict';
@@ -4157,6 +4433,233 @@
         mimeExt: mimeExt,
         create: create
     };
+})();
+
+/* ===== nexus-camera-helpers.js ===== */
+/* NexusCameraHelpers —— nux-camera-recognize 支撑层（前21 拆出，随 nexus-all.js 分发）
+ * 职责：图片管线纯函数（校验/降采样/取帧/结果归一）+ 组件模板串。
+ * 相机会话状态机（getUserMedia/stream 生命周期）归组件主文件。
+ */
+(function() {
+    'use strict';
+    if (window.NexusCameraHelpers) return;
+
+    var DEFAULT_STAGES = ['上传图片', 'AI 识别中', '整理结果'];
+
+    var BUSY_PAIRS = [
+        ['正在上传图片…', '正在把照片交给识别服务'],
+        ['AI 正在识别图片内容…', '视觉模型正在阅读这张图片'],
+        ['正在整理识别结果…', '即将完成']
+    ];
+
+    function toast(message, type) {
+        if (typeof window.showToast === 'function') window.showToast(message, type || 'error');
+    }
+
+    function formatError(err) {
+        if (!err) return '识别失败，请重试';
+        if (err.name === 'NotAllowedError') return '相机未授权：请在浏览器权限设置中允许相机，或改用「从相册选择」。';
+        if (err.name === 'NotFoundError') return '未找到可用摄像头，可改用「从相册选择」。';
+        if (err.message) return err.message;
+        return '识别失败，请重试';
+    }
+
+    /* 合法性校验：非图片/超限返回人话错误串，合法返回 null */
+    function validateImageFile(file, maxSizeMb) {
+        if (!/^image\//.test(file.type)) return '请选择图片文件';
+        if (file.size > maxSizeMb * 1024 * 1024) return '图片超过 ' + maxSizeMb + 'MB 大小限制';
+        return null;
+    }
+
+    /* 大图降采样（>2MB 且支持 createImageBitmap 时按 maxEdge 缩边，保 PNG 透明通道） */
+    function prepareFile(file, maxEdge) {
+        var SMALL = 2 * 1024 * 1024;
+        if (file.size <= SMALL || (typeof createImageBitmap !== 'function')) return Promise.resolve(file);
+        return createImageBitmap(file).then(function (bmp) {
+            var scale = Math.min(1, maxEdge / Math.max(bmp.width, bmp.height));
+            if (scale >= 1) return file;
+            var canvas = document.createElement('canvas');
+            canvas.width = Math.round(bmp.width * scale);
+            canvas.height = Math.round(bmp.height * scale);
+            canvas.getContext('2d').drawImage(bmp, 0, 0, canvas.width, canvas.height);
+            bmp.close();
+            return new Promise(function (resolve) {
+                var keepPng = file.type === 'image/png';
+                canvas.toBlob(function (blob) { resolve(blob || file); }, keepPng ? 'image/png' : 'image/jpeg', 0.9);
+            });
+        }).catch(function () { return file; });
+    }
+
+    /* 相机取帧 → JPEG blob（前置镜像；maxEdge 缩边；纯函数由组件传入 video/facing） */
+    function captureFrame(video, facing, maxEdge) {
+        var w = video.videoWidth;
+        var h = video.videoHeight;
+        var scale = Math.min(1, maxEdge / Math.max(w, h));
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.round(w * scale);
+        canvas.height = Math.round(h * scale);
+        var cx = canvas.getContext('2d');
+        if (facing === 'user') {
+            cx.translate(canvas.width, 0);
+            cx.scale(-1, 1);
+        }
+        cx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        return new Promise(function (resolve) {
+            canvas.toBlob(function (blob) { resolve(blob); }, 'image/jpeg', 0.9);
+        });
+    }
+
+    /* 识别载荷归一 → { kind:'text'|'json', text?, data?, model } */
+    function normalizeResult(payload) {
+        var model = payload && typeof payload === 'object' && !Array.isArray(payload) ? payload.model : undefined;
+        if (payload && typeof payload === 'object' && !Array.isArray(payload)
+            && (payload.result !== undefined || payload.content !== undefined)) {
+            payload = payload.result !== undefined ? payload.result : payload.content;
+        }
+        if (payload !== null && typeof payload === 'object') {
+            return { kind: 'json', data: payload, model: model };
+        }
+        return { kind: 'text', text: String(payload == null ? '' : payload), model: model };
+    }
+
+    function kvEntriesOf(result) {
+        if (!result || result.kind !== 'json') return [];
+        return Object.keys(result.data).map(function (k) {
+            var v = result.data[k];
+            if (v === null || v === undefined) v = '—';
+            else if (typeof v === 'object') v = JSON.stringify(v);
+            return { key: k, value: String(v) };
+        });
+    }
+
+    function resultTextOf(result) {
+        if (!result) return '';
+        return result.kind === 'json' ? JSON.stringify(result.data, null, 2) : result.text;
+    }
+
+    function renderMarkdown(text) {
+        if (window.NexusMarkdown && NexusMarkdown.render) return NexusMarkdown.render(text || '');
+        return String(text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+    }
+
+    window.NexusCameraHelpers = {
+        DEFAULT_STAGES: DEFAULT_STAGES,
+        BUSY_PAIRS: BUSY_PAIRS,
+        toast: toast,
+        formatError: formatError,
+        validateImageFile: validateImageFile,
+        prepareFile: prepareFile,
+        captureFrame: captureFrame,
+        normalizeResult: normalizeResult,
+        kvEntriesOf: kvEntriesOf,
+        resultTextOf: resultTextOf,
+        renderMarkdown: renderMarkdown
+    };
+})();
+
+/* ===== components/nux-camera-recognize-template.js ===== */
+/* NuxCameraRecognizeTemplate —— nux-camera-recognize 模板串（前21 拆出，随 nexus-all.js 分发）
+ * 与主件 nux-camera-recognize.js（独立 script）分离；主件经 nexus-all 先载后可直引。
+ */
+(function() {
+    'use strict';
+    if (window.NuxCameraRecognizeTemplate) return;
+    window.NuxCameraRecognizeTemplate = [
+'<div class="ncr" :class="{ \'ncr--compact\': compact }">',
+'    <label v-if="title" class="ncr-label">{{ title }}</label>',
+'    <input ref="inputEl" class="ncr-input" type="file" accept="image/*"',
+'        :capture="inputCapture ? \'environment\' : null" @change="onPick" />',
+
+'    <div v-if="state === \'idle\'" class="ncr-frame">',
+'        <span class="ncr-glyph" aria-hidden="true">📷</span>',
+'        <div class="ncr-entry-actions">',
+'            <button v-if="allowCamera" type="button" class="ncr-btn ncr-btn--primary" @click="openCamera">拍照识别</button>',
+'            <button v-if="allowGallery" type="button" class="ncr-btn" @click="pick">从相册选择</button>',
+'        </div>',
+'        <p class="ncr-hint">{{ hint || (canUseCamera ? \'支持拍照或选择图片，识别由 AI 完成，内容仅供参考\' : \'当前环境不支持调起相机，可从相册选择图片\') }}</p>',
+'    </div>',
+
+'    <div v-else-if="state === \'camera\'" class="ncr-camera" role="region" aria-label="相机取景">',
+'        <video ref="videoEl" class="ncr-video" autoplay playsinline muted></video>',
+'        <div class="ncr-reticle" aria-hidden="true"><i></i><i></i><i></i><i></i></div>',
+'        <div class="ncr-camera-top">',
+'            <span class="ncr-camera-tip">{{ cameraTip }}</span>',
+'            <button type="button" class="ncr-iconbtn" aria-label="关闭相机" @click="closeCamera">✕</button>',
+'        </div>',
+'        <div class="ncr-camera-bar">',
+'            <button v-if="allowGallery" type="button" class="ncr-iconbtn" aria-label="从相册选择" @click="pick">🖼</button>',
+'            <button type="button" class="ncr-shutter" aria-label="拍摄" :disabled="flashing" @click="capture"></button>',
+'            <button type="button" class="ncr-iconbtn" aria-label="切换前后摄像头" @click="flipCamera">⟳</button>',
+'        </div>',
+'        <div v-if="flashing" class="ncr-flash" aria-hidden="true"></div>',
+'    </div>',
+
+'    <div v-else-if="state === \'preview\'" class="ncr-preview" role="region" aria-label="照片预览">',
+'        <img class="ncr-shot" :src="previewUrl" alt="待识别的照片" />',
+'        <div class="ncr-preview-actions">',
+'            <button type="button" class="ncr-btn" @click="retake">重拍</button>',
+'            <button ref="recognizeBtnEl" type="button" class="ncr-btn ncr-btn--primary" @click="recognize">{{ recognizeText }}</button>',
+'        </div>',
+'    </div>',
+
+'    <div v-else-if="state === \'recognizing\'" class="ncr-busy" role="status" aria-live="polite">',
+'        <span class="ncr-busy-thumb">',
+'            <img v-if="previewUrl" :src="previewUrl" alt="" />',
+'            <i class="ncr-scan" aria-hidden="true"></i>',
+'        </span>',
+'        <span class="ncr-busy-main">',
+'            <span class="ncr-stages">',
+'                <span v-for="(s, i) in stages" :key="s.key" class="ncr-stage"',
+'                    :class="{ \'ncr-stage--done\': i < stageIndex, \'ncr-stage--active\': i === stageIndex }">',
+'                    <i class="ncr-stage-dot" aria-hidden="true"></i>{{ s.label }}',
+'                </span>',
+'            </span>',
+'            <span class="ncr-busy-bar" aria-hidden="true"><i></i></span>',
+'            <span class="ncr-busy-foot">',
+'                <span class="ncr-busy-msg">{{ busyMsg }}</span>',
+'                <button type="button" class="ncr-btn" @click="cancelRecognize">取消</button>',
+'            </span>',
+'        </span>',
+'    </div>',
+
+'    <div v-else-if="state === \'done\'" class="ncr-result" role="region" aria-label="识别结果">',
+'        <div class="ncr-result-head">',
+'            <img v-if="previewUrl" class="ncr-result-thumb" :src="previewUrl" alt="原图" />',
+'            <span class="ncr-notice">✦ AI 生成内容，仅供参考</span>',
+'        </div>',
+'        <slot name="result" :result="result">',
+'            <div class="ncr-result-body">',
+'                <template v-if="result && result.kind === \'json\'">',
+'                    <dl class="ncr-kv">',
+'                        <template v-for="e in kvEntries" :key="e.key">',
+'                            <dt>{{ e.key }}</dt><dd>{{ e.value }}</dd>',
+'                        </template>',
+'                    </dl>',
+'                </template>',
+'                <template v-else>',
+'                    <div v-html="result ? renderMarkdown(result.text) : \'\'"></div>',
+'                </template>',
+'            </div>',
+'        </slot>',
+'        <div class="ncr-result-actions">',
+'            <button type="button" class="ncr-btn" @click="copyResult">复制</button>',
+'            <button type="button" class="ncr-btn" @click="retake">再拍一张</button>',
+'        </div>',
+'    </div>',
+
+'    <div v-else-if="state === \'error\'" class="ncr-result ncr-result--error" role="alert">',
+'        <div class="ncr-result-head">',
+'            <img v-if="previewUrl" class="ncr-result-thumb" :src="previewUrl" alt="原图" />',
+'            <p class="ncr-error-msg">{{ errorMsg }}</p>',
+'        </div>',
+'        <div class="ncr-result-actions">',
+'            <button type="button" class="ncr-btn" @click="reset">重新开始</button>',
+'            <button type="button" class="ncr-btn ncr-btn--primary" @click="recognize">重试识别</button>',
+'        </div>',
+'    </div>',
+'</div>'
+    ].join('\n');
 })();
 
 /* ===== nexus-structured.js ===== */
@@ -5480,10 +5983,13 @@
     var HELPERS = {
         'NuxAiChatHelpers': 'AI 对话工具集（features/input/roles、键盘高度、富事件路由）',
         'NuxAiChatTemplate': 'AI 对话组件模板字符串',
+        'NuxAiChatCore': 'AI 对话聚合包支撑层（附件纯函数族/TTS 朗读/流式渲染器工厂/编辑重发工厂，helpers 保别名转发）',
         'NuxAiWidgetsRegistry': 'AI 消息内组件渲染器注册表（register(type, def, icon)，供 nux-ai-widgets-rich 等扩展）',
         'nux-ai-widgets-rich.js': 'AI 消息内增强组件（form/chart/confirm），仅向 NuxAiWidgetsRegistry 注册类型并注入样式，无独立全局导出',
         'NuxLoginHelpers': '登录页工具集（验证码/SMS 状态机、协议勾选、忘记密码动态加载）',
         'NuxLoginPageTemplate': '登录页模板字符串',
+        'NuxCameraRecognizeTemplate': '拍照识别组件模板字符串',
+        'NexusCameraHelpers': '拍照识别纯管线（文件校验/降采样/取帧/结果归一，随聚合包分发）',
         'PosterRender': '海报渲染引擎（px/elementStyle/buildInner/capture/download）'
     };
 
@@ -7165,22 +7671,18 @@ try {
     };
 })();
 
-/* ===== nexus-feedback-float.js ===== */
-/* global feedback float — 全应用反馈入口：右下角浮标 + 微表单 + 我的反馈回音
- * 提交走 userFeedback UC 轨（/api/v1/uc/feedbacks，身份由 UC 令牌决定），
- * 上下文自动附带（应用名/页面/console 最近报错环），未注册应用由服务端自动建档。
- * 退出：window.NEXUS_FEEDBACK_DISABLED = true 或 localStorage.nux_feedback_float = 'off'
+/* ===== nexus-feedback-float-helpers.js ===== */
+/* NexusFeedbackFloatHelpers —— 反馈浮标支撑层（自 nexus-feedback-float.js 前21 拆出）
+ * 职责：console 报错环 / 环境探测 / userFeedback UC 轨 API / 纯工具。
+ * UI 与 DOM 归主文件；本文件不碰 DOM（除报错环监听）。
  */
 (function() {
     'use strict';
-    if (window.NexusFeedbackFloat) return;
+    if (window.NexusFeedbackFloatHelpers) return;
 
     var API_BASE = String(window.NEXUS_FEEDBACK_BASE
         || (location.origin + '/userfeedback')).replace(/\/+$/, '');
-    var ROOT_ID = 'nux-feedback-root';
-    var PANEL_Z = 1600;
     var MAX_CONSOLE = 8;
-    var MAX_FAILURES = 3;
 
     var TYPES = [
         { key: 'bug', label: '问题' },
@@ -7190,14 +7692,6 @@ try {
         { key: 'inquiry', label: '咨询' },
         { key: 'other', label: '其他' }
     ];
-    var STATUS = {
-        PENDING: { label: '待处理', cls: 'nxfb-tag--muted' },
-        PROCESSING: { label: '处理中', cls: 'nxfb-tag--info' },
-        RESOLVED: { label: '已解决', cls: 'nxfb-tag--ok' },
-        CLOSED: { label: '已关闭', cls: 'nxfb-tag--muted' }
-    };
-
-    var state = { failures: 0, type: 'bug', ctx: true, tab: 'compose', open: false, lastFocus: null, unreadEcho: 0 };
 
     /* ---------- console 报错环（提交时随附，帮站长看到「现场」） ---------- */
     var ring = [];
@@ -7261,102 +7755,123 @@ try {
         return /user-center\.html$|portal\.html$|login\.html$|register\.html$/.test(path);
     }
 
-    /* ---------- 样式 ---------- */
-    function injectStyles() {
-        if (document.getElementById('nux-feedback-style')) return;
-        var style = document.createElement('style');
-        style.id = 'nux-feedback-style';
-        style.textContent = ''
-            + '#' + ROOT_ID + '{position:fixed;right:16px;bottom:calc(16px + var(--nx-safe-bottom,0px));z-index:var(--nx-z-float,1500);font-family:inherit;}'
-            + '#' + ROOT_ID + '.nxfb-raised{bottom:76px;}'
-            + '.nxfb-btn{display:flex;align-items:center;gap:6px;height:38px;padding:0 14px;border-radius:999px;'
-            + 'background:var(--nx-bg-elevated,#fff);color:var(--nx-text-body,#334155);'
-            + 'border:1px solid var(--nx-border,#e2e8f0);box-shadow:var(--nx-shadow-lg,0 8px 24px rgba(0,0,0,.12));'
-            + 'font-size:13px;cursor:pointer;transition:transform .15s,box-shadow .15s,opacity .2s;opacity:.88;}'
-            + '.nxfb-btn:hover{opacity:1;transform:translateY(-1px);}'
-            + '.nxfb-btn svg{flex:none;}'
-            + '@media (max-width:768px){.nxfb-btn span{display:none;}.nxfb-btn{padding:0 11px;}'
-            + 'body:has(.nux-layout-bottom-nav) #' + ROOT_ID + ',body:has(.nx-mobile-tabbar) #' + ROOT_ID + ',body:has(.nux-bottom-nav) #' + ROOT_ID + '{bottom:calc(74px + var(--nx-safe-bottom,0px));}}'
-            + '.nxfb-mask{position:fixed;inset:0;z-index:var(--nx-z-float-panel,' + PANEL_Z + ');background:rgba(15,23,42,.42);'
-            + 'display:flex;align-items:flex-end;justify-content:center;'
-            + 'backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);}'
-            + '@media (min-width:769px){.nxfb-mask{align-items:center;}}'
-            + '.nxfb-panel{background:var(--nx-bg-elevated,#fff);color:var(--nx-text-body,#334155);'
-            + 'border:1px solid var(--nx-border,#e2e8f0);border-radius:var(--nx-radius-lg,16px);'
-            + 'box-shadow:var(--nx-shadow-lg,0 8px 24px rgba(0,0,0,.18));width:380px;max-width:calc(100vw - 24px);'
-            + 'max-height:min(560px,calc(100vh - 32px));max-height:min(560px,calc(100dvh - 32px));display:flex;flex-direction:column;'
-            + 'margin-bottom:max(8px,env(safe-area-inset-bottom));'
-            + 'animation:nxfb-in .18s ease;}'
-            + '@media (prefers-reduced-motion:reduce){.nxfb-panel{animation:none;}}'
-            + '@keyframes nxfb-in{from{opacity:0;transform:translateY(10px) scale(.98);}to{opacity:1;transform:none;}}'
-            + '.nxfb-head{display:flex;align-items:center;justify-content:space-between;'
-            + 'padding:14px 16px 10px;}'
-            + '.nxfb-title{font-size:15px;font-weight:600;color:var(--nx-text-heading,#0f172a);}'
-            + '.nxfb-close{border:0;background:none;color:var(--nx-text-muted,#94a3b8);cursor:pointer;'
-            + 'font-size:18px;line-height:1;padding:4px;border-radius:8px;}'
-            + '.nxfb-close:hover{color:var(--nx-text-heading,#0f172a);}'
-            + '.nxfb-tabs{display:flex;gap:4px;margin:0 16px 10px;padding:3px;'
-            + 'background:var(--nx-bg-secondary,#f1f5f9);border-radius:10px;}'
-            + '.nxfb-tab{flex:1;border:0;background:none;padding:6px 0;border-radius:8px;'
-            + 'font-size:13px;color:var(--nx-text-secondary,#64748b);cursor:pointer;}'
-            + '.nxfb-tab.is-on{background:var(--nx-bg-elevated,#fff);color:var(--nx-text-heading,#0f172a);'
-            + 'box-shadow:0 1px 4px rgba(15,23,42,.12);font-weight:600;}'
-            + '.nxfb-body{padding:0 16px 16px;overflow-y:auto;}'
-            + '.nxfb-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;}'
-            + '.nxfb-chip{border:1px solid var(--nx-border,#e2e8f0);background:none;border-radius:999px;'
-            + 'padding:5px 13px;font-size:13px;color:var(--nx-text-secondary,#64748b);cursor:pointer;}'
-            + '.nxfb-chip.is-on{background:var(--nx-primary-soft,rgba(99,102,241,.12));'
-            + 'border-color:var(--nx-primary,#6366f1);color:var(--nx-primary,#6366f1);font-weight:600;}'
-            + '.nxfb-text{width:100%;box-sizing:border-box;min-height:110px;resize:vertical;'
-            + 'border:1px solid var(--nx-border,#e2e8f0);border-radius:10px;padding:10px 12px;'
-            + 'font-size:14px;font-family:inherit;color:var(--nx-text-body,#334155);'
-            + 'background:var(--nx-bg-secondary,#f8fafc);line-height:1.5;}'
-            + '.nxfb-text:focus{outline:2px solid var(--nx-primary,#6366f1);outline-offset:-1px;}'
-            + '.nxfb-ctx{display:flex;align-items:center;gap:6px;margin:10px 0 2px;'
-            + 'font-size:12px;color:var(--nx-text-muted,#94a3b8);cursor:pointer;}'
-            + '.nxfb-ctx input{accent-color:var(--nx-primary,#6366f1);}'
-            + '.nxfb-foot{display:flex;align-items:center;justify-content:space-between;'
-            + 'gap:10px;margin-top:12px;}'
-            + '.nxfb-hint{font-size:12px;color:var(--nx-text-muted,#94a3b8);min-width:0;}'
-            + '.nxfb-send{flex:none;border:0;border-radius:10px;padding:9px 18px;font-size:14px;font-weight:600;'
-            + 'background:var(--nx-primary,#6366f1);color:var(--nx-text-on-accent,#fff);cursor:pointer;}'
-            + '.nxfb-send:disabled{opacity:.5;cursor:default;}'
-            + '.nxfb-err{margin-top:8px;font-size:12px;color:#dc2626;display:none;}'
-            + '.nxfb-login{text-align:center;padding:22px 8px 10px;}'
-            + '.nxfb-login p{font-size:14px;color:var(--nx-text-secondary,#64748b);margin:0 0 14px;}'
-            + '.nxfb-login a{display:inline-block;border-radius:10px;padding:9px 22px;font-size:14px;'
-            + 'font-weight:600;text-decoration:none;'
-            + 'background:var(--nx-primary,#6366f1);color:var(--nx-text-on-accent,#fff);}'
-            + '.nxfb-ok{text-align:center;padding:26px 8px 14px;}'
-            + '.nxfb-ok-icon{width:44px;height:44px;border-radius:999px;margin:0 auto 12px;'
-            + 'display:flex;align-items:center;justify-content:center;'
-            + 'background:var(--nx-primary-soft,rgba(99,102,241,.12));color:var(--nx-primary,#6366f1);}'
-            + '.nxfb-ok h4{margin:0 0 6px;font-size:15px;color:var(--nx-text-heading,#0f172a);}'
-            + '.nxfb-ok p{margin:0 0 16px;font-size:13px;color:var(--nx-text-secondary,#64748b);}'
-            + '.nxfb-link{background:none;border:0;padding:0;font-size:13px;font-weight:600;'
-            + 'color:var(--nx-primary,#6366f1);cursor:pointer;}'
-            + '.nxfb-item{display:block;width:100%;text-align:left;border:0;background:none;'
-            + 'padding:10px 2px;border-bottom:1px solid var(--nx-border,#e2e8f0);cursor:pointer;}'
-            + '.nxfb-item:hover{background:var(--nx-bg-secondary,#f8fafc);}'
-            + '.nxfb-item-top{display:flex;align-items:center;gap:8px;margin-bottom:4px;}'
-            + '.nxfb-item-title{flex:1;min-width:0;font-size:13px;font-weight:600;'
-            + 'color:var(--nx-text-heading,#0f172a);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
-            + '.nxfb-tag{flex:none;font-size:11px;border-radius:999px;padding:2px 8px;}'
-            + '.nxfb-tag--muted{background:var(--nx-bg-secondary,#f1f5f9);color:var(--nx-text-secondary,#64748b);}'
-            + '.nxfb-tag--info{background:rgba(59,130,246,.14);color:#2563eb;}'
-            + '.nxfb-tag--ok{background:rgba(16,185,129,.14);color:#059669;}'
-            + '.nxfb-item-meta{font-size:12px;color:var(--nx-text-muted,#94a3b8);}'
-            + '.nxfb-item-meta .nxfb-voice{color:var(--nx-primary,#6366f1);font-weight:600;}'
-            + '.nxfb-empty{text-align:center;padding:26px 0;color:var(--nx-text-muted,#94a3b8);font-size:13px;}'
-            + '.nxfb-list-loading{text-align:center;padding:20px 0;font-size:13px;'
-            + 'color:var(--nx-text-muted,#94a3b8);}'
-            + '.nxfb-badge{position:absolute;top:-4px;right:-4px;min-width:17px;height:17px;'
-            + 'padding:0 4px;border-radius:999px;background:var(--nx-danger,#ef4444);color:#fff;'
-            + 'font-size:11px;font-weight:700;line-height:17px;text-align:center;'
-            + 'box-shadow:0 0 0 2px var(--nx-bg-card,#fff);}'
-            + '.nxfb-newecho{color:var(--nx-primary,#6366f1);font-weight:700;}';
-        document.head.appendChild(style);
+    /* ---------- API ---------- */
+    function contextMeta() {
+        var meta = { app_name: appLabel(), page: window.location.pathname };
+        try { meta.title = String(document.title || '').slice(0, 120); } catch (e) {}
+        try { meta.viewport = window.innerWidth + 'x' + window.innerHeight; } catch (e) {}
+        return meta;
     }
+
+    /* opts: { type, withCtx } —— 类型与附带环境开关由宿主态传入（原闭包读主文件 state） */
+    function submitFeedback(content, opts) {
+        opts = opts || {};
+        var type = opts.type || 'bug';
+        var body = {
+            title: content.split('\n')[0].slice(0, 40) || TYPES.filter(function(t) {
+                return t.key === type;
+            })[0].label,
+            content: content,
+            feedback_type: type,
+            priority: 'medium',
+            source: 'widget',
+            app_key: appKey(),
+            metadata: opts.withCtx
+                ? Object.assign(contextMeta(), { console: ring.slice() })
+                : contextMeta()
+        };
+        return fetch(API_BASE + '/api/v1/uc/feedbacks', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token()
+            },
+            body: JSON.stringify(body)
+        }).then(function(resp) {
+            if (resp.status === 401) { var e = new Error('unauthorized'); e.status = 401; throw e; }
+            if (!resp.ok) throw new Error('http-' + resp.status);
+            return resp.json();
+        }).then(function(wrapper) {
+            var data = wrapper && wrapper.data ? wrapper.data : {};
+            return data;
+        });
+    }
+
+    function listMine() {
+        return fetch(API_BASE + '/api/v1/uc/feedbacks?page_size=5', {
+            headers: { 'Authorization': 'Bearer ' + token() }
+        }).then(function(resp) {
+            if (resp.status === 401) { var e = new Error('unauthorized'); e.status = 401; throw e; }
+            if (!resp.ok) throw new Error('http-' + resp.status);
+            return resp.json();
+        }).then(function(wrapper) {
+            var data = wrapper && wrapper.data ? wrapper.data : {};
+            return Array.isArray(data.items) ? data.items : [];
+        });
+    }
+
+    /* ---------- 纯工具 ---------- */
+    function appLabelOf(item) {
+        try {
+            return (window.NexusUtils && NexusUtils.notify
+                ? NexusUtils.notify.appLabel(item.app_key) : '') || item.app_key || '';
+        } catch (e) { return item.app_key || ''; }
+    }
+
+    function fmtDate(value) {
+        if (!value) return '';
+        var d = new Date(value);
+        if (isNaN(d.getTime())) return '';
+        var now = new Date();
+        var opt = { month: 'numeric', day: 'numeric' };
+        if (d.getFullYear() !== now.getFullYear()) opt.year = 'numeric';
+        return d.toLocaleDateString('zh-CN', opt);
+    }
+
+    function loginUrl() {
+        var here = (window.location.pathname || '') + (window.location.search || '');
+        return '/login.html?redirect=' + encodeURIComponent(here.replace(/^\/+/, '/'));
+    }
+
+    window.NexusFeedbackFloatHelpers = {
+        API_BASE: API_BASE,
+        TYPES: TYPES,
+        appKey: appKey,
+        appLabel: appLabel,
+        token: token,
+        shouldSkipPage: shouldSkipPage,
+        contextMeta: contextMeta,
+        submitFeedback: submitFeedback,
+        listMine: listMine,
+        appLabelOf: appLabelOf,
+        fmtDate: fmtDate,
+        loginUrl: loginUrl
+    };
+})();
+
+/* ===== nexus-feedback-float.js ===== */
+/* global feedback float — 全应用反馈入口：右下角浮标 + 微表单 + 我的反馈回音
+ * 提交走 userFeedback UC 轨（/api/v1/uc/feedbacks，身份由 UC 令牌决定），
+ * 上下文自动附带（应用名/页面/console 最近报错环），未注册应用由服务端自动建档。
+ * 支撑层（报错环/环境/API/纯工具）在 NexusFeedbackFloatHelpers，样式在 css/nexus-feedback-float.css。
+ * 退出：window.NEXUS_FEEDBACK_DISABLED = true 或 localStorage.nux_feedback_float = 'off'
+ */
+(function() {
+    'use strict';
+    if (window.NexusFeedbackFloat) return;
+
+    var H = window.NexusFeedbackFloatHelpers || {};
+    var ROOT_ID = 'nux-feedback-root';
+    var MAX_FAILURES = 3;
+
+    var STATUS = {
+        PENDING: { label: '待处理', cls: 'nxfb-tag--muted' },
+        PROCESSING: { label: '处理中', cls: 'nxfb-tag--info' },
+        RESOLVED: { label: '已解决', cls: 'nxfb-tag--ok' },
+        CLOSED: { label: '已关闭', cls: 'nxfb-tag--muted' }
+    };
+
+    var state = { failures: 0, type: 'bug', ctx: true, tab: 'compose', open: false, lastFocus: null, unreadEcho: 0 };
 
     /* ---------- DOM ---------- */
     function el(tag, cls, html) {
@@ -7417,9 +7932,9 @@ try {
     }
 
     function refreshEchoBadge() {
-        if (!token() || window.NexusFeedbackFloatStopped) return;
-        fetch(API_BASE + '/api/v1/uc/echo/unread-count', {
-            headers: { 'Authorization': 'Bearer ' + token() }
+        if (!H.token || !H.token() || window.NexusFeedbackFloatStopped) return;
+        fetch(H.API_BASE + '/api/v1/uc/echo/unread-count', {
+            headers: { 'Authorization': 'Bearer ' + H.token() }
         }).then(function(resp) { return resp.ok ? resp.json() : null; }).then(function(wrapper) {
             var data = wrapper && wrapper.data ? wrapper.data : {};
             state.unreadEcho = Number(data.count || 0);
@@ -7441,11 +7956,6 @@ try {
                 if (bottom < 70) root.classList.add('nxfb-raised');
             }
         } catch (e) {}
-    }
-
-    function loginUrl() {
-        var here = (window.location.pathname || '') + (window.location.search || '');
-        return '/login.html?redirect=' + encodeURIComponent(here.replace(/^\/+/, '/'));
     }
 
     /* ---------- 面板 ---------- */
@@ -7521,7 +8031,7 @@ try {
         var body = state.panel.body;
         body.innerHTML = '';
         var chips = el('div', 'nxfb-chips');
-        TYPES.forEach(function(t) {
+        (H.TYPES || []).forEach(function(t) {
             var chip = el('button', 'nxfb-chip' + (state.type === t.key ? ' is-on' : ''), t.label);
             chip.type = 'button';
             chip.addEventListener('click', function() {
@@ -7545,7 +8055,7 @@ try {
         ctxCheck.addEventListener('change', function() { state.ctx = ctxCheck.checked; });
         ctxLabel.appendChild(ctxCheck);
         ctxLabel.appendChild(document.createTextNode(
-            '附带环境信息（' + appLabel() + ' · 当前页面 · 最近报错）'));
+            '附带环境信息（' + (H.appLabel ? H.appLabel() : '') + ' · 当前页面 · 最近报错）'));
 
         var err = el('div', 'nxfb-err');
 
@@ -7563,7 +8073,7 @@ try {
         body.appendChild(foot);
 
         function renderHint() {
-            var t = token();
+            var t = H.token ? H.token() : '';
             hint.textContent = t ? '将以当前登录身份提交' : '登录后提交，才能收到回音';
         }
         renderHint();
@@ -7578,7 +8088,7 @@ try {
             }
             send.disabled = true;
             err.style.display = 'none';
-            submitFeedback(content).then(function(fb) {
+            H.submitFeedback(content, { type: state.type, withCtx: state.ctx }).then(function(fb) {
                 renderSuccess(fb);
             }).catch(function(exc) {
                 send.disabled = false;
@@ -7601,7 +8111,7 @@ try {
         var wrap = el('div', 'nxfb-login');
         var p = el('p', null, '登录后提交反馈，处理进展会通知到你。');
         var go = el('a', null, '去登录');
-        go.href = loginUrl();
+        go.href = H.loginUrl ? H.loginUrl() : '/login.html';
         wrap.appendChild(p);
         wrap.appendChild(go);
         body.appendChild(wrap);
@@ -7628,7 +8138,7 @@ try {
         var body = state.panel.body;
         body.innerHTML = '';
         body.appendChild(el('div', 'nxfb-list-loading', '加载中…'));
-        listMine().then(function(items) {
+        H.listMine().then(function(items) {
             body.innerHTML = '';
             if (!items.length) {
                 var empty = el('div', 'nxfb-empty', '还没有反馈记录');
@@ -7649,7 +8159,7 @@ try {
             more.style.display = 'block';
             more.style.margin = '12px auto 2px';
             more.addEventListener('click', function() {
-                window.open(API_BASE + '/', '_blank');
+                window.open(H.API_BASE + '/', '_blank');
             });
             body.appendChild(more);
         }).catch(function(exc) {
@@ -7667,7 +8177,7 @@ try {
         var row = el('button', 'nxfb-item');
         row.type = 'button';
         var title = String(item.title || '（无标题）');
-        var metaBits = [fmtDate(item.created_at), appLabelOf(item)];
+        var metaBits = [H.fmtDate(item.created_at), H.appLabelOf(item)];
         if (item.unread_echo) {
             metaBits.push('<span class="nxfb-newecho">新回音</span>');
         } else if (item.reply_count > 0) {
@@ -7683,78 +8193,9 @@ try {
         row.querySelector('.nxfb-tag').textContent = st.label;
         row.querySelector('.nxfb-item-meta').innerHTML = metaBits.join(' · ');
         row.addEventListener('click', function() {
-            window.open(API_BASE + '/?fid=' + item.id, '_blank');
+            window.open(H.API_BASE + '/?fid=' + item.id, '_blank');
         });
         return row;
-    }
-
-    function appLabelOf(item) {
-        try {
-            return (window.NexusUtils && NexusUtils.notify
-                ? NexusUtils.notify.appLabel(item.app_key) : '') || item.app_key || '';
-        } catch (e) { return item.app_key || ''; }
-    }
-
-    function fmtDate(value) {
-        if (!value) return '';
-        var d = new Date(value);
-        if (isNaN(d.getTime())) return '';
-        var now = new Date();
-        var opt = { month: 'numeric', day: 'numeric' };
-        if (d.getFullYear() !== now.getFullYear()) opt.year = 'numeric';
-        return d.toLocaleDateString('zh-CN', opt);
-    }
-
-    /* ---------- API ---------- */
-    function contextMeta() {
-        var meta = { app_name: appLabel(), page: window.location.pathname };
-        try { meta.title = String(document.title || '').slice(0, 120); } catch (e) {}
-        try { meta.viewport = window.innerWidth + 'x' + window.innerHeight; } catch (e) {}
-        return meta;
-    }
-
-    function submitFeedback(content) {
-        var body = {
-            title: content.split('\n')[0].slice(0, 40) || TYPES.filter(function(t) {
-                return t.key === state.type;
-            })[0].label,
-            content: content,
-            feedback_type: state.type,
-            priority: 'medium',
-            source: 'widget',
-            app_key: appKey(),
-            metadata: state.ctx
-                ? Object.assign(contextMeta(), { console: ring.slice() })
-                : contextMeta()
-        };
-        return fetch(API_BASE + '/api/v1/uc/feedbacks', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token()
-            },
-            body: JSON.stringify(body)
-        }).then(function(resp) {
-            if (resp.status === 401) { var e = new Error('unauthorized'); e.status = 401; throw e; }
-            if (!resp.ok) throw new Error('http-' + resp.status);
-            return resp.json();
-        }).then(function(wrapper) {
-            var data = wrapper && wrapper.data ? wrapper.data : {};
-            return data;
-        });
-    }
-
-    function listMine() {
-        return fetch(API_BASE + '/api/v1/uc/feedbacks?page_size=5', {
-            headers: { 'Authorization': 'Bearer ' + token() }
-        }).then(function(resp) {
-            if (resp.status === 401) { var e = new Error('unauthorized'); e.status = 401; throw e; }
-            if (!resp.ok) throw new Error('http-' + resp.status);
-            return resp.json();
-        }).then(function(wrapper) {
-            var data = wrapper && wrapper.data ? wrapper.data : {};
-            return Array.isArray(data.items) ? data.items : [];
-        });
     }
 
     function stop() {
@@ -7770,8 +8211,7 @@ try {
         stop: stop
     };
 
-    if (!shouldSkipPage()) {
-        injectStyles();
+    if (!(H.shouldSkipPage ? H.shouldSkipPage() : false)) {
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', ensureButton);
         } else {

@@ -976,3 +976,17 @@
     color: var(--nx-danger, rgb(220, 38, 38));
     background: var(--nx-bg-surface, #fff);
 }
+
+/* v2.97.0 停止终态签名行（NexusStop stopNote）：muted 克制灰调（深蓝灰石板纪律——
+ * 过程面降权不抢戏），不进 content 不污染复制面；空内容停止时为气泡唯一内容 */
+.nx-ai-chat-stopped-line {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--nx-text-muted, #94a3b8);
+}
+.nx-ai-chat-stopped-line svg {
+    flex: none;
+}

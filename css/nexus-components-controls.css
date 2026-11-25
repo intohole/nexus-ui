@@ -320,6 +320,31 @@
 }
 .nux-chip-remove:hover { background: rgba(var(--nx-danger-rgb), 0.15); color: var(--nx-danger); }
 
+/* v2.97.0 chip 富内容与折叠：stat 副文案徽标 + maxVisible「还有 N 个」开关 */
+.nux-chip-main { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nux-chip-stat {
+  flex: none;
+  font-size: 11px;
+  color: var(--nx-text-muted);
+  background: var(--nx-bg-muted);
+  padding: 1px 6px;
+  border-radius: 9999px;
+}
+.nux-chip-more {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 var(--nx-space-3);
+  border: 1px dashed var(--nx-border);
+  border-radius: var(--nx-radius-full);
+  background: none;
+  color: var(--nx-text-secondary);
+  font-size: var(--nx-text-sm);
+  cursor: pointer;
+  transition: all var(--nx-transition-fast);
+}
+.nux-chip-more:hover { color: var(--nx-text-heading); border-color: var(--nx-border-hover); }
+
 .nux-loading { display: flex; align-items: center; justify-content: center; gap: var(--nx-space-2); color: var(--nx-text-muted); }
 .nux-loading--block { padding: var(--nx-space-8) 0; }
 .nux-loading--inline { padding: 0; }
@@ -427,5 +452,31 @@
 }
 .nux-select-option:hover { background: var(--nx-bg-hover); }
 .nux-select-option--selected { color: var(--app-accent, var(--nx-primary)); font-weight: 600; }
+
+/* v2.97.0 富选项（combo/filterable 分支）：主文案+tag 徽标一行，desc 副文案次行 */
+.nux-select-option--rich { white-space: normal; display: flex; flex-direction: column; gap: 2px; }
+.nux-select-option-row { display: flex; align-items: center; gap: var(--nx-space-2); min-width: 0; }
+.nux-select-option-main { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nux-select-option-tag {
+  flex: none;
+  font-size: 11px;
+  padding: 1px 7px;
+  border-radius: 9999px;
+  background: var(--nx-bg-muted);
+  color: var(--nx-text-secondary);
+  font-weight: 600;
+}
+.nux-select-option-desc {
+  font-size: 12px;
+  color: var(--nx-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nux-select-option--disabled { opacity: 0.45; cursor: not-allowed; }
+.nux-select-option--disabled:hover { background: none; }
+/* v2.97.0：弹窗内的 combo 下拉必须盖过其模态带（nx-modal-overlay z=var(--nx-z-modal) 9000），
+ * 否则下拉被弹窗盖死（lyra 前7「抽屉内 confirm 被盖死」同族判例）；页面级下拉仍走 --nx-z-popover */
+.nx-modal-overlay .nux-select-dropdown { z-index: calc(var(--nx-z-modal) + 1); }
 .nux-select-option--muted { color: var(--nx-text-muted); cursor: default; }
 .nux-select-option--muted:hover { background: transparent; }

@@ -4,6 +4,7 @@
     const { ref, reactive, computed, onMounted, onBeforeUnmount, watch, nextTick } = Vue;
 
     const H = window.NuxAiChatHelpers;
+    const C = window.NuxAiChatCore || {};
     const DEFAULT_FEATURES = H.defaultFeatures;
     const DEFAULT_INPUT = H.defaultInput;
     const DEFAULT_ROLES = H.defaultRoles;
@@ -16,6 +17,7 @@
             messages: { type: Array, default: () => [] },
             apiConfig: { type: Object, default: () => ({}) },
             sendHandler: { type: Function, default: null },
+            cancelRequest: { type: Function, default: null },
             features: { type: Object, default: () => ({}) },
             inputConfig: { type: Object, default: () => ({}) },
             welcome: { type: Object, default: () => ({}) },
@@ -210,37 +212,12 @@
 
             // 流式块级渲染（nexus-streamdown）：稳定区 html 仅块推进时变化（v-html 值
             // 不变不重建 DOM），活跃尾块经 rAF 合帧每帧最多渲一次。watch 挂在消息
-            // content 上，helpers 的直写路径无需感知。
-            const streamers = new WeakMap();
-
-            function refreshStream(m) {
-                if (!feat.streamBlocks || !m.streaming) return;
-                if (!window.NexusStreamdown || !window.NexusMarkdown) return;
-                let s = streamers.get(m);
-                if (!s) {
-                    s = { raf: 0 };
-                    streamers.set(m, s);
-                }
-                if (s.raf) return;
-                s.raf = requestAnimationFrame(() => {
-                    s.raf = 0;
-                    if (!streamers.has(m) || !m.streaming) return;
-                    if (!list.includes(m)) { streamers.delete(m); return; }
-                    const out = NexusStreamdown.update(m.content, s);
-                    if (out) {
-                        m.stableHtml = out.stableHtml;
-                        m.activeHtml = out.activeHtml;
-                    }
-                });
-            }
-
-            function stopStreamers() {
-                list.forEach((m) => {
-                    const s = streamers.get(m);
-                    if (s && s.raf) cancelAnimationFrame(s.raf);
-                });
-                streamers.clear?.();
-            }
+            // content 上，helpers 的直写路径无需感知。（v2.97.0 工厂下沉 NexusAiChatCore）
+            const { refreshStream, stopStreamers } = C.createStreamers({
+                list: list,
+                enabled: () => feat.streamBlocks,
+                inList: (m) => list.includes(m)
+            });
 
             function postProcessMd(el) {
                 if (window.NexusMarkdown && el) NexusMarkdown.postProcess(el);
@@ -272,6 +249,7 @@
                 lastSendTime: lastSendTime,
                 scrollEl: scrollEl, inputEl: inputEl, listEl: listEl,
                 props: props, feat: feat, inputCfg: inputCfg,
+                cancelRequest: props.cancelRequest || null,
                 takeAttachmentsForSend: takeAttachmentsForSend,
                 emit: function () { ctx.emit.apply(ctx, arguments); },
                 nextTick: nextTick,
@@ -305,27 +283,12 @@
                 }
             }
 
-            function startEdit(m) {
-                if (!feat.chatActions || feat.editResend === 'off' || isStreaming.value || props.disabled) return;
-                if (!m || m.role !== 'user') return;
-                m._editDraft = m.content;
-                m._editing = true;
-            }
-
-            function cancelEdit(m) {
-                if (!m) return;
-                m._editing = false;
-                m._editDraft = '';
-            }
-
-            function confirmEdit(m) {
-                if (!m || !m._editing) return;
-                const text = String(m._editDraft || '').trim();
-                m._editing = false;
-                m._editDraft = '';
-                if (!text || text === m.content) return;
-                editResend(m, text);
-            }
+            // 编辑重发状态机（v2.97.0 工厂下沉 NexusAiChatCore）
+            const { startEdit, cancelEdit, confirmEdit } = C.createEditResend({
+                feat: feat, isStreaming: isStreaming,
+                disabled: () => props.disabled,
+                editResend: editResend
+            });
 
             function onWidgetAction(ev, msg) {
                 if (!ev) return;

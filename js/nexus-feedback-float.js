@@ -1,27 +1,17 @@
 /* global feedback float — 全应用反馈入口：右下角浮标 + 微表单 + 我的反馈回音
  * 提交走 userFeedback UC 轨（/api/v1/uc/feedbacks，身份由 UC 令牌决定），
  * 上下文自动附带（应用名/页面/console 最近报错环），未注册应用由服务端自动建档。
+ * 支撑层（报错环/环境/API/纯工具）在 NexusFeedbackFloatHelpers，样式在 css/nexus-feedback-float.css。
  * 退出：window.NEXUS_FEEDBACK_DISABLED = true 或 localStorage.nux_feedback_float = 'off'
  */
 (function() {
     'use strict';
     if (window.NexusFeedbackFloat) return;
 
-    var API_BASE = String(window.NEXUS_FEEDBACK_BASE
-        || (location.origin + '/userfeedback')).replace(/\/+$/, '');
+    var H = window.NexusFeedbackFloatHelpers || {};
     var ROOT_ID = 'nux-feedback-root';
-    var PANEL_Z = 1600;
-    var MAX_CONSOLE = 8;
     var MAX_FAILURES = 3;
 
-    var TYPES = [
-        { key: 'bug', label: '问题' },
-        { key: 'suggestion', label: '建议' },
-        { key: 'feature', label: '功能' },
-        { key: 'complaint', label: '投诉' },
-        { key: 'inquiry', label: '咨询' },
-        { key: 'other', label: '其他' }
-    ];
     var STATUS = {
         PENDING: { label: '待处理', cls: 'nxfb-tag--muted' },
         PROCESSING: { label: '处理中', cls: 'nxfb-tag--info' },
@@ -30,165 +20,6 @@
     };
 
     var state = { failures: 0, type: 'bug', ctx: true, tab: 'compose', open: false, lastFocus: null, unreadEcho: 0 };
-
-    /* ---------- console 报错环（提交时随附，帮站长看到「现场」） ---------- */
-    var ring = [];
-    function pushRing(level, text) {
-        ring.push({ level: level, text: String(text).slice(0, 200) });
-        if (ring.length > MAX_CONSOLE) ring.shift();
-    }
-    (function installRing() {
-        var origError = console.error, origWarn = console.warn;
-        console.error = function() {
-            try { pushRing('error', [].slice.call(arguments).join(' ')); } catch (e) {}
-            return origError.apply(console, arguments);
-        };
-        console.warn = function() {
-            try { pushRing('warn', [].slice.call(arguments).join(' ')); } catch (e) {}
-            return origWarn.apply(console, arguments);
-        };
-        window.addEventListener('error', function(ev) {
-            pushRing('error', (ev.message || 'script error') + ' @' + (ev.filename || '') + ':' + (ev.lineno || ''));
-        });
-        window.addEventListener('unhandledrejection', function(ev) {
-            var r = ev && ev.reason;
-            pushRing('error', 'unhandledrejection: ' + (r && r.message ? r.message : r));
-        });
-    })();
-
-    /* ---------- 环境 ---------- */
-    function appKey() {
-        var seg = String(window.location.pathname || '').split('/')[1] || '';
-        seg = seg.toLowerCase();
-        return seg || 'portal';
-    }
-    function appLabel() {
-        try {
-            var label = window.NexusUtils && NexusUtils.notify
-                ? NexusUtils.notify.appLabel(appKey()) : '';
-            if (label) return label;
-        } catch (e) {}
-        var key = appKey();
-        return key.charAt(0).toUpperCase() + key.slice(1);
-    }
-    function token() {
-        try {
-            if (window.NexusUtils && NexusUtils.authToken) return NexusUtils.authToken() || '';
-        } catch (e) {}
-        try {
-            return sessionStorage.getItem('uc_access_token')
-                || localStorage.getItem('uc_access_token') || '';
-        } catch (e) { return ''; }
-    }
-    function shouldSkipPage() {
-        if (window.NEXUS_FEEDBACK_DISABLED) return true;
-        try {
-            if (document.documentElement.getAttribute('data-nux-feedback') === 'off') return true;
-            if (localStorage.getItem('nux_feedback_float') === 'off') return true;
-        } catch (e) {}
-        var path = window.location.pathname || '';
-        if (path === '/' || path === '') return true;
-        if (path.indexOf('/userfeedback') === 0) return true;
-        if (/\/v2\.\d+\.\d+\//.test(path)) return true;
-        return /user-center\.html$|portal\.html$|login\.html$|register\.html$/.test(path);
-    }
-
-    /* ---------- 样式 ---------- */
-    function injectStyles() {
-        if (document.getElementById('nux-feedback-style')) return;
-        var style = document.createElement('style');
-        style.id = 'nux-feedback-style';
-        style.textContent = ''
-            + '#' + ROOT_ID + '{position:fixed;right:16px;bottom:calc(16px + var(--nx-safe-bottom,0px));z-index:var(--nx-z-float,1500);font-family:inherit;}'
-            + '#' + ROOT_ID + '.nxfb-raised{bottom:76px;}'
-            + '.nxfb-btn{display:flex;align-items:center;gap:6px;height:38px;padding:0 14px;border-radius:999px;'
-            + 'background:var(--nx-bg-elevated,#fff);color:var(--nx-text-body,#334155);'
-            + 'border:1px solid var(--nx-border,#e2e8f0);box-shadow:var(--nx-shadow-lg,0 8px 24px rgba(0,0,0,.12));'
-            + 'font-size:13px;cursor:pointer;transition:transform .15s,box-shadow .15s,opacity .2s;opacity:.88;}'
-            + '.nxfb-btn:hover{opacity:1;transform:translateY(-1px);}'
-            + '.nxfb-btn svg{flex:none;}'
-            + '@media (max-width:768px){.nxfb-btn span{display:none;}.nxfb-btn{padding:0 11px;}'
-            + 'body:has(.nux-layout-bottom-nav) #' + ROOT_ID + ',body:has(.nx-mobile-tabbar) #' + ROOT_ID + ',body:has(.nux-bottom-nav) #' + ROOT_ID + '{bottom:calc(74px + var(--nx-safe-bottom,0px));}}'
-            + '.nxfb-mask{position:fixed;inset:0;z-index:var(--nx-z-float-panel,' + PANEL_Z + ');background:rgba(15,23,42,.42);'
-            + 'display:flex;align-items:flex-end;justify-content:center;'
-            + 'backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);}'
-            + '@media (min-width:769px){.nxfb-mask{align-items:center;}}'
-            + '.nxfb-panel{background:var(--nx-bg-elevated,#fff);color:var(--nx-text-body,#334155);'
-            + 'border:1px solid var(--nx-border,#e2e8f0);border-radius:var(--nx-radius-lg,16px);'
-            + 'box-shadow:var(--nx-shadow-lg,0 8px 24px rgba(0,0,0,.18));width:380px;max-width:calc(100vw - 24px);'
-            + 'max-height:min(560px,calc(100vh - 32px));max-height:min(560px,calc(100dvh - 32px));display:flex;flex-direction:column;'
-            + 'margin-bottom:max(8px,env(safe-area-inset-bottom));'
-            + 'animation:nxfb-in .18s ease;}'
-            + '@media (prefers-reduced-motion:reduce){.nxfb-panel{animation:none;}}'
-            + '@keyframes nxfb-in{from{opacity:0;transform:translateY(10px) scale(.98);}to{opacity:1;transform:none;}}'
-            + '.nxfb-head{display:flex;align-items:center;justify-content:space-between;'
-            + 'padding:14px 16px 10px;}'
-            + '.nxfb-title{font-size:15px;font-weight:600;color:var(--nx-text-heading,#0f172a);}'
-            + '.nxfb-close{border:0;background:none;color:var(--nx-text-muted,#94a3b8);cursor:pointer;'
-            + 'font-size:18px;line-height:1;padding:4px;border-radius:8px;}'
-            + '.nxfb-close:hover{color:var(--nx-text-heading,#0f172a);}'
-            + '.nxfb-tabs{display:flex;gap:4px;margin:0 16px 10px;padding:3px;'
-            + 'background:var(--nx-bg-secondary,#f1f5f9);border-radius:10px;}'
-            + '.nxfb-tab{flex:1;border:0;background:none;padding:6px 0;border-radius:8px;'
-            + 'font-size:13px;color:var(--nx-text-secondary,#64748b);cursor:pointer;}'
-            + '.nxfb-tab.is-on{background:var(--nx-bg-elevated,#fff);color:var(--nx-text-heading,#0f172a);'
-            + 'box-shadow:0 1px 4px rgba(15,23,42,.12);font-weight:600;}'
-            + '.nxfb-body{padding:0 16px 16px;overflow-y:auto;}'
-            + '.nxfb-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;}'
-            + '.nxfb-chip{border:1px solid var(--nx-border,#e2e8f0);background:none;border-radius:999px;'
-            + 'padding:5px 13px;font-size:13px;color:var(--nx-text-secondary,#64748b);cursor:pointer;}'
-            + '.nxfb-chip.is-on{background:var(--nx-primary-soft,rgba(99,102,241,.12));'
-            + 'border-color:var(--nx-primary,#6366f1);color:var(--nx-primary,#6366f1);font-weight:600;}'
-            + '.nxfb-text{width:100%;box-sizing:border-box;min-height:110px;resize:vertical;'
-            + 'border:1px solid var(--nx-border,#e2e8f0);border-radius:10px;padding:10px 12px;'
-            + 'font-size:14px;font-family:inherit;color:var(--nx-text-body,#334155);'
-            + 'background:var(--nx-bg-secondary,#f8fafc);line-height:1.5;}'
-            + '.nxfb-text:focus{outline:2px solid var(--nx-primary,#6366f1);outline-offset:-1px;}'
-            + '.nxfb-ctx{display:flex;align-items:center;gap:6px;margin:10px 0 2px;'
-            + 'font-size:12px;color:var(--nx-text-muted,#94a3b8);cursor:pointer;}'
-            + '.nxfb-ctx input{accent-color:var(--nx-primary,#6366f1);}'
-            + '.nxfb-foot{display:flex;align-items:center;justify-content:space-between;'
-            + 'gap:10px;margin-top:12px;}'
-            + '.nxfb-hint{font-size:12px;color:var(--nx-text-muted,#94a3b8);min-width:0;}'
-            + '.nxfb-send{flex:none;border:0;border-radius:10px;padding:9px 18px;font-size:14px;font-weight:600;'
-            + 'background:var(--nx-primary,#6366f1);color:var(--nx-text-on-accent,#fff);cursor:pointer;}'
-            + '.nxfb-send:disabled{opacity:.5;cursor:default;}'
-            + '.nxfb-err{margin-top:8px;font-size:12px;color:#dc2626;display:none;}'
-            + '.nxfb-login{text-align:center;padding:22px 8px 10px;}'
-            + '.nxfb-login p{font-size:14px;color:var(--nx-text-secondary,#64748b);margin:0 0 14px;}'
-            + '.nxfb-login a{display:inline-block;border-radius:10px;padding:9px 22px;font-size:14px;'
-            + 'font-weight:600;text-decoration:none;'
-            + 'background:var(--nx-primary,#6366f1);color:var(--nx-text-on-accent,#fff);}'
-            + '.nxfb-ok{text-align:center;padding:26px 8px 14px;}'
-            + '.nxfb-ok-icon{width:44px;height:44px;border-radius:999px;margin:0 auto 12px;'
-            + 'display:flex;align-items:center;justify-content:center;'
-            + 'background:var(--nx-primary-soft,rgba(99,102,241,.12));color:var(--nx-primary,#6366f1);}'
-            + '.nxfb-ok h4{margin:0 0 6px;font-size:15px;color:var(--nx-text-heading,#0f172a);}'
-            + '.nxfb-ok p{margin:0 0 16px;font-size:13px;color:var(--nx-text-secondary,#64748b);}'
-            + '.nxfb-link{background:none;border:0;padding:0;font-size:13px;font-weight:600;'
-            + 'color:var(--nx-primary,#6366f1);cursor:pointer;}'
-            + '.nxfb-item{display:block;width:100%;text-align:left;border:0;background:none;'
-            + 'padding:10px 2px;border-bottom:1px solid var(--nx-border,#e2e8f0);cursor:pointer;}'
-            + '.nxfb-item:hover{background:var(--nx-bg-secondary,#f8fafc);}'
-            + '.nxfb-item-top{display:flex;align-items:center;gap:8px;margin-bottom:4px;}'
-            + '.nxfb-item-title{flex:1;min-width:0;font-size:13px;font-weight:600;'
-            + 'color:var(--nx-text-heading,#0f172a);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
-            + '.nxfb-tag{flex:none;font-size:11px;border-radius:999px;padding:2px 8px;}'
-            + '.nxfb-tag--muted{background:var(--nx-bg-secondary,#f1f5f9);color:var(--nx-text-secondary,#64748b);}'
-            + '.nxfb-tag--info{background:rgba(59,130,246,.14);color:#2563eb;}'
-            + '.nxfb-tag--ok{background:rgba(16,185,129,.14);color:#059669;}'
-            + '.nxfb-item-meta{font-size:12px;color:var(--nx-text-muted,#94a3b8);}'
-            + '.nxfb-item-meta .nxfb-voice{color:var(--nx-primary,#6366f1);font-weight:600;}'
-            + '.nxfb-empty{text-align:center;padding:26px 0;color:var(--nx-text-muted,#94a3b8);font-size:13px;}'
-            + '.nxfb-list-loading{text-align:center;padding:20px 0;font-size:13px;'
-            + 'color:var(--nx-text-muted,#94a3b8);}'
-            + '.nxfb-badge{position:absolute;top:-4px;right:-4px;min-width:17px;height:17px;'
-            + 'padding:0 4px;border-radius:999px;background:var(--nx-danger,#ef4444);color:#fff;'
-            + 'font-size:11px;font-weight:700;line-height:17px;text-align:center;'
-            + 'box-shadow:0 0 0 2px var(--nx-bg-card,#fff);}'
-            + '.nxfb-newecho{color:var(--nx-primary,#6366f1);font-weight:700;}';
-        document.head.appendChild(style);
-    }
 
     /* ---------- DOM ---------- */
     function el(tag, cls, html) {
@@ -249,9 +80,9 @@
     }
 
     function refreshEchoBadge() {
-        if (!token() || window.NexusFeedbackFloatStopped) return;
-        fetch(API_BASE + '/api/v1/uc/echo/unread-count', {
-            headers: { 'Authorization': 'Bearer ' + token() }
+        if (!H.token || !H.token() || window.NexusFeedbackFloatStopped) return;
+        fetch(H.API_BASE + '/api/v1/uc/echo/unread-count', {
+            headers: { 'Authorization': 'Bearer ' + H.token() }
         }).then(function(resp) { return resp.ok ? resp.json() : null; }).then(function(wrapper) {
             var data = wrapper && wrapper.data ? wrapper.data : {};
             state.unreadEcho = Number(data.count || 0);
@@ -273,11 +104,6 @@
                 if (bottom < 70) root.classList.add('nxfb-raised');
             }
         } catch (e) {}
-    }
-
-    function loginUrl() {
-        var here = (window.location.pathname || '') + (window.location.search || '');
-        return '/login.html?redirect=' + encodeURIComponent(here.replace(/^\/+/, '/'));
     }
 
     /* ---------- 面板 ---------- */
@@ -353,7 +179,7 @@
         var body = state.panel.body;
         body.innerHTML = '';
         var chips = el('div', 'nxfb-chips');
-        TYPES.forEach(function(t) {
+        (H.TYPES || []).forEach(function(t) {
             var chip = el('button', 'nxfb-chip' + (state.type === t.key ? ' is-on' : ''), t.label);
             chip.type = 'button';
             chip.addEventListener('click', function() {
@@ -377,7 +203,7 @@
         ctxCheck.addEventListener('change', function() { state.ctx = ctxCheck.checked; });
         ctxLabel.appendChild(ctxCheck);
         ctxLabel.appendChild(document.createTextNode(
-            '附带环境信息（' + appLabel() + ' · 当前页面 · 最近报错）'));
+            '附带环境信息（' + (H.appLabel ? H.appLabel() : '') + ' · 当前页面 · 最近报错）'));
 
         var err = el('div', 'nxfb-err');
 
@@ -395,7 +221,7 @@
         body.appendChild(foot);
 
         function renderHint() {
-            var t = token();
+            var t = H.token ? H.token() : '';
             hint.textContent = t ? '将以当前登录身份提交' : '登录后提交，才能收到回音';
         }
         renderHint();
@@ -410,7 +236,7 @@
             }
             send.disabled = true;
             err.style.display = 'none';
-            submitFeedback(content).then(function(fb) {
+            H.submitFeedback(content, { type: state.type, withCtx: state.ctx }).then(function(fb) {
                 renderSuccess(fb);
             }).catch(function(exc) {
                 send.disabled = false;
@@ -433,7 +259,7 @@
         var wrap = el('div', 'nxfb-login');
         var p = el('p', null, '登录后提交反馈，处理进展会通知到你。');
         var go = el('a', null, '去登录');
-        go.href = loginUrl();
+        go.href = H.loginUrl ? H.loginUrl() : '/login.html';
         wrap.appendChild(p);
         wrap.appendChild(go);
         body.appendChild(wrap);
@@ -460,7 +286,7 @@
         var body = state.panel.body;
         body.innerHTML = '';
         body.appendChild(el('div', 'nxfb-list-loading', '加载中…'));
-        listMine().then(function(items) {
+        H.listMine().then(function(items) {
             body.innerHTML = '';
             if (!items.length) {
                 var empty = el('div', 'nxfb-empty', '还没有反馈记录');
@@ -481,7 +307,7 @@
             more.style.display = 'block';
             more.style.margin = '12px auto 2px';
             more.addEventListener('click', function() {
-                window.open(API_BASE + '/', '_blank');
+                window.open(H.API_BASE + '/', '_blank');
             });
             body.appendChild(more);
         }).catch(function(exc) {
@@ -499,7 +325,7 @@
         var row = el('button', 'nxfb-item');
         row.type = 'button';
         var title = String(item.title || '（无标题）');
-        var metaBits = [fmtDate(item.created_at), appLabelOf(item)];
+        var metaBits = [H.fmtDate(item.created_at), H.appLabelOf(item)];
         if (item.unread_echo) {
             metaBits.push('<span class="nxfb-newecho">新回音</span>');
         } else if (item.reply_count > 0) {
@@ -515,78 +341,9 @@
         row.querySelector('.nxfb-tag').textContent = st.label;
         row.querySelector('.nxfb-item-meta').innerHTML = metaBits.join(' · ');
         row.addEventListener('click', function() {
-            window.open(API_BASE + '/?fid=' + item.id, '_blank');
+            window.open(H.API_BASE + '/?fid=' + item.id, '_blank');
         });
         return row;
-    }
-
-    function appLabelOf(item) {
-        try {
-            return (window.NexusUtils && NexusUtils.notify
-                ? NexusUtils.notify.appLabel(item.app_key) : '') || item.app_key || '';
-        } catch (e) { return item.app_key || ''; }
-    }
-
-    function fmtDate(value) {
-        if (!value) return '';
-        var d = new Date(value);
-        if (isNaN(d.getTime())) return '';
-        var now = new Date();
-        var opt = { month: 'numeric', day: 'numeric' };
-        if (d.getFullYear() !== now.getFullYear()) opt.year = 'numeric';
-        return d.toLocaleDateString('zh-CN', opt);
-    }
-
-    /* ---------- API ---------- */
-    function contextMeta() {
-        var meta = { app_name: appLabel(), page: window.location.pathname };
-        try { meta.title = String(document.title || '').slice(0, 120); } catch (e) {}
-        try { meta.viewport = window.innerWidth + 'x' + window.innerHeight; } catch (e) {}
-        return meta;
-    }
-
-    function submitFeedback(content) {
-        var body = {
-            title: content.split('\n')[0].slice(0, 40) || TYPES.filter(function(t) {
-                return t.key === state.type;
-            })[0].label,
-            content: content,
-            feedback_type: state.type,
-            priority: 'medium',
-            source: 'widget',
-            app_key: appKey(),
-            metadata: state.ctx
-                ? Object.assign(contextMeta(), { console: ring.slice() })
-                : contextMeta()
-        };
-        return fetch(API_BASE + '/api/v1/uc/feedbacks', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token()
-            },
-            body: JSON.stringify(body)
-        }).then(function(resp) {
-            if (resp.status === 401) { var e = new Error('unauthorized'); e.status = 401; throw e; }
-            if (!resp.ok) throw new Error('http-' + resp.status);
-            return resp.json();
-        }).then(function(wrapper) {
-            var data = wrapper && wrapper.data ? wrapper.data : {};
-            return data;
-        });
-    }
-
-    function listMine() {
-        return fetch(API_BASE + '/api/v1/uc/feedbacks?page_size=5', {
-            headers: { 'Authorization': 'Bearer ' + token() }
-        }).then(function(resp) {
-            if (resp.status === 401) { var e = new Error('unauthorized'); e.status = 401; throw e; }
-            if (!resp.ok) throw new Error('http-' + resp.status);
-            return resp.json();
-        }).then(function(wrapper) {
-            var data = wrapper && wrapper.data ? wrapper.data : {};
-            return Array.isArray(data.items) ? data.items : [];
-        });
     }
 
     function stop() {
@@ -602,8 +359,7 @@
         stop: stop
     };
 
-    if (!shouldSkipPage()) {
-        injectStyles();
+    if (!(H.shouldSkipPage ? H.shouldSkipPage() : false)) {
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', ensureButton);
         } else {

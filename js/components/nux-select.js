@@ -12,9 +12,11 @@
             required: { type: Boolean, default: false },
             clearable: { type: Boolean, default: false },
             filterable: { type: Boolean, default: false },
-            loading: { type: Boolean, default: false }
+            loading: { type: Boolean, default: false },
+            // 联想检索字段（v2.97.0）：默认仅 label；双语场景传 ['label','desc']。
+            filterFields: { type: Array, default: () => ['label'] }
         },
-        emits: ['update:modelValue', 'change', 'clear'],
+        emits: ['update:modelValue', 'change', 'clear', 'query'],
         data() {
             return { open: false, query: '' };
         },
@@ -28,12 +30,18 @@
             },
             selectedLabel() {
                 const opt = this.options.find(o => String(o.value) === String(this.modelValue));
-                return opt ? opt.label : '';
+                if (opt) return opt.label;
+                // freeText 兜底（v2.97.0）：值不在选项集（如自由文本存量数据）时显示原值
+                return this.hasValue ? String(this.modelValue) : '';
             },
             filteredOptions() {
                 if (!this.query) return this.options;
                 const q = this.query.toLowerCase();
-                return this.options.filter(o => String(o.label).toLowerCase().includes(q));
+                const fields = this.filterFields && this.filterFields.length ? this.filterFields : ['label'];
+                return this.options.filter(o => fields.some(f => {
+                    const v = f === 'label' ? o.label : o[f];
+                    return String(v != null ? v : '').toLowerCase().includes(q);
+                }));
             },
             displayValue() {
                 if (this.query !== '') return this.query;
@@ -54,6 +62,7 @@
                 this.$emit('clear');
             },
             pick(opt) {
+                if (opt.disabled) return;
                 this.query = '';
                 this.open = false;
                 this.$emit('update:modelValue', opt.value);
@@ -70,7 +79,7 @@
             onFilterKey(e) {
                 if (e.key === 'Escape') { this.open = false; }
                 else if (e.key === 'Enter') {
-                    const first = this.filteredOptions[0];
+                    const first = this.filteredOptions.find(o => !o.disabled);
                     if (first) this.pick(first);
                 } else if (e.key === 'ArrowDown') {
                     const first = this.filteredOptions[0];
@@ -92,7 +101,7 @@
                 <div v-if="!filterable" class="nux-select-wrap">
                     <select :id="fieldId" class="nux-input nux-select-native" :value="modelValue" :disabled="disabled" :aria-invalid="error ? 'true' : undefined" :aria-describedby="error ? fieldId + '-error' : undefined" @change="onChange">
                         <option v-if="!hasValue" value="" disabled>{{ placeholder }}</option>
-                        <option v-for="opt in options" :key="String(opt.value)" :value="opt.value">{{ opt.label }}</option>
+                        <option v-for="opt in options" :key="String(opt.value)" :value="opt.value" :disabled="opt.disabled">{{ opt.label }}</option>
                     </select>
                     <button v-if="clearable && hasValue && !disabled" type="button" class="nux-select-clear" aria-label="清空选择" @click.stop="clearValue">×</button>
                     <span v-else class="nux-select-arrow" aria-hidden="true">▾</span>
@@ -100,15 +109,24 @@
                 <div v-else class="nux-select-wrap nux-select-wrap--combo" :class="{ 'nux-select-wrap--open': open }">
                     <input :id="fieldId" type="text" class="nux-input nux-select-input" autocomplete="off"
                         :disabled="disabled" :value="displayValue" :placeholder="hasValue ? selectedLabel : placeholder"
-                        @input="e => query = e.target.value" @focus="open = true" @click.stop="open = true" @keydown="onFilterKey">
+                        @input="e => { query = e.target.value; $emit('query', e.target.value); }" @focus="open = true" @click.stop="open = true" @keydown="onFilterKey">
                     <button v-if="clearable && hasValue && !disabled && !open" type="button" class="nux-select-clear" aria-label="清空选择" @click.stop="clearValue">×</button>
                     <span v-else class="nux-select-arrow" aria-hidden="true">▾</span>
                     <ul v-if="open && !disabled" class="nux-select-dropdown" role="listbox">
                         <li v-if="loading" class="nux-select-option nux-select-option--muted">加载中…</li>
                         <li v-else-if="!filteredOptions.length" class="nux-select-option nux-select-option--muted">无匹配项</li>
-                        <li v-else v-for="opt in filteredOptions" :key="String(opt.value)" class="nux-select-option"
-                            :class="{ 'nux-select-option--selected': String(opt.value) === String(modelValue) }"
-                            role="option" @click.stop="pick(opt)">{{ opt.label }}</li>
+                        <li v-else v-for="opt in filteredOptions" :key="String(opt.value)" class="nux-select-option nux-select-option--rich"
+                            :class="{ 'nux-select-option--selected': String(opt.value) === String(modelValue), 'nux-select-option--disabled': opt.disabled }"
+                            role="option" :aria-disabled="opt.disabled ? 'true' : undefined" :aria-selected="String(opt.value) === String(modelValue)"
+                            @click.stop="pick(opt)">
+                            <slot name="option" :option="opt">
+                                <span class="nux-select-option-row">
+                                    <span class="nux-select-option-main">{{ opt.label }}</span>
+                                    <span v-if="opt.tag" class="nux-select-option-tag">{{ opt.tag }}</span>
+                                </span>
+                                <span v-if="opt.desc" class="nux-select-option-desc">{{ opt.desc }}</span>
+                            </slot>
+                        </li>
                     </ul>
                 </div>
                 <div class="nux-field-foot">

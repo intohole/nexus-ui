@@ -266,6 +266,17 @@ a.nx-citation-title:focus-visible { outline: 2px solid var(--nx-primary); outlin
 .nx-timeline-item--danger .nx-timeline-dot { background: var(--nx-danger); }
 .nx-timeline-item--accent .nx-timeline-dot { background: var(--nx-primary); }
 
+/* v2.97.0 当前项（item.current → is-current 高亮类；徽章等富标记归消费方 item slot） */
+.nx-timeline-item.is-current .nx-timeline-dot { background: var(--nx-primary); }
+.nx-timeline-item.is-current .nx-timeline-title { color: var(--nx-primary); }
+
+.nx-timeline-empty {
+  padding: var(--nx-space-4, 16px) 0;
+  font-size: 13px;
+  color: var(--nx-text-muted);
+  text-align: center;
+}
+
 .nx-timeline-meta {
   display: flex;
   align-items: center;

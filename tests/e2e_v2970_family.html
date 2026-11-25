@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>v2.97.0 AI 交互原语族走查</title>
+<script src="/js/nexus-theme-init.js"></script>
+<link rel="stylesheet" href="/css/nexus-all.css">
+<style>
+    body { padding: 28px 32px; font-family: system-ui, -apple-system, sans-serif; max-width: 900px; margin: 0 auto; }
+    h3 { margin: 26px 0 10px; font-size: 15px; color: var(--nx-text-secondary, #667); border-bottom: 1px solid var(--nx-border, #e5e8ef); padding-bottom: 6px; }
+    .chat-box { height: 300px; border: 1px solid var(--nx-border, #e5e8ef); border-radius: 12px; }
+    .tl-restore { display: inline-flex; align-items: center; min-height: 32px; padding: 0 14px; border: 1px solid var(--nx-border, #e2e8f0); border-radius: 999px; background: var(--nx-bg-surface, #fff); color: var(--nx-text-body, #334155); font-size: 13px; cursor: pointer; }
+    .tl-restore:hover { border-color: var(--app-accent, #6366f1); color: var(--app-accent, #6366f1); }
+    .tl-current-note { font-size: 12px; color: var(--nx-text-muted, #94a3b8); }
+    .nx-timeline-body { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+</style>
+</head>
+<body>
+<div id="app">
+    <h3>A. 停止终态签名行（NexusStop stopNote，默认开）</h3>
+    <nux-ai-chat id="chat-note" class="chat-box" ref="chatNote"
+        :features="{ streamBlocks: false, stopNote: noteFeat }"
+        :send-handler="streamSlow" placeholder="输入后发送，流式中点停止"></nux-ai-chat>
+    <h3>B. 停止旧占位（stopNote:false opt-out 面）</h3>
+    <nux-ai-chat id="chat-legacy" class="chat-box" ref="chatLegacy"
+        :features="{ streamBlocks: false, stopNote: false }"
+        :send-handler="streamSlow" placeholder="同上（opt-out 对照）"></nux-ai-chat>
+
+    <h3>C. timeline 当前项+动作插槽+空态</h3>
+    <nux-timeline id="tl-main" :items="tlItems">
+        <template #item="{ item, isCurrent, busy }">
+            <button v-if="!isCurrent" class="tl-restore" :disabled="busy" @click="restore(item)">切回此版</button>
+            <span v-else class="tl-current-note">当前使用中</span>
+        </template>
+    </nux-timeline>
+    <nux-timeline id="tl-empty" :items="[]">
+        <template #empty><span id="tl-empty-text">还没有版本，保存后自动留档。</span></template>
+    </nux-timeline>
+
+    <h3>D. select 富选项（filterFields 双语+desc/tag+disabled 拒点）</h3>
+    <nux-select id="sel-rich" v-model="breed" :options="breedOptions" filterable clearable
+        :filter-fields="['label','desc']" placeholder="输入中英文搜索"></nux-select>
+    <div class="picked-log">已选：{{ breed || '（未选）' }}</div>
+
+    <h3>E. chips 折叠+动作形态+removable</h3>
+    <nux-chip-group id="chips-fold" :options="foldOptions" :multiple="true" v-model="foldSel" :max-visible="3"></nux-chip-group>
+    <nux-chip-group id="chips-action" :options="actionOptions" variant="action" removable
+        @change="logAct($event)" @remove="logRm($event)"></nux-chip-group>
+    <div class="picked-log">动作 log：{{ actLog }}</div>
+</div>
+
+<script src="/vendor/vue.global.prod.js"></script>
+<script src="/js/nexus-all.js"></script>
+<script src="/js/components/nux-ai-chat-helpers.js"></script>
+<script src="/js/components/nux-ai-chat-template.js"></script>
+<script src="/js/components/nux-ai-chat.js"></script>
+<script src="/js/components/nux-timeline.js"></script>
+<script src="/js/components/nux-select.js"></script>
+<script src="/js/components/nux-chip-group.js"></script>
+<script>
+const proveRed = new URLSearchParams(location.search).has('prove_red');
+window.PROVE_RED_NOTE_OFF = proveRed; /* 判红力自证：关掉 stopNote，A 段签名行断言必须变红 */
+const app = Vue.createApp({
+    data() {
+        return {
+            noteFeat: !proveRed,
+            breed: '田园猫',
+            breedOptions: [
+                { label: '布偶猫', value: 'ragdoll', desc: 'Ragdoll', tag: '4-6kg' },
+                { label: '英国短毛猫', value: 'british', desc: 'British Shorthair', tag: '4-5kg' },
+                { label: '橘猫', value: 'orange', desc: 'Orange Tabby', tag: '4-7kg', disabled: true }
+            ],
+            tlItems: [
+                { time: '11月25日 10:00', title: '初版行程', current: false },
+                { time: '11月25日 14:00', title: '加了博物馆', current: true }
+            ],
+            foldSel: [],
+            foldOptions: [
+                { label: '英伟达', value: 'nvda', stat: '3 条昨日动态' },
+                { label: 'OpenAI', value: 'oa', stat: '昨日无动静' },
+                { label: '特斯拉', value: 'tsla', stat: '1 条昨日动态' },
+                { label: 'AMD', value: 'amd', stat: '昨日无动静' },
+                { label: '英特尔', value: 'intc', stat: '2 条昨日动态' }
+            ],
+            actionOptions: [
+                { label: '+ 关注 台积电', value: 'tsmc' },
+                { label: '+ 关注 苹果', value: 'aapl' }
+            ],
+            actLog: ''
+        };
+    },
+    methods: {
+        streamSlow(content, callbacks) {
+            callbacks.registerStop(() => {});
+            let i = 0;
+            const full = '这是一段用于停止演示的流式回答内容，需要足够长以便截断。';
+            const timer = setInterval(() => {
+                i += 2;
+                callbacks.onChunk(full.slice(0, i), full.slice(0, i));
+                if (i >= full.length) { clearInterval(timer); callbacks.onDone(full); }
+            }, 60);
+        },
+        restore(item) {
+            item.busy = true;
+            setTimeout(() => {
+                this.tlItems.forEach(x => { x.current = false; x.busy = false; });
+                item.current = true;
+            }, 100);
+        },
+        logAct(v) { this.actLog += 'act:' + v + ' '; },
+        logRm(v) { this.actLog += 'rm:' + v + ' '; }
+    }
+});
+NexusComponents.register(app);
+app.mount('#app');
+</script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 (function () {
     'use strict';
+    const Core = window.NuxAiChatCore || {};
     window.NuxAiChatHelpers = {
         defaultFeatures: {
             stopButton: true,
@@ -8,6 +9,7 @@
             chatActions: true,
             reasoningAuto: true,
             metaStrip: false,
+            stopNote: true,
             scrollToBottomButton: true,
             smartScroll: true,
             typingIndicator: true,
@@ -95,69 +97,21 @@
             if (status === 401 || status === 403) return '登录状态失效';
             return '';
         },
-        // v2.89.0：composer 附件纯函数族（准入/快照/上传状态机/TTS 朗读），Vue-free
-        // 注入形态与 createActions 同构；UI 态（drag/条渲染）归组件。
-        attachmentFrom: function (file) {
-            return {
-                id: 'att_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-                file: file, name: file.name, size: file.size, type: file.type || '',
-                status: 'pending', url: '', error: '', preview: ''
-            };
-        },
-        filterAttachmentFiles: function (files, existing, inputCfg) {
-            const max = (inputCfg && inputCfg.attachmentMaxCount) || 4;
-            const maxBytes = ((inputCfg && inputCfg.attachmentMaxSizeMb) || 10) * 1024 * 1024;
-            const list = Array.from(files || []);
-            const room = Math.max(0, max - existing.length);
-            const inRoom = list.slice(0, room);
-            const accepted = inRoom.filter((f) => f.size <= maxBytes);
-            return { accepted: accepted, oversize: inRoom.length - accepted.length, overflow: list.length - room };
-        },
-        uploadAttachment: function (att, uploader) {
-            att.status = 'uploading';
-            return Promise.resolve()
-                .then(() => uploader(att.file))
-                .then((out) => {
-                    att.status = 'done';
-                    att.url = (out && (out.url || out.audio_url)) || '';
-                    if (!att.url) { att.status = 'error'; att.error = '上传响应缺少 url'; }
-                    return att;
-                })
-                .catch((e) => {
-                    att.status = 'error';
-                    att.error = (e && e.message) || '上传失败';
-                    return att;
-                });
-        },
-        snapshotAttachments: function (attachments) {
-            if (!attachments || !attachments.length) return null;
-            const out = attachments.map((a) => ({
-                id: a.id, name: a.name, size: a.size, type: a.type,
-                status: a.status, url: a.url
-            }));
-            attachments.splice(0, attachments.length);
-            return out;
-        },
-        speakMessage: function (env, m) {
-            if (!window.NexusTts || !m || !m.content) return;
-            const sid = env.speakingId;
-            if (sid.value === m.id) {
-                NexusTts.stop();
-                sid.value = '';
-                return;
-            }
-            sid.value = m.id;
-            const strip = (window.NexusChat && NexusChat.stripMarkdownForTts)
-                || window.NuxAiChatHelpers.stripMarkdownForTts;
-            NexusTts.speak(strip(m.content)).then((ok) => {
-                if (!ok && sid.value === m.id) sid.value = '';
-            });
-        },
+        // v2.89.0：composer 附件纯函数族 + TTS 朗读（v2.97.0 上收 NexusAiChatCore，
+        // 聚合包必载；helpers 保直调面别名）。UI 态（drag/条渲染）归组件。
+        attachmentFrom: (file) => Core.attachmentFrom(file),
+        filterAttachmentFiles: (files, existing, inputCfg) => Core.filterAttachmentFiles(files, existing, inputCfg),
+        uploadAttachment: (att, uploader) => Core.uploadAttachment(att, uploader),
+        snapshotAttachments: (attachments) => Core.snapshotAttachments(attachments),
+        speakMessage: (env, m) => Core.speakMessage(env, m),
         // 对话动作状态机工厂（r137 自 nux-ai-chat setup 抽出，行为逐行守恒；
         // env 依赖注入形态保持 Vue-free，tests/test_ai_chat_actions.mjs 直测）。
         // settle 为终态收敛单源：收编原 send.finishStream 与 fallbackSync.onFinish 重复簇。
         // v2.87.0：reasoning 自动开合（streaming 自动展开/收口自动收起，尊重手动干预）
         // 与 thinkingMs 首响耗时记账。
+        // v2.97.0：NexusStop 接线——seq 代际闸（迟到帧拒收）+ settle 幂等（根治停止后
+        // 迟到 AbortError 二次收口的双发）+ feat.stopNote 终态签名行（抑制假内容占位）
+        // + cancelRequest 服务端取消钩子透传。
         createActions: function (env) {
             const list = env.list, input = env.input;
             const isStreaming = env.isStreaming, isError = env.isError, errorMsg = env.errorMsg;
@@ -173,12 +127,16 @@
             const routeRichEvent = env.routeRichEvent || window.NuxAiChatHelpers.routeRichEvent;
             const createStreamController = env.createStreamController || window.NuxAiChatHelpers.createStreamController;
             const fallbackRequest = env.fallbackRequest || window.NuxAiChatHelpers.fallbackRequest;
+            const stopper = env.stopper
+                || (window.NexusStop ? window.NexusStop.create({ cancelRequest: env.cancelRequest || null }) : null);
 
             let controller = null;
             let stopped = false;
             let stopFn = null;
 
             function settle(ok, msg, err, errMeta) {
+                if (msg._settled) return;
+                msg._settled = true;
                 msg.streaming = false;
                 if (feat.reasoningAuto && !msg._reasoningManual && msg.showReasoning) {
                     msg.showReasoning = false;
@@ -238,9 +196,11 @@
                 stopped = false;
                 stopFn = null;
                 controller = null;
+                const seq = stopper ? stopper.begin() : 0;
 
                 const callbacks = {
                     onChunk: (chunk, full) => {
+                        if (stopper && !stopper.isCurrent(seq)) return;
                         assistantMsg.content = full;
                         if (!assistantMsg._firstChunkAt) {
                             assistantMsg._firstChunkAt = Date.now();
@@ -253,6 +213,7 @@
                         emit('chunk', chunk, full, assistantMsg);
                     },
                     onEvent: (ev, data) => {
+                        if (stopper && !stopper.isCurrent(seq)) return;
                         const routed = routeRichEvent(assistantMsg, ev, data);
                         if (routed && feat.reasoningAuto && assistantMsg.thinking && !assistantMsg._reasoningManual) {
                             assistantMsg.showReasoning = true;
@@ -260,11 +221,12 @@
                         if (routed && (ev === 'meta' || (data && data.type === 'meta'))) emit('meta', data, assistantMsg);
                     },
                     onDone: (full) => {
+                        if (stopper && !stopper.isCurrent(seq)) return;
                         if (full && !assistantMsg.content) assistantMsg.content = full;
                         settle(true, assistantMsg);
                     },
                     onError: (err, errMeta) => {
-                        if (stopped) {
+                        if (stopped || (stopper && !stopper.isCurrent(seq))) {
                             settle(true, assistantMsg);
                             return;
                         }
@@ -279,7 +241,10 @@
                     },
                     currentMessage: assistantMsg,
                     routeRich: (ev, data) => { routeRichEvent(assistantMsg, ev, data); },
-                    registerStop: (fn) => { stopFn = fn; }
+                    registerStop: (fn) => {
+                        stopFn = fn;
+                        if (stopper) stopper.onStopFn(fn);
+                    }
                 };
 
                 try {
@@ -364,7 +329,8 @@
             function stop() {
                 if (!isStreaming.value) return;
                 stopped = true;
-                if (stopFn) { try { stopFn(); } catch (e) {} }
+                if (stopper) stopper.stop();
+                else if (stopFn) { try { stopFn(); } catch (e) {} }
                 else if (controller) { try { controller.stop(); } catch (e) {} }
                 isStreaming.value = false;
                 stopElapsed();
@@ -373,9 +339,31 @@
                 const last = list[list.length - 1];
                 if (last && last.streaming) {
                     last.streaming = false;
-                    if (!last.content) last.content = '（已停止生成）';
+                    last._settled = true;
+                    if (feat.reasoningAuto && !last._reasoningManual && last.showReasoning) {
+                        last.showReasoning = false;
+                    }
+                    const kind = stopper ? stopper.classify(!!last.content)
+                        : (last.content ? 'stoppedPartial' : 'stoppedEmpty');
+                    if (feat.stopNote) {
+                        last._stopped = kind;
+                        last._stoppedNote = stopper ? stopper.noteFor(kind)
+                            : (window.NexusStop ? window.NexusStop.DEFAULT_NOTES[kind] : '');
+                    } else if (!last.content) {
+                        last.content = '（已停止生成）';
+                    }
+                    emit('done', last.content, last);
                 }
+                /* 平台路径本地即时收口：释放 stopping（服务端收尾型宿主才走 waitSettled） */
+                if (stopper) stopper.finish();
                 emitMessages();
+                nextTick(() => {
+                    if (last && last.content && listEl.value) {
+                        const els = listEl.value.querySelectorAll('.nx-ai-chat-msg');
+                        const el = els[els.length - 1];
+                        if (el) postProcessMd(el.querySelector('.nx-ai-chat-bubble'));
+                    }
+                });
             }
 
             function retry(msg) {
@@ -406,7 +394,7 @@
             }
 
             return { send: send, stop: stop, retry: retry, clear: clear, abort: abort,
-                regenerate: regenerate, editResend: editResend };
+                regenerate: regenerate, editResend: editResend, stopper: stopper };
         }
     };
 })();

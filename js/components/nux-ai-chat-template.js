@@ -120,6 +120,10 @@
                                 ></nux-interrupt-card>
                                 <slot name="message-after" :msg="m"></slot>
                             </div>
+                            <div v-if="m._stoppedNote" class="nx-ai-chat-stopped-line">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"></rect></svg>
+                                <span>{{ m._stoppedNote }}</span>
+                            </div>
                             <div v-if="m.error" class="nx-ai-chat-error-bar" role="alert">
                                 <span class="nx-ai-chat-error-text">
                                     <em v-if="errorKind(m)" class="nx-ai-chat-error-kind">{{ errorKind(m) }}</em>
