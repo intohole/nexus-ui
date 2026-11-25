@@ -23,6 +23,14 @@ const ChipGroup = window.NuxChipGroup;
         Timeline.template.includes(':index="i"') && Timeline.template.includes(':is-current="!!item.current"')
         && Timeline.template.includes(':busy="!!item.busy"'));
     check('timeline: #empty 空态插槽', Timeline.template.includes('nx-timeline-empty') && Timeline.template.includes('<slot name="empty">'));
+    check('timeline: v2.97.1 state 透传（数组/字符串→行类）+单根 wrap（attrs 透传恢复）',
+        Timeline.template.includes('stateCls(item)') && Timeline.template.includes('nx-timeline-wrap')
+        && typeof Timeline.methods.stateCls === 'function');
+    check('timeline: stateCls 数组过滤+字符串单包+空态 null',
+        JSON.stringify(Timeline.methods.stateCls({ state: ['a', '', 'b'] })) === JSON.stringify(['a', 'b'])
+        && JSON.stringify(Timeline.methods.stateCls({ state: 'solo' })) === JSON.stringify(['solo'])
+        && Timeline.methods.stateCls({}) === null);
+    check('timeline: title 补 v-if（v2.97.1）', Timeline.template.includes('v-if="item.title"'));
     check('timeline: tone 白名单降级守恒', Timeline.methods.tone({ tone: 'nope' }) === 'default'
         && Timeline.methods.tone({ tone: 'danger' }) === 'danger');
 }

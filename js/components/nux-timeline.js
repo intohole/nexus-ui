@@ -7,25 +7,34 @@
         methods: {
             tone(item) {
                 return ['success', 'warning', 'danger', 'accent'].indexOf(item.tone) > -1 ? item.tone : 'default';
+            },
+            /* v2.97.1：item.state（字符串或字符串数组）→ 行追加类透传
+             * （wanxiang 切点预览 will-detach/is-target 消费面立项；与 is-current 正交叠加） */
+            stateCls(item) {
+                const s = item.state;
+                if (!s) return null;
+                return Array.isArray(s) ? s.filter(Boolean) : [s];
             }
         },
         template: `
-            <ol class="nx-timeline" v-if="items.length">
-                <li v-for="(item, i) in items" :key="i" class="nx-timeline-item"
-                    :class="['nx-timeline-item--' + tone(item), { 'is-current': !!item.current }]">
-                    <span class="nx-timeline-dot" aria-hidden="true"></span>
-                    <div class="nx-timeline-body">
-                        <div class="nx-timeline-meta" v-if="item.time || item.tag">
-                            <span class="nx-timeline-time" v-if="item.time">{{ item.time }}</span>
-                            <span class="nx-timeline-tag" v-if="item.tag">{{ item.tag }}</span>
+            <div class="nx-timeline-wrap">
+                <ol class="nx-timeline" v-if="items.length">
+                    <li v-for="(item, i) in items" :key="i" class="nx-timeline-item"
+                        :class="['nx-timeline-item--' + tone(item), { 'is-current': !!item.current }, stateCls(item)]">
+                        <span class="nx-timeline-dot" aria-hidden="true"></span>
+                        <div class="nx-timeline-body">
+                            <div class="nx-timeline-meta" v-if="item.time || item.tag">
+                                <span class="nx-timeline-time" v-if="item.time">{{ item.time }}</span>
+                                <span class="nx-timeline-tag" v-if="item.tag">{{ item.tag }}</span>
+                            </div>
+                            <div class="nx-timeline-title" v-if="item.title">{{ item.title }}</div>
+                            <div class="nx-timeline-desc" v-if="item.desc">{{ item.desc }}</div>
+                            <slot name="item" :item="item" :index="i" :is-current="!!item.current" :busy="!!item.busy"></slot>
                         </div>
-                        <div class="nx-timeline-title">{{ item.title }}</div>
-                        <div class="nx-timeline-desc" v-if="item.desc">{{ item.desc }}</div>
-                        <slot name="item" :item="item" :index="i" :is-current="!!item.current" :busy="!!item.busy"></slot>
-                    </div>
-                </li>
-            </ol>
-            <div v-else class="nx-timeline-empty"><slot name="empty"></slot></div>
+                    </li>
+                </ol>
+                <div v-else class="nx-timeline-empty"><slot name="empty"></slot></div>
+            </div>
         `
     };
 
