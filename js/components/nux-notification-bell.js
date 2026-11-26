@@ -3,7 +3,7 @@
         name: 'nux-notification-bell',
         components: (window.NuxNotificationDigestPanel ? { 'nux-notification-digest-panel': window.NuxNotificationDigestPanel } : {}),
         props: {
-            baseUrl: { type: String, default: '/notifycenter' },
+            baseUrl: { type: String, default: '' },
             pollInterval: { type: Number, default: 60000 },
             maxVisible: { type: Number, default: 10 },
             title: { type: String, default: '消息通知' },
