@@ -101,6 +101,75 @@
         return null;
     }
 
+    // ---- ACTIVITY 族（v2.99.0，AG-UI ACTIVITY_SNAPSHOT/DELTA 对应物） ----
+
+    // 最小 RFC 6902 应用器：add/remove/replace 三 op，路径 /a/0/b（数组段为数字索引）。
+    // 未知 op 或路径失配返回 false（调用方降级忽略，fail-soft）。
+    function applyJsonPatch(target, patch) {
+        if (!Array.isArray(patch)) return false;
+        var doc = target;
+        for (var i = 0; i < patch.length; i++) {
+            var op = patch[i] || {};
+            var path = String(op.path || '');
+            if (!path) return false;
+            var segs = path.split('/').slice(1).map(function (s) { return s.replace(/~1/g, '/').replace(/~0/g, '~'); });
+            if (!segs.length) {
+                if (op.op === 'replace') { doc = op.value; continue; }
+                return false;
+            }
+            var parent = doc;
+            var key = segs[segs.length - 1];
+            for (var j = 0; j < segs.length - 1; j++) {
+                var s = segs[j];
+                if (parent == null || typeof parent !== 'object') return false;
+                parent = parent[s];
+            }
+            if (parent == null || typeof parent !== 'object') return false;
+            if (op.op === 'add' || op.op === 'replace') {
+                parent[key] = op.value;
+            } else if (op.op === 'remove') {
+                if (Array.isArray(parent)) parent.splice(Number(key), 1);
+                else delete parent[key];
+            } else {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // ACTIVITY_SNAPSHOT：messageId 键落 msg.activities[]；replace 缺省 true 覆写 content。
+    // 带 subagentRunId 的 activity 在条目上记录归因，由呈现层关联到对应子代理席。
+    function applyActivity(list, payload) {
+        var mid = String(payload.messageId || payload.id || '');
+        if (!mid || !list) return null;
+        var entry = null;
+        for (var i = 0; i < list.length; i++) {
+            if (list[i].id === mid) { entry = list[i]; break; }
+        }
+        var replace = payload.replace === undefined ? true : !!payload.replace;
+        var content = payload.content;
+        if (!entry) {
+            entry = { id: mid, activityType: String(payload.activityType || ''), content: null, subagentRunId: runId(payload) || '' };
+            list.push(entry);
+        }
+        if (replace || entry.content == null) entry.content = content === undefined ? entry.content : content;
+        if (payload.activityType) entry.activityType = String(payload.activityType);
+        return entry;
+    }
+
+    // ACTIVITY_DELTA：对既有条目 content 应用最小 JSON patch；无基底条目忽略（fail-soft）。
+    function applyActivityDelta(list, payload) {
+        var mid = String(payload.messageId || payload.id || '');
+        if (!mid || !list) return null;
+        for (var i = 0; i < list.length; i++) {
+            if (list[i].id === mid) {
+                var ok = applyJsonPatch(list[i].content, payload.patch);
+                return ok ? list[i] : null;
+            }
+        }
+        return null;
+    }
+
     window.NexusSubagent = {
         normalizeStatus: normalizeStatus,
         runId: runId,
@@ -109,6 +178,9 @@
         start: start,
         finish: finish,
         fail: fail,
-        routeAttributed: routeAttributed
+        routeAttributed: routeAttributed,
+        applyJsonPatch: applyJsonPatch,
+        applyActivity: applyActivity,
+        applyActivityDelta: applyActivityDelta
     };
 })();

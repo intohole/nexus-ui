@@ -264,10 +264,13 @@ test('E1: subagent_update 未知事件 handled=false 且 msg 零变化', () => {
     assert.strictEqual(snap(msg), before, 'msg 深度不变');
 });
 
-test('E2: activity_snapshot 未知事件 handled=false 且 msg 零变化', () => {
+// 实锚（用例改锚）：v2.98.0 契约将 ACTIVITY 标注「后续轮候选不落码」→ E2 曾锚 activity_snapshot 为未知事件；
+// v2.99.0 尾巴清理轮用户钦定兑掉 ACTIVITY 族（llms.txt 对照表同步升级为已支持，H 段覆盖其路由行为），
+// 自造词 subagent_update（对照表明示正道=ACTIVITY_*）仍是未知事件，E2 改锚之。
+test('E2: subagent_update 自造词 handled=false 且 msg 零变化', () => {
     const msg = richMsg();
     const before = snap(msg);
-    const r = NC.routeRichEvent(msg, 'activity_snapshot', { items: [{ a: 1 }] });
+    const r = NC.routeRichEvent(msg, 'subagent_update', { items: [{ a: 1 }] });
     assert.strictEqual(r, false);
     assert.strictEqual(snap(msg), before, 'msg 深度不变');
 });
@@ -330,4 +333,78 @@ test('G1: richSubagents feature 开关默认 false', () => {
 test('G2: nux-subagent-track 组件存在且 props 声明 items', () => {
     assert.ok(ST, 'components/nux-subagent-track.js 未实现或未导出 window.NuxSubagentTrack');
     assert.ok(ST.props && 'items' in ST.props, 'props 需声明 items（msg.subagents 数组）');
+});
+
+/* ---------- H. ACTIVITY 族（v2.99.0，AG-UI ACTIVITY_SNAPSHOT/DELTA 对应物） ----------
+ * 契约锚：llms.txt「AI 事件面 ↔ AG-UI 1.0 对照表」ACTIVITY 行
+ * - activity_snapshot：messageId 键落 msg.activities[]，replace 缺省 true 覆写 content，带 subagentRunId 记录归因
+ * - activity_delta：对既有条目 content 应用最小 RFC 6902（add/remove/replace），无基底 fail-soft 忽略
+ * - 未知大写 wire 名小写直通；events 由 routeRichEvent 路由返回 handled=true
+ */
+
+test('H1: activity_snapshot 落 msg.activities[] 且 replace 缺省覆写', () => {
+    const msg = {};
+    assert.strictEqual(NC.routeRichEvent(msg, 'activity_snapshot', { messageId: 'act1', activityType: 'search_step', content: { step: 1 } }), true);
+    assert.strictEqual(msg.activities.length, 1);
+    assert.strictEqual(msg.activities[0].id, 'act1');
+    assert.strictEqual(msg.activities[0].content.step, 1);
+    NC.routeRichEvent(msg, 'activity_snapshot', { messageId: 'act1', activityType: 'search_step', content: { step: 2 } });
+    assert.strictEqual(msg.activities[0].content.step, 2, '缺省 replace=true 覆写');
+    assert.strictEqual(msg.activities.length, 1, '同 messageId 不重复 push');
+});
+
+test('H2: activity_snapshot replace:false 保留基底', () => {
+    const msg = {};
+    NC.routeRichEvent(msg, 'activity_snapshot', { messageId: 'a2', content: { base: true } });
+    NC.routeRichEvent(msg, 'activity_snapshot', { messageId: 'a2', content: { base: false, extra: 1 }, replace: false });
+    assert.deepStrictEqual(msg.activities[0].content, { base: true }, 'replace=false 不覆写非空基底');
+});
+
+test('H3: snapshot 带 subagentRunId 记录归因到条目', () => {
+    const msg = {};
+    NC.routeRichEvent(msg, 'activity_snapshot', { messageId: 'a3', activityType: 'plan', content: { v: 1 }, subagentRunId: 'sa-p' });
+    assert.strictEqual(msg.activities[0].subagentRunId, 'sa-p');
+});
+
+test('H4: activity_delta 应用最小 JSON patch（add/replace/remove）', () => {
+    const msg = {};
+    NC.routeRichEvent(msg, 'activity_snapshot', { messageId: 'a4', content: { list: ['x'], done: false } });
+    assert.strictEqual(NC.routeRichEvent(msg, 'activity_delta', { messageId: 'a4', activityType: 't', patch: [
+        { op: 'add', path: '/list/-', value: 'y' } === undefined ? {} : { op: 'add', path: '/list/1', value: 'y' },
+        { op: 'replace', path: '/done', value: true }
+    ] }), true);
+    assert.deepStrictEqual(msg.activities[0].content, { list: ['x', 'y'], done: true });
+    NC.routeRichEvent(msg, 'activity_delta', { messageId: 'a4', activityType: 't', patch: [{ op: 'remove', path: '/list/0' }] });
+    assert.deepStrictEqual(msg.activities[0].content.list, ['y']);
+});
+
+test('H5: activity_delta 无基底条目 fail-soft 忽略（handled=true 不崩）', () => {
+    const msg = {};
+    assert.strictEqual(NC.routeRichEvent(msg, 'activity_delta', { messageId: 'ghost', patch: [{ op: 'replace', path: '/x', value: 1 }] }), true);
+    assert.strictEqual(msg.activities, undefined, '无基底不建条目');
+});
+
+test('H6: activity_delta 未知 op / 失配路径 fail-soft', () => {
+    const msg = {};
+    NC.routeRichEvent(msg, 'activity_snapshot', { messageId: 'a6', content: { a: 1 } });
+    NC.routeRichEvent(msg, 'activity_delta', { messageId: 'a6', patch: [{ op: 'copy', path: '/b', from: '/a' }] });
+    assert.deepStrictEqual(msg.activities[0].content, { a: 1 }, '未知 op 不动 content');
+    NC.routeRichEvent(msg, 'activity_delta', { messageId: 'a6', patch: [{ op: 'replace', path: '/deep/missing', value: 0 }] });
+    assert.deepStrictEqual(msg.activities[0].content, { a: 1 }, '失配路径不动 content');
+});
+
+test('H7: 大写 wire 名 ACTIVITY_SNAPSHOT 小写直通', () => {
+    const msg = {};
+    assert.strictEqual(NC.routeRichEvent(msg, '', { type: 'ACTIVITY_SNAPSHOT', messageId: 'a7', content: { ok: 1 } }), true);
+    assert.strictEqual(msg.activities[0].id, 'a7');
+});
+
+test('H8: NexusSubagent.applyJsonPatch 直调三 op 等价 + 非法入参 false', () => {
+    const SA = window.NexusSubagent;
+    assert.ok(SA && SA.applyJsonPatch, 'applyJsonPatch 导出在位');
+    const t = { a: { b: [1] } };
+    assert.strictEqual(SA.applyJsonPatch(t, [{ op: 'add', path: '/a/b/1', value: 2 }, { op: 'replace', path: '/a/b/0', value: 9 }, { op: 'remove', path: '/a/b/1' }]), true);
+    assert.deepStrictEqual(t, { a: { b: [9] } });
+    assert.strictEqual(SA.applyJsonPatch(t, 'not-array'), false);
+    assert.strictEqual(SA.applyJsonPatch(t, [{ op: 'move', path: '/x', from: '/y' }]), false);
 });

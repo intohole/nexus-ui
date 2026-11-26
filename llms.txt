@@ -267,7 +267,7 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 
 **终态映射（NexusStop ↔ AG-UI Run 族）**：AG-UI `RUN_FINISHED.outcome` ∈ success|interrupt|cancelled（缺失即成功，"Absent means success"），error 走独立 `RUN_ERROR` 事件。nexus 本地终态保持 NexusStop 四键单源：`stoppedPartial/stoppedEmpty/interrupted/lost`（停止即作废代际），对照表映射不做代码合并。
 
-**显式不做/后续候选**：`STATE_SNAPSHOT/STATE_DELTA`（RFC 6902 JSON Patch，应用层状态同步，越呈现层界）；`ACTIVITY_SNAPSHOT/ACTIVITY_DELTA`（子代理结构化进度快照/增量——**后续轮候选**，当前子代理过程细节走内容事件归因分流）；`MESSAGES_SNAPSHOT`（会话恢复协议，应用层）；二进制 wire（proto-freeze）。注意 AG-UI **无 SUBAGENT_UPDATE 事件**——nexus 词汇表中若有此类需求，正道是 ACTIVITY_* 或内容事件归因，勿自造。
+**显式不做/后续候选**：`STATE_SNAPSHOT/STATE_DELTA`（RFC 6902 JSON Patch，应用层状态同步，越呈现层界）；`MESSAGES_SNAPSHOT`（会话恢复协议，应用层）；二进制 wire（proto-freeze）。**ACTIVITY_SNAPSHOT/ACTIVITY_DELTA（v2.99.0 起已支持）**：`activity_snapshot`（messageId 键落 `msg.activities[]`，replace 缺省 true 覆写，带 subagentRunId 记录归因→nux-subagent-track 按席关联进度行，running 席 summary 位实时显示最新进度）+ `activity_delta`（最小 RFC 6902 add/remove/replace 应用，无基底条目/未知 op/失配路径 fail-soft 零副作用）。注意 AG-UI **无 SUBAGENT_UPDATE 事件**——nexus 词汇表中此类需求正道=ACTIVITY_*，勿自造。
 
 **舰队后端建议词汇**：snake_case 事件名 + payload 携带 `subagentRunId`；生命周期三事件用 `subagent_started/subagent_finished{outcome:'success'|'suspended'}/subagent_failed{message}`；子代理思考/工具事件在原事件名上加 `subagent_run_id` 字段即可归因。
 

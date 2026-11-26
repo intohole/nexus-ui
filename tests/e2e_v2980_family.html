@@ -21,8 +21,8 @@
         :features="{ streamBlocks: false, richSubagents: saFeat }"
         :send-handler="streamSubagents" placeholder="输入任意内容发送，观察子代理卡组"></nux-ai-chat>
 
-    <h3>B. 组件直挂：四态各一席 + 详情折叠</h3>
-    <nux-subagent-track id="sa-direct" :items="directItems"></nux-subagent-track>
+    <h3>B. 组件直挂：四态各一席 + 详情折叠 + ACTIVITY 进度行（v2.99.0）</h3>
+    <nux-subagent-track id="sa-direct" :items="directItems" :activities="directActs"></nux-subagent-track>
 
     <h3>C. 兼容对照：richSubagents:false → 卡组不渲染（路由照走，仅呈现关）</h3>
     <nux-ai-chat id="chat-off" class="chat-box"
@@ -48,6 +48,9 @@ const app = Vue.createApp({
                 { id: 'sa-ok', label: '写作席', status: 'done', durationMs: 4200, thinking: '初稿围绕时间线展开，先列事件再补因果。', toolCalls: [{ id: 'c1', name: 'web_search' }] },
                 { id: 'sa-wait', label: '澄清席', status: 'suspended', interrupts: ['it_1'] },
                 { id: 'sa-bad', label: '评审席', status: 'error', error: '上游 429 限流，建议稍后重试' }
+            ],
+            directActs: [
+                { id: 'da1', activityType: 'search_step', content: { q: '时间线', hit: 30 }, subagentRunId: 'sa-run' }
             ]
         };
     },

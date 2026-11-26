@@ -45,7 +45,8 @@
     var NuxSubagentTrack = {
         name: 'NuxSubagentTrack',
         props: {
-            items: { type: Array, default: function () { return []; } }
+            items: { type: Array, default: function () { return []; } },
+            activities: { type: Array, default: function () { return []; } }
         },
         data: function () {
             return { expanded: {} };
@@ -53,17 +54,34 @@
         computed: {
             views: function () {
                 var self = this;
+                var acts = this.activities || [];
+                function actsFor(saId) {
+                    return acts.filter(function (a) { return (a.subagentRunId || '') === saId; });
+                }
+                function activityLine(a) {
+                    var c = a.content;
+                    var brief = (c != null && typeof c === 'object')
+                        ? truncate(JSON.stringify(c).replace(/\s+/g, ' '), 160)
+                        : truncate(String(c == null ? '' : c), 160);
+                    return (a.activityType || 'activity') + '：' + brief;
+                }
                 return (this.items || []).map(function (item, i) {
                     var status = entryStatus(item);
                     var tools = item.toolCalls || [];
                     var thinking = String(item.thinking || '').trim();
                     var summary = STATUS_TEXT[status] || STATUS_TEXT.done;
                     if (status === 'error' && item.error) summary = truncate(item.error, 120);
+                    var itemActs = actsFor(item.id || '');
+                    var lastAct = itemActs.length ? itemActs[itemActs.length - 1] : null;
                     var detailParts = [];
                     if (thinking) detailParts.push(truncate(thinking, 400));
                     if (tools.length) {
                         var last = tools[tools.length - 1] || {};
                         detailParts.push('工具调用 ' + tools.length + ' 次（最近：' + (last.name || '未知') + '）');
+                    }
+                    if (itemActs.length) {
+                        detailParts.push.apply(detailParts, itemActs.slice(-3).map(activityLine));
+                        if (itemActs.length > 3) detailParts.push('…共 ' + itemActs.length + ' 条进度');
                     }
                     if (item.interrupts && item.interrupts.length) {
                         detailParts.push('挂起等待人工输入');
@@ -76,6 +94,7 @@
                         suspended: status === 'suspended',
                         error: status === 'error',
                         summary: summary,
+                        progress: (status === 'running' && lastAct) ? activityLine(lastAct) : '',
                         duration: status === 'running' ? '' : formatDuration(item.durationMs),
                         detail: detailParts.join('\n'),
                         expandable: status !== 'running' && !!detailParts.length
@@ -104,7 +123,7 @@
                         <span v-else-if="v.suspended" class="nx-subagent-track-mark is-suspended" aria-hidden="true">⏸</span>
                         <span v-else class="nx-subagent-track-mark is-done" aria-hidden="true">✓</span>
                         <span class="nx-subagent-track-name">{{ v.label }}</span>
-                        <span class="nx-subagent-track-summary" :class="{ 'is-error': v.error }">{{ v.summary }}</span>
+                        <span class="nx-subagent-track-summary" :class="{ 'is-error': v.error }">{{ v.progress || v.summary }}</span>
                         <span v-if="v.duration" class="nx-subagent-track-duration">{{ v.duration }}</span>
                         <svg v-if="v.expandable" class="nx-subagent-track-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </button>

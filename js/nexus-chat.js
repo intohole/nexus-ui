@@ -297,6 +297,14 @@
         } else if (type === 'subagent_error' || type === 'subagent_failed') {
             // AG-UI SUBAGENT_ERROR 对应物：子代理失败不终止 run，仅标红该条目。
             if (window.NexusSubagent) window.NexusSubagent.fail(msg.subagents || (msg.subagents = []), payload);
+        } else if (type === 'activity_snapshot') {
+            // v2.99.0：AG-UI ACTIVITY_SNAPSHOT 对应物——非对话内容的结构化进度快照。
+            // 带 subagentRunId 时条目记录归因（呈现层关联到子代理席），落点 msg.activities[]。
+            if (window.NexusSubagent) window.NexusSubagent.applyActivity(msg.activities || (msg.activities = []), payload);
+        } else if (type === 'activity_delta') {
+            // AG-UI ACTIVITY_DELTA 对应物：最小 RFC 6902 patch 应用。
+            // 无基底条目（含 msg.activities 未建）零副作用 fail-soft——不懒建空壳数组。
+            if (window.NexusSubagent && msg.activities) window.NexusSubagent.applyActivityDelta(msg.activities, payload);
         } else if (type === 'thinking_end' || type === 'reasoning_end') {
             // v2.98.0 刀2：AG-UI Reasoning 收束对应物——自动展开态收起，手动展开（_reasoningManual）尊重不动；
             // _reasoningEnded 挡住 helpers onEvent 的 routed 自动重展开。

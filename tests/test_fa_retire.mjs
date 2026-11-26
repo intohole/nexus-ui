@@ -19,26 +19,23 @@ check('census: vendor 排除在位（fa 副本不自计）', /"vendor"/.test(rea
     check('census: 可执行出进度行', ok);
 }
 
-// ---- build 契约：nexus-ui 自身子集构建全绿 ----
+// ---- 成品契约：css/nux-icons.css 是 FA 退役后唯一承载（a3d27c0 删 vendor 源料，
+// out/s98/fa_src 临时缓存被磁盘治理清空 → 重建式守卫成为死路径，改对成品断言同契约） ----
 let css = '';
 {
-    let ok = false;
-    try {
-        const out = execFileSync('python3', [ROOT + 'tools/nux_icons_build.py', '--repo', 'nexus-ui', '--out', '/tmp/s98_guard_nexusui.css'], { encoding: 'utf8', cwd: ROOT });
-        ok = /MISSING/.test(out) === false && /built \d+ icons/.test(out);
-    } catch (e) { ok = false; }
-    check('build: nexus-ui 子集构建零 missing', ok);
-    css = existsSync('/tmp/s98_guard_nexusui.css') ? readFileSync('/tmp/s98_guard_nexusui.css', 'utf8') : '';
+    const artifact = ROOT + 'css/nux-icons.css';
+    check('artifact: 成品在位（FA 退役后唯一承载）', existsSync(artifact));
+    css = existsSync(artifact) ? readFileSync(artifact, 'utf8') : '';
 }
-check('build: 容器类承载在位（currentColor+mask）', /\.fa,\.fas,\.far,\.fab.*background-color:currentColor/.test(css) && css.includes('-webkit-mask-image'));
-check('build: fa-spin 动画等价在位', css.includes('nuxfa-spin'));
-check('build: 尺寸类等价在位（lg/2x/fw）', css.includes('.fa-lg') && css.includes('.fa-2x') && css.includes('.fa-fw'));
-check('build: 许可注记在位（CC BY 4.0）', css.includes('CC BY 4.0'));
+check('artifact: 容器类承载在位（currentColor+mask）', /\.fa,\.fas,\.far,\.fab.*background-color:currentColor/.test(css) && css.includes('-webkit-mask-image'));
+check('artifact: fa-spin 动画等价在位', css.includes('nuxfa-spin'));
+check('artifact: 尺寸类等价在位（lg/2x/fw）', css.includes('.fa-lg') && css.includes('.fa-2x') && css.includes('.fa-fw'));
+check('artifact: 许可注记在位（CC BY 4.0）', css.includes('CC BY 4.0'));
 {
     const stripped = css.replace('.fa-inverse{background-color:#fff}', '');
-    check('build: 呈现面零裸 hex（S64 暗色契约）', !/#([0-9a-fA-F]{3,6})\b/.test(stripped));
+    check('artifact: 呈现面零裸 hex（S64 暗色契约）', !/#([0-9a-fA-F]{3,6})\b/.test(stripped));
 }
-check('build: 图标类数量充分（nexus-ui ≥90）', (css.match(/mask-image/g) || []).length >= 180);
+check('artifact: 图标类数量充分（nexus-ui ≥90）', (css.match(/mask-image/g) || []).length >= 180);
 
 // ---- 别名语义守卫：无环+目标合法+高频名有落点 ----
 {
@@ -62,6 +59,31 @@ check('build: 图标类数量充分（nexus-ui ≥90）', (css.match(/mask-image
         check('alias: 归一无环', acyclic && pairs.length > 100);
         const mustHave = ['times', 'check-circle', 'sync-alt', 'home', 'trash-alt', 'edit', 'search', 'cog', 'file-alt', 'shield-alt'];
         check('alias: v4/v5 高频名全有落点', mustHave.every(n => map[n]));
+
+        // ---- 消费名覆盖：census 扫仓内 fa 类消费清单 → ALIASES 归一 → 逐名查成品落点 ----
+        // （替代退役的重建式「零 missing」断言：源 SVG 已随 FA 退役消失，成品即契约）
+        if (css) {
+            let missing = [];
+            try {
+                const probe = [
+                    "import sys; sys.path.insert(0, 'tools')",
+                    "from pathlib import Path",
+                    "from fontawesome_census import iter_targets, icon_names",
+                    "names = set()",
+                    "for t in iter_targets(Path('nexus-ui')):",
+                    "    names |= set(icon_names(t.read_text(encoding='utf8', errors='ignore')).keys())",
+                    "print('\\n'.join(sorted(names)))"
+                ].join('\n');
+                const out = execFileSync('python3', ['-c', probe], { encoding: 'utf8', cwd: ROOT });
+                const names = out.split('\n').map(s => s.trim()).filter(Boolean);
+                for (const n of names) {
+                    const v6 = map[n] || n;
+                    if (!css.includes('.fa-' + v6) && !css.includes('.fa-' + n)) missing.push(n);
+                }
+            } catch (e) { missing = ['<census-fail:' + e.message.slice(0, 80) + '>']; }
+            if (missing.length) console.error('  missing:', missing.slice(0, 10).join(', '), missing.length > 10 ? `（共 ${missing.length}）` : '');
+            check('artifact: 消费名全覆盖零 missing（census 口径）', missing.length === 0);
+        }
     }
 }
 

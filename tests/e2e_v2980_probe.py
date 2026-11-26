@@ -84,6 +84,10 @@ async def run_theme(pw, port: str, theme: str, prove_red: bool) -> list[tuple[st
     results.append((f"{tag}: 直挂四态类齐（run/susp/err 各≥1）",
                     d_susp >= 1 and d_err >= 1 and d_run >= 1,
                     f"susp={d_susp} err={d_err} run={d_run}"))
+    # v2.99.0 ACTIVITY 进度行：running 席 summary 位显示最新 activity 进度
+    run_summary = await direct.locator(".nx-subagent-track-item.is-running .nx-subagent-track-summary").inner_text()
+    results.append((f"{tag}: ACTIVITY 进度行上 running 席 summary 位",
+                    "search_step" in run_summary, f"txt={run_summary!r}"))
 
     # C. 兼容对照：richSubagents:false 同序列 → 卡组缺席
     off_track = page.locator("#chat-off .nx-subagent-track")
