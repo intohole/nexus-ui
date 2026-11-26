@@ -154,9 +154,51 @@
         let handled = true;
         if (type === 'meta') {
             msg.meta = payload;
-        } else if (type === 'thinking') {
+        } else if (type === 'thinking' || type === 'thinking_start' || type === 'reasoning_start') {
+            // v2.98.0：AG-UI Reasoning 族对应物——start 别名并入累积分支（自动展开走 helpers routed 既有机制）；
+            // 带 subagentRunId 的思考分流进子代理条目，不写母消息。
+            const saThink = window.NexusSubagent ? window.NexusSubagent.routeAttributed(msg.subagents, payload) : null;
+            if (saThink) {
+                saThink.thinking = (saThink.thinking || '') + (payload.content || payload.thinking || '');
+                return true;
+            }
             msg.thinking = (msg.thinking || '') + (payload.content || payload.thinking || '');
         } else if (type === 'tool' || type === 'tool_executed' || type === 'tool_update' || type === 'tool_result') {
+            // v2.98.0：带 subagentRunId 的工具调用分流进子代理条目（AG-UI Attributable 归因形状），
+            // 无 id 或条目缺席走母消息原逻辑。
+            const saTool = window.NexusSubagent ? window.NexusSubagent.routeAttributed(msg.subagents, payload) : null;
+            if (saTool) {
+                const agentCalls = saTool.toolCalls || (saTool.toolCalls = []);
+                const agentId = payload.id || payload.call_id || payload.tool_call_id || '';
+                const agentLabel = payload.display_name || payload.name || payload.tool || '';
+                const agentIsUpdate = type === 'tool_update' || type === 'tool_result';
+                if (agentIsUpdate) {
+                    const agentTarget = agentId
+                        ? agentCalls.find((c) => c.id === agentId)
+                        : agentCalls.find((c) => c.name === agentLabel && c.status === 'running');
+                    if (agentTarget) {
+                        agentTarget.status = payload.status ? normalizeToolStatus(payload.status) : (payload.error ? 'error' : 'done');
+                        if (payload.result !== undefined) agentTarget.result = payload.result;
+                        if (payload.output !== undefined && payload.result === undefined) agentTarget.result = payload.output;
+                        if (payload.error) agentTarget.error = payload.error;
+                        if (payload.duration_ms !== undefined) agentTarget.duration_ms = payload.duration_ms;
+                        if (!agentTarget.name && agentLabel) agentTarget.name = agentLabel;
+                        return true;
+                    }
+                }
+                agentCalls.push({
+                    id: agentId || ('c_' + agentCalls.length + '_' + Date.now()),
+                    name: agentLabel || payload.display_name || '工具调用',
+                    status: payload.status
+                        ? normalizeToolStatus(payload.status)
+                        : (payload.error ? 'error' : (agentIsUpdate ? 'done' : 'running')),
+                    args: payload.args !== undefined ? payload.args : payload.input,
+                    result: payload.result !== undefined ? payload.result : payload.output,
+                    error: payload.error || '',
+                    duration_ms: payload.duration_ms || 0
+                });
+                return true;
+            }
             const calls = msg.toolCalls || (msg.toolCalls = []);
             const tools = msg.tools || (msg.tools = []);
             const callId = payload.id || payload.call_id || payload.tool_call_id || '';
@@ -199,6 +241,16 @@
             });
         } else if (type === 'interrupt' || type === 'interrupt_request') {
             // v2.89.0：AG-UI Interrupts 对应物——human-in-loop 暂停请求，一消息一活跃卡。
+            // v2.98.0：带 subagentRunId 的挂起记到子代理条目（suspended 中性态 + interruptIds），
+            // 不占用消息级活跃卡（联动约定见 llms.txt 对照表，v1 只渲染不联动）。
+            const saIt = window.NexusSubagent ? window.NexusSubagent.routeAttributed(msg.subagents, payload) : null;
+            if (saIt) {
+                const itId = payload.id || ('it_' + Date.now());
+                saIt.interrupts = saIt.interrupts || [];
+                if (!saIt.interrupts.includes(itId)) saIt.interrupts.push(itId);
+                if (saIt.status === 'running') saIt.status = 'suspended';
+                return true;
+            }
             msg.interrupt = {
                 id: payload.id || ('it_' + Date.now()),
                 title: payload.title || 'AI 请求确认',
@@ -236,6 +288,20 @@
                     target.data = Object.assign({}, target.data || {}, { disabled: !!payload.disabled });
                 }
             }
+        } else if (type === 'subagent_start' || type === 'subagent_started') {
+            // v2.98.0：AG-UI SUBAGENT_STARTED 对应物。重复 start 同 id 幂等（数据层 ensure）。
+            if (window.NexusSubagent) window.NexusSubagent.start(msg.subagents || (msg.subagents = []), payload);
+        } else if (type === 'subagent_finish' || type === 'subagent_finished') {
+            // AG-UI SUBAGENT_FINISHED 对应物：outcome ∈ success|suspended（suspended=挂起非失败）。
+            if (window.NexusSubagent) window.NexusSubagent.finish(msg.subagents || (msg.subagents = []), payload);
+        } else if (type === 'subagent_error' || type === 'subagent_failed') {
+            // AG-UI SUBAGENT_ERROR 对应物：子代理失败不终止 run，仅标红该条目。
+            if (window.NexusSubagent) window.NexusSubagent.fail(msg.subagents || (msg.subagents = []), payload);
+        } else if (type === 'thinking_end' || type === 'reasoning_end') {
+            // v2.98.0 刀2：AG-UI Reasoning 收束对应物——自动展开态收起，手动展开（_reasoningManual）尊重不动；
+            // _reasoningEnded 挡住 helpers onEvent 的 routed 自动重展开。
+            if (!msg._reasoningManual) msg.showReasoning = false;
+            msg._reasoningEnded = true;
         } else {
             handled = false;
         }

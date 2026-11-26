@@ -3611,9 +3611,51 @@
         let handled = true;
         if (type === 'meta') {
             msg.meta = payload;
-        } else if (type === 'thinking') {
+        } else if (type === 'thinking' || type === 'thinking_start' || type === 'reasoning_start') {
+            // v2.98.0：AG-UI Reasoning 族对应物——start 别名并入累积分支（自动展开走 helpers routed 既有机制）；
+            // 带 subagentRunId 的思考分流进子代理条目，不写母消息。
+            const saThink = window.NexusSubagent ? window.NexusSubagent.routeAttributed(msg.subagents, payload) : null;
+            if (saThink) {
+                saThink.thinking = (saThink.thinking || '') + (payload.content || payload.thinking || '');
+                return true;
+            }
             msg.thinking = (msg.thinking || '') + (payload.content || payload.thinking || '');
         } else if (type === 'tool' || type === 'tool_executed' || type === 'tool_update' || type === 'tool_result') {
+            // v2.98.0：带 subagentRunId 的工具调用分流进子代理条目（AG-UI Attributable 归因形状），
+            // 无 id 或条目缺席走母消息原逻辑。
+            const saTool = window.NexusSubagent ? window.NexusSubagent.routeAttributed(msg.subagents, payload) : null;
+            if (saTool) {
+                const agentCalls = saTool.toolCalls || (saTool.toolCalls = []);
+                const agentId = payload.id || payload.call_id || payload.tool_call_id || '';
+                const agentLabel = payload.display_name || payload.name || payload.tool || '';
+                const agentIsUpdate = type === 'tool_update' || type === 'tool_result';
+                if (agentIsUpdate) {
+                    const agentTarget = agentId
+                        ? agentCalls.find((c) => c.id === agentId)
+                        : agentCalls.find((c) => c.name === agentLabel && c.status === 'running');
+                    if (agentTarget) {
+                        agentTarget.status = payload.status ? normalizeToolStatus(payload.status) : (payload.error ? 'error' : 'done');
+                        if (payload.result !== undefined) agentTarget.result = payload.result;
+                        if (payload.output !== undefined && payload.result === undefined) agentTarget.result = payload.output;
+                        if (payload.error) agentTarget.error = payload.error;
+                        if (payload.duration_ms !== undefined) agentTarget.duration_ms = payload.duration_ms;
+                        if (!agentTarget.name && agentLabel) agentTarget.name = agentLabel;
+                        return true;
+                    }
+                }
+                agentCalls.push({
+                    id: agentId || ('c_' + agentCalls.length + '_' + Date.now()),
+                    name: agentLabel || payload.display_name || '工具调用',
+                    status: payload.status
+                        ? normalizeToolStatus(payload.status)
+                        : (payload.error ? 'error' : (agentIsUpdate ? 'done' : 'running')),
+                    args: payload.args !== undefined ? payload.args : payload.input,
+                    result: payload.result !== undefined ? payload.result : payload.output,
+                    error: payload.error || '',
+                    duration_ms: payload.duration_ms || 0
+                });
+                return true;
+            }
             const calls = msg.toolCalls || (msg.toolCalls = []);
             const tools = msg.tools || (msg.tools = []);
             const callId = payload.id || payload.call_id || payload.tool_call_id || '';
@@ -3656,6 +3698,16 @@
             });
         } else if (type === 'interrupt' || type === 'interrupt_request') {
             // v2.89.0：AG-UI Interrupts 对应物——human-in-loop 暂停请求，一消息一活跃卡。
+            // v2.98.0：带 subagentRunId 的挂起记到子代理条目（suspended 中性态 + interruptIds），
+            // 不占用消息级活跃卡（联动约定见 llms.txt 对照表，v1 只渲染不联动）。
+            const saIt = window.NexusSubagent ? window.NexusSubagent.routeAttributed(msg.subagents, payload) : null;
+            if (saIt) {
+                const itId = payload.id || ('it_' + Date.now());
+                saIt.interrupts = saIt.interrupts || [];
+                if (!saIt.interrupts.includes(itId)) saIt.interrupts.push(itId);
+                if (saIt.status === 'running') saIt.status = 'suspended';
+                return true;
+            }
             msg.interrupt = {
                 id: payload.id || ('it_' + Date.now()),
                 title: payload.title || 'AI 请求确认',
@@ -3693,6 +3745,20 @@
                     target.data = Object.assign({}, target.data || {}, { disabled: !!payload.disabled });
                 }
             }
+        } else if (type === 'subagent_start' || type === 'subagent_started') {
+            // v2.98.0：AG-UI SUBAGENT_STARTED 对应物。重复 start 同 id 幂等（数据层 ensure）。
+            if (window.NexusSubagent) window.NexusSubagent.start(msg.subagents || (msg.subagents = []), payload);
+        } else if (type === 'subagent_finish' || type === 'subagent_finished') {
+            // AG-UI SUBAGENT_FINISHED 对应物：outcome ∈ success|suspended（suspended=挂起非失败）。
+            if (window.NexusSubagent) window.NexusSubagent.finish(msg.subagents || (msg.subagents = []), payload);
+        } else if (type === 'subagent_error' || type === 'subagent_failed') {
+            // AG-UI SUBAGENT_ERROR 对应物：子代理失败不终止 run，仅标红该条目。
+            if (window.NexusSubagent) window.NexusSubagent.fail(msg.subagents || (msg.subagents = []), payload);
+        } else if (type === 'thinking_end' || type === 'reasoning_end') {
+            // v2.98.0 刀2：AG-UI Reasoning 收束对应物——自动展开态收起，手动展开（_reasoningManual）尊重不动；
+            // _reasoningEnded 挡住 helpers onEvent 的 routed 自动重展开。
+            if (!msg._reasoningManual) msg.showReasoning = false;
+            msg._reasoningEnded = true;
         } else {
             handled = false;
         }
@@ -3925,6 +3991,122 @@
                 get seq() { return seq; }
             };
         }
+    };
+})();
+
+/* ===== nexus-subagent.js ===== */
+/* ============================================================
+ * nexus-subagent.js —— AI 子代理（subagent）数据层原语
+ * v2.98.0 AG-UI 对齐轮：SUBAGENT_STARTED/FINISHED/ERROR 三件族
+ * + 内容事件 subagentRunId 归因分流。呈现层见 nux-subagent-track。
+ * 契约文档：llms.txt「AI 事件面 ↔ AG-UI 1.0 对照表」。
+ * 无代际闸：迟到帧拒收依赖上游 ChatController/NexusStop seq 闸。
+ * ============================================================ */
+(function () {
+    'use strict';
+
+    var RUNNING_SET = { running: 1, started: 1, executing: 1, in_progress: 1, pending: 1 };
+    var DONE_SET = { done: 1, finished: 1, completed: 1, success: 1 };
+    var SUSPENDED_SET = { suspended: 1, waiting: 1, awaiting_input: 1 };
+    var ERROR_SET = { error: 1, failed: 1, failure: 1 };
+
+    // 子代理状态归一独立词表。suspended = 挂起等人工输入（AG-UI 语义：非失败），
+    // 禁止混用 normalizeToolStatus 的 cancelled→error 映射。
+    function normalizeStatus(status) {
+        var s = String(status || '').toLowerCase();
+        if (RUNNING_SET[s]) return 'running';
+        if (SUSPENDED_SET[s]) return 'suspended';
+        if (ERROR_SET[s]) return 'error';
+        if (DONE_SET[s]) return 'done';
+        return '';
+    }
+
+    function runId(payload) {
+        return String((payload && (payload.subagentRunId || payload.subagent_run_id)) || '');
+    }
+
+    function hasSubagentRunId(payload) {
+        return !!runId(payload);
+    }
+
+    // list 必须是调用方持有的数组引用（msg.subagents）；缺条目时按 running 态新建。
+    // 同 id 重复 start 幂等：只补 label，不重复 push。
+    function ensure(list, payload) {
+        var id = runId(payload) || String((payload && payload.id) || '');
+        if (!id || !list) return null;
+        for (var i = 0; i < list.length; i++) {
+            if (list[i].id === id) return list[i];
+        }
+        var entry = {
+            id: id,
+            label: payload.label || payload.name || payload.title || id,
+            status: 'running',
+            parent: payload.parentSubagentRunId || payload.parent_subagent_run_id || '',
+            outcome: '',
+            result: undefined,
+            error: '',
+            durationMs: Number(payload.duration_ms) || 0,
+            startedAt: Date.now(),
+            thinking: '',
+            toolCalls: [],
+            interrupts: Array.isArray(payload.interrupt_ids) ? payload.interrupt_ids.slice() : []
+        };
+        list.push(entry);
+        return entry;
+    }
+
+    function start(list, payload) {
+        var t = ensure(list, payload);
+        if (t && (payload.label || payload.name)) t.label = payload.label || payload.name;
+        return t;
+    }
+
+    // SUBAGENT_FINISHED：outcome ∈ success|suspended（AG-UI 词表），error 走 fail。
+    function finish(list, payload) {
+        var t = ensure(list, payload);
+        if (!t) return null;
+        var raw = String(payload.outcome || payload.status || 'success').toLowerCase();
+        var st = normalizeStatus(raw === 'success' ? 'done' : raw);
+        t.status = st || 'done';
+        t.outcome = raw;
+        if (payload.result !== undefined) t.result = payload.result;
+        if (Array.isArray(payload.interrupt_ids) && payload.interrupt_ids.length) {
+            t.interrupts = payload.interrupt_ids.slice();
+        }
+        if (payload.duration_ms !== undefined) t.durationMs = Number(payload.duration_ms) || t.durationMs;
+        t.endedAt = Date.now();
+        return t;
+    }
+
+    function fail(list, payload) {
+        var t = ensure(list, payload);
+        if (!t) return null;
+        t.status = 'error';
+        t.error = payload.message || payload.error || '子代理执行失败';
+        t.endedAt = Date.now();
+        return t;
+    }
+
+    // 内容事件归因分流入口：routeRichEvent 的 thinking/tool/interrupt 分支头部调用。
+    // 返回匹配条目；无 id 或条目缺席返回 null（调用方走母消息原逻辑）。
+    function routeAttributed(list, payload) {
+        var id = runId(payload);
+        if (!id || !list) return null;
+        for (var i = 0; i < list.length; i++) {
+            if (list[i].id === id) return list[i];
+        }
+        return null;
+    }
+
+    window.NexusSubagent = {
+        normalizeStatus: normalizeStatus,
+        runId: runId,
+        hasSubagentRunId: hasSubagentRunId,
+        ensure: ensure,
+        start: start,
+        finish: finish,
+        fail: fail,
+        routeAttributed: routeAttributed
     };
 })();
 
@@ -5964,6 +6146,7 @@
         'nux-selection-bar': 'NuxSelectionBar',
         'nux-settings-drawer': 'NuxSettingsDrawer',
         'nux-side-panel': 'NuxSidePanel',
+        'nux-subagent-track': 'NuxSubagentTrack',
         'nux-skeleton': 'NuxSkeleton',
                         'nux-stat-card': 'NuxStatCard',
         'nux-switch': 'NuxSwitch',

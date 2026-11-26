@@ -19,6 +19,7 @@
             keyboardAvoid: true,
             richReasoning: true,
             richTools: true,
+            richSubagents: false,
             richReferences: true,
             loadEarlier: true,
             regenerate: 'local',
@@ -215,7 +216,7 @@
                     onEvent: (ev, data) => {
                         if (stopper && !stopper.isCurrent(seq)) return;
                         const routed = routeRichEvent(assistantMsg, ev, data);
-                        if (routed && feat.reasoningAuto && assistantMsg.thinking && !assistantMsg._reasoningManual) {
+                        if (routed && feat.reasoningAuto && assistantMsg.thinking && !assistantMsg._reasoningManual && !assistantMsg._reasoningEnded) {
                             assistantMsg.showReasoning = true;
                         }
                         if (routed && (ev === 'meta' || (data && data.type === 'meta'))) emit('meta', data, assistantMsg);

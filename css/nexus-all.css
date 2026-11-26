@@ -2941,6 +2941,128 @@ a.nx-citation-title:focus-visible { outline: 2px solid var(--nx-primary); outlin
   .nx-tool-call-chevron { transition: none; }
 }
 
+/* ---- nux-subagent-track：AI 子代理进度卡组（running/done/suspended/error 四态，AG-UI SUBAGENT_* 对应物；suspended=中性等待非失败） ---- */
+.nx-subagent-track {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nx-subagent-track-item {
+  border: 1px solid var(--nx-border, rgba(148, 163, 184, 0.25));
+  border-radius: var(--nx-radius-md, 8px);
+  background: var(--nx-bg-subtle, rgba(148, 163, 184, 0.06));
+  overflow: hidden;
+}
+
+.nx-subagent-track-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  padding: 6px 9px;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: var(--nx-text-xs);
+  color: var(--nx-text-secondary, inherit);
+  text-align: left;
+  cursor: default;
+}
+
+.nx-subagent-track-item.is-open .nx-subagent-track-row,
+.nx-subagent-track-row:not(:disabled) {
+  cursor: pointer;
+}
+
+.nx-subagent-track-row:not(:disabled):hover {
+  background: var(--nx-bg-hover, rgba(148, 163, 184, 0.1));
+}
+
+.nx-subagent-track-row:focus-visible {
+  outline: 2px solid var(--nx-accent, #6366f1);
+  outline-offset: -2px;
+}
+
+.nx-subagent-track-mark { flex: none; font-size: 11px; line-height: 1; }
+.nx-subagent-track-mark.is-done { color: var(--nx-success, #22c55e); }
+.nx-subagent-track-mark.is-error { color: var(--nx-danger, #ef4444); }
+.nx-subagent-track-mark.is-suspended { color: var(--nx-info, #3b82f6); }
+
+.nx-subagent-track-spinner {
+  flex: none;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--nx-accent, #6366f1) 30%, transparent);
+  border-top-color: var(--nx-accent, #6366f1);
+  animation: nx-subagent-track-spin 0.8s linear infinite;
+}
+
+@keyframes nx-subagent-track-spin { to { transform: rotate(360deg); } }
+
+.nx-subagent-track-name {
+  flex: none;
+  font-weight: 600;
+  color: var(--nx-text-heading, inherit);
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nx-subagent-track-summary {
+  min-width: 0;
+  flex: 1;
+  color: var(--nx-text-tertiary, inherit);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nx-subagent-track-summary.is-error { color: var(--nx-danger, #ef4444); }
+
+.nx-subagent-track-duration {
+  flex: none;
+  color: var(--nx-text-muted, inherit);
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
+}
+
+.nx-subagent-track-chevron { flex: none; color: var(--nx-text-tertiary, inherit); transition: transform var(--nx-transition-fast, 0.15s); }
+.nx-subagent-track-item.is-open .nx-subagent-track-chevron { transform: rotate(180deg); }
+
+.nx-subagent-track-detail {
+  padding: 2px 12px 8px 27px;
+  border-top: 1px dashed var(--nx-border, rgba(148, 163, 184, 0.25));
+}
+
+.nx-subagent-track-detail-body {
+  margin: 6px 0 0;
+  padding: 7px 9px;
+  background: var(--nx-bg-code, rgba(15, 23, 42, 0.85));
+  border-radius: var(--nx-radius-sm, 6px);
+  overflow: auto;
+  max-height: 220px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.nx-subagent-track-detail-body code {
+  font-family: var(--nx-font-mono, ui-monospace, monospace);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nx-subagent-track-spinner { animation-duration: 2.4s; }
+  .nx-subagent-track-chevron { transition: none; }
+}
+
 /* ===== nexus-components-form.css ===== */
 .nx-input {
   width: 100%;

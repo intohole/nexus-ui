@@ -55,6 +55,7 @@
                                     </button>
                                     <div v-if="m.showReasoning" class="nx-ai-chat-reasoning-body">{{ m.thinking }}</div>
                                 </div>
+                                <nux-subagent-track v-if="feat.richSubagents && m.subagents && m.subagents.length" :items="m.subagents"></nux-subagent-track>
                                 <nux-tool-call v-if="feat.richTools && m.toolCalls && m.toolCalls.length" :items="m.toolCalls"></nux-tool-call>
                                 <div v-else-if="feat.richTools && m.tools && m.tools.length" class="nx-ai-chat-tools">
                                     <span v-for="(t, ti) in m.tools" :key="'t' + ti" class="nx-ai-chat-tool-chip">

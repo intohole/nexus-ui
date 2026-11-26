@@ -62,6 +62,7 @@
         'nux-selection-bar': 'NuxSelectionBar',
         'nux-settings-drawer': 'NuxSettingsDrawer',
         'nux-side-panel': 'NuxSidePanel',
+        'nux-subagent-track': 'NuxSubagentTrack',
         'nux-skeleton': 'NuxSkeleton',
                         'nux-stat-card': 'NuxStatCard',
         'nux-switch': 'NuxSwitch',

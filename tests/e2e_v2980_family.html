@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>v2.98.0 AI 事件面 AG-UI 对齐族走查</title>
+<script src="/js/nexus-theme-init.js"></script>
+<link rel="stylesheet" href="/css/nexus-all.css">
+<style>
+    body { padding: 28px 32px; font-family: system-ui, -apple-system, sans-serif; max-width: 900px; margin: 0 auto; }
+    h3 { margin: 26px 0 10px; font-size: 15px; color: var(--nx-text-secondary, #667); border-bottom: 1px solid var(--nx-border, #e5e8ef); padding-bottom: 6px; }
+    .chat-box { height: 360px; border: 1px solid var(--nx-border, #e5e8ef); border-radius: 12px; }
+    .note { font-size: 12px; color: var(--nx-text-muted, #94a3b8); margin: 4px 0; }
+</style>
+</head>
+<body>
+<div id="app">
+    <h3>A. 全链走查：subagent 三件族+内容归因分流+思考收束（richSubagents:true）</h3>
+    <p class="note">发送后自动注入模拟 SSE 序列：检索席（done）+ 写作席（suspended 挂起）+ 评审席（error）+ 子代理思考/工具归因分流 + thinking_end 收起。</p>
+    <nux-ai-chat id="chat-sa" class="chat-box"
+        :features="{ streamBlocks: false, richSubagents: saFeat }"
+        :send-handler="streamSubagents" placeholder="输入任意内容发送，观察子代理卡组"></nux-ai-chat>
+
+    <h3>B. 组件直挂：四态各一席 + 详情折叠</h3>
+    <nux-subagent-track id="sa-direct" :items="directItems"></nux-subagent-track>
+
+    <h3>C. 兼容对照：richSubagents:false → 卡组不渲染（路由照走，仅呈现关）</h3>
+    <nux-ai-chat id="chat-off" class="chat-box"
+        :features="{ streamBlocks: false, richSubagents: false }"
+        :send-handler="streamSubagents" placeholder="同 A 序列（对照）"></nux-ai-chat>
+</div>
+
+<script src="/vendor/vue.global.prod.js"></script>
+<script src="/js/nexus-all.js"></script>
+<script src="/js/components/nux-ai-chat-helpers.js"></script>
+<script src="/js/components/nux-ai-chat-template.js"></script>
+<script src="/js/components/nux-ai-chat.js"></script>
+<script src="/js/components/nux-subagent-track.js"></script>
+<script>
+const proveRed = new URLSearchParams(location.search).has('prove_red');
+window.PROVE_RED_SA_OFF = proveRed; /* 判红力自证：关掉 richSubagents，A 段卡组断言必须变红 */
+const app = Vue.createApp({
+    data() {
+        return {
+            saFeat: !proveRed,
+            directItems: [
+                { id: 'sa-run', label: '检索席', status: 'running' },
+                { id: 'sa-ok', label: '写作席', status: 'done', durationMs: 4200, thinking: '初稿围绕时间线展开，先列事件再补因果。', toolCalls: [{ id: 'c1', name: 'web_search' }] },
+                { id: 'sa-wait', label: '澄清席', status: 'suspended', interrupts: ['it_1'] },
+                { id: 'sa-bad', label: '评审席', status: 'error', error: '上游 429 限流，建议稍后重试' }
+            ]
+        };
+    },
+    methods: {
+        streamSubagents(content, callbacks) {
+            callbacks.registerStop(() => {});
+            const seq = [
+                ['subagent_started', { subagentRunId: 'sa-research', label: '检索席', parentSubagentRunId: '' }],
+                ['thinking', { subagentRunId: 'sa-research', content: '先查时间线再交叉验证。' }],
+                ['tool', { subagentRunId: 'sa-research', id: 't1', name: 'web_search', args: { q: '时间线' } }],
+                ['tool_result', { subagentRunId: 'sa-research', id: 't1', result: '3 条命中', duration_ms: 820 }],
+                ['subagent_finished', { subagentRunId: 'sa-research', outcome: 'success', result: '时间线 3 条', duration_ms: 1500 }],
+                ['subagent_started', { subagentRunId: 'sa-writer', label: '写作席' }],
+                ['subagent_started', { subagentRunId: 'sa-writer', label: '写作席' }],
+                ['subagent_finished', { subagentRunId: 'sa-writer', outcome: 'suspended', interrupt_ids: ['it_9'] }],
+                ['subagent_started', { subagentRunId: 'sa-critic', label: '评审席' }],
+                ['subagent_failed', { subagentRunId: 'sa-critic', message: '上游 429 限流' }]
+            ];
+            let i = 0;
+            const full = '三个子代理已完成各自分工，以下是综合结论。';
+            const timer = setInterval(() => {
+                if (i < seq.length) {
+                    const [ev, data] = seq[i++];
+                    callbacks.onEvent(ev, data);
+                    return;
+                }
+                i += 2;
+                callbacks.onChunk(full.slice(0, i - seq.length), full.slice(0, i - seq.length));
+                if (i - seq.length >= full.length) {
+                    callbacks.onEvent('thinking_end', {});
+                    clearInterval(timer);
+                    callbacks.onDone(full);
+                }
+            }, 90);
+        }
+    }
+});
+NexusComponents.register(app);
+app.mount('#app');
+</script>
+</body>
+</html>
