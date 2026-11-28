@@ -81,7 +81,10 @@
 
     function openForgot(opts) {
         var compBase = opts.compBase;
-        if (!compBase) return;
+        if (!compBase) {
+            if (opts.onError) opts.onError('找回密码暂不可用，请刷新页面后重试');
+            return;
+        }
         opts.loading.value = true;
         var chain = Promise.resolve();
         if (!window.UserCenterSDK) {
@@ -96,7 +99,19 @@
             });
         }
         chain.then(function() {
-            if (!opts.sdkRef.value) { opts.loading.value = false; return; }
+            if (!opts.sdkRef.value) {
+                var boot = null;
+                try {
+                    boot = (window.UserCenterSDK && typeof window.UserCenterSDK.bootstrap === 'function')
+                        ? window.UserCenterSDK.bootstrap({}) : null;
+                } catch (e) { boot = null; }
+                if (opts.refresh) opts.refresh();
+                if (!opts.sdkRef.value && !(boot && boot.sdk)) {
+                    opts.loading.value = false;
+                    if (opts.onError) opts.onError('找回密码服务暂不可用，请稍后再试');
+                    return;
+                }
+            }
             if (opts.comp.value) { opts.loading.value = false; opts.open.value = true; return; }
             const s = document.createElement('script');
             s.src = compBase + '/nux-forgot-password.js';
@@ -104,10 +119,17 @@
                 opts.loading.value = false;
                 opts.comp.value = window.NuxForgotPassword || null;
                 if (opts.comp.value) opts.open.value = true;
+                else if (opts.onError) opts.onError('找回密码组件加载失败，请刷新重试');
             };
-            s.onerror = function() { opts.loading.value = false; };
+            s.onerror = function() {
+                opts.loading.value = false;
+                if (opts.onError) opts.onError('找回密码组件加载失败，请检查网络后重试');
+            };
             document.head.appendChild(s);
-        }).catch(function() { opts.loading.value = false; });
+        }).catch(function() {
+            opts.loading.value = false;
+            if (opts.onError) opts.onError('找回密码服务加载失败，请检查网络后重试');
+        });
     }
 
     window.NuxLoginHelpers = {

@@ -80,10 +80,12 @@
             const forgotOpen = Vue.ref(false);
             const forgotLoading = Vue.ref(false);
             const forgotComp = Vue.shallowRef(window.NuxForgotPassword || null);
+            const sdkEpoch = Vue.ref(0);
             const combinedError = Vue.computed(() => props.error || localError.value);
             const isSmsMode = Vue.computed(() => props.showSmsLogin && loginType.value === 'sms');
             const regSms = Vue.computed(() => mode.value === 'register' && props.showSmsLogin);
             const effectiveSdk = Vue.computed(function() {
+                void sdkEpoch.value;
                 if (props.sdk) return props.sdk;
                 var g = window.ucSDK || window.__UC_SDK__ || window.ucSdk || null;
                 if (g && typeof g.forgotPassword === 'function') return g;
@@ -393,7 +395,9 @@
                     sdkRef: effectiveSdk,
                     loading: forgotLoading,
                     comp: forgotComp,
-                    open: forgotOpen
+                    open: forgotOpen,
+                    refresh: function() { sdkEpoch.value++; },
+                    onError: function(msg) { localError.value = msg; }
                 });
             }
 
