@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>v3.0.0 AI 原语三件族走查（diff/plan/telemetry）</title>
+<script src="/js/nexus-theme-init.js"></script>
+<link rel="stylesheet" href="/css/nexus-all.css">
+<style>
+    body { padding: 28px 32px; font-family: system-ui, -apple-system, sans-serif; max-width: 920px; margin: 0 auto; }
+    h3 { margin: 26px 0 10px; font-size: 15px; color: var(--nx-text-secondary, #667); border-bottom: 1px solid var(--nx-border, #e5e8ef); padding-bottom: 6px; }
+    .note { font-size: 12px; color: var(--nx-text-muted, #94a3b8); margin: 4px 0; }
+</style>
+</head>
+<body>
+<div id="app">
+    <h3>A. nux-plan-card 直挂：四态+进度头+折叠</h3>
+    <nux-plan-card id="plan-direct" :items="planItems" title="重构计划"></nux-plan-card>
+
+    <h3>B. nux-diff-review 直挂：unified diff 直喂+逐块标记+整体决定</h3>
+    <nux-diff-review id="diff-direct" :files="diffText" title="重构变更" @decide="onDecide"></nux-diff-review>
+    <p class="note" id="decide-note">决定未发生</p>
+
+    <h3>C. nux-run-telemetry 直挂：messages 自动聚合</h3>
+    <nux-run-telemetry id="tel-direct" :messages="telMessages" title="会话遥测"></nux-run-telemetry>
+
+    <h3>D. widget 路由：plan/diff/telemetry 三型经 nux-ai-widgets 分发</h3>
+    <nux-ai-widgets id="widgets-route" :widgets="routeWidgets" @action="onAction"></nux-ai-widgets>
+    <p class="note" id="action-note">动作未发生</p>
+</div>
+
+<script src="/vendor/vue.global.prod.js"></script>
+<script src="/js/nexus-all.js"></script>
+<script src="/js/components/nux-plan-card.js"></script>
+<script src="/js/components/nux-diff-review.js"></script>
+<script src="/js/components/nux-run-telemetry.js"></script>
+<script src="/js/components/nux-ai-widgets.js"></script>
+<script>
+const proveRed = new URLSearchParams(location.search).has('prove_red');
+const app = Vue.createApp({
+    data() {
+        return {
+            planItems: [
+                { id: 't1', title: '解析需求', status: 'done' },
+                { id: 't2', title: '生成代码', status: 'running', note: '写 nux-diff-review' },
+                { id: 't3', title: '回归测试', status: 'pending' },
+                { id: 't4', title: '部署', status: 'error', note: '磁盘满' }
+            ],
+            diffText: 'diff --git a/src/foo.js b/src/foo.js\nindex 123..456 100644\n--- a/src/foo.js\n+++ b/src/foo.js\n@@ -10,3 +10,4 @@ function main() {\n keep line\n-removed line\n+added line\n+added line 2\n@@ -40,2 +41,3 @@ function helper() {\n ctx hunk2\n+big new line in hunk two\n' +
+                Array.from({ length: 20 }, (_, i) => '+filler line ' + i).join('\n'),
+            telMessages: [
+                { role: 'user', id: 'm0' },
+                { role: 'assistant', id: 'm1', meta: { runId: 'r1', tokens: 1200, durationMs: 3000 }, toolCalls: [{}, {}], subagents: [{ id: 'a' }] },
+                { role: 'assistant', id: 'm2', meta: { runId: 'r1', tokens: 30 }, stoppedPartial: true },
+                { role: 'assistant', id: 'm3', meta: { runId: 'r2', usage: { total_tokens: 2500 } }, error: '429 限流' }
+            ],
+            routeWidgets: proveRed ? [] : [
+                { id: 'w1', type: 'plan', title: '清单', data: { interactive: true, items: [{ id: 'p1', title: '探针任务', status: 'pending' }, { id: 'p2', title: '探针第二项', status: 'running' }] } },
+                { id: 'w2', type: 'diff', title: '小 diff', data: { files: '--- a/w.js\n+++ b/w.js\n@@ -1 +1 @@\n-old\n+new\n' } },
+                { id: 'w3', type: 'telemetry', title: '遥测', data: { runs: [{ id: 'r9', label: 'r9', status: 'done', tokens: 500, durationMs: 800, toolCount: 1 }] } }
+            ]
+        };
+    },
+    methods: {
+        onDecide(d) {
+            document.getElementById('decide-note').textContent = 'decide:' + d.action + ':' + d.scope + ':' + d.files.map((f) => f.file + '(' + f.hunkIds.length + ')').join(',');
+        },
+        onAction(a) {
+            document.getElementById('action-note').textContent = 'action:' + a.type + ':' + a.action + ':' + JSON.stringify(a.payload);
+        }
+    }
+});
+NexusComponents.register(app);
+app.mount('#app');
+window.PROVE_RED_V3 = proveRed;
+</script>
+</body>
+</html>

@@ -1,0 +1,217 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://songguokr.com/nexus-ui/contract/ai-events.schema.json",
+  "title": "Nexus AI 事件面契约",
+  "description": "NexusChat.routeRichEvent 事件词表与 payload 形状。传输层（NexusStream.post/ChatController）把 SSE data 帧解析为 (event, data) 后进入本面；事件名大小写不敏感（routeRichEvent 统一 toLowerCase），后端可直接发 AG-UI 1.0 wire 的 SCREAMING_SNAKE（SUBAGENT_STARTED 等 toLowerCase 后直通）。本 schema 面向发帧方校验：event 枚举必须覆盖，payload 字段宽容接收（未知字段剥离不拒收）。",
+  "type": "object",
+  "properties": {
+    "event": {
+      "type": "string",
+      "description": "事件名。nexus snake_case 与 AG-UI 1.0 SCREAMING_SNAKE 等价（大小写不敏感路由）。",
+      "examples": ["tool", "subagent_started", "SUBAGENT_STARTED"]
+    },
+    "data": {
+      "type": "object",
+      "description": "payload。所有事件共享的归因字段：subagentRunId（AG-UI Attributable 形状）存在时该帧归属子代理条目而非母消息。",
+      "properties": {
+        "type": { "type": "string", "description": "可省略；省略时以 event 字段为准。" },
+        "subagentRunId": { "type": "string", "description": "AG-UI Attributable 归因：带此 id 的 thinking/tool/interrupt 帧分流进 msg.subagents[] 对应条目；条目缺席时走母消息原逻辑（零漂移回退）。" },
+        "id": { "type": "string", "description": "实体 id（tool call id / interrupt id / widget id），缺省由前端按计数+时间戳补。" }
+      }
+    }
+  },
+  "required": ["event"],
+  "eventFace": [
+    {
+      "event": "meta",
+      "agui": "自由帧（AG-UI 无对应）",
+      "landsOn": "msg.meta",
+      "payload": {
+        "type": "object",
+        "description": "run 级元信息整包透传并 emit('meta')。建议键：runId/threadId/tokens/usage.total_tokens/durationMs/elapsedMs/status/label/startedAt/endedAt/toolCount/subagentCount/raw。nux-run-telemetry.collect 即消费此面。",
+        "examples": [{ "runId": "r_20261128_01", "threadId": "t99", "tokens": 4210, "durationMs": 12400, "status": "done" }]
+      }
+    },
+    {
+      "event": "thinking / thinking_start / reasoning_start",
+      "agui": "REASONING_START / REASONING_MESSAGE（近似）",
+      "landsOn": "msg.thinking 累加",
+      "payload": {
+        "type": "object",
+        "properties": {
+          "content": { "type": "string", "description": "思考文本增量；亦接受 thinking 键。" },
+          "subagentRunId": { "type": "string" }
+        }
+      }
+    },
+    {
+      "event": "thinking_end / reasoning_end",
+      "agui": "REASONING_END",
+      "landsOn": "msg.showReasoning=false（手动展开尊重，_reasoningEnded 挡重展开）",
+      "payload": { "type": "object" }
+    },
+    {
+      "event": "tool / tool_executed / tool_update / tool_result",
+      "agui": "TOOL_CALL_START / TOOL_CALL_ARGS / TOOL_CALL_END / TOOL_CALL_RESULT",
+      "landsOn": "msg.toolCalls[]（带详情）+ msg.tools[]（纯名称 chips）",
+      "payload": {
+        "type": "object",
+        "description": "tool/tool_executed 为 start 语义；tool_update/tool_result 为 update 语义（按 id 或同名 running 幂等回填）。无详情键时只记名称 chip。",
+        "properties": {
+          "id": { "type": "string", "description": "call id；亦接受 call_id/tool_call_id。" },
+          "name": { "type": "string", "description": "工具名；亦接受 display_name/tool。" },
+          "status": { "type": "string", "enum": ["running", "done", "error", "suspended"], "description": "缺省按 error/语义推断。" },
+          "args": { "type": ["object", "string"], "description": "入参；亦接受 input。" },
+          "result": { "type": ["object", "string", "number", "boolean"], "description": "结果；亦接受 output。" },
+          "error": { "type": "string" },
+          "duration_ms": { "type": "number" },
+          "subagentRunId": { "type": "string", "description": "归因子代理条目。" }
+        }
+      }
+    },
+    {
+      "event": "interrupt / interrupt_request",
+      "agui": "INTERRUPT",
+      "landsOn": "msg.interrupt（消息级 human-in-loop 卡，一消息一活跃卡）",
+      "payload": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string", "default": "AI 请求确认" },
+          "body": { "type": "string", "description": "亦接受 content/message。" },
+          "payload": { "type": ["object", "string", "null"], "description": "业务数据透传；亦接受 data。" },
+          "actions": { "type": "array", "items": { "type": "string" }, "default": ["approve", "reject"], "description": "动作词表：approve/continue/reject/retry/pause/edit。" },
+          "allow_edit": { "type": "boolean", "default": false },
+          "input_placeholder": { "type": "string" },
+          "subagentRunId": { "type": "string", "description": "归因子代理：条目记 interrupts[] 且 status→suspended，不占消息级卡。" }
+        }
+      }
+    },
+    {
+      "event": "interrupt_resolve",
+      "agui": "INTERRUPT resolution",
+      "landsOn": "msg.interrupt=null（id 匹配或缺省）",
+      "payload": { "type": "object", "properties": { "id": { "type": "string" } } }
+    },
+    {
+      "event": "references / reference",
+      "agui": "CUSTOM 约定键",
+      "landsOn": "msg.references[]",
+      "payload": {
+        "type": "object",
+        "properties": {
+          "references": { "type": "array", "description": "亦接受 items。项形状：{n,title,url,source,verdict:supported|partial|unsupported,note}。" }
+        }
+      }
+    },
+    {
+      "event": "credibility",
+      "agui": "CUSTOM 约定键",
+      "landsOn": "msg.credibility（带 level/pct 时）",
+      "payload": {
+        "type": "object",
+        "properties": { "level": { "type": "string", "enum": ["fail", "shaky", "fair", "good"] }, "pct": { "type": "number" }, "note": { "type": "string" } }
+      }
+    },
+    {
+      "event": "warning",
+      "agui": "CUSTOM 约定键",
+      "landsOn": "msg.warnings[] 追加",
+      "payload": { "type": "object", "properties": { "content": { "type": "string", "description": "亦接受 message/text。" } } }
+    },
+    {
+      "event": "widget / component",
+      "agui": "CUSTOM（generative UI 正道）",
+      "landsOn": "msg.widgets[] 追加",
+      "payload": {
+        "type": "object",
+        "description": "widget type 经 NuxAiWidgetsRegistry 分发：内置 table/cards/steps/related/choice/feedback，rich form/chart/confirm，v3 扩展 diff/plan/telemetry。",
+        "properties": {
+          "id": { "type": "string" },
+          "widget": { "type": "string", "description": "渲染类型；亦接受 component/type。" },
+          "title": { "type": "string" },
+          "data": { "type": "object", "description": "组件 payload；缺省整包。内置型见 llms.txt nux-ai-widgets 段。" }
+        }
+      }
+    },
+    {
+      "event": "widget_update / component_update",
+      "agui": "CUSTOM（幂等更新）",
+      "landsOn": "msg.widgets[] 按 id 回填 data/title/disabled",
+      "payload": { "type": "object", "properties": { "id": { "type": "string" }, "data": { "type": "object" }, "title": { "type": "string" }, "disabled": { "type": "boolean" } } }
+    },
+    {
+      "event": "subagent_start / subagent_started",
+      "agui": "SUBAGENT_STARTED",
+      "landsOn": "msg.subagents[]（同 id 幂等）",
+      "payload": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string", "description": "席名；亦接受 label/role。" },
+          "status": { "type": "string", "default": "running" }
+        }
+      }
+    },
+    {
+      "event": "subagent_finish / subagent_finished",
+      "agui": "SUBAGENT_FINISHED",
+      "landsOn": "子代理条目 status；outcome: success→done / suspended→suspended（中性等待，禁 cancelled→error 映射）",
+      "payload": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "outcome": { "type": "string", "enum": ["success", "suspended", "failed", "cancelled"] },
+          "interrupt_ids": { "type": "array", "items": { "type": "string" } },
+          "duration_ms": { "type": "number" }
+        }
+      }
+    },
+    {
+      "event": "subagent_error / subagent_failed",
+      "agui": "SUBAGENT_ERROR",
+      "landsOn": "子代理条目 status=error（不终止 run）",
+      "payload": { "type": "object", "properties": { "id": { "type": "string" }, "error": { "type": "string" } } }
+    },
+    {
+      "event": "activity_snapshot",
+      "agui": "ACTIVITY_SNAPSHOT",
+      "landsOn": "msg.activities[]（messageId 键，replace 缺省 true）",
+      "payload": {
+        "type": "object",
+        "description": "非对话内容的结构化进度快照（如任务清单/阶段状态）。nux-plan-card 的数据流：后端把 plan items 放进 activity content，或经 widget 事件直接渲染。",
+        "properties": {
+          "messageId": { "type": "string" },
+          "content": { "type": ["object", "array", "string"], "description": "开放键对象（进度体）。" },
+          "activityType": { "type": "string" },
+          "replace": { "type": "boolean", "default": true },
+          "subagentRunId": { "type": "string", "description": "归因到席（呈现层关联）。" }
+        },
+        "required": ["messageId"]
+      }
+    },
+    {
+      "event": "activity_delta",
+      "agui": "ACTIVITY_DELTA",
+      "landsOn": "msg.activities[]（最小 RFC 6902 patch；无基底条目 fail-soft 零副作用）",
+      "payload": {
+        "type": "object",
+        "properties": {
+          "messageId": { "type": "string" },
+          "patch": { "type": "array", "description": "RFC 6902 operations：add/remove/replace/move/copy/test。" },
+          "subagentRunId": { "type": "string" }
+        },
+        "required": ["messageId", "patch"]
+      }
+    }
+  ],
+  "chatControllerFace": {
+    "description": "传输层（非 routeRichEvent 面）：ChatController 按可配键消费文本流。contentKey（缺省 delta，别名 content/message）→ msg.content 累加；doneKey（缺省 done）→ 收口。payload.content|delta|text|message 任一携带文本均可。",
+    "events": ["delta", "content", "message", "done"],
+    "agui": "TEXT_MESSAGE_START / TEXT_MESSAGE_CONTENT / TEXT_MESSAGE_END / RUN_FINISHED（近似）"
+  },
+  "explicitlyUnsupported": {
+    "description": "显式不做（与 AG-UI 对照表一致）：STATE_SNAPSHOT/STATE_DELTA（Json-RFC6902 全量状态同步）、MESSAGES_SNAPSHOT、二进制 wire。归因形状=Attributable（subagentRunId 长在内容/进度事件上），非独立事件。",
+    "agui": ["STATE_SNAPSHOT", "STATE_DELTA", "MESSAGES_SNAPSHOT"]
+  }
+}

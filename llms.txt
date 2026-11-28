@@ -4,6 +4,14 @@
 
 CDN地址（全工作区统一，版本见 `nexus-ui/deps.json`）：`https://songguokr.com/nexus-ui/v{version}/`
 
+## 硬约束（AI 编码助手必读，违反即断链/静默劫持）
+
+1. **Vue 3 CDN 全局模式 only**：本设计系统无构建/打包步骤，组件为独立 IIFE 文件挂 `window.Nux*` 全局。禁止 npm 安装、禁止 ESM import、禁止 SSR 用法、禁止 `import NexusXxx from ...` 形态的代码——全部经 `<script src>` 引入后使用全局。
+2. **注册统一入口**：组件注册只走 `NexusComponents.register(app)`（未加载的自动跳过），禁止逐个 `app.component(...)` 手写注册块。
+3. **全局名禁劫持**：`window.nuxConfirm/nuxPrompt/showToast/nux-*` 等平台全局名禁止赋值覆盖（加载顺序决定生效者=静默劫持，codeBlock 判例）；业务本地组件名与 `nux-*` 前缀冲突前先查 `check_component_refs.py` 的 RESERVED_NAMES（goldenStock 15 + nux-mcp-manager 等已预留）。
+4. **版本钉法**：应用侧引用统一带版本段 `nexus-ui/v{version}/`，版本唯一事实源=`deps.json` 的 `deps["nexus-ui"].version`；升级必须改 deps.json 后跑 `sync_version.py` 全工作区同步，禁止只改单仓。
+5. **机读契约**：组件 props/emits 全量清单=contract/nexus-ui.contract.json；AI 事件 payload 形状=contract/ai-events.schema.json。两者由 `scripts/gen_ai_contract.py` 从源码生成（`--check` 模式做漂移门禁），禁止手改。
+
 ## 引入方式
 
 ### CSS（在HTML head中）
@@ -220,18 +228,107 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 
 用户协议页面唯一事实源：本仓库 `agreement.html`（协议条款/隐私政策文案直接维护在该页）。
 
-### 全部组件索引（65 个，以 `NexusComponents.list()` 为准）
+### 全部组件索引（78 个，以 `NexusComponents.list()` 为准；分类为语义策展，机读全清单见下方 GENERATED 区块）
 
 | 分类 | 组件 |
 |------|------|
 | 布局骨架 | nux-layout-sidebar / nux-layout-topnav / nux-bottom-nav / nux-side-panel / nux-section / nux-backtop |
 | 站点级 | nux-footer / nux-about-page / nux-menu-about / nux-login-page / nux-forgot-password / nux-menu-user / nux-settings-drawer |
 | 反馈 | nux-undo-toast / nux-modal / nux-drawer / nux-notification-bell / nux-notification-panel† / nux-loading / nux-skeleton / nux-empty-state / nux-error-state / nux-ai-task-progress / nux-reveal-strip |
-| 数据展示 | nux-stat-card / nux-tag / nux-avatar / nux-progress / nux-calendar / nux-checkin / nux-result-view / nux-selection-bar / nux-pagination / nux-poster / nux-conversation-list / nux-icon |
+| 数据展示 | nux-stat-card / nux-tag / nux-avatar / nux-progress / nux-calendar / nux-checkin / nux-result-view / nux-selection-bar / nux-pagination / nux-poster / nux-conversation-list / nux-icon / nux-table / nux-table-column / nux-descriptions / nux-timeline |
 | 表单控件 | nux-form-group / nux-button / nux-input / nux-textarea / nux-select / nux-switch / nux-checkbox / nux-input-number / nux-search-box / nux-segmented / nux-chip-group / nux-accordion / nux-tab-group |
-| 交互增强 | nux-file-upload / nux-swipe-actions / nux-theme-toggle / nux-camera-recognize / nux-voice-input |
-| AI 能力 | nux-ai-badge / nux-ai-chat / nux-ai-indicator / nux-ai-notice / nux-ai-widgets / nux-clarify-card / nux-interrupt-card / nux-subagent-track / nux-tool-call |
+| 交互增强 | nux-file-upload / nux-swipe-actions / nux-theme-toggle / nux-camera-recognize / nux-voice-input / nux-copy-button |
+| AI 能力 | nux-ai-badge / nux-ai-chat / nux-ai-indicator / nux-ai-notice / nux-ai-widgets / nux-clarify-card / nux-interrupt-card / nux-subagent-track / nux-tool-call / nux-citations / nux-confidence / nux-diff-review / nux-plan-card / nux-run-telemetry |
 | 应用与引导 | nux-app-card / nux-app-switcher / nux-automation / nux-onboarding / nux-onboarding-strip |
+
+<!-- nux:generated:components BEGIN -->
+
+### 组件机读索引（GENERATED，勿手改；真源 js/components/，由 scripts/gen_ai_contract.py 产出）
+
+| tag | window 全局 | props | emits |
+|------|------|------|------|
+| nux-about-page | NuxAboutPage | appName, appIcon, slogan, description, story, features, promises, ecosystem, showEcosystem, version, backUrl, contactText, contactEmail | — |
+| nux-accordion | NuxAccordion | items, modelValue | update:modelValue, change |
+| nux-ai-badge | NuxAiBadge | size, text, tone | — |
+| nux-ai-chat | NuxAiChat | messages, apiConfig, sendHandler, cancelRequest, features, inputConfig, welcome, quickReplies, roles, placeholder, disabled, scrollThreshold, streaming, hasMore | update:messages, send, chunk, done, error, stop, retry, clear, stream-start, stream-end, meta, widget-action, voice-result, regenerate, edit-resend, attachment-pick, attachment-remove, interrupt-action |
+| nux-ai-indicator | NuxAiIndicator | state, label | — |
+| nux-ai-notice | NuxAiNotice | text, note, size, tone | — |
+| nux-ai-task-progress | NuxAiTaskProgress | title, stages, current, percent, message, cancellable, compact, findings, state | cancel |
+| nux-ai-widgets | NuxAiWidgets | data | open |
+| nux-app-card | NuxAppCard | app, accent, desc, badge, showFav, faved, editable | open, fav, edit |
+| nux-app-switcher | NuxAppSwitcher | — | — |
+| nux-automation | NuxAutomation | rules, templates, triggerPresets, loading | create, update, toggle, remove, run |
+| nux-avatar | NuxAvatar | src, name, size, shape, initial | — |
+| nux-backtop | NuxBacktop | threshold, bottom, right | click |
+| nux-bottom-nav | NuxBottomNav | items, currentKey, themeClass, bottomNavLimit, moreActive, showMore | navigate, more |
+| nux-button | NuxButton | variant, size, block, disabled, loading | click |
+| nux-calendar | NuxCalendar | mode, modelValue, levels, counts, startDate, totalDays, endDate, records, cells, year, month, weekStart, legend, loading | update:modelValue, date-select, month-change |
+| nux-camera-recognize | NuxCameraRecognize | uploadUrl, apiInstance, handler, prompt, system, jsonMode, stages, allowCamera, allowGallery, autoRecognize, maxSizeMb, maxEdge, title, hint, recognizeText, compact | capture, change, start, success, error, cancel, reset |
+| nux-checkbox | NuxCheckbox | modelValue, label, disabled | update:modelValue, change |
+| nux-checkin | NuxCheckin | title, icon, subtitle, taskType, taskTitle, taskDesc, taskTarget, unit, direction, baseline, checkedIn, todayTotal, todayTarget, streak, prevStreak, completedDays, totalDays, startDate, endDate, records, shields, mendLeft, freezeLeft, missedDates, loading, error, celebrateText, task | checkin, quick-checkin, mend, freeze, repair, open-day |
+| nux-chip-group | NuxChipGroup | modelValue, options, multiple, removable, disabled | update:modelValue, change, remove |
+| nux-citations | NuxCitations | items, title, collapsible | — |
+| nux-clarify-card | NuxClarifyCard | questions, message, submitText, skipText, allowSkip, loading | submit, skip |
+| nux-confidence | NuxConfidence | level, label, pct, note, variant, hidePct | — |
+| nux-conversation-list | NuxConversationList | api, conversationUrl, newTitle, activeId, showSearch, showArchive, showRename, showDelete, pageSize, staticItems, listAdapter, itemAdapter | select, created, deleted, archive, renamed, error |
+| nux-copy-button | NuxCopyButton | text, getText, label, variant | — |
+| nux-descriptions | NuxDescriptions | items, columns, title | — |
+| nux-diff-review | NuxDiffReview | files, title, approvable, collapsible, state, disabled | decide |
+| nux-drawer | NuxDrawer | modelValue, side, width, label, escClose, closeOnOverlay | update:modelValue |
+| nux-empty-state | NuxEmptyState | icon, title, description, hint, primaryText, secondaryText, primaryLoading | primary, secondary |
+| nux-error-state | NuxErrorState | icon, title, message, code, retryText | retry |
+| nux-file-upload | NuxFileUpload | modelValue, multiple, accept, maxSizeMb, maxCount, disabled, label, hint, compress, dragText | update:modelValue, change, remove, error |
+| nux-footer | NuxFooter | appName, showIcp, icpNumber, company, email, disclaimer, showAiBadge, showGongan, gonganNumber, gonganLink | — |
+| nux-forgot-password | NuxForgotPassword | sdk, defaultType | back, done |
+| nux-form-group | NuxFormGroup | label, required, error, hint, horizontal | — |
+| nux-icon | NuxIcon | name, size, strokeWidth, color, label | — |
+| nux-input | NuxInput | modelValue, type, placeholder, disabled, readonly, clearable, error, hint, maxlength, label, required | update:modelValue, enter, blur |
+| nux-input-number | NuxInputNumber | modelValue, min, max, step, label, required, error, disabled, unit, placeholder | update:modelValue, change |
+| nux-interrupt-card | NuxInterruptCard | title, body, payload, actions, allowEdit, inputPlaceholder, resolved, disabled | action |
+| nux-layout-sidebar | NuxLayoutSidebar | sidebarWidth, collapsedWidth, headerHeight, appName, appIcon, themeClass, menuItems, menuGroups, currentPath, collapsible, mobileMode, bottomNavLimit, bottomNavItems, headerless, namespace, menuOpen | navigate, toggle-collapsed, update:menuOpen |
+| nux-layout-topnav | NuxLayoutTopNav | headerHeight, appName, appIcon, themeClass, navItems, currentPath | navigate |
+| nux-loading | NuxLoading | text, size, inline | — |
+| nux-login-page | NuxLoginPage | appName, appIcon, appLogo, slogan, description, features, stats, themeColor, showRegister, showPhoneLogin, phoneLogin, showEmailField, requireEmail, showInviteCode, inviteCodeMode, showSmsLogin, showRememberMe, showForgot, sdk, showTerms, termsText, termsUrl, privacyUrl, thirdPartyLogin, authMode, minPasswordLength, loading, smsLoading, smsSentAt, error, useCustomRegister, defaultMode, variant, ageGate, minorAge, captchaEnabled, captchaBase, autoLogin | login, register, registered, sms-login, send-sms, third-party-login, success |
+| nux-menu-about | NuxMenuAbout | label | — |
+| nux-menu-user | NuxMenuUser | appName, loginUrl, label | logout |
+| nux-modal | NuxModal | modelValue, title, width, showFooter, closeOnOverlay, escClose | update:modelValue, confirm, cancel |
+| nux-notification-bell | NuxNotificationBell | baseUrl, pollInterval, maxVisible, title, centerUrl | — |
+| nux-notification-panel | NuxNotificationPanel | — | — |
+| nux-onboarding | NuxOnboarding | steps, doneKey, showAfter | — |
+| nux-onboarding-strip | NuxOnboardingStrip | steps, done, dismissKey | — |
+| nux-pagination | NuxPagination | page, totalPages, hasNext, hasPrev, ariaLabel, total, pageSize, currentPage, pageSizes, layout, pagerCount | prev, next, current-change, size-change, update:currentPage, update:pageSize |
+| nux-plan-card | NuxPlanCard | items, title, collapsible, interactive | item-click |
+| nux-poster | NuxPoster | blueprint, maxWidth, downloadable | — |
+| nux-progress | NuxProgress | value, type, size, strokeWidth, label, showPercent, status | — |
+| nux-result-view | NuxResultView | struct, editable, readonly, instruct, busy | edit, instruct |
+| nux-reveal-strip | NuxRevealStrip | variant, icon, title, desc, ctaText, ctaLoading, dismissible, dismissKey, dismissTtl | cta, dismiss |
+| nux-run-telemetry | NuxRunTelemetry | runs, messages, title, collapsible | — |
+| nux-search-box | NuxSearchBox | modelValue, placeholder, delay, disabled | update:modelValue, search |
+| nux-section | NuxSection | title, description, flat | — |
+| nux-segmented | NuxSegmented | modelValue, options, disabled, ariaLabel | update:modelValue, change |
+| nux-select | NuxSelect | modelValue, options, placeholder, disabled, error, label, required, clearable, filterable, loading | update:modelValue, change, clear, query |
+| nux-selection-bar | NuxSelectionBar | count, countLabel, clearLabel | clear |
+| nux-settings-drawer | NuxSettingsDrawer | modelValue, sections, activeKey, title, appName, appIcon, hashPrefix | update:modelValue, update:activeKey, navigate, close |
+| nux-side-panel | NuxSidePanel | brandIcon, brandImg, brandName, actionLabel, actionIcon, actionDisabled, tabs, activeTab, items, itemKey, titleField, itemMeta, activeKey, statusField, removable, loading, skeleton, groupByDate, dateField, groupToday, groupYesterday, groupEarlier, searchable, searchPlaceholder, searchMin, emptyIcon, emptyTitle, emptyText, personalTitle, personalItems, userName, width, drawerWidth, breakpoint, layout, open, ariaLabel | action, brand, select, remove, personal, update:open, update:activeTab |
+| nux-skeleton | NuxSkeleton | loading, rows, avatar, variant, cards, ariaLabel, preset | — |
+| nux-stat-card | NuxStatCard | icon, value, label, subtext, trend, color | — |
+| nux-subagent-track | NuxSubagentTrack | items, activities | — |
+| nux-swipe-actions | NuxSwipeActions | leftActions, rightActions, disabled | action |
+| nux-switch | NuxSwitch | modelValue, label, description, ariaLabel, disabled | update:modelValue, change |
+| nux-tab-group | NuxTabGroup | modelValue, tabs, ariaLabel | update:modelValue |
+| nux-table | NuxTable | data, stripe, loading, emptyText, maxHeight, clickable | row-click |
+| nux-table-column | NuxTableColumn | label, prop, width, minWidth, fixed, cellClass | — |
+| nux-tag | NuxTag | type, size, plain | — |
+| nux-textarea | NuxTextarea | modelValue, placeholder, rows, disabled, readonly, autoResize, error, hint, maxlength, label, required | update:modelValue, blur |
+| nux-theme-toggle | NuxThemeToggle | — | change |
+| nux-timeline | NuxTimeline | items | — |
+| nux-tool-call | NuxToolCall | items | — |
+| nux-undo-toast | NuxUndoToast | text, undoLabel, duration, raised | undo, dismiss |
+| nux-voice-input | NuxVoiceInput | transcribeUrl, handler, apiInstance, disabled, maxSeconds, fieldName, size, target, appendMode | result, error, state-change |
+
+注册表 78 个，与 NexusComponents.list() 同步。
+
+<!-- nux:generated:components END -->
 
 ### 零引用组件处置记录（2026-10-06 全工作区实测）
 
@@ -270,6 +367,20 @@ Events: login(emit {username,password,rememberMe})/register(emit {username,passw
 **显式不做/后续候选**：`STATE_SNAPSHOT/STATE_DELTA`（RFC 6902 JSON Patch，应用层状态同步，越呈现层界）；`MESSAGES_SNAPSHOT`（会话恢复协议，应用层）；二进制 wire（proto-freeze）。**ACTIVITY_SNAPSHOT/ACTIVITY_DELTA（v2.99.0 起已支持）**：`activity_snapshot`（messageId 键落 `msg.activities[]`，replace 缺省 true 覆写，带 subagentRunId 记录归因→nux-subagent-track 按席关联进度行，running 席 summary 位实时显示最新进度）+ `activity_delta`（最小 RFC 6902 add/remove/replace 应用，无基底条目/未知 op/失配路径 fail-soft 零副作用）。注意 AG-UI **无 SUBAGENT_UPDATE 事件**——nexus 词汇表中此类需求正道=ACTIVITY_*，勿自造。
 
 **舰队后端建议词汇**：snake_case 事件名 + payload 携带 `subagentRunId`；生命周期三事件用 `subagent_started/subagent_finished{outcome:'success'|'suspended'}/subagent_failed{message}`；子代理思考/工具事件在原事件名上加 `subagent_run_id` 字段即可归因。
+
+### AI 事件面接线配方（方言接入最短路径，2026-11 增）
+
+现状：nux-ai-chat 传 `apiConfig.streamUrl`（默认传输）时富事件自动路由；**传 `sendHandler` 自管请求的业务**若只消费 chunk/done/error，等于绕开了整条富事件面（v2.98.0 起全舰队已知零消费的主因）。方言接入最短路径三步：
+
+```js
+// ① 业务 sendHandler 拿到自有 SSE/JSON 帧时（帧名或 payload.type 为准）：
+const routed = window.NexusChat.routeRichEvent(msg, frame.type, frame.data ?? frame);
+// ② routed===false 的帧走业务自有语义分支（业务方言保留，平台词表只接通用面）
+// ③ 开箱默认面为纯文本流；富面板按需开（默认值不翻转，逐项显式开）：
+features: { richSubagents: true, metaStrip: true, speakButton: true }  // attachments/voice 同法
+```
+
+后端直发 AG-UI wire 的（SCREAMING_SNAKE）帧无需映射——`toLowerCase()` 后直通；payload 形状机校验用 `contract/ai-events.schema.json`。run 级遥测一行聚合：`NuxRunTelemetry.collect(messages)`（按 meta.runId/threadId 分组，累计 tokens/工具/子代理/终态）。
 
 ### 工具脚本（非组件，按需引 script）
 
@@ -505,6 +616,71 @@ nux-skeleton 保持原有 props 行为不变，新增 `preset`（`list`|`cards`|
 ```
 
 Props: preset(String='')/rows(Number=3)/cards(Number=4)（沿用既有 loading/avatar/variant/ariaLabel）
+
+### AI 原语补档（2026-11-28 增：clarify/voice-realtime/subagent 数据层 + v3 三件）
+
+#### nux-clarify-card 澄清提问卡
+
+AI 主动澄清多问收集（单选/多选/自由文本混合）。事件驱动：`routeRichEvent` 之 `widget` 型 `type:'clarify'`，或业务直接 `:questions` 驱动。
+
+```html
+<nux-clarify-card :questions="[{id:'genre',text:'想要哪种玩法？',type:'single',required:true,options:[{value:'shmup',label:'打飞机'},{value:'rts',label:'RTS'}]},
+  {id:'notes',text:'补充说明',type:'text',placeholder:'可空'}]"
+  message="开工前确认两点" :allow-skip="true" :loading="false"
+  @submit="onClarify" @skip="onSkip"></nux-clarify-card>
+```
+
+Props: questions(Array，项 {id,text,type:single|multiple|text,options?,placeholder?,required?})/message(String)/allowSkip(Boolean=false)/loading(Boolean=false)
+Events: submit(answers：{qid: value 或 value[]})/skip。根锚 `data-nux-clarify`。
+
+#### nux-voice-realtime 实时语音
+
+`js/components/nux-voice-realtime.js`：实时语音对话面（录音→流式转写→播报回路），依赖 js/nexus-audio-recorder.js + js/nexus-tts.js 原语。详细 props 以源码 `window.NuxVoiceRealtime` 为准（本段为占位登记，API 冻结后补全）。
+
+#### js/nexus-subagent.js 子代理数据层（非组件）
+
+`window.NexusSubagent`——AG-UI SUBAGENT/ACTIVITY 族事件的数据层单源，`NexusChat.routeRichEvent` 内部消费；独立引入组件时无需手动调用。方法：`start(list,payload)`（同 id 幂等建席）/`finish(list,payload)`（outcome: success→done、suspended→suspended 中性等待，禁 cancelled→error 映射）/`fail(list,payload)`（标红该席不终止 run）/`routeAttributed(list,payload)`（Attributable 归因头部分流：subagentRunId 命中席→返回条目，缺席→null 走母消息原逻辑）/`applyActivity(list,payload)`（activity_snapshot，messageId 键，replace 缺省 true）/`applyActivityDelta(list,patch)`（最小 RFC 6902，无基底 fail-soft 零副作用）。席条目形状：`{id,name,status:running|done|suspended|error,thinking,toolCalls[],interrupts[],durationMs}`。
+
+#### nux-diff-review diff 审查卡（v3 新增）
+
+文件变更审查原语：逐 hunk 采纳/驳回 + 整体决定 + unified diff 文本直接解析。对照 21st-dev/agent-elements EditTool per-hunk diff review 模式。
+
+```html
+<!-- 直喂 unified diff 原文（git diff / 工具产物均可） -->
+<nux-diff-review :files="diffText" title="本次重构变更" @decide="onDecide"></nux-diff-review>
+<!-- 结构化输入 -->
+<nux-diff-review :files="[{file:'a.js',hunks:[{header:'@@ -1,2 +1,3 @@',lines:[{type:'add',text:'new line'},{type:'del',text:'old'},{type:'ctx',text:'same'}]}]}]"
+  :approvable="true" state="reviewing" @decide="onDecide"></nux-diff-review>
+```
+
+Props: files(Array|String，String=unified diff 原文自动解析；数组项三态：{file,patch} / {file,hunks} / 纯字符串)/title(String='变更审查')/approvable(Boolean=true，显审批 footer)/collapsible(Boolean=true，>12 行 hunk 折叠+渐隐展开)/state(String='reviewing'，reviewing|approved|rejected)/disabled(Boolean=false)
+Events: decide({action:'approve'|'reject', scope:'all'|'hunk', files:[{file,hunkIds}]})——逐块标记后整体采纳=scope hunk 只作用已标记块，未标记=全部。静态方法 `NuxDiffReview.parse(unifiedText)`→files[]。widget 型：`{type:'diff', data:{files,title,approvable,state}}`，decide 映射 confirm(approve)/cancel(reject)。CSS 在 nexus-components-insight.css（`.nx-diff-*`）。
+
+#### nux-plan-card 任务清单卡（v3 新增）
+
+读写型 todo/计划清单原语（对照 agent-elements TodoTool；计划审批语义由 nux-interrupt-card 承担，本件只做清单）。事件驱动：`activity_snapshot` 带清单 content，或 `widget` 型 `type:'plan'`。
+
+```html
+<nux-plan-card :items="[{id:'t1',title:'解析需求',status:'done'},{id:'t2',title:'生成代码',status:'running',note:'写 nux-diff-review'},{id:'t3',title:'回归测试',status:'pending'},{id:'t4',title:'部署',status:'error',note:'edge-04 磁盘满'}]"
+  title="重构计划" :collapsible="true" @item-click="onTask"></nux-plan-card>
+```
+
+Props: items(Array，项 {id,title|content|text,status:pending|running|done|error（宽容归一）,note?})/title(String='任务清单')/collapsible(Boolean=true，已完成项折叠「已完成 N 项」)/interactive(Boolean=false，条目可点)
+Events: item-click({id,title,status})（interactive 时）。头部进度 done/total+进度条+当前 running 项摘要行；根锚 `data-nux-plan`、条目 `data-status`、running 条目 aria-current。widget 型：`{type:'plan', data:{items,title,collapsible,interactive}}`，item-click 映射白名单动词 open。CSS `.nx-plan-card-*`。
+
+#### nux-run-telemetry run 级遥测面（v3 新增）
+
+跨消息 run 聚合遥测（对照 agent-ui-kit run telemetry 面）：tokens/时长/工具次数/子代理席数/终态（对表 NexusStop 四态+streaming 在途）。
+
+```html
+<!-- messages 直喂自动聚合（含 streaming/error/stopped* 状态归并） -->
+<nux-run-telemetry :messages="messages" title="本轮会话遥测"></nux-run-telemetry>
+<!-- 或业务自聚合 runs 直喂 -->
+<nux-run-telemetry :runs="[{id:'r1',label:'任务A',status:'done',tokens:4210,durationMs:12400,toolCount:6,subagentCount:2}]"></nux-run-telemetry>
+```
+
+Props: runs(Array)/messages(Array，传入时优先 collect 自动聚合)/title(String='运行遥测')/collapsible(Boolean=true)
+Events: 无（只读展示面）。静态方法 `NuxRunTelemetry.collect(messages)`→runs[]（按 meta.runId||threadId||msg.id 分组；累计 meta.tokens/usage.total_tokens、toolCalls、subagents、durationMs/elapsedMs；终态 error>running>interrupted>done 优先级归并）。widget 型：`{type:'telemetry', data:{runs,title}}`。CSS `.nx-run-tel-*`。
 
 ### Composables
 

@@ -1,0 +1,1775 @@
+{
+ "version": "2.99.2",
+ "registryCount": 78,
+ "components": [
+  {
+   "tag": "nux-about-page",
+   "global": "NuxAboutPage",
+   "file": "js/components/nux-about-page.js",
+   "props": {
+    "appName": "String",
+    "appIcon": "String",
+    "slogan": "String",
+    "description": "String",
+    "story": "Array",
+    "features": "Array",
+    "promises": "Array",
+    "ecosystem": "Array",
+    "showEcosystem": "Boolean",
+    "version": "String",
+    "backUrl": "String",
+    "contactText": "String",
+    "contactEmail": "String"
+   },
+   "emits": [],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-accordion",
+   "global": "NuxAccordion",
+   "file": "js/components/nux-accordion.js",
+   "props": {
+    "items": "Array",
+    "modelValue": "Number"
+   },
+   "emits": [
+    "update:modelValue",
+    "change"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-ai-badge",
+   "global": "NuxAiBadge",
+   "file": "js/components/nux-ai-badge.js",
+   "props": {
+    "size": "String",
+    "text": "String",
+    "tone": "String"
+   },
+   "emits": [],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-ai-chat",
+   "global": "NuxAiChat",
+   "file": "js/components/nux-ai-chat.js",
+   "props": {
+    "messages": "Array",
+    "apiConfig": "Object",
+    "sendHandler": "Function",
+    "cancelRequest": "Function",
+    "features": "Object",
+    "inputConfig": "Object",
+    "welcome": "Object",
+    "quickReplies": "Array",
+    "roles": "Object",
+    "placeholder": "String",
+    "disabled": "Boolean",
+    "scrollThreshold": "Number",
+    "streaming": "Boolean",
+    "hasMore": "Boolean"
+   },
+   "emits": [
+    "update:messages",
+    "send",
+    "chunk",
+    "done",
+    "error",
+    "stop",
+    "retry",
+    "clear",
+    "stream-start",
+    "stream-end",
+    "meta",
+    "widget-action",
+    "voice-result",
+    "regenerate",
+    "edit-resend",
+    "attachment-pick",
+    "attachment-remove",
+    "interrupt-action"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-ai-indicator",
+   "global": "NuxAiIndicator",
+   "file": "js/components/nux-ai-indicator.js",
+   "props": {
+    "state": "String",
+    "label": "String"
+   },
+   "emits": [],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-ai-notice",
+   "global": "NuxAiNotice",
+   "file": "js/components/nux-ai-notice.js",
+   "props": {
+    "text": "String",
+    "note": "String",
+    "size": "String",
+    "tone": "String"
+   },
+   "emits": [],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-ai-task-progress",
+   "global": "NuxAiTaskProgress",
+   "file": "js/components/nux-ai-task-progress.js",
+   "props": {
+    "title": "String",
+    "stages": "Array",
+    "current": "[String, Number]",
+    "percent": "Number",
+    "message": "String",
+    "cancellable": "Boolean",
+    "compact": "Boolean",
+    "findings": "Array",
+    "state": "String"
+   },
+   "emits": [
+    "cancel"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-ai-widgets",
+   "global": "NuxAiWidgets",
+   "file": "js/components/nux-ai-widgets.js",
+   "props": {
+    "data": "Object"
+   },
+   "emits": [
+    "open"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-app-card",
+   "global": "NuxAppCard",
+   "file": "js/components/nux-app-card.js",
+   "props": {
+    "app": "Object",
+    "accent": "String",
+    "desc": "String",
+    "badge": "Object",
+    "showFav": "Boolean",
+    "faved": "Boolean",
+    "editable": "Boolean"
+   },
+   "emits": [
+    "open",
+    "fav",
+    "edit"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-app-switcher",
+   "global": "NuxAppSwitcher",
+   "file": "js/components/nux-app-switcher.js",
+   "props": {},
+   "emits": [],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-automation",
+   "global": "NuxAutomation",
+   "file": "js/components/nux-automation.js",
+   "props": {
+    "rules": "Array",
+    "templates": "Array",
+    "triggerPresets": "Array",
+    "loading": "Boolean"
+   },
+   "emits": [
+    "create",
+    "update",
+    "toggle",
+    "remove",
+    "run"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-avatar",
+   "global": "NuxAvatar",
+   "file": "js/components/nux-avatar.js",
+   "props": {
+    "src": "String",
+    "name": "String",
+    "size": "String",
+    "shape": "String",
+    "initial": "String"
+   },
+   "emits": [],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-backtop",
+   "global": "NuxBacktop",
+   "file": "js/components/nux-backtop.js",
+   "props": {
+    "threshold": "Number",
+    "bottom": "String",
+    "right": "String"
+   },
+   "emits": [
+    "click"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-bottom-nav",
+   "global": "NuxBottomNav",
+   "file": "js/components/nux-bottom-nav.js",
+   "props": {
+    "items": "Array",
+    "currentKey": "String",
+    "themeClass": "String",
+    "bottomNavLimit": "Number",
+    "moreActive": "Boolean",
+    "showMore": "Boolean"
+   },
+   "emits": [
+    "navigate",
+    "more"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-button",
+   "global": "NuxButton",
+   "file": "js/components/nux-button.js",
+   "props": {
+    "variant": "String",
+    "size": "String",
+    "block": "Boolean",
+    "disabled": "Boolean",
+    "loading": "Boolean"
+   },
+   "emits": [
+    "click"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-calendar",
+   "global": "NuxCalendar",
+   "file": "js/components/nux-calendar.js",
+   "props": {
+    "mode": "String",
+    "modelValue": "String",
+    "levels": "Object",
+    "counts": "Object",
+    "startDate": "String",
+    "totalDays": "Number",
+    "endDate": "String",
+    "records": "Array",
+    "cells": "Array",
+    "year": "Number",
+    "month": "Number",
+    "weekStart": "Number",
+    "legend": "Boolean",
+    "loading": "Boolean"
+   },
+   "emits": [
+    "update:modelValue",
+    "date-select",
+    "month-change"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-camera-recognize",
+   "global": "NuxCameraRecognize",
+   "file": "js/components/nux-camera-recognize.js",
+   "props": {
+    "uploadUrl": "String",
+    "apiInstance": "Object",
+    "handler": "Function",
+    "prompt": "String",
+    "system": "String",
+    "jsonMode": "Boolean",
+    "stages": "Array",
+    "allowCamera": "Boolean",
+    "allowGallery": "Boolean",
+    "autoRecognize": "Boolean",
+    "maxSizeMb": "Number",
+    "maxEdge": "Number",
+    "title": "String",
+    "hint": "String",
+    "recognizeText": "String",
+    "compact": "Boolean"
+   },
+   "emits": [
+    "capture",
+    "change",
+    "start",
+    "success",
+    "error",
+    "cancel",
+    "reset"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-checkbox",
+   "global": "NuxCheckbox",
+   "file": "js/components/nux-checkbox.js",
+   "props": {
+    "modelValue": "Boolean",
+    "label": "String",
+    "disabled": "Boolean"
+   },
+   "emits": [
+    "update:modelValue",
+    "change"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-checkin",
+   "global": "NuxCheckin",
+   "file": "js/components/nux-checkin.js",
+   "props": {
+    "title": "String",
+    "icon": "String",
+    "subtitle": "String",
+    "taskType": "String",
+    "taskTitle": "String",
+    "taskDesc": "String",
+    "taskTarget": "Number",
+    "unit": "String",
+    "direction": "String",
+    "baseline": "Number",
+    "checkedIn": "Boolean",
+    "todayTotal": "Number",
+    "todayTarget": "Number",
+    "streak": "Number",
+    "prevStreak": "Number",
+    "completedDays": "Number",
+    "totalDays": "Number",
+    "startDate": "String",
+    "endDate": "String",
+    "records": "Array",
+    "shields": "Number",
+    "mendLeft": "Number",
+    "freezeLeft": "Number",
+    "missedDates": "Array",
+    "loading": "Boolean",
+    "error": "String",
+    "celebrateText": "String",
+    "task": "Boolean"
+   },
+   "emits": [
+    "checkin",
+    "quick-checkin",
+    "mend",
+    "freeze",
+    "repair",
+    "open-day"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-chip-group",
+   "global": "NuxChipGroup",
+   "file": "js/components/nux-chip-group.js",
+   "props": {
+    "modelValue": "[String, Number, Array]",
+    "options": "Array",
+    "multiple": "Boolean",
+    "removable": "Boolean",
+    "disabled": "Boolean"
+   },
+   "emits": [
+    "update:modelValue",
+    "change",
+    "remove"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-citations",
+   "global": "NuxCitations",
+   "file": "js/components/nux-citations.js",
+   "props": {
+    "items": "Array",
+    "title": "String",
+    "collapsible": "Boolean"
+   },
+   "emits": [],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-clarify-card",
+   "global": "NuxClarifyCard",
+   "file": "js/components/nux-clarify-card.js",
+   "props": {
+    "questions": "Array",
+    "message": "String",
+    "submitText": "String",
+    "skipText": "String",
+    "allowSkip": "Boolean",
+    "loading": "Boolean"
+   },
+   "emits": [
+    "submit",
+    "skip"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-confidence",
+   "global": "NuxConfidence",
+   "file": "js/components/nux-confidence.js",
+   "props": {
+    "level": "[String, Number]",
+    "label": "String",
+    "pct": "Number",
+    "note": "String",
+    "variant": "String",
+    "hidePct": "Boolean"
+   },
+   "emits": [],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-conversation-list",
+   "global": "NuxConversationList",
+   "file": "js/components/nux-conversation-list.js",
+   "props": {
+    "api": "Object",
+    "conversationUrl": "String",
+    "newTitle": "String",
+    "activeId": "String",
+    "showSearch": "Boolean",
+    "showArchive": "Boolean",
+    "showRename": "Boolean",
+    "showDelete": "Boolean",
+    "pageSize": "Number",
+    "staticItems": "Array",
+    "listAdapter": "Function",
+    "itemAdapter": "Function"
+   },
+   "emits": [
+    "select",
+    "created",
+    "deleted",
+    "archive",
+    "renamed",
+    "error"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-copy-button",
+   "global": "NuxCopyButton",
+   "file": "js/components/nux-copy-button.js",
+   "props": {
+    "text": "String",
+    "getText": "Function",
+    "label": "String",
+    "variant": "String"
+   },
+   "emits": [],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-descriptions",
+   "global": "NuxDescriptions",
+   "file": "js/components/nux-descriptions.js",
+   "props": {
+    "items": "Array",
+    "columns": "Number",
+    "title": "String"
+   },
+   "emits": [],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-diff-review",
+   "global": "NuxDiffReview",
+   "file": "js/components/nux-diff-review.js",
+   "props": {
+    "files": "[Array, String]",
+    "title": "String",
+    "approvable": "Boolean",
+    "collapsible": "Boolean",
+    "state": "String",
+    "disabled": "Boolean"
+   },
+   "emits": [
+    "decide"
+   ],
+   "statics": [
+    "parse"
+   ],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-drawer",
+   "global": "NuxDrawer",
+   "file": "js/components/nux-drawer.js",
+   "props": {
+    "modelValue": "Boolean",
+    "side": "String",
+    "width": "String",
+    "label": "String",
+    "escClose": "Boolean",
+    "closeOnOverlay": "Boolean"
+   },
+   "emits": [
+    "update:modelValue"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-empty-state",
+   "global": "NuxEmptyState",
+   "file": "js/components/nux-empty-state.js",
+   "props": {
+    "icon": "String",
+    "title": "String",
+    "description": "String",
+    "hint": "String",
+    "primaryText": "String",
+    "secondaryText": "String",
+    "primaryLoading": "Boolean"
+   },
+   "emits": [
+    "primary",
+    "secondary"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-error-state",
+   "global": "NuxErrorState",
+   "file": "js/components/nux-error-state.js",
+   "props": {
+    "icon": "String",
+    "title": "String",
+    "message": "String",
+    "code": "String",
+    "retryText": "String"
+   },
+   "emits": [
+    "retry"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-file-upload",
+   "global": "NuxFileUpload",
+   "file": "js/components/nux-file-upload.js",
+   "props": {
+    "modelValue": "Array",
+    "multiple": "Boolean",
+    "accept": "String",
+    "maxSizeMb": "Number",
+    "maxCount": "Number",
+    "disabled": "Boolean",
+    "label": "String",
+    "hint": "String",
+    "compress": "Boolean",
+    "dragText": "String"
+   },
+   "emits": [
+    "update:modelValue",
+    "change",
+    "remove",
+    "error"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-footer",
+   "global": "NuxFooter",
+   "file": "js/components/nux-footer.js",
+   "props": {
+    "appName": "String",
+    "showIcp": "Boolean",
+    "icpNumber": "String",
+    "company": "String",
+    "email": "String",
+    "disclaimer": "String",
+    "showAiBadge": "Boolean",
+    "showGongan": "Boolean",
+    "gonganNumber": "String",
+    "gonganLink": "String"
+   },
+   "emits": [],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-forgot-password",
+   "global": "NuxForgotPassword",
+   "file": "js/components/nux-forgot-password.js",
+   "props": {
+    "sdk": "Object",
+    "defaultType": "String"
+   },
+   "emits": [
+    "back",
+    "done"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-form-group",
+   "global": "NuxFormGroup",
+   "file": "js/components/nux-form-group.js",
+   "props": {
+    "label": "String",
+    "required": "Boolean",
+    "error": "String",
+    "hint": "String",
+    "horizontal": "Boolean"
+   },
+   "emits": [],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-icon",
+   "global": "NuxIcon",
+   "file": "js/components/nux-icon.js",
+   "props": {
+    "name": "String",
+    "size": "[Number, String]",
+    "strokeWidth": "[Number, String]",
+    "color": "String",
+    "label": "String"
+   },
+   "emits": [],
+   "statics": [
+    "has"
+   ],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-input",
+   "global": "NuxInput",
+   "file": "js/components/nux-input.js",
+   "props": {
+    "modelValue": "[String, Number]",
+    "type": "String",
+    "placeholder": "String",
+    "disabled": "Boolean",
+    "readonly": "Boolean",
+    "clearable": "Boolean",
+    "error": "String",
+    "hint": "String",
+    "maxlength": "Number",
+    "label": "String",
+    "required": "Boolean"
+   },
+   "emits": [
+    "update:modelValue",
+    "enter",
+    "blur"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-input-number",
+   "global": "NuxInputNumber",
+   "file": "js/components/nux-input-number.js",
+   "props": {
+    "modelValue": "Number",
+    "min": "Number",
+    "max": "Number",
+    "step": "Number",
+    "label": "String",
+    "required": "Boolean",
+    "error": "String",
+    "disabled": "Boolean",
+    "unit": "String",
+    "placeholder": "String"
+   },
+   "emits": [
+    "update:modelValue",
+    "change"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-interrupt-card",
+   "global": "NuxInterruptCard",
+   "file": "js/components/nux-interrupt-card.js",
+   "props": {
+    "title": "String",
+    "body": "String",
+    "payload": "[Object, String]",
+    "actions": "Array",
+    "allowEdit": "Boolean",
+    "inputPlaceholder": "String",
+    "resolved": "[String, Boolean]",
+    "disabled": "Boolean"
+   },
+   "emits": [
+    "action"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-layout-sidebar",
+   "global": "NuxLayoutSidebar",
+   "file": "js/components/nux-layout-sidebar.js",
+   "props": {
+    "sidebarWidth": "String",
+    "collapsedWidth": "String",
+    "headerHeight": "String",
+    "appName": "String",
+    "appIcon": "String",
+    "themeClass": "String",
+    "menuItems": "Array",
+    "menuGroups": "Array",
+    "currentPath": "String",
+    "collapsible": "Boolean",
+    "mobileMode": "String",
+    "bottomNavLimit": "Number",
+    "bottomNavItems": "Array",
+    "headerless": "Boolean",
+    "namespace": "String",
+    "menuOpen": "Boolean"
+   },
+   "emits": [
+    "navigate",
+    "toggle-collapsed",
+    "update:menuOpen"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-layout-topnav",
+   "global": "NuxLayoutTopNav",
+   "file": "js/components/nux-layout-topnav.js",
+   "props": {
+    "headerHeight": "String",
+    "appName": "String",
+    "appIcon": "String",
+    "themeClass": "String",
+    "navItems": "Array",
+    "currentPath": "String"
+   },
+   "emits": [
+    "navigate"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-loading",
+   "global": "NuxLoading",
+   "file": "js/components/nux-loading.js",
+   "props": {
+    "text": "String",
+    "size": "String",
+    "inline": "Boolean"
+   },
+   "emits": [],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-login-page",
+   "global": "NuxLoginPage",
+   "file": "js/components/nux-login-page.js",
+   "props": {
+    "appName": "String",
+    "appIcon": "String",
+    "appLogo": "String",
+    "slogan": "String",
+    "description": "String",
+    "features": "Array",
+    "stats": "Array",
+    "themeColor": "String",
+    "showRegister": "Boolean",
+    "showPhoneLogin": "Boolean",
+    "phoneLogin": "Boolean",
+    "showEmailField": "Boolean",
+    "requireEmail": "Boolean",
+    "showInviteCode": "Boolean",
+    "inviteCodeMode": "String",
+    "showSmsLogin": "Boolean",
+    "showRememberMe": "Boolean",
+    "showForgot": "Boolean",
+    "sdk": "Object",
+    "showTerms": "Boolean",
+    "termsText": "String",
+    "termsUrl": "String",
+    "privacyUrl": "String",
+    "thirdPartyLogin": "Array",
+    "authMode": "String",
+    "minPasswordLength": "Number",
+    "loading": "Boolean",
+    "smsLoading": "Boolean",
+    "smsSentAt": "[Number, String]",
+    "error": "String",
+    "useCustomRegister": "Boolean",
+    "defaultMode": "String",
+    "variant": "String",
+    "ageGate": "Boolean",
+    "minorAge": "Number",
+    "captchaEnabled": "Boolean",
+    "captchaBase": "String",
+    "autoLogin": "Boolean"
+   },
+   "emits": [
+    "login",
+    "register",
+    "registered",
+    "sms-login",
+    "send-sms",
+    "third-party-login",
+    "success"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-menu-about",
+   "global": "NuxMenuAbout",
+   "file": "js/components/nux-menu-about.js",
+   "props": {
+    "label": "[Boolean, String]"
+   },
+   "emits": [],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-menu-user",
+   "global": "NuxMenuUser",
+   "file": "js/components/nux-menu-user.js",
+   "props": {
+    "appName": "String",
+    "loginUrl": "String",
+    "label": "[Boolean, String]"
+   },
+   "emits": [
+    "logout"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-modal",
+   "global": "NuxModal",
+   "file": "js/components/nux-modal.js",
+   "props": {
+    "modelValue": "Boolean",
+    "title": "String",
+    "width": "String",
+    "showFooter": "Boolean",
+    "closeOnOverlay": "Boolean",
+    "escClose": "Boolean"
+   },
+   "emits": [
+    "update:modelValue",
+    "confirm",
+    "cancel"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-notification-bell",
+   "global": "NuxNotificationBell",
+   "file": "js/components/nux-notification-bell.js",
+   "props": {
+    "baseUrl": "String",
+    "pollInterval": "Number",
+    "maxVisible": "Number",
+    "title": "String",
+    "centerUrl": "String"
+   },
+   "emits": [],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-notification-panel",
+   "global": "NuxNotificationPanel",
+   "file": "js/components/nux-notification-panel.js",
+   "props": {},
+   "emits": [],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-onboarding",
+   "global": "NuxOnboarding",
+   "file": "js/components/nux-onboarding.js",
+   "props": {
+    "steps": "Array",
+    "doneKey": "String",
+    "showAfter": "Number"
+   },
+   "emits": [],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-onboarding-strip",
+   "global": "NuxOnboardingStrip",
+   "file": "js/components/nux-onboarding-strip.js",
+   "props": {
+    "steps": "Array",
+    "done": "Array",
+    "dismissKey": "String"
+   },
+   "emits": [],
+   "statics": [
+    "mount"
+   ],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-pagination",
+   "global": "NuxPagination",
+   "file": "js/components/nux-pagination.js",
+   "props": {
+    "page": "Number",
+    "totalPages": "Number",
+    "hasNext": "Boolean",
+    "hasPrev": "Boolean",
+    "ariaLabel": "String",
+    "total": "Number",
+    "pageSize": "Number",
+    "currentPage": "Number",
+    "pageSizes": "Array",
+    "layout": "String",
+    "pagerCount": "Number"
+   },
+   "emits": [
+    "prev",
+    "next",
+    "current-change",
+    "size-change",
+    "update:currentPage",
+    "update:pageSize"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-plan-card",
+   "global": "NuxPlanCard",
+   "file": "js/components/nux-plan-card.js",
+   "props": {
+    "items": "Array",
+    "title": "String",
+    "collapsible": "Boolean",
+    "interactive": "Boolean"
+   },
+   "emits": [
+    "item-click"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-poster",
+   "global": "NuxPoster",
+   "file": "js/components/nux-poster.js",
+   "props": {
+    "blueprint": "Object",
+    "maxWidth": "Number",
+    "downloadable": "Boolean"
+   },
+   "emits": [],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-progress",
+   "global": "NuxProgress",
+   "file": "js/components/nux-progress.js",
+   "props": {
+    "value": "Number",
+    "type": "String",
+    "size": "Number",
+    "strokeWidth": "Number",
+    "label": "String",
+    "showPercent": "Boolean",
+    "status": "String"
+   },
+   "emits": [],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-result-view",
+   "global": "NuxResultView",
+   "file": "js/components/nux-result-view.js",
+   "props": {
+    "struct": "Object",
+    "editable": "Boolean",
+    "readonly": "Boolean",
+    "instruct": "Boolean",
+    "busy": "Boolean"
+   },
+   "emits": [
+    "edit",
+    "instruct"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-reveal-strip",
+   "global": "NuxRevealStrip",
+   "file": "js/components/nux-reveal-strip.js",
+   "props": {
+    "variant": "String",
+    "icon": "String",
+    "title": "String",
+    "desc": "String",
+    "ctaText": "String",
+    "ctaLoading": "Boolean",
+    "dismissible": "Boolean",
+    "dismissKey": "String",
+    "dismissTtl": "Number"
+   },
+   "emits": [
+    "cta",
+    "dismiss"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-run-telemetry",
+   "global": "NuxRunTelemetry",
+   "file": "js/components/nux-run-telemetry.js",
+   "props": {
+    "runs": "Array",
+    "messages": "Array",
+    "title": "String",
+    "collapsible": "Boolean"
+   },
+   "emits": [],
+   "statics": [
+    "collect"
+   ],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-search-box",
+   "global": "NuxSearchBox",
+   "file": "js/components/nux-search-box.js",
+   "props": {
+    "modelValue": "String",
+    "placeholder": "String",
+    "delay": "Number",
+    "disabled": "Boolean"
+   },
+   "emits": [
+    "update:modelValue",
+    "search"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-section",
+   "global": "NuxSection",
+   "file": "js/components/nux-section.js",
+   "props": {
+    "title": "String",
+    "description": "String",
+    "flat": "Boolean"
+   },
+   "emits": [],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-segmented",
+   "global": "NuxSegmented",
+   "file": "js/components/nux-segmented.js",
+   "props": {
+    "modelValue": "[String, Number]",
+    "options": "Array",
+    "disabled": "Boolean",
+    "ariaLabel": "String"
+   },
+   "emits": [
+    "update:modelValue",
+    "change"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-select",
+   "global": "NuxSelect",
+   "file": "js/components/nux-select.js",
+   "props": {
+    "modelValue": "[String, Number, Boolean]",
+    "options": "Array",
+    "placeholder": "String",
+    "disabled": "Boolean",
+    "error": "String",
+    "label": "String",
+    "required": "Boolean",
+    "clearable": "Boolean",
+    "filterable": "Boolean",
+    "loading": "Boolean"
+   },
+   "emits": [
+    "update:modelValue",
+    "change",
+    "clear",
+    "query"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-selection-bar",
+   "global": "NuxSelectionBar",
+   "file": "js/components/nux-selection-bar.js",
+   "props": {
+    "count": "Number",
+    "countLabel": "String",
+    "clearLabel": "String"
+   },
+   "emits": [
+    "clear"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-settings-drawer",
+   "global": "NuxSettingsDrawer",
+   "file": "js/components/nux-settings-drawer.js",
+   "props": {
+    "modelValue": "Boolean",
+    "sections": "Array",
+    "activeKey": "String",
+    "title": "String",
+    "appName": "String",
+    "appIcon": "String",
+    "hashPrefix": "String"
+   },
+   "emits": [
+    "update:modelValue",
+    "update:activeKey",
+    "navigate",
+    "close"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-side-panel",
+   "global": "NuxSidePanel",
+   "file": "js/components/nux-side-panel.js",
+   "props": {
+    "brandIcon": "String",
+    "brandImg": "String",
+    "brandName": "String",
+    "actionLabel": "String",
+    "actionIcon": "String",
+    "actionDisabled": "Boolean",
+    "tabs": "Array",
+    "activeTab": "String",
+    "items": "Array",
+    "itemKey": "String",
+    "titleField": "String",
+    "itemMeta": "Function",
+    "activeKey": "[String, Number]",
+    "statusField": "String",
+    "removable": "Boolean",
+    "loading": "Boolean",
+    "skeleton": "Number",
+    "groupByDate": "Boolean",
+    "dateField": "String",
+    "groupToday": "String",
+    "groupYesterday": "String",
+    "groupEarlier": "String",
+    "searchable": "Boolean",
+    "searchPlaceholder": "String",
+    "searchMin": "Number",
+    "emptyIcon": "String",
+    "emptyTitle": "String",
+    "emptyText": "String",
+    "personalTitle": "String",
+    "personalItems": "Array",
+    "userName": "String",
+    "width": "String",
+    "drawerWidth": "String",
+    "breakpoint": "Number",
+    "layout": "String",
+    "open": "Boolean",
+    "ariaLabel": "String"
+   },
+   "emits": [
+    "action",
+    "brand",
+    "select",
+    "remove",
+    "personal",
+    "update:open",
+    "update:activeTab"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-skeleton",
+   "global": "NuxSkeleton",
+   "file": "js/components/nux-skeleton.js",
+   "props": {
+    "loading": "Boolean",
+    "rows": "Number",
+    "avatar": "Boolean",
+    "variant": "String",
+    "cards": "Number",
+    "ariaLabel": "String",
+    "preset": "String"
+   },
+   "emits": [],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-stat-card",
+   "global": "NuxStatCard",
+   "file": "js/components/nux-stat-card.js",
+   "props": {
+    "icon": "String",
+    "value": "[String, Number]",
+    "label": "String",
+    "subtext": "String",
+    "trend": "Number",
+    "color": "String"
+   },
+   "emits": [],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-subagent-track",
+   "global": "NuxSubagentTrack",
+   "file": "js/components/nux-subagent-track.js",
+   "props": {
+    "items": "Array",
+    "activities": "Array"
+   },
+   "emits": [],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-swipe-actions",
+   "global": "NuxSwipeActions",
+   "file": "js/components/nux-swipe-actions.js",
+   "props": {
+    "leftActions": "Array",
+    "rightActions": "Array",
+    "disabled": "Boolean"
+   },
+   "emits": [
+    "action"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-switch",
+   "global": "NuxSwitch",
+   "file": "js/components/nux-switch.js",
+   "props": {
+    "modelValue": "Boolean",
+    "label": "String",
+    "description": "String",
+    "ariaLabel": "String",
+    "disabled": "Boolean"
+   },
+   "emits": [
+    "update:modelValue",
+    "change"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-tab-group",
+   "global": "NuxTabGroup",
+   "file": "js/components/nux-tab-group.js",
+   "props": {
+    "modelValue": "[String, Number]",
+    "tabs": "Array",
+    "ariaLabel": "String"
+   },
+   "emits": [
+    "update:modelValue"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-table",
+   "global": "NuxTable",
+   "file": "js/components/nux-table.js",
+   "props": {
+    "data": "Array",
+    "stripe": "Boolean",
+    "loading": "Boolean",
+    "emptyText": "String",
+    "maxHeight": "[String, Number]",
+    "clickable": "Boolean"
+   },
+   "emits": [
+    "row-click"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-table-column",
+   "global": "NuxTableColumn",
+   "file": "js/components/nux-table-column.js",
+   "props": {
+    "label": "String",
+    "prop": "String",
+    "width": "[String, Number]",
+    "minWidth": "[String, Number]",
+    "fixed": "String",
+    "cellClass": "String"
+   },
+   "emits": [],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-tag",
+   "global": "NuxTag",
+   "file": "js/components/nux-tag.js",
+   "props": {
+    "type": "String",
+    "size": "String",
+    "plain": "Boolean"
+   },
+   "emits": [],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-textarea",
+   "global": "NuxTextarea",
+   "file": "js/components/nux-textarea.js",
+   "props": {
+    "modelValue": "String",
+    "placeholder": "String",
+    "rows": "Number",
+    "disabled": "Boolean",
+    "readonly": "Boolean",
+    "autoResize": "Boolean",
+    "error": "String",
+    "hint": "String",
+    "maxlength": "Number",
+    "label": "String",
+    "required": "Boolean"
+   },
+   "emits": [
+    "update:modelValue",
+    "blur"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-theme-toggle",
+   "global": "NuxThemeToggle",
+   "file": "js/components/nux-theme-toggle.js",
+   "props": {},
+   "emits": [
+    "change"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-timeline",
+   "global": "NuxTimeline",
+   "file": "js/components/nux-timeline.js",
+   "props": {
+    "items": "Array"
+   },
+   "emits": [],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-tool-call",
+   "global": "NuxToolCall",
+   "file": "js/components/nux-tool-call.js",
+   "props": {
+    "items": "Array"
+   },
+   "emits": [],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-undo-toast",
+   "global": "NuxUndoToast",
+   "file": "js/components/nux-undo-toast.js",
+   "props": {
+    "text": "String",
+    "undoLabel": "String",
+    "duration": "Number",
+    "raised": "Boolean"
+   },
+   "emits": [
+    "undo",
+    "dismiss"
+   ],
+   "statics": [],
+   "hasTemplate": true
+  },
+  {
+   "tag": "nux-voice-input",
+   "global": "NuxVoiceInput",
+   "file": "js/components/nux-voice-input.js",
+   "props": {
+    "transcribeUrl": "String",
+    "handler": "Function",
+    "apiInstance": "Object",
+    "disabled": "Boolean",
+    "maxSeconds": "Number",
+    "fieldName": "String",
+    "size": "String",
+    "target": "String",
+    "appendMode": "String"
+   },
+   "emits": [
+    "result",
+    "error",
+    "state-change"
+   ],
+   "statics": [
+    "mount"
+   ],
+   "hasTemplate": true
+  }
+ ],
+ "tools": [
+  {
+   "file": "js/nexus-ai-chat-core.js",
+   "exports": {
+    "NuxAiChatCore": [
+     "filterAttachmentFiles",
+     "snapshotAttachments",
+     "speakMessage",
+     "uploadAttachment"
+    ]
+   }
+  },
+  {
+   "file": "js/nexus-audio-recorder.js",
+   "exports": {
+    "NexusAudioRecorder": [
+     "create",
+     "isSupported",
+     "mimeExt",
+     "pickMime",
+     "version"
+    ]
+   }
+  },
+  {
+   "file": "js/nexus-camera-helpers.js",
+   "exports": {
+    "NexusCameraHelpers": [
+     "BUSY_PAIRS",
+     "DEFAULT_STAGES",
+     "captureFrame",
+     "formatError",
+     "kvEntriesOf",
+     "normalizeResult",
+     "prepareFile",
+     "renderMarkdown",
+     "resultTextOf",
+     "toast",
+     "validateImageFile"
+    ]
+   }
+  },
+  {
+   "file": "js/nexus-components.js",
+   "exports": {
+    "NexusComponents": [
+     "components",
+     "helpers",
+     "list",
+     "register"
+    ]
+   }
+  },
+  {
+   "file": "js/nexus-credit-float.js",
+   "exports": {
+    "NexusCreditFloat": [
+     "config",
+     "refresh",
+     "start",
+     "stop"
+    ]
+   }
+  },
+  {
+   "file": "js/nexus-credit-panel.js",
+   "exports": {
+    "NexusCreditPanel": [
+     "close",
+     "open",
+     "show402"
+    ]
+   }
+  },
+  {
+   "file": "js/nexus-deep-link.js",
+   "exports": {
+    "NexusDeepLink": [
+     "RETURN_KEY",
+     "get",
+     "isSafePath",
+     "popReturn",
+     "stash",
+     "take"
+    ]
+   }
+  },
+  {
+   "file": "js/nexus-feedback-float-helpers.js",
+   "exports": {
+    "NexusFeedbackFloatHelpers": [
+     "API_BASE",
+     "TYPES",
+     "appKey",
+     "appLabel",
+     "appLabelOf",
+     "contextMeta",
+     "fmtDate",
+     "listMine",
+     "loginUrl",
+     "shouldSkipPage",
+     "submitFeedback",
+     "token"
+    ]
+   }
+  },
+  {
+   "file": "js/nexus-feedback-float.js",
+   "exports": {
+    "NexusFeedbackFloat": [
+     "close",
+     "open",
+     "stop"
+    ]
+   }
+  },
+  {
+   "file": "js/nexus-mobile.js",
+   "exports": {
+    "NexusMobile": [
+     "MOBILE_BREAKPOINT",
+     "ensureViewport",
+     "getKeyboardHeight",
+     "isMobile",
+     "mountKeyboard"
+    ]
+   }
+  },
+  {
+   "file": "js/nexus-page-transition.js",
+   "exports": {
+    "NexusPageTransition": [
+     "nameOf",
+     "nativeSupported",
+     "supported",
+     "transition",
+     "version",
+     "vueTransition"
+    ]
+   }
+  },
+  {
+   "file": "js/nexus-pager.js",
+   "exports": {
+    "NexusPager": [
+     "coerce",
+     "create"
+    ]
+   }
+  },
+  {
+   "file": "js/nexus-pull-refresh.js",
+   "exports": {
+    "NexusPullRefresh": [
+     "TRIGGER",
+     "attach",
+     "isSupported"
+    ]
+   }
+  },
+  {
+   "file": "js/nexus-stop.js",
+   "exports": {
+    "NexusStop": [
+     "DEFAULT_NOTES",
+     "create"
+    ]
+   }
+  },
+  {
+   "file": "js/nexus-streamdown.js",
+   "exports": {
+    "NexusStreamdown": [
+     "version"
+    ]
+   }
+  },
+  {
+   "file": "js/nexus-subagent.js",
+   "exports": {
+    "NexusSubagent": [
+     "applyActivity",
+     "applyActivityDelta",
+     "applyJsonPatch",
+     "ensure",
+     "fail",
+     "finish",
+     "hasSubagentRunId",
+     "normalizeStatus",
+     "routeAttributed",
+     "runId",
+     "start"
+    ]
+   }
+  },
+  {
+   "file": "js/nexus-tip.js",
+   "exports": {
+    "NexusTip": [
+     "bind",
+     "bindAll",
+     "supported",
+     "unbind",
+     "update",
+     "version"
+    ]
+   }
+  },
+  {
+   "file": "js/nexus-tts.js",
+   "exports": {
+    "NexusTts": [
+     "config",
+     "enabled",
+     "isSpeaking",
+     "onState",
+     "setEnabled",
+     "speak",
+     "stop",
+     "supported",
+     "version"
+    ]
+   }
+  },
+  {
+   "file": "js/nexus-vitals.js",
+   "exports": {
+    "NexusVitals": [
+     "_push",
+     "flush",
+     "init",
+     "lastBody",
+     "stats",
+     "supported",
+     "version"
+    ]
+   }
+  }
+ ],
+ "routeRichEvents": [
+  "activity_delta",
+  "activity_snapshot",
+  "component",
+  "component_update",
+  "credibility",
+  "interrupt",
+  "interrupt_request",
+  "interrupt_resolve",
+  "meta",
+  "reasoning_end",
+  "reasoning_start",
+  "reference",
+  "references",
+  "subagent_error",
+  "subagent_failed",
+  "subagent_finish",
+  "subagent_finished",
+  "subagent_start",
+  "subagent_started",
+  "thinking",
+  "thinking_end",
+  "thinking_start",
+  "tool",
+  "tool_executed",
+  "tool_result",
+  "tool_update",
+  "warning",
+  "widget",
+  "widget_update"
+ ]
+}
