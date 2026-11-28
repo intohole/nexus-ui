@@ -51,6 +51,9 @@ KNOWN_EXCEPTIONS: dict[str, str] = {
     "shensi/static/js/views/result.js#clipboard": "S171 发版窗登记：r9 批改/分享复制双点，then/error 双回调→$emit('notify') 上行通知链（含『链接生成成功但复制失败请手动复制』降级文案），与全局 toast 语义有差，留 shensi 线带 notify 链适配后摘牌",
     "shensi/static/js/views/result.js#exec-command-copy": "同上 result#clipboard 第二命中点（shareAttempt 分享链），触发条件同条",
     "xunji/static/js/components/case-actions.js#clipboard": "S171 发版窗登记：分享复制静默 catch（shareCopied 状态位自管理），与 case.js#clipboard 既有例外同族（S137 定性：失败语义走自管状态非 toast），由 xunji 线分享族统一收归后摘牌",
+    "goldenStock/frontend/client/assets/js/main.js#manual-register": "v2.100.0 发版窗登记：goldenStock 手写注册块（含 nux-subagent-track 等十余行 app.component 逐个注册）为 RESERVED_NAMES 同源的旧形态存量，非本轮产物（20b41d7 随版件收口已在该仓在案）；直替=NexusComponents.register(app) 一行替换整块，留 goldenStock 前端轮改造后摘牌",
+    "sentinel/static/js/format.js#clipboard": "v2.100.0 发版窗登记：fe4 事故行工作台复制配方出口（362f7e5，11-28 在案）自带 execCommand 回退的手搓复制链，非本轮产物；与 NexusUtils.copyToClipboard 等价可直替，留 sentinel 线复制族统一收归后摘牌",
+    "sentinel/static/js/format.js#exec-command-copy": "同上 format.js#clipboard 第二命中点（手搓回退腿），触发条件同条",
 }
 
 RULES = [
